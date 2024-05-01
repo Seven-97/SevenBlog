@@ -1,0 +1,38 @@
+---
+home: true
+icon: home
+title: Seven的菜鸟之路
+heroImage: /logo.svg
+heroText: Seven
+tagline: 记录Seven的菜鸟之路
+actions:
+  - text: 开始打怪升级
+    link: /home.md
+    type: primary
+  # - text: 知识星球
+  #   link: /about-the-author/zhishixingqiu-two-years.md
+  #   type: default
+footer: |-
+  <a href="https://beian.miit.gov.cn/" target="_blank">闽ICP备2022017393号</a> | 主题: <a href="https://vuepress-theme-hope.github.io/v2/" target="_blank">VuePress Theme Hope</a>
+---
+
+
+## 关于我
+
+我是Seven，一名Java爱好者，技术一般，经历平平，但是也一直渴望进步，为了人生不留遗憾，也希望能够一直做着自己喜欢的事情。
+
+目前在一家互联网厂中拧螺丝。
+
+永远年轻，永远热爱！
+
+## 关于本站
+建设此站为在这日新月异的互联网上，留下一点点的足迹，记录自己成长的过程。
+
+本站文章皆为作者站在巨人的肩膀上而创，若有不足，欢迎讨论；若有侵权，即删。
+
+版权声明：转载请注明文章出处
+
+## 联系我
+我的邮箱：415849169@qq.com
+
+
