@@ -15,10 +15,10 @@ export default hopeTheme({
 
   author: {
     name: "Seven",
-    url: "https://www.seven97.top/",
+    url: "https://www.seven97.top/article/",
   },
 
-  repo: "https://github.com/Seven-97",
+  repo: "https://github.com/Seven-97/SevenBlog",
   docsDir: "docs",
   // 纯净模式：https://theme-hope.vuejs.press/zh/guide/interface/pure.html
   pure: true,
@@ -41,27 +41,7 @@ export default hopeTheme({
   },
 
   plugins: {
-    components: {
-      rootComponents: {
-        // https://plugin-components.vuejs.press/zh/guide/utilities/notice.html#%E7%94%A8%E6%B3%95
-        // notice: [
-        //   {
-        //     path: "/",
-        //     title: "2023技术年货汇总",
-        //     showOnce: true,
-        //     content:
-        //       "抽空整理了一些优秀的技术团队公众号 2023 年的优质技术文章汇总，质量都挺高的，强烈建议打开这篇文章看看。",
-        //     actions: [
-        //       {
-        //         text: "开始阅读",
-        //         link: "https://www.yuque.com/snailclimb/dr6cvl/nt5qc467p3t6s13k?singleDoc# 《2023技术年货》",
-        //         type: "primary",
-        //       },
-        //     ],
-        //   },
-        // ],
-      },
-    },
+    
 
     blog: true,
 
