@@ -64,9 +64,9 @@ SET lock_key unique_value NX PX 10000
 
 > Redis的单条命令操作是原子性的，但是多条命令操作并不是原子性的，因此Lua脚本实现的就是令Redis的多条命令也实现原子操作
 
-> redis事务不是原子操作的，详情请看 [Redis的事务](https://www.seven97.top/blog/66 "Redis的事务")  
+> redis事务不是原子操作的，详情请看 [Redis的事务](https://www.seven97.top/database/redis/05-transactionofredis.html "Redis的事务")  
 >
-> 但是，可以利用Redis的事务和watch实现的乐观锁来 监视锁的状态
+> 但是，可以利用Redis的事务和watch实现的乐观锁 来监视锁的状态
 
 ```java
     @RequestMapping(" /deduct_stock")

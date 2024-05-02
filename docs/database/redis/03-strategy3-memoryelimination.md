@@ -32,7 +32,7 @@ noeviction：不会淘汰任何数据。
 - volatile-ttl：针对设置了过期时间的key，**越早过期**的越先被淘汰。
 
 ## Redis的内存淘汰算法
-操作系统本身有其内存淘汰算法，针对内存页面淘汰，详情请看 [内存的页面置换算法](https://www.seven97.top/blog/63 "内存的页面置换算法")
+操作系统本身有其内存淘汰算法，针对内存页面淘汰，详情请看 [内存的页面置换算法](https://www.seven97.top/cs-basics/operating-system/memorypagereplacementalgorithm.html "内存的页面置换算法")
 
 ### LRU 算法
 LRU（ Least Recently Used，最近最少使用）淘汰算法：是一种常用的页面置换算法，也就是说最久没有使用的缓存将会被淘汰。
