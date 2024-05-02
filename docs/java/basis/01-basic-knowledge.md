@@ -982,7 +982,7 @@ public class Animal implements Cloneable {
 
 可以看到，新对象的引用类型 person 不会再受到旧对象的影响。
 
-但是，在EffectiveJava中，反对使用clone方法来进行克隆
+但是，在EffectiveJava中，反对使用clone方法来进行克隆，详情关注[谨慎重写 clone 方法](https://www.seven97.top/books/effectivejava-summary.html#_13、谨慎重写-clone-方法)
 
  
 
