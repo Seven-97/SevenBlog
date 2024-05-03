@@ -369,18 +369,11 @@ export default sidebar({
       collapsible: true,
       children: [
           "maven-detail",
+          "git-detail",
         {
           text: "Gradle",
           icon: "gradle",
           prefix: "gradle/",
-          collapsible: true,
-          children: [
-          ],
-        },
-        {
-          text: "Git",
-          icon: "git",
-          prefix: "git/",
           collapsible: true,
           children: [
           ],
