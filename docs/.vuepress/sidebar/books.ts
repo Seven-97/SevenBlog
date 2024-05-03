@@ -8,7 +8,9 @@ export const books = arraySidebar([
     prefix: "software-quality/",
     collapsible: true,
     children: [
+      "alibaba-developmentmanual",
       "effectivejava-summary",
+      
     ]
   }
 
