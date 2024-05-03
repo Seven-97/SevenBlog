@@ -3,9 +3,13 @@ import { arraySidebar } from "vuepress-theme-hope";
 export const books = arraySidebar([
   
   {
-    text: "EffectiveJava总结",
-    link: "effectivejava-summary",
+    text: "软件质量",
     icon: "highavailable",
+    prefix: "software-quality/",
+    collapsible: true,
+    children: [
+      "effectivejava-summary",
+    ]
   }
 
 ]);

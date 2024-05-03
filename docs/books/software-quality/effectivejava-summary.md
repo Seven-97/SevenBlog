@@ -1,7 +1,6 @@
 ---
 title: EffectiveJava总结
 category: 计算机书籍
-icon: "highavailable"
 ---
 
 
