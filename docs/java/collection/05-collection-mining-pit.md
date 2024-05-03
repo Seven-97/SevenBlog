@@ -61,7 +61,7 @@ System.out.println(statusList.contains(3));
 
 ![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250946976.gif)
 
-关于这一点，在《阿里巴巴Java开发手册》泰山版中，也有提及：
+关于这一点，在《[阿里巴巴Java开发手册](https://www.seven97.top/books/software-quality/alibaba-developmentmanual.html)》中，也有提及：
 
 使用工具类 Arrays.asList()把数组转换成集合时，不能使用其修改集合相关的方法，它的 add/remove/clear 方法会抛出 UnsupportedOperationException 异常。 
 
