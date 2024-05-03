@@ -311,9 +311,11 @@ export default sidebar({
           prefix: "message-queue/",
           collapsible: true,
           children: [
-            "rabbitMQ-advancedusage ",
-            "rocketMQ-advancedusage ",
+            "rabbitMQ-advancedusage",
+            "rocketMQ-advancedusage",
+            "rocketMQ-scenarios",
             "rocketMQ-sourcecode",
+
           ],
         },
         {
