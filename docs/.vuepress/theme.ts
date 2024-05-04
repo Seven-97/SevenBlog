@@ -29,7 +29,7 @@ export default hopeTheme({
     '<a href="https://beian.miit.gov.cn/" target="_blank">闽ICP备2022017393号</a>',
   displayFooter: true,
 
-  pageInfo: ["Author", "Category", "Tag", "Original", "Word", "ReadingTime"],
+  pageInfo: ["Author", "Category", "Tag","Date","Word", "ReadingTime","PageView"],
 
   blog: {
 
@@ -48,7 +48,7 @@ export default hopeTheme({
     copyright: {
       author: "Seven",
       license: "MIT",
-      triggerLength: 100,
+      triggerLength: 50,
       maxLength: 700,
       canonical: "https://www.seven97.top/",
       global: true,
