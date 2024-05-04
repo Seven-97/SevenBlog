@@ -5,10 +5,17 @@ import theme from "./theme.js";
 export default defineUserConfig({
   dest: "./dist",
 
-  title: "Seven的菜鸟之路",
+  title: "Seven的菜鸟成长之路",
   description:
-    "Seven的菜鸟之路",
+    "Seven的菜鸟成长之路",
   lang: "zh-CN",
+
+  markdown:{
+    headers: {
+      // 用到哪一级就提取哪一级
+      level: [2, 3, 4, 5],
+    },
+  },
 
   head: [
     // meta
@@ -36,7 +43,7 @@ export default defineUserConfig({
       {
         name: "description",
         content:
-          "Seven的菜鸟之路",
+          "Seven的菜鸟成长之路",
       },
     ],
     ["meta", { name: "apple-mobile-web-app-capable", content: "yes" }],
