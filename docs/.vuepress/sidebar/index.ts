@@ -352,7 +352,7 @@ export default sidebar({
         },
         {
           text: "监控中心",
-          icon: "highavailable",
+          icon: "limit_rate",
           prefix: "monitoring-center/",
           collapsible: true,
           children: [
@@ -506,6 +506,23 @@ export default sidebar({
       collapsible: true,
       children: [
           "DDD",
+      ],
+    },
+    {
+      text: "大数据框架",
+      icon: "big-data",
+      prefix: "bigdata/",
+      collapsible: true,
+      children: [
+        {
+          text: "理论 & 算法 & 数据结构",
+          icon: "suanfaku",
+          prefix: "protocol/",
+          collapsible: true,
+          children: [
+            "datastructure-LSMtree",
+          ],
+        },
       ],
     },
   ],
