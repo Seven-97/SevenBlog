@@ -198,11 +198,11 @@ tag:
 
 取出第五个元素并堆化：
 
-![image-20240427090415585](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270904682.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270904682.png)
 
 取出第六个元素并堆化：
 
-![image-20240427090519287](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270905366.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270905366.png)
 
 堆排序完成！
 

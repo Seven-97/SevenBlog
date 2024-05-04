@@ -344,15 +344,15 @@ myStack.pop();//报错：java.lang.IllegalArgumentException: Stack is empty.
 
 使用两个栈 `s1, s2` 就能实现一个队列的功能（这样放置栈可能更容易理解）：
 
-![image-20240427093506967](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270935051.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270935051.png)
 
 当调用 `push` 让元素入队时，只要把元素压入 `s1` 即可，比如说 `push` 进 3 个元素分别是 1,2,3，那么底层结构就是这样：
 
-![image-20240427093556623](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270935838.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270935838.png)
 
 那么如果这时候使用 `peek` 查看队头的元素怎么办呢？按道理队头元素应该是 1，但是在 `s1` 中 1 被压在栈底，现在就要轮到 `s2` 起到一个中转的作用了：当 `s2` 为空时，可以把 `s1` 的所有元素取出再添加进 `s2`，**这时候 `s2` 中元素就是先进先出顺序了**。
 
-![image-20240427093621756](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270936936.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270936936.png)
 
 
 
