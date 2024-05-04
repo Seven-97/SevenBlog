@@ -85,6 +85,8 @@ $ git clean -df # untracked状态，撤销新增的文件和文件夹
 #	xxx.py
 ```
 
+>`git checkout` 与后文的切换分支命令几乎一致，事实上，`checkout` 作为单个命令有点超载（它承载了很多独立的功能），因此在 Git 2.23 版本中，引入了一个名为 `git switch` 的新命令，最终会取代 `git checkout`
+
 ### 已暂存，未提交
 
 > 这个时候已经执行过git add，但未执行git commit，但是用git diff已经看不到任何修改。 因为git diff检查的是工作区与暂存区之间的差异。
@@ -350,6 +352,72 @@ $ git commit --amend
 $ git status
 ```
 
+### 分支合并
+
+每个分支上都有各自独有的提交，这意味着没有一个分支包含了修改的所有内容。因此通过合并分支来解决这个问题。
+
+git merge 用来做分支合并，将其他分支中的内容合并到当前分支中。比如分支结构如下：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405032318912.png)
+
+假设当前分支是master
+
+> git checkout master
+
+把issueFix中的内容Merge进来：
+
+> git merge issueFix
+
+
+
+如果没有冲突的话，merge完成。有冲突的话，git会提示那个文件中有冲突，比如有如下冲突：
+
+> <<<<<<< HEAD:test.c
+>
+> printf (“test1″);
+>
+> =======
+>
+> printf (“test2″);
+>
+> \>>>>>>> issueFix:test.c
+
+可以看到 ======= 隔开的上半部分，是 HEAD（即 master 分支，在运行 merge 命令时检出的分支）中的内容，下半部分是在 issueFix 分支中的内容。
+
+解决冲突的办法无非是二者选其一或者由你亲自整合到一起。比如你可以通过把这段内容替换为下面这样来解决：
+
+> printf (“test2″);
+
+这个解决方案各采纳了两个分支中的一部分内容，而且删除了 <<<<<<<，=======，和>>>>>>> 这些行。在解决了所有文件里的所有冲突后，运行 git add 将把它们标记为已解决（resolved）。因为一旦暂存，就表示冲突已经解决。如果你想用一个有图形界面的工具来解决这些问题，不妨运行 git mergetool，它会调用一个可视化的合并工具并引导你解决所有冲突：
+
+> $ git mergetool
+> merge tool candidates: kdiff3 tkdiff xxdiff meld gvimdiff opendiff emerge vimdiff
+> Merging the files: index.html
+
+> Normal merge conflict for ‘test.c’:
+> {local}: modified
+> {remote}: modified
+> Hit return to start merge resolution tool (kdiff3):
+
+合并后的分支图如下：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405032320674.png)
+注意，这次合并的实现，由于当前 master 分支所指向的 commit (C4)并非想要并入分支（issueFix）的直接祖先，Git 不得不进行一些处理。就此例而言，Git 会用两个分支的末端（C4 和 C5）和它们的共同祖先（C2）进行一次简单的三方合并。对三方合并的结果作一新的快照，并自动创建一个指向它的 commit（C6)
+
+退出合并工具以后，Git 会询问你合并是否成功。如果回答是，它会为你把相关文件暂存起来，以表明状态为已解决。然后可以用 git commit 来完成这次合并提交。
+
+
+
+因此，多人协作的工作模式通常是这样：
+
+1. 首先，可以试图用git push origin 推送自己的修改；
+2. 如果推送失败，则因为远程分支比你的本地更新，需要先用git pull试图合并；
+3. 如果合并有冲突，则解决冲突，并在本地提交；
+4. 没有冲突或者解决掉冲突后，再用git push origin 推送就能成功！
+5. 如果git pull提示no tracking information，则说明本地分支和远程分支的链接关系没有创建，用命令git branch --set-upstream-to origin/。
+
+
+
 ### 配置自己的Git
 
 - 查看当前的配置
@@ -414,6 +482,8 @@ release 为预上线分支（预发布分支），UAT测试阶段使用。一般
 
 ### 分支与环境对应关系
 
+
+
 在系统开发过程中常用的环境：
 
 - DEV 环境（Development environment）：用于开发者调试使用
@@ -439,6 +509,8 @@ release 为预上线分支（预发布分支），UAT测试阶段使用。一般
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405032242353.webp)
 
 以上生命周期仅作参考，不同开发团队可能有不同的规范，可自行灵活定义。
+
+
 
 ### Git Commit Message规范
 
