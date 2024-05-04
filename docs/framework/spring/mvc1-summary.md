@@ -1,5 +1,5 @@
 ---
-title: MVC概述
+title: MVC - 概述
 category: 常用框架
 tag:
   - SpringMVC

@@ -1,5 +1,5 @@
 ---
-title: DispatcherServlet的初始化过程
+title: MVC - DispatcherServlet的初始化过程
 category: 常用框架
 tag:
   - SpringMVC
