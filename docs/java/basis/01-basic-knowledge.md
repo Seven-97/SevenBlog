@@ -258,9 +258,9 @@ final char c3[] = new char[12];
 c3[] =  {'第','1','个','字','符','串','第','2','个','字','符','串'};
 ```
 
-l 创建s1的时候其实就是创建了第一个不可变的char[]数组，创建s2的时候创建了第二个不可变的char[]数组
+- 创建s1的时候其实就是创建了第一个不可变的char[]数组，创建s2的时候创建了第二个不可变的char[]数组
 
-l 创建str的时候其实就是另外又创建了一个数组，再将s1和s2的数据复制到str中
+- 创建str的时候其实就是另外又创建了一个数组，再将s1和s2的数据复制到str中
 
 ##### StringBuilder
 
@@ -284,7 +284,7 @@ System.out.println("超过16个字的SB容量：" + sb.capacity());
 超过16个字的SB容量：34
 ```
 
-**StringBuilder特征：**StringBuilder初始化容量是16(无参构造)
+**StringBuilder特征**：StringBuilder初始化容量是16(无参构造)
 
 ```java
 public StringBuilder() {

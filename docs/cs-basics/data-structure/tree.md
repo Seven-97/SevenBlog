@@ -89,7 +89,7 @@ tag:
 1. 可以是一棵空树
 2. 如果不是空树，它的左右两个子树的高度差的绝对值不超过 1，并且左右两个子树都是一棵平衡二叉树。
 
-平衡二叉树的常用实现方法有 **[红黑树]([Map - TreeSet & TreeMap 详解 | Seven的菜鸟之路](https://www.seven97.top/java/collection/03-map2-treeset-treemap.html#红黑树))**、**AVL 树**、**替罪羊树**、**加权平衡树**、**伸展树** 等。
+平衡二叉树的常用实现方法有 **[红黑树]([Map - TreeSet & TreeMap 详解 | Seven的菜鸟成长之路](https://www.seven97.top/java/collection/03-map2-treeset-treemap.html#红黑树))**、**AVL 树**、**替罪羊树**、**加权平衡树**、**伸展树** 等。
 
 在给大家展示平衡二叉树之前，先给大家看一棵树：
 

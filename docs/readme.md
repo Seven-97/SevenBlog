@@ -1,10 +1,10 @@
 ---
 home: true
 icon: home
-title: Seven的菜鸟之路
+title: Seven的菜鸟成长之路
 heroImage: /logo.svg
 heroText: Seven
-tagline: 记录Seven的菜鸟之路
+tagline: 记录Seven的菜鸟成长之路
 actions:
   - text: 开始打怪升级
     link: /home.md
