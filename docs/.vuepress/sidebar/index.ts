@@ -376,6 +376,7 @@ export default sidebar({
           prefix: "gradle/",
           collapsible: true,
           children: [
+            "decompilation-jadx",
           ],
         },
         {
@@ -422,6 +423,7 @@ export default sidebar({
             "03-http1-statuscodeandheader",
             "03-http2-https",
             "03-http3-http2and3",
+            "tcpandhttp-keepalive",
           ],
         },
         {
