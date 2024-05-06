@@ -969,13 +969,366 @@ CAP#1 extends Object from capture of ?
 
  
 
- 
+### 27、消除 unchecked 警告
+
+ 使用泛型编程时，很容易看到unchecked编译器警告。应该尽可能消除这些警告。消除所有这些警告后，就能确保代码是类型安全的。
+
+有时unchecked警告很容易消除，例如下面不规范的代码会导致编译器警告：
+
+```java
+Set<Lark> exaltation = new HashSet();
+```
+
+可以修改一下，取消警告：
+
+```java
+Set<Lark> exaltation = new HashSet<>();
+```
+
+但有时警告无法消除，如果可以证明代码是类型安全的，可以通过SuppressWarnings("unchecked") 注解来抑制警告。
+
+SuppressWarnings应该在尽可能小的范围内使用。如下例在一个变量上使用这个注解：
+
+```java
+// Adding local variable to reduce scope of @SuppressWarnings
+public <T> T[] toArray(T[] a) {
+    if (a.length < size) {
+        // This cast is correct because the array we're creating
+        // is of the same type as the one passed in, which is T[].
+        @SuppressWarnings("unchecked") T[] result = (T[]) Arrays.copyOf(elements, size, a.getClass());
+        return result;
+    }
+    System.arraycopy(elements, 0, a, 0, size);
+    if (a.length > size)
+        a[size] = null;
+    return a;
+}
+```
+
+每次使用注解时，要添加一条注释，说明这样做是安全的，以帮助他人理解代码。
 
  
 
- 
+### 28、列表优于数组
+
+ 使用泛型时，优先考虑用list，而非数组。
+
+数组和泛型有两个重要区别，这让它们在一起工作不那么协调。
+
+**区别一：数组是协变的，而泛型不是**。如果 Sub 是 Super 的子类型，那么类型 Sub[] 就是类型 Super[] 的子类型，而`List<Sub>`并非`List<Super>`的子类型。
+
+例如，下面这段代码是合法的：
+
+```java
+// Fails at runtime!
+Object[] objectArray = new Long[1];
+objectArray[0] = "I don't fit in"; // Throws ArrayStoreException
+```
+
+但这一段代码就不是：
+
+```java
+// Won't compile!
+List<Object> ol = new ArrayList<Long>(); // Incompatible types
+ol.add("I don't fit in");
+```
+
+两种方法都不能将 String 放入 Long 容器，但使用数组，会得到一个运行时错误；使用 list，你可以在编译时发现问题。后者当然是更加安全的。
+
+
+
+**区别二：数组是具体化的，而泛型通过擦除来实现**。这意味着，数组在运行时知道并强制执行他们的元素类型，而泛型只在编译时执行类型约束，在运行时丢弃类型信息，这样做是为了与不使用泛型的老代码兼容。
+
+由于这些差异，数组和泛型不能很好地混合。例如，创建泛型、参数化类型或类型参数的数组是非法的。因此，这些数组创建表达式都是非法的：`new List<E>[]`、`new List<String>[]`、`new E[]`。所有这些行为都会在编译时报错，原因是它们并非类型安全。如果合法，那么类型错误可能延迟到运行时才出现，这违反了泛型系统的基本保证。
+
+例如下面代码：
+
+```java
+// Why generic array creation is illegal - won't compile!
+List<String>[] stringLists = new List<String>[1]; // (1)
+List<Integer> intList = List.of(42); // (2)
+Object[] objects = stringLists; // (3)
+objects[0] = intList; // (4)
+String s = stringLists[0].get(0); // (5)
+```
+
+如果第一行是合法的，那么会运行时到第5行才抛出运行时异常。
 
  
+
+### 29、优先考虑泛型
+
+应该尽量在自己编写的类型中使用泛型，这会保证类型安全，并使代码更易使用。
+
+下面通过例子来看下如何对一个现有类做泛型化改造。
+
+
+
+首先是一个简单的堆栈实现：
+
+```java
+// Object-based collection - a prime candidate for generics
+public class Stack {
+    private Object[] elements;
+    private int size = 0;
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+
+    public Stack() {
+        elements = new Object[DEFAULT_INITIAL_CAPACITY];
+    }
+
+    public void push(Object e) {
+        ensureCapacity();
+        elements[size++] = e;
+    }
+
+    public Object pop() {
+        if (size == 0)
+            throw new EmptyStackException();
+        Object result = elements[--size];
+        elements[size] = null; // Eliminate obsolete reference
+        return result;
+    }
+
+    public boolean isEmpty() {
+        return size == 0;
+    }
+
+    private void ensureCapacity() {
+        if (elements.length == size)
+            elements = Arrays.copyOf(elements, 2 * size + 1);
+    }
+}
+```
+
+我们用适当的类型参数替换所有的 Object 类型，然后尝试编译修改后的程序：
+
+```java
+// Initial attempt to generify Stack - won't compile!
+public class Stack<E> {
+    private E[] elements;
+    private int size = 0;
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+
+    public Stack() {
+        elements = new E[DEFAULT_INITIAL_CAPACITY];
+    }
+
+    public void push(E e) {
+        ensureCapacity();
+        elements[size++] = e;
+    }
+
+    public E pop() {
+        if (size == 0)
+            throw new EmptyStackException();
+        E result = elements[--size];
+        elements[size] = null; // Eliminate obsolete reference
+        return result;
+    } ... // no changes in isEmpty or ensureCapacity
+}
+```
+
+这时生成一个错误：
+
+```java
+Stack.java:8: generic array creation
+elements = new E[DEFAULT_INITIAL_CAPACITY];
+^
+```
+
+上一条目中讲到不能创建一个非具体化类型的数组。因此我们修改为：
+
+```java
+// The elements array will contain only E instances from push(E).
+// This is sufficient to ensure type safety, but the runtime
+// type of the array won't be E[]; it will always be Object[]!
+@SuppressWarnings("unchecked")
+public Stack() {
+    elements = (E[]) new Object[DEFAULT_INITIAL_CAPACITY];
+}
+```
+
+另一种解决编译错误的方法是将字段元素的类型从 E[] 更改为 Object[]。这时会得到一个不同的错误：
+
+```java
+Stack.java:19: incompatible types
+found: Object, required: E
+E result = elements[--size];
+^
+```
+
+You can change this error into a warning by casting the element retrieved from the array to E, but you will get a warning:
+
+通过将从数组中检索到的元素转换为 E，可以将此错误转换为警告。我们对警告做抑制：
+
+```java
+// Appropriate suppression of unchecked warning
+public E pop() {
+    if (size == 0)
+        throw new EmptyStackException();
+    // push requires elements to be of type E, so cast is correct
+    @SuppressWarnings("unchecked")
+    E result =(E) elements[--size];
+    elements[size] = null; // Eliminate obsolete reference
+    return result;
+}
+```
+
+
+
+### 30、优先使用泛型方法
+
+应尽量使方法支持泛型，这样可以保证类型安全，并让代码更容易使用。例如下面代码：
+
+```java
+// Generic method
+public static <E> Set<E> union(Set<E> s1, Set<E> s2) {
+    Set<E> result = new HashSet<>(s1);
+    result.addAll(s2);
+    return result;
+}
+```
+
+有时，你需要创建一个对象，该对象是不可变的，但适用于许多不同类型，这时可以用泛型单例工厂模式来实现，如 Collections.emptySet。
+
+
+
+下面的例子实现了一个恒等函数分发器：
+
+```java
+// Generic singleton factory pattern
+private static UnaryOperator<Object> IDENTITY_FN = (t) -> t;
+
+@SuppressWarnings("unchecked")
+public static <T> UnaryOperator<T> identityFunction() {
+    return (UnaryOperator<T>) IDENTITY_FN;
+}
+```
+
+然后是对这个恒等函数分发器的使用：
+
+```java
+// Sample program to exercise generic singleton
+public static void main(String[] args) {
+    String[] strings = { "jute", "hemp", "nylon" };
+    UnaryOperator<String> sameString = identityFunction();
+
+    for (String s : strings)
+        System.out.println(sameString.apply(s));
+
+    Number[] numbers = { 1, 2.0, 3L };
+    UnaryOperator<Number> sameNumber = identityFunction();
+
+    for (Number n : numbers)
+        System.out.println(sameNumber.apply(n));
+}
+```
+
+递归类型限定允许类型参数被包含该类型参数本身的表达式限制，常见的场合是用在Comparable接口上。例如：
+
+```java
+// Using a recursive type bound to express mutual comparability
+public static <E extends Comparable<E>> E max(Collection<E> c);
+```
+
+
+
+### 31、使用限定通配符来增加 API 的灵活性
+
+在泛型中使用有界通配符，可以让API更加灵活。
+
+考虑第29条中的堆栈类。我们创建一个`Stack<Number>`类型的堆栈，并在其中插入integer。
+
+```java
+Stack<Number> numberStack = new Stack<>();
+Iterable<Integer> integers = ... ;
+numberStack.pushAll(integers);
+```
+
+这个例子在直觉上似乎是没问题的。然而实际执行的时候会报错：
+
+```java
+StackTest.java:7: error: incompatible types: Iterable<Integer>
+cannot be converted to Iterable<Number>
+        numberStack.pushAll(integers);
+                    ^
+```
+
+解决办法是使用带extends的有界通配符类型。下面代码表示泛型参数为E的子类型（包括E类型本身）：
+
+```java
+// Wildcard type for a parameter that serves as an E producer
+public void pushAll(Iterable<? extends E> src) {
+    for (E e : src)
+        push(e);
+}
+```
+
+
+
+作为堆栈，还需要对外提供弹出元素的方法，以下是基础实现：
+
+```java
+// popAll method without wildcard type - deficient!
+public void popAll(Collection<E> dst) {
+    while (!isEmpty())
+        dst.add(pop());
+}
+```
+
+但是这个实现在遇到下面场景时也会出现运行时报错，错误信息与前面的非常类似：`Collection<Object>`不是 `Collection<Number>` 的子类型。
+
+```java
+Stack<Number> numberStack = new Stack<Number>();
+Collection<Object> objects = ... ;
+numberStack.popAll(objects);
+```
+
+解决办法是使用带super的有界通配符类型。下面例子表示泛型参数为E的超类（包括E类型本身）。
+
+```java
+// Wildcard type for parameter that serves as an E consumer
+public void popAll(Collection<? super E> dst) {
+  while (!isEmpty()
+    dst.add(pop());
+}
+```
+
+总结上面例子的经验，就是生产者用extends通配符，消费者用super通配符。可以简记为PECS原则：producer-extends, consumer-super。
+
+
+
+### 32、合理地结合泛型和可变参数
+
+可变参数方法和泛型在一起工作时不那么协调，因此需要特别注意。
+
+可变参数方法的设计属于一个抽象泄漏，即当你调用可变参数方法时，将创建一个数组来保存参数；该数组本应是实现细节，却是可见的。因此会出现编译器警告。
+
+下面是一个可变参数和泛型混用，造成类型错误的例子：
+
+```java
+// Mixing generics and varargs can violate type safety!
+static void dangerous(List<String>... stringLists) {
+    List<Integer> intList = List.of(42);
+    Object[] objects = stringLists;
+    objects[0] = intList; // Heap pollution
+    String s = stringLists[0].get(0); // ClassCastException
+}
+```
+
+有人可能会问：为什么使用泛型可变参数声明方法是合法的，而显式创建泛型数组是非法的？因为带有泛型或参数化类型的可变参数的方法在实际开发中非常有用，因此语言设计人员选择忍受这种不一致性。
+
+要保证可变参数和泛型混用时的类型安全，有以下两种方式：
+
+1. 为方法添加 SafeVarargs标记，这代表方法的编写者承诺这个方法是类型安全的，需要方法编写者自己保证。这时编译器警告会被消除。
+2. 如果方法内部保证可变参数只读，不做任何修改，那么这个方法也是类型安全的。
+
+将数组传递给另一个使用 @SafeVarargs 正确注释的可变参数方法是安全的，将数组传递给仅计算数组内容的某个函数的非可变方法也是安全的。
+
+
+
+
 
  
 
@@ -1003,7 +1356,7 @@ CAP#1 extends Object from capture of ?
 
 ### 9、使用 try-with-resources 替代 try-finally 
 
-原因关注 [04 异常详解](note://WEB8fe1555c51e56ec1bee14ea854ae0530)
+原因关注 [异常详解](https://www.seven97.top/java/basis/04-exceptions.html#try-with-resources)
 
  
 
