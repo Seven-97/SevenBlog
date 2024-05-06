@@ -249,7 +249,6 @@ export default sidebar({
           prefix: "springboot/",
           collapsible: true,
           children: [
-            "initiateprocess",
             "principleofautomaticassembly",
           ],
         },

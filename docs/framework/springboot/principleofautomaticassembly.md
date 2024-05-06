@@ -7,10 +7,6 @@ tag:
 
 
 
-## 主配置类
-
-
-
 ## 引入
 
 先看SpringBoot的主配置类
@@ -298,6 +294,12 @@ public @interface SpringBootApplication {}
 
 
 
+### 小结
+
+总的来说，SpringBoot的自动装配原理就是 通过`@EnableAutoConfiguration`注解在类路径的META-INF/spring.factories文件中找到所有的对应配置类，然后将这些自动配置类加载到spring容器中
+
+
+
 ## run方法
 
 ```java
@@ -537,4 +539,17 @@ public WebServer getWebServer(ServletContextInitializer... initializers) {
 ```
 
 这块代码，就是要寻找的内置Tomcat，在这个过程当中，可以看到创建Tomcat的一个流程。
+
+
+
+也就是：
+
+1. 首先从main找到run()方法，在执行run()方法之前new一个SpringApplication对象
+2. 进入run()方法，创建应用监听器SpringApplicationRunListeners开始监听
+3. 然后加载SpringBoot配置环境(ConfigurableEnvironment)，然后把配置环境(Environment)加入监听对象中
+4. 然后加载应用上下文(ConfigurableApplicationContext)，当做run方法的返回对象
+5. 最后创建Spring容器，refreshContext(context)，实现starter自动化配置和bean的实例化等工作。
+   
+
+
 
