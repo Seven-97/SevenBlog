@@ -1328,6 +1328,40 @@ static void dangerous(List<String>... stringLists) {
 
 
 
+### 33、优先考虑类型安全的异构容器
+
+在前面的例子中，类型参数都是固定数量，例如`Map<K, V>`就只有两个类型参数。如果我们需要无限数量的类型参数，可以通过将类型参数放置在键上而不是容器上。例如，可以使用 DatabaseRow 类型表示数据库行，并使用泛型类型 `Column<T>` 作为它的键。
+
+下面的例子实现了以类型作为键的缓存，它是类型安全的，例如以String类型为键读取时，读到的对象肯定也是String类型，而不是Integer类型。
+
+```java
+// Typesafe heterogeneous container pattern - implementation
+public class Favorites {
+  private Map<Class<?>, Object> favorites = new HashMap<>();
+
+  public <T> void putFavorite(Class<T> type, T instance) {
+    favorites.put(Objects.requireNonNull(type), instance);
+  }
+
+  public <T> T getFavorite(Class<T> type) {
+    return type.cast(favorites.get(type));
+  }
+    // Typesafe heterogeneous container pattern - client
+  public static void main(String[] args) {
+        Favorites f = new Favorites();
+        f.putFavorite(String.class, "Java");
+        f.putFavorite(Integer.class, 0xcafebabe);
+        f.putFavorite(Class.class, Favorites.class);
+        String favoriteString = f.getFavorite(String.class);
+        int favoriteInteger = f.getFavorite(Integer.class);
+        Class<?> favoriteClass = f.getFavorite(Class.class);
+        System.out.printf("%s %x %s%n", favoriteString,favoriteInteger, favoriteClass.getName());
+  }
+}
+```
+
+
+
 
 
  
