@@ -8,6 +8,95 @@ tag:
 
 
 
+
+
+## 常用命令与标签解释
+
+到Maven目录下
+
+- mvn -compile ：编译maven项目
+- mvn -test ：执行测试代码
+- mvn -package ：将当前maven目录打包
+- mvn -clean ：将当前maven的target中的class文件清空
+- mvn -install  ：将当前项目jar包安装到本地仓库
+
+
+
+标签详解
+
+```xml
+<!-- project 是根标签-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- 父类继承用-->
+    <parent>
+        <!--
+         groupId 饭写公司网址+项目名
+         artifactId 项目+模块名
+         version   第个1 表示大版本号
+         第二个0 表示分支版本号
+         还可以有 第三个数字 表示小版本号
+         snapshot  快照   alpha 内部测试 beta 公测 release稳定 GA正式发布
+        package  打包的方式 不指定 默认是jar   war zip pom
+        -->
+        <artifactId>TrainingWork</artifactId>
+        <groupId>com.qunar.fresh</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <!-- 集合多个子模块-->
+    <modules></modules>
+    <!--指定了当前的pom的版本-->
+    <modelVersion>4.0.0</modelVersion>
+    <!-- 项目的坐标-->
+    <artifactId>Question8_1</artifactId>
+    <!-- 项目 描述名-->
+    <name></name>
+    <!-- 项目地址-->
+    <url></url>
+    <!-- 项目描述 -->
+    <description></description>
+    <!-- 依赖列表-->
+    <dependencies>
+        <dependency>
+            <!-- 指定坐标从而知道依赖的是哪个项目-->
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <!-- 这个类的依赖范围-->
+            <scope></scope>
+            <!-- 设置依赖是否可选   默认false 是默认继承-->
+            <optional></optional>
+            <!-- 排除依赖传递列表-->
+            <exclusions>
+                <exclusion></exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+    <!-- 依赖管理  不会被实际的依赖进来 还需要在用dependencys 依赖 一般用在父类-->
+    <dependencyManagement></dependencyManagement>
+    <!-- 插件列表-->
+    <build>
+        <plugins></plugins>
+    </build>
+</project>
+```
+
+
+
+## Maven 项⽬⽣命周期
+
+Maven从项⽬的三个不同的⻆度，定义了单套⽣命周期，三套⽣命周期是相互独⽴的，它们之间不会相互影响。
+
+默认构建⽣命周期(Default Lifeclyle): 该⽣命周期表示这项⽬的构建过程，定义了⼀个项⽬的构建要经过的不同的阶段。
+
+清理⽣命周期(Clean Lifecycle): 该⽣命周期负责清理项⽬中的多余信息，保持项⽬资源和代码的整洁性。⼀般拿来清空directory(即⼀般的target)⽬录下的⽂件。
+
+站点管理⽣命周期(Site Lifecycle) :向我们创建⼀个项⽬时，我们有时候需要提供⼀个站点，来介绍这个项⽬的信息，如项⽬介绍，项⽬进度状态、项⽬组成成员，版本控制信息，项⽬javadoc索引信息等等。站点管理⽣命周期定义了站点管理过程的各个阶段
+
+ 
+
+
+
 ## 依赖管理
 
 Maven项目，依赖，构建配置，以及构件：所有这些都是要建模和表述的对象。这些对象通过一个名为项目对象模型(Project Object Model, POM)的XML文件描述。这个POM告诉Maven它正处理什么类型的项目，如何修改默认的行为来从源码生成输出。同样的方式，一个Java Web应用有一个web.xml文件来描述，配置，及自定义该应用，一个Maven项目则通过一个 pom.xml文件定义。该文件是Maven中一个项目的描述性陈述；也是当Maven构建项目的时候需要理解的一份“地图”。
@@ -217,17 +306,7 @@ Maven 依赖调解 (Dependency Mediation) 的第一原则是：路径最近者�
 1. 找到 Maven 加载的 Jar 包版本，使⽤ mvn dependency:tree 查看依赖树，根据依赖原则来调整依赖在POM ⽂件的声明顺序。
 2. 发现了冲突的包之后，剩下的就是选择⼀个合适版本的包留下，如果是传递依赖的包正确，那么把显示依赖的包exclude掉。如果是某⼀个传递依赖的包有问题，那需要⼿动把这个传递依赖execlude掉
 
-## Maven 项⽬⽣命周期
 
-Maven从项⽬的三个不同的⻆度，定义了单套⽣命周期，三套⽣命周期是相互独⽴的，它们之间不会相互影响。
-
-默认构建⽣命周期(Default Lifeclyle): 该⽣命周期表示这项⽬的构建过程，定义了⼀个项⽬的构建要经过的不同的阶段。
-
-清理⽣命周期(Clean Lifecycle): 该⽣命周期负责清理项⽬中的多余信息，保持项⽬资源和代码的整洁性。⼀般拿来清空directory(即⼀般的target)⽬录下的⽂件。
-
-站点管理⽣命周期(Site Lifecycle) :向我们创建⼀个项⽬时，我们有时候需要提供⼀个站点，来介绍这个项⽬的信息，如项⽬介绍，项⽬进度状态、项⽬组成成员，版本控制信息，项⽬javadoc索引信息等等。站点管理⽣命周期定义了站点管理过程的各个阶段
-
- 
 
 ## 如何处理无法拉取的jar包
 
