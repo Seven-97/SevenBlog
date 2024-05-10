@@ -267,7 +267,7 @@ export default sidebar({
           prefix: "web/",
           collapsible: true,
           children: [
-            
+            "tomcat1",
           ],
         },
       ],
