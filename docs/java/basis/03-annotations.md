@@ -243,3 +243,45 @@ public interface MyAnno extends java.lang.Innotation.Annotation {
 - 注解
 
 - 以上类型的数组
+
+
+
+### 运行时注解解析
+
+定义了注解后，就可以在代码中使用了，但这还没完，还需要对注解进行解析和处理。在运行时需要用到反射来解析注解，反射API中有专门用于处理注解的API：
+
+- AnnotatedElement ：这是反射接口处理注解的核心类型，它是反射类型Method，Field和Constructor的基类，通过它的方法来获取注解Annotation实例。
+- 用Annotation来处理具体的注解
+
+注意，注解的解析和处理用的是反射，所以注解定义时要用RententionPolicy.RUNTIME，否则用反射是拿不到注解信息的，因为反射是在运行时（Runtime）。
+
+
+
+解析注解实例：
+
+```java
+public class MethodInfoParsing {
+    public static void main(String[] args) {
+        try {
+            Method[] methods = MethodInfoParsing.class
+                    .getClassLoader().loadClass("MethodInfoExample").getDeclaredMethods();
+            for (Method method : methods) {
+                if (!method.isAnnotationPresent(MethodInfo.class)) {
+                    continue;
+                }
+                for (Annotation annotation : method.getDeclaredAnnotations()) {
+                    System.out.println("Annotation " + annotation + " on method " + method.getName());
+                }
+                MethodInfo info = method.getAnnotation(MethodInfo.class);
+                if ("Paul".equals(info.author())) {
+                    System.out.println("From Pauls: " + method.getName());
+                }
+            }
+        } catch (ClassNotFoundException e) {
+        }
+    }
+}
+```
+
+
+
