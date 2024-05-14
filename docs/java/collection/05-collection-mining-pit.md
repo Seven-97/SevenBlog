@@ -312,9 +312,34 @@ ArrayList的subList方法，返回的是原集合的一个子集合（视图）�
 
  
 
- 
+##  Collections.emptyList()原理
 
- 
+很多大佬写代码的时候，结果集为空的情况,他返回的不是null，而是:
+
+```java
+return Collections.EMPTY_LIST;
+```
+
+我们都知道返回null，很有可能造成空指针异常，可以使用emptyList或EMPTY_LIST就可以避免这个问题，除非你想捕获这个为空的信息.
+
+好处：
+
+**1.** new ArrayList()创建时有初始大小，占用内存，emptyList()不用创建一个新的对象，可以减少内存开销；
+**2.** 方法返回一个emptyList()时，不会报空指针异常，如果直接返回Null，没有进行非空判断就会报空指针异常；
+
+
+
+但是使用emptyList空的方法返回空集合的时候要注意，这个空集合是不可变的。原因是此List与常用的List不同，它是Collections类里的静态内部类，在继承AbstractList后并没有实现add()、remove()等方法，所以返回的List**不能**进行**增加**和**删除**元素操作。
+
+
+
+
+
+
+
+
+
+
 
  
 

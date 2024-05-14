@@ -17,13 +17,141 @@ tag:
 
 - @ComponentScan：扫描被@Component (@Repository,@Service,@Controller)注解的 bean，注解默认会扫描该类所在的包下所有的类。
 
-自动配置机制？在启动过程中，Spring Boot会扫描应用程序的类路径，根据定义条件匹配的各种AutoConfiguration类进行自动配置。通过条件化配置和默认属性值，根据应用程序的类路径和其他条件来自动配置Spring应用程序的各种组件。自动配置的目标是让开发人员能够以最小的配置和干预自动获得功能完整的应用程序。
+[自动配置机制](https://www.seven97.top/framework/springboot/principleofautomaticassembly.html)？在启动过程中，Spring Boot会扫描应用程序的类路径，根据定义条件匹配的各种AutoConfiguration类进行自动配置。通过条件化配置和默认属性值，根据应用程序的类路径和其他条件来自动配置Spring应用程序的各种组件。自动配置的目标是让开发人员能够以最小的配置和干预自动获得功能完整的应用程序。
 
 ## Spring Bean 相关
 
 ### @Autowired
 
 自动导入对象到类中，被注入进的类同样要被 Spring 容器管理比如：Service 类注入到 Controller 类中。
+
+
+
+### @Qualifier
+
+当注入的依赖存在多个候选者，可以使用一些方法来筛选出唯一候选者
+
+
+
+例：
+
+创建接口Car，以及两个实现其接口的bean
+
+```java
+public interface Car {
+}
+ 
+@Component
+public class RedCar implements Car {
+}
+ 
+@Component
+public class WhiteCar implements Car {
+}
+```
+
+创建类型为Person的bean
+
+```java
+@Component
+public class Person {
+ 
+    @Autowired
+    private Car car;
+}
+```
+
+
+
+@Qualifier注解源码
+
+![image-20240515001758389](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405150018597.png)
+
+从源码中我们知道这个注解可以作用于属性、方法、参数、类、注解上面
+
+
+
+作用于属性上
+
+```java
+@Component
+public class Person {
+ 
+    @Autowired
+    @Qualifier("redCar")
+    private Car car;
+ 
+}
+```
+
+
+
+作用于方法上
+
+```java
+@Component
+public class Person {
+ 
+    @Autowired
+    @Qualifier("redCar")
+    private Car car;
+ 
+    @Autowired
+    @Qualifier("mimi")
+    private Animal animal;
+ 
+}
+```
+
+
+
+作用于类上
+
+```java
+@Component
+@Qualifier("car666")
+public class RedCar implements Car {
+}
+ 
+@Component
+public class Person {
+ 
+    @Autowired
+    @Qualifier("car666")
+    private Car car;
+ 
+    @Autowired
+    @Qualifier("mimi")
+    private Animal animal;
+ 
+}
+```
+
+
+
+作用于参数上
+
+```java
+@Component
+public class Person {
+ 
+    @Autowired
+    @Qualifier("car666")
+    private Car car;
+ 
+    private Animal animal;
+ 
+    public Person(@Qualifier("wangcai") Animal animal) {
+        this.animal = animal;
+    }
+}
+```
+
+
+
+
+
+
 
 ### @Component,@Repository,@Service, @Controller
 
