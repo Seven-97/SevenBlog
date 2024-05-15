@@ -17,8 +17,34 @@ Redis中的数据类型指的是 value存储的数据类型，key都是以String
 Redis数据类型对应的底层数据结构
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270801490.png)
 
-
 ## String 类型的应用场景
+
+### 常用命令
+
+- 存放键值：set key value [EX seconds] [PX milliseconds] [NX|XX]
+
+  - [NX|XX] :
+
+    - nx：如果key不存在则建立
+
+    - xx：如果key存在则修改其值，也可以直接使用setnx/setex命令
+
+- 获取键值：get key
+
+- 值递增/递减：incr key
+  - 如果字符串中的值是数字类型的，可以使用incr命令每次递增，不是数字类型则报错。
+  - 一次想递增N用incrby命令，如果是浮点型数据可以用incrbyfloat命令递增。
+  - 同样，递减使用decr、decrby命令。
+
+- 批量存放键值：mset key value [key value ...]
+
+- 批量获取键值：mget key [key ...]
+- 获取值长度：strlen key
+- 追加内容：append key value
+- 获取部分字符：getrange key start end
+
+
+
 ### 缓存对象
 使用 String 来缓存对象有两种方式：
 - 直接缓存整个对象的 JSON，命令例子： SET user:1 '{"name":"seven", "age":18}'。
@@ -61,8 +87,29 @@ SET lock_key unique_value NX PX 10000
 可以借助 Redis 对这些 Session 信息进行统一的存储和管理，这样无论请求发送到那台服务器，服务器都会去同一个 Redis 获取相关的 Session 信息，这样就解决了分布式系统下 Session 存储的问题。
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270801688.png)
 
-
 ## List 类型的应用场景
+
+### 常用命令
+
+- 存储值：
+  - 左端存值：lpush key value [value ...]
+  - 右端存值：rpush key value [value ...]
+  - 索引存值：lset key index value
+
+- 弹出元素：
+  - 左端弹出：lpop key
+  - 右端弹出：rpop key
+
+- 获取元素个数：llen key
+- 获取列表元素：
+  - 两边获取：lrange key start stop
+  - 索引获取：lindex key index
+- 删除元素：
+  - 根据值删除：lrem key count value
+  - 范围删除：ltrim key start stop
+
+
+
 ### 消息队列
 
 - 消息保序：使用 LPUSH + RPOP，对队列进行先进先出的消息处理；满足消息队列的保序性
@@ -74,7 +121,29 @@ SET lock_key unique_value NX PX 10000
 1. 生产者需要自行实现全局唯一 ID；
 2. 不能以消费组形式消费数据
 
-### Hash 类型
+## Hash 类型
+
+### 常用命令
+
+- 存放值：
+  - 单个：hset key field value
+  - 多个：hmset key field value [field value ...]
+  - 不存在时：hsetnx key field value
+
+- 获取字段值：
+  - 单个：hget key field
+  - 多个：hmget key field [field ...]
+  - 获取所有键与值：hgetall key
+  - 获取所有字段：hkeys key
+  - 获取所有值：hvals key
+
+- 判断是否存在：hexists key field
+- 获取字段数量：hlen key
+- 递增/减：hincrby key field increment
+- 删除字段：hdel key field [field ...]
+
+
+
 ### 缓存对象
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270801706.png)
 
@@ -94,6 +163,19 @@ SET lock_key unique_value NX PX 10000
 
 ## Set 类型
 聚合计算（并集、交集、差集）场景，比如点赞、共同关注、抽奖活动等。
+
+### 常用命令
+
+- 存储值：sadd key member [member ...]
+
+- 获取所有元素：smembers key
+- 随机获取：srandmember langs count
+- 判断是否存在某member：sismember key member
+- 获取集合中元素个数：scard key
+- 删除集合元素：srem key member [member ...]
+- 弹出元素：spop key [count]
+
+
 
 ### 点赞
 可以保证**一个用户只能点一个赞**，已经点赞过的用户不能再点赞
@@ -192,6 +274,21 @@ key 可以是用户id，value 则是已关注的公众号的id。
 
 ## Zset 类型
 排序场景，比如排行榜、电话和姓名排序等。
+
+### 常用命令
+
+- 存储值：zadd key [NX|XX] [CH] [INCR] score member [score member ...]
+- 获取元素分数：zscore key member
+- 获取排名范围：zrange key start stop [WITHSCORES]
+- 获取指定分数范围排名：zrangebyscore key min max [WITHSCORES] [LIMIT offset count]
+- 增加指定元素分数：zincrby key increment member
+- 获取集合元素个数：zcard key
+- 获取指定范围分数个数：zcount key min max
+- 删除指定元素：zrem key member [member ...]
+- 获取元素排名：zrank key member
+
+
+
 ### Zset结构
 ```C
 typedef struct zset {

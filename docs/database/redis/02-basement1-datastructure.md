@@ -35,10 +35,17 @@ typedef struct redisDb {
 
 struct dict {
    //...
-    dictEntry **ht_table[2]; //两个dictEntry，一个开始为空，rehash迁移时使用
+     dictht ht[2]; //两个dictEntry，一个开始为空，rehash迁移时使用
     //...
 	long rehashidx; /* rehashing not in progress if rehashidx == -1 */
 };
+
+typedef struct dictht {
+    dictEntry **table;        // 哈希表节点数组
+    unsigned long size;       // 哈希表大小
+    unsigned long sizemask;   // 哈希表大小掩码，用于计算索引值，总是等于size-1
+    unsigned long used;       // 该哈希表已有节点的数量
+} dictht;
 
 struct dictEntry {//具体的对象
     void *key; //key
@@ -51,16 +58,19 @@ struct dictEntry {//具体的对象
     struct dictEntry *next;    //下一个节点的指针
     void *metadata[];
 };
+
 ```
 
 void * key 和 void * value 指针指向的就是 Redis 对象。Redis中有全局hash表，key是String,value是不同类型的对象，如果是Java，那可以直接用Map\<String,Object>来通用表示。而Redis直接由C语言实现，因此具体的每个对象都由 redisObject 结构表示，用type来表示具体类型，如下：
 ```c
-struct redisObject {
-    unsigned type:4;
-    unsigned encoding:4;
-   //……
-    void *ptr;
-};
+typedef struct redisObject {
+    unsigned type: 4;        // 对象类型
+    unsigned storage: 2;     // REDIS_VM_MEMORY or REDIS_VM_SWAPPING
+    unsigned encoding: 4;    // 对象所使用的编码
+    unsigned lru: 22;        // lru time (relative to server.lruclock)
+    int refcount;            // 对象的引用计数
+    void *ptr;               // 指向对象的底层实现数据结构
+} robj;
 ```
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270802790.png)
@@ -72,7 +82,7 @@ struct redisObject {
 如图，Redis 数据类型（也叫 Redis 对象）和底层数据结构的对应关图：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270802383.png)
 
-- 默认情况下hash使用listpack存储，当保存的字段-值的数量大于512个或者当个字段的值大于64个字节时，改为hashtable。
+- 默认情况下hash使用listpack存储，当保存的字段-值的数量大于512个或者单个字段的值大于64个字节时，改为hashtable。
 - 默认情况下zSet使用listpack做为存储结构，当集合中的元素大于等于128个或是单个值的字节数大于等于64，存储结构会修改为skiplist。
 
 这几个值都是可以修改的，没必要记；在redis.conf里
@@ -241,7 +251,7 @@ struct dictEntry {
 ```
 dictEntry 结构里不仅包含指向键和值的指针，还包含了指向下一个哈希表节点的指针，这个指针可以将多个哈希值相同的键值对链接起来，以此来解决哈希冲突的问题，这就是链式哈希。
 
-关于解决hash冲突问题可以看这篇文章：[解决哈希冲突的三种方法](https://www.seven97.top/blog/15 "解决哈希冲突的三种方法")
+关于解决hash冲突问题可以看这篇文章：[解决哈希冲突的三种方法](https://www.seven97.top/java/basis/01-basic-knowledge.html#扩展-解决哈希冲突的三种方法)
 
 而redis是**先通过拉链法**解决，**再通过rehash**来解决hash冲突问题的，即再hash法
 
