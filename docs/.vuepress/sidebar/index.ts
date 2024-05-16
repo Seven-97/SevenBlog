@@ -324,6 +324,7 @@ export default sidebar({
           prefix: "rpc/",
           collapsible: true,
           children: [
+            "dubbo-advancedusage",
             "dubbo-spimechanism",
             "dubbo-serviceexposure-sourcecode",
             "dubbo-servicenvocation-sourcecode",
