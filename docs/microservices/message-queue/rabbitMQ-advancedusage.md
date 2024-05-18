@@ -1,5 +1,5 @@
 ---
-title: RabbitMQ高级使用
+title: RabbitMQ - 高级使用
 category: 微服务
 tag:
   - RabbitMQ
