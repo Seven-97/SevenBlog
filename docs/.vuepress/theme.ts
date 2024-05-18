@@ -51,7 +51,7 @@ export default hopeTheme({
     copyright: {
       author: "Seven",
       license: "MIT",
-      triggerLength: 50,
+      triggerLength: 100,
       maxLength: 700,
       canonical: "https://www.seven97.top/",
       global: true,
