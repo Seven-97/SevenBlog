@@ -7,35 +7,48 @@ tag:
 
 
 
-# Kafka 生产者
+## Kafka 生产者
 
-## 生产者消息发送流程
+### 生产者消息发送流程
 
-### 发送原理
-
- 在消息发送的过程中，涉及到两个线程，main线程和sender线程，其中main线程是消息的生产线程，而sender线程是jvm单例的线程，专门用于消息的发送。
-
- 在jvm的内存中开辟了一块缓存空间叫RecordAccumulator（消息累加器），用于将多条消息合并成一个批次，然后由sender线程发送给kafka集群。
-
- 我们的一条消息在生产过程会调用send方法然后经过拦截器经过序列化器，再经过分区器确定消息发送在具体topic下的哪个分区，然后发送到对应的消息累加器中，消息累加器是多个双端队列。并且每个队列和主题分区都具有一一映射关系。消息在累加器中，进行合并，达到了对应的size（batch.size）或者等待超过对应的等待时间(linger.ms)，都会触发sender线程的发送。sender线程有一个请求池，默认缓存五个请求（ max.in.flight.requests.per.connection ），发送消息后，会等待服务端的ack，如果没收到ack就会重试默认重试int最大值（ retries ）。如果ack成功就会删除累加器中的消息批次，并相应到生产端。
+#### 发送原理
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244201.jpg)
+
+1.  在消息发送的过程中，涉及到两个线程，main线程和sender线程，
+   1. main线程是消息的生产线程
+   2. sender线程是jvm单例的线程，专门用于消息的发送。
+
+2. 在jvm的内存中开辟了一块缓存空间叫RecordAccumulator（消息累加器），用于将多条消息合并成一个批次，然后由sender线程发送给kafka集群。
+
+
+
+ 一条消息在生产过程执行的步骤：
+
+1. 调用send方法然后经过拦截器经过序列化器，再经过分区器确定消息发送在具体topic下的哪个分区
+   1. 拦截器：可以对数据进行加工
+   2. 序列化器：序列化数据
+   3. 分区器：决定将数据发往哪个分区（一个分区会创建一个队列）
+2. 再将数据发送到对应的消息累加器（默认32MB）中，消息累加器是多个双端队列。并且每个队列和主题分区都具有一一映射关系。消息在累加器中，进行合并。达到了**对应的size（batch.size）或者等待超过对应的等待时间(linger.ms)**，都会触发sender线程的发送。
+3. sender线程有一个请求池，默认缓存五个请求（ max.in.flight.requests.per.connection ），发送消息后，会等待服务端的ack
+   1. 如果没收到ack就会重试，默认重试次数是 int 最大值（ retries ）。
+   2. 如果ack成功就会删除累加器中的消息批次，并相应到生产端。
+
+
 
 当双端队列中的DQueue满足 batch.size 或者 linger.ms 条件时触发sender线程。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244256.jpg)
 
-### 生产者重要参数列表
+#### 生产者重要参数列表
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244236.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191142710.png)
 
-## 发送
+### 发送
 
-### 普通异步发送
+#### 普通异步发送
 
 1）需求：创建 Kafka 生产者，采用异步的方式发送到 Kafka Broker
-
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244212.gif)
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244227.jpg)
 
@@ -67,7 +80,7 @@ public class CustomProducer {
         // 1. 给 kafka 配置对象添加配置信息：bootstrap.servers
         Properties properties = new Properties();
         //服务信息
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"47.106.86.64:9092");
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"192.168.181.131:9092,192.168.181.132:9092");
         //配置序列化
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,StringSerializer.class.getName());
@@ -85,13 +98,14 @@ public class CustomProducer {
 
 测试：在Linux上开启Kafka验证
 
-kafka-console-consumer.sh --bootstrap-server 47.106.86.64:9092 --topic first
-
  
 
-### 带回调函数的异步发送
+#### 带回调函数的异步发送
 
- 回调函数会在 producer 收到 ack 时调用，为异步调用，该方法有两个参数，分别是元数据信息（Record Metadata）和异常信息（Exception），如果 Exception 为 null，说明消息发送成功，如果 Exception 不为 null，说明消息发送失败。
+ 回调函数会在 producer 收到 ack 时调用，为异步调用，该方法有两个参数，分别是元数据信息（Record Metadata）和异常信息（Exception）
+
+- 如果 Exception 为 null，说明消息发送成功
+- 如果 Exception 不为 null，说明消息发送失败
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244127.gif)
 
@@ -139,13 +153,16 @@ public class CustomProducer {
 
 
 
-### 同步发送API
+#### 同步发送API
 
 1. 先处理已经堆积在DQueue中的数据。
-
 2. RecordAccumulator再处理外部数据。
 
+同步发送原理：
+
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244310.jpg)
+
+
 
 只需在异步发送的基础上，再调用一下 get()方法即可。
 
@@ -189,7 +206,7 @@ public class CustomProducerSync {
 
  
 
-## 生产者拦截器
+### 生产者拦截器
 
 生产者拦截器 （ProducerInterceptor）
 
@@ -229,19 +246,19 @@ properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,MyInterceptor.getClass.
 
 
 
-## 生产者分区
+### 生产者分区
 
-### 分区的好处
+#### 分区的好处
 
-从存储的角度 -> 合理使用存储资源，实现负载均衡
+- 从存储的角度：合理使用存储资源，实现负载均衡
 
-从计算的角度 -> 提高并行计算的可行性
+- 从计算的角度：提高并行计算的可行性
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244278.jpg)
 
-### 生产者发送消息分区策略
 
-1）默认的分区器 DefaultPartitioner
+
+#### 默认的分区器 DefaultPartitioner
 
 在 IDEA 中 ctrl +n，全局查找 DefaultPartitioner。
 
@@ -251,15 +268,15 @@ Kafka支持三种分区策略 1) 指定分区； 2）指定key，计算hash得�
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244349.jpg)
 
-### 自定义分区器
+#### 自定义分区器
 
 如果研发人员可以根据企业需求，自己重新实现分区器。
 
-1）需求
+1. 需求
 
 例如我们实现一个分区器实现，发送过来的数据中如果包含 Hi，就发往 0 号分区，不包含 Hi，就发往 1 号分区。
 
-2）实现步骤
+2. 实现步骤
 
 （1）定义类实现 Partitioner 接口。
 
@@ -298,7 +315,9 @@ properties.put(ProducerConfig.PARTITIONER_CLASS_CONFIG,MyPartitioner.class.getNa
 
 （4）开启测试
 
-## 生产者提高吞吐量
+
+
+### 生产者如何提高吞吐量
 
 通过提高吞吐量达到低延迟的效果
 
@@ -322,7 +341,7 @@ RecordAccumlator：在异步发送并且分区很多的情况下，32M的数据�
 
 
 
-### 消息累加器
+#### 消息累加器
 
 消息累加器（RecordAccumulator）
 
@@ -330,19 +349,19 @@ RecordAccumlator：在异步发送并且分区很多的情况下，32M的数据�
 
  为了提高生产者的吞吐量，我们通过累加器将多条消息合并成一批统一发送。在broker中将消息批量存入。减少多次的网络IO。
 
- 消息累加器默认32m，如果生产者的发送速率大于sender发送的速率，消息就会堆满累加器。生产者就会阻塞，或者报错，报错取决于阻塞时间的配置。
+- 消息累加器默认32m，如果生产者的发送速率大于sender发送的速率，消息就会堆满累加器。生产者就会阻塞，或者报错，报错取决于阻塞时间的配置。
 
- 累加器的存储形式为ConcurrentMap<TopicPartition, Deque<ProducerBatch>>，可以看出来就是一个分区对应一个双端队列，队列中存储的是ProducerBatch一般大小是16k根据batch.size配置，新的消息会append到ProducerBatch中，满16k就会创建新的ProducerBatch，并且触发sender线程进行发送。
+- 累加器的存储形式为ConcurrentMap<TopicPartition, Deque&lt;ProducerBatch>>，可以看出来就是一个分区对应一个双端队列，队列中存储的是ProducerBatch一般大小是16k根据batch.size配置，新的消息会append到ProducerBatch中，满16k就会创建新的ProducerBatch，并且触发sender线程进行发送。
 
- 如果消息量非常大，生成了大量的ProducerBatch，在发送后，又需要JVM通过GC回收这些ProducerBatch就变得非常影响性能，所以kafka通过 BufferPool作为内存池来管理ProducerBatch的创建和回收，需要申请一个新的ProducerBatch空间时，调用 free.allocate(size, maxTimeToBlock)找内存池申请空间。
+- 如果消息量非常大，生成了大量的ProducerBatch，在发送后，又需要JVM通过GC回收这些ProducerBatch就变得非常影响性能，所以kafka通过 BufferPool作为内存池来管理ProducerBatch的创建和回收，需要申请一个新的ProducerBatch空间时，调用 free.allocate(size, maxTimeToBlock)找内存池申请空间。
 
-如果单条消息大于16k，那么就不会复用内存池了，会生成一个更大的ProducerBatch专门存放大消息，发送完后GC回收该内存空间。
+- 如果单条消息大于16k，那么就不会复用内存池了，会生成一个更大的ProducerBatch专门存放大消息，发送完后GC回收该内存空间。
 
 为了进一步减小网络中消息传输的带宽。我们也可以通过**消息压缩**的方式，在生产端将消息追加进ProducerBatch就对每一条消息进行压缩了。常用的有Gzip、Snappy、Lz4 和 Zstd，这是时间换空间的手段。压缩的消息会在消费端进行解压。
 
  
 
-### 消息发送线程（Sender）
+#### 消息发送线程（Sender）
 
  消息保存在内存后，Sender线程就会把符合条件的消息按照批次进行发送。除了发送消息，元数据的加载也是通过Sender线程来处理的。
 
@@ -350,29 +369,37 @@ RecordAccumlator：在异步发送并且分区很多的情况下，32M的数据�
 
  Sender线程默认容纳5个未确认的消息，消息发送失败后会进行重试。
 
-## 生产经验—数据可靠性
 
-### 消息确认机制-ACK
+
+### 数据可靠性
+
+#### 消息确认机制-ACK
 
 producer提供了三种消息确认的模式，通过配置acks来实现
 
-acks为0时， 表示生产者将数据发送出去就不管了，不等待任何返回。这种情况下数据传输效率最高，但是数据可靠性最低，当 server挂掉的时候就会丢数据；
+- 为0时， 表示生产者将数据发送出去就不管了，不等待任何返回。这种情况下数据传输效率最高，但是数据可靠性最低，当 server挂掉的时候就会丢数据；
 
-acks为1时（默认），表示数据发送到Kafka后，经过leader成功接收消息的的确认，才算发送成功，如果leader宕机了，就会丢失数据。
+- 为1时（默认），表示数据发送到Kafka后，经过leader成功接收消息的的确认，才算发送成功，如果leader宕机了，就会丢失数据。
 
-acks为-1/all时，表示生产者需要等待ISR中的所有follower都确认接收到数据后才算发送完成，这样数据不会丢失，因此可靠性最高，性能最低。
+- 为-1/all时，表示生产者需要等待ISR中的所有follower都确认接收到数据后才算发送完成，这样数据不会丢失，因此可靠性最高，性能最低。
 
-- 数据完全可靠条件 = ACK级别设置为-1 + 分区副本大于等于2 + ISR里应答的最小副本数量大于等于2
+
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244091.jpg)
 
-AR = ISR + ORS
+- **数据完全可靠条件**（至少一次At Least Once） = ACK级别设置为-1 + 分区副本大于等于2 + ISR里应答的最小副本数量大于等于2
 
-正常情况下，如果所有的follower副本都应该与leader副本保持一定程度的同步，则AR = ISR，OSR = null。
+- 最多一次（At Most One） = ACK设置为0
 
-ISR 表示在指定时间内和leader保存数据同步的集合；
+- AR = ISR + ORS
 
-ORS表示不能在指定的时间内和leader保持数据同步集合，称为OSR(Out-Sync Relipca set)。
+  - 正常情况下，如果所有的follower副本都应该与leader副本保持一定程度的同步，则AR = ISR，OSR = null。
+
+  - ISR 表示在指定时间内和leader保存数据同步的集合；
+
+  - ORS表示不能在指定的时间内和leader保持数据同步集合，称为OSR(Out-Sync Relipca set)。
+
+
 
 ```java
 // Ack 设置
@@ -384,19 +411,19 @@ properties.put(ProducerConfig.RETRIES_CONFIG,3);
 
 
 
- 
 
-### 数据去重-幂等性
+
+#### 数据去重-幂等性
 
 1）幂等性原理
 
 在一般的MQ模型中，常有以下的消息通信概念
 
-- 至少一次（At Least Once）： ACK级别设置为-1 + 分区副本大于等于2 + ISR里应答的最小副本数量>=2。可以保证数据不丢失，但是不能保证数据不重复。
+- 至少一次（At Least Once）： ACK级别设置为-1 + 分区副本大于等于2 + ISR里应答的最小副本数量>=2。可以保证数据不丢失，但是**不能保证数据不重复**。
 
-- 最多一次（At Most Once）：ACK级别设置为0 。可以保证数据不重复，但是不能保证数据不丢失。•
+- 最多一次（At Most Once）：ACK级别设置为0 。可以保证数据不重复，但是**不能保证数据不丢失**。
 
-- 精确一次（Exactly Once）：至少一次 + 幂等性 。 Kafka 0.11版本引入一项重大特性：幂等性和事务。
+- 精确一次（Exactly Once）：至少一次 + 幂等性 。 即能保证数据不丢失也不重复
 
  幂等性，简单地说就是对接口的多次调用所产生的结果和调用一次是一致的。生产者在进行重试的时候有可能会重复写入消息，而使用Kafka 的幂等性功能之后就可以避免这种情况。（不产生重复数据）
 
@@ -410,7 +437,7 @@ properties.put(ProducerConfig.RETRIES_CONFIG,3);
 
  开启幂等性功能的方式很简单，只需要显式地将生产者客户端参数enable.idempotence设置为true即可(这个参数的默认值为true)，并且还需要确保生产者客户端的retries、acks、max.in.filght.request.per.connection参数不被配置错，默认值就是对的。
 
-### 消息事务
+#### 消息事务
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244101.jpg)
 
@@ -439,7 +466,7 @@ void abortTransaction() throws ProducerFencedException;
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244067.jpg)
 
-## 消息顺序
+### 消息顺序
 
 消息在单分区内有序，多分区内无序（如果对多分区进行排序，造成分区无法工作需要等待排序，浪费性能）
 
@@ -457,9 +484,9 @@ kafka只能保证单分区下的消息顺序性，为了保证消息的顺序性
 
 如果Request3在失败重试后才发往到集群中，必然会导致乱序，但是集群会重新按照序列号进行排序（最对一次排序5个）。
 
-# Kafka Broker
+## Kafka Broker
 
-## Broker设计
+### Broker设计
 
  我们都知道kafka能堆积非常大的数据，一台服务器，肯定是放不下的。由此出现的集群的概念，集群不仅可以让消息负载均衡，还能提高消息存取的吞吐量。kafka集群中，会有多台broker，每台broker分别在不同的机器上。
 
@@ -471,15 +498,15 @@ kafka只能保证单分区下的消息顺序性，为了保证消息的顺序性
 
 
 
-## Zookeeper
+### Zookeeper
 
-### Zookeeper作用
+#### Zookeeper作用
 
 Zookeeper在Kafka中扮演了重要的角色，kafka使用zookeeper进行元数据管理，保存broker注册信息，包括主题（Topic）、分区（Partition）信息等，选择分区leader。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191029053.png)
 
-### Broker选举Leader
+#### Broker选举Leader
 
  这里需要先明确一个概念leader选举，因为kafka中涉及多处选举机制，容易搞混，Kafka由三个方面会涉及到选举：
 
@@ -574,7 +601,7 @@ kafka-server-start.sh -daemon ./config/server.properties
 
 
 
-### Broker重要参数
+#### Broker重要参数
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191033922.png)
 
@@ -582,9 +609,9 @@ kafka-server-start.sh -daemon ./config/server.properties
 
 
 
-## 节点服役和退役
+### 节点服役和退役
 
-### 服役新节点
+#### 服役新节点
 
 (1) 启动一台新的KafKa服务端（加入原有的Zookeeper集群）
 
@@ -679,7 +706,7 @@ Clearing topic-level throttles on topic first
 
 
 
-### 退役旧节点
+#### 退役旧节点
 
 执行负载均衡操作:先按照退役一台节点，生成执行计划，然后按照服役时操作流程执行负载均衡。
 
@@ -689,9 +716,9 @@ Clearing topic-level throttles on topic first
 kafka-reassign-partitions.sh --bootstrap-server 47.106.86.64:9092 --topics-to-move-json-file topics-to-move.json --broker-list "0,1,2" --generate
 ```
 
-## 副本机制
+### 副本机制
 
-### 副本基本信息
+#### 副本基本信息
 
 - Replica ：副本，同一分区的不同副本保存的是相同的消息，为保证集群中的某个节点发生故障时，该节点上的 partition 数据不丢失 ，提高副本可靠性，且 kafka 仍然能够继续工作，kafka 提供了副本机制，一个 topic 的每个分区都有若干个副本，一个 leader 和若干个 follower。
 - Leader ：每个分区的多个副本中的"主副本"，生产者以及消费者只与 Leader 交互。
@@ -705,7 +732,7 @@ kafka-reassign-partitions.sh --bootstrap-server 47.106.86.64:9092 --topics-to-mo
 - LEO:每个副本都有内部的LEO，代表当前队列消息的最后一条偏移量offset + 1。
 - HW:高水位，代表所有ISR中的LEO最低的那个offset，也是消费者可见的最大消息offset。
 
-### 副本选举Leader
+#### 副本选举Leader
 
  Kafka 集群中有一个 broker 的 Controller 会被选举为 Controller Leader (4.2.2) ，负责管理集群Broker 的上下线，所有 topic 的分区副本分配和 Leader 选举等工作。
 
@@ -780,7 +807,7 @@ Topic: atguigu1 Partition: 3 Leader: 1 Replicas: 2,1,0,3 Isr: 1,0
 
 
 
-### 副本故障处理
+#### 副本故障处理
 
 1. follower故障流程
 
@@ -798,7 +825,7 @@ Topic: atguigu1 Partition: 3 Leader: 1 Replicas: 2,1,0,3 Isr: 1,0
 
 
 
-### 分区副本分配
+#### 分区副本分配
 
 如果 kafka 服务器只有 4 个节点，那么设置 kafka 的分区数大于服务器台数，在 kafka底层如何分配存储副本呢？
 
@@ -836,7 +863,7 @@ Topic: second4 Partition: 15 Leader: 3 Replicas: 3,0,1 Isr: 3,0,1
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191041957.png)
 
-### 手动调整分区副本
+#### 手动调整分区副本
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191042767.png)
 
@@ -875,7 +902,7 @@ kafka-reassign-partitions.sh --bootstrap-server  47.106.86.64:9092  --reassignme
 kafka-reassign-partitions.sh --bootstrap-server  47.106.86.64:9092  --reassignment-json-file increase-replication-factor.json --verify
 ```
 
-### 分区自动调整
+#### 分区自动调整
 
  一般情况下，我们的分区都是平衡散落在broker的，随着一些broker故障，会慢慢出现leader集中在某台broker上的情况，造成集群负载不均衡，这时候就需要分区平衡。
 
@@ -890,7 +917,7 @@ kafka-reassign-partitions.sh --bootstrap-server  47.106.86.64:9092  --reassignme
 
 我们也可以通过修改配置，然后手动触发分区的再平衡。
 
-### 增加副本因子
+#### 增加副本因子
 
 在生产环境当中，由于某个主题的重要等级需要提升，我们考虑增加副本。副本数的增加需要先制定计划，然后根据计划执行。
 
@@ -928,9 +955,9 @@ kafka-reassign-partitions.sh --bootstrap-server 47.106.86.64:9092 --reassignment
 
 ```
 
-## 文件存储
+### 文件存储
 
-### 存储结构
+#### 存储结构
 
 在Kafka中主题（Topic）是一个逻辑上的概念，分区（partition）是物理上的存在的。每个partition对应一个log文件，该log文件中存储的就是Producer生产的数据。Producer生产的数据会被不断追加到该log文件末端。为防止log文件过大导致数据定位效率低下，Kafka采用了分片和索引机制，将每个partition分为多个segment，每个segment默认1G（ log.segment.bytes ）， 每个segment包括.index文件、.log文件和**.timeindex**等文件。这些文件位于文件夹下，该文件命名规则为：topic名称+分区号。
 
@@ -956,7 +983,7 @@ kafka-run-class.sh kafka.tools.DumpLogSegments --files ./00000000000000000000.lo
 
 
 
-### 文件清理策略
+#### 文件清理策略
 
  Kafka将消息存储在磁盘中，为了控制磁盘占用空间的不断增加就需要对消息做一定的清理操作。Kafka 中每一个分区副本都对应一个Log，而Log又可以分为多个日志分段，这样也便于日志的清理操作。Kafka提供了两种日志清理策略。
 
@@ -1017,7 +1044,7 @@ kafka中默认的日志保存时间为7天，可以通过调整如下参数修�
 
 
 
-## Kafka高效读数据
+### Kafka高效读数据
 
 kafka之所以可以快速读写的原因如下：
 
@@ -1026,7 +1053,7 @@ kafka之所以可以快速读写的原因如下：
 - 顺序写磁盘
 - 页缓冲和零拷贝
 
-### 顺序写磁盘
+#### 顺序写磁盘
 
 Kafka 的 producer 生产数据，要写入到 log 文件中，写的过程是一直追加到文件末端，为顺序写。官网有数据表明，同样的磁盘，顺序写能到 600M/s，而随机写只有 100K/s。这与磁盘的机械机构有关，顺序写之所以快，是因为其省去了大量磁头寻址的时间。
 
@@ -1034,7 +1061,7 @@ Kafka 的 producer 生产数据，要写入到 log 文件中，写的过程是�
 
 
 
-### 页缓存与零拷贝
+#### 页缓存与零拷贝
 
 kafka高效读写的原因很大一部分取决于页缓存和零拷贝
 
@@ -1069,9 +1096,9 @@ Java的JDK NIO中方法transferTo()方法就能够实现零拷贝操作，这个
 
 
 
-# Kafka消费者
+## Kafka消费者
 
-## 消费模式
+### 消费模式
 
 常见的消费模式有两种：
 
@@ -1083,15 +1110,15 @@ Java的JDK NIO中方法transferTo()方法就能够实现零拷贝操作，这个
 
 
 
-## 消费工作流程
+### 消费工作流程
 
-### 消费者总体工作流程
+#### 消费者总体工作流程
 
  消费者对消息进行消费，并且将已经消费的消息加入 _consumer_offsets 中。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191057142.png)
 
-### 消费者组原理
+#### 消费者组原理
 
 Consumer Group（CG）：消费者组，由多个consumer组成。形成一个消费者组的条件，是所有消费者的groupid相同。
 
@@ -1105,7 +1132,7 @@ Consumer Group（CG）：消费者组，由多个consumer组成。形成一个�
 - 如果所有的消费者都隶属于同一个消费组，那么所有的消息都会被均衡地投递给每一个消费者，即每条消息只会被一个消费者处理，这就相当于点对点模式的应用。
 - 如果所有的消费者都隶属于不同的消费组，那么所有的消息都会被广播给所有的消费者，即每条消息会被所有的消费者处理，这就相当于发布／订阅模式的应用。
 
-### 消费者组选举Leader
+#### 消费者组选举Leader
 
 具体的消费者组初始化流程：
 
@@ -1119,7 +1146,7 @@ Consumer Group（CG）：消费者组，由多个consumer组成。形成一个�
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191059964.png)
 
-## 消费者API
+### 消费者API
 
 消费组单消费者以及消费者组多消费者
 
@@ -1156,7 +1183,7 @@ public class CustomConsumer {
 }
 ```
 
-## 分区平衡以及再平衡
+### 分区平衡以及再平衡
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191100921.png)
 
@@ -1169,13 +1196,13 @@ public class CustomConsumer {
 
 
 
-### 分区分配策略
+#### 分区分配策略
 
  我们知道一个 Consumer Group 中有多个 Consumer，一个 Topic 也有多个 Partition，所以必然会涉及到 Partition 的分配问题: 确定哪个 Partition 由哪个 Consumer 来消费的问题。
 
 Kafka 客户端提供了3 种分区分配策略：RangeAssignor、RoundRobinAssignor 和 StickyAssignor，前两种 分配方案相对简单一些StickyAssignor分配方案相对复杂一些。
 
-### Range
+#### Range
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191100580.png)
 
@@ -1191,7 +1218,7 @@ Range 分区分配再平衡案例
 2 号消费者：消费到 4、5、6 号分区数据。
 说明：消费者 0 已经被踢出消费者组，所以重新按照 range 方式分配。
 
-### RoundRobin
+#### RoundRobin
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191106159.png)
 
@@ -1211,7 +1238,7 @@ properties.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, "org.apache.
 2 号消费者：消费到 1、3、5 号分区数据
 说明：消费者 0 已经被踢出消费者组，所以重新按照 RoundRobin 方式分配。
 
-### Sticky：
+#### Sticky：
 
 StickyAssignor 分区分配算法是 Kafka 客户端提供的分配策略中最复杂的一种，可以通过 partition.assignment.strategy 参数去设置，从 0.11 版本开始引入，目的就是在执行新分配时，尽量在上一次分配结果上少做调整，其主要实现了以下2个目标：
 
@@ -1226,9 +1253,9 @@ StickyAssignor 分区分配算法是 Kafka 客户端提供的分配策略中最�
 properties.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, "org.apache.kafka.clients.consumer.StickyAssignor");
 ```
 
-## offset位移提交
+### offset位移提交
 
-### offset 的默认维护位置
+#### offset 的默认维护位置
 
  Kafka 0.9 版本之前consumer默认将offset保存在Zookeeper中，从0.9版本之后consumer默认保存在Kafka一个内置的topic中，该topic为_consumer_offsets。
 
@@ -1255,7 +1282,7 @@ expireTimestamp=None)
 
 消费者提交offset的方式有两种，自动提交和手动提交
 
-### 自动提交
+#### 自动提交
 
 为了使我们能够专注于自己的业务逻辑，Kafka提供了自动提交offset的功能。
 
@@ -1273,7 +1300,7 @@ properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
 properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG,1000);
 ```
 
-### 手动提交
+#### 手动提交
 
 虽然自动提交offset十分简单便利，但由于其是基于时间提交的，开发人员难以把握offset提交的时机。因 此Kafka还提供了手动提交offset的API。手动提交offset的方法有两种：分别是commitSync（同步提交）和commitAsync（异步提交）。两者的相同点是，都会将本次提交的一批数据最高的偏移量提交；不同点是，同步提交阻塞当前线程，一直到提交成功，并且会自动失败重试（由不可控因素导致，也会出现提交失败）；而异步提交则没有失败重试机制，故有可能提交失败。
 
@@ -1282,7 +1309,7 @@ properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG,1000);
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191108631.png)
 
-### 指定消费位置
+#### 指定消费位置
 
 在kafka中当消费者查找不到所记录的消费位移时，会根据auto.offset.reset的配置，决定从何处消费。
 
@@ -1377,7 +1404,7 @@ while (true){
 
 
 
-### 漏消费和重复消费
+#### 漏消费和重复消费
 
 重复消费：已经消费了数据，但是 offset 没提交。
 漏消费：先提交 offset 后消费，有可能会造成数据的漏消费。
@@ -1386,11 +1413,11 @@ while (true){
 
 
 
-## 消费者事务
+### 消费者事务
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191111570.png)
 
-## 数据积压（提高吞吐量）
+### 数据积压（提高吞吐量）
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191111584.png)
 
@@ -1399,7 +1426,7 @@ while (true){
 
 
 
-## 拦截器
+### 拦截器
 
 与生产者对应，消费者也有拦截器。我们来看看拦截器具体的方法。
 

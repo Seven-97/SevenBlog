@@ -294,6 +294,7 @@ export default sidebar({
             "snowflake",
             "loadbalance",
             "requestflowlimitingalgorithm",
+            "idempotence",
           ],
         },
         {
