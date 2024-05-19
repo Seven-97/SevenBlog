@@ -11,7 +11,7 @@ tag:
 
 
 
-## 1 消息存储
+## 消息存储
 
 分布式队列因为有高可靠性的要求，所以数据要进行持久化存储。
 
@@ -24,7 +24,7 @@ tag:
 5. 如果消息消费者在指定时间内成功返回ack，那么MQ认为消息消费成功，在存储中删除消息，即执行第6步；如果MQ在指定时间内没有收到ACK，则认为消息消费失败，会尝试重新push消息,重复执行4、5、6步骤
 6. MQ删除消息
 
-### 1.1 存储介质
+### 存储介质
 
 * 关系型数据库DB
 
@@ -38,11 +38,11 @@ Apache下开源的另外一款MQ—ActiveMQ（默认采用的KahaDB做消息存�
 
   ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291940930.png)
 
-### 1.2 性能对比
+### 性能对比
 
 文件系统>关系型数据库DB
 
-### 1.3 消息的存储和发送
+### 消息的存储和发送
 
 1）消息存储
 
@@ -73,7 +73,7 @@ RocketMQ充分利用了上述特性，也就是所谓的“零拷贝”技术，
 
 > 这里需要注意的是，采用MappedByteBuffer这种内存映射的方式有几个限制，其中之一是一次只能映射1.5~2G 的文件至用户态的虚拟内存，这也是为何RocketMQ默认设置单个CommitLog日志数据文件为1G的原因了
 
-### 1.4 消息存储结构
+### 消息存储结构
 
 RocketMQ消息的存储是由ConsumeQueue和CommitLog配合完成 的，消息真正的物理存储文件是CommitLog，ConsumeQueue是消息的逻辑队列，类似数据库的索引文件，存储的是指向物理存储的地址。每 个Topic下的每个Message Queue都有一个对应的ConsumeQueue文件。
 
@@ -83,7 +83,7 @@ RocketMQ消息的存储是由ConsumeQueue和CommitLog配合完成 的，消息�
 * ConsumerQueue：存储消息在CommitLog的索引
 * IndexFile：为了消息查询提供了一种通过key或时间区间来查询消息的方法，这种通过IndexFile来查找消息的方法不影响发送与消费消息的主流程
 
-### 1.5 刷盘机制
+### 刷盘机制
 
 RocketMQ的消息是存储到磁盘上的，这样既能保证断电后恢复， 又可以让存储的消息量超出内存的限制。RocketMQ为了提高性能，会尽可能地保证磁盘的顺序写。消息在通过Producer写入RocketMQ的时 候，有两种写磁盘方式，分布式同步刷盘和异步刷盘。
 
@@ -101,7 +101,7 @@ RocketMQ的消息是存储到磁盘上的，这样既能保证断电后恢复，
 
 **同步刷盘还是异步刷盘，都是通过Broker配置文件里的flushDiskType 参数设置的，这个参数被配置成SYNC_FLUSH、ASYNC_FLUSH中的 一个。**
 
-## 2 高可用性机制
+## 高可用性机制
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291940441.jpg)
 
@@ -111,17 +111,17 @@ Master和Slave的区别：在Broker的配置文件中，参数 brokerId的值为
 
 Master角色的Broker支持读和写，Slave角色的Broker仅支持读，也就是 Producer只能和Master角色的Broker连接写入消息；Consumer可以连接 Master角色的Broker，也可以连接Slave角色的Broker来读取消息。
 
-### 2.1 消息消费高可用
+### 消息消费高可用
 
 在Consumer的配置文件中，并不需要设置是从Master读还是从Slave 读，当Master不可用或者繁忙的时候，Consumer会被自动切换到从Slave 读。有了自动切换Consumer这种机制，当一个Master角色的机器出现故障后，Consumer仍然可以从Slave读取消息，不影响Consumer程序。这就达到了消费端的高可用性。
 
-### 2.2 消息发送高可用
+### 消息发送高可用
 
 在创建Topic的时候，把Topic的多个Message Queue创建在多个Broker组上（相同Broker名称，不同 brokerId的机器组成一个Broker组），这样当一个Broker组的Master不可 用后，其他组的Master仍然可用，Producer仍然可以发送消息。 RocketMQ目前还不支持把Slave自动转成Master，如果机器资源不足， 需要把Slave转成Master，则要手动停止Slave角色的Broker，更改配置文 件，用新的配置文件启动Broker。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291940462.jpg)
 
-### 2.3 消息主从复制
+### 消息主从复制
 
 如果一个Broker组有Master和Slave，消息需要从Master复制到Slave 上，有同步和异步两种复制方式。
 
@@ -147,7 +147,7 @@ Master角色的Broker支持读和写，Slave角色的Broker仅支持读，也就
 
 实际应用中要结合业务场景，合理设置刷盘方式和主从复制方式， 尤其是SYNC_FLUSH方式，由于频繁地触发磁盘写动作，会明显降低 性能。通常情况下，应该把Master和Save配置成ASYNC_FLUSH的刷盘 方式，主从之间配置成SYNC_MASTER的复制方式，这样即使有一台 机器出故障，仍然能保证数据不丢，是个不错的选择。
 
-### 2.4 集群Master选举机制
+### 集群Master选举机制
 
 #### 基于raft协议的过半写入机制
 
@@ -187,9 +187,9 @@ Leader角色则是系统的核心，它的主动行为是发送心跳信号保�
 
 
 
-## 3 负载均衡
+## 负载均衡
 
-### 3.1 Producer负载均衡
+### Producer负载均衡
 
 Producer端，每个实例在发消息的时候，默认会轮询所有的message queue发送，以达到让消息平均落在不同的queue上。而由于queue可以散落在不同的broker，所以消息就发送到不同的broker下，如下图：
 
@@ -197,7 +197,7 @@ Producer端，每个实例在发消息的时候，默认会轮询所有的messag
 
 图中箭头线条上的标号代表顺序，发布方会把第一条消息发送至 Queue 0，然后第二条消息发送至 Queue 1，以此类推。
 
-### 3.2 Consumer负载均衡
+### Consumer负载均衡
 
 1）集群模式
 
@@ -229,13 +229,13 @@ Producer端，每个实例在发消息的时候，默认会轮询所有的messag
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291940994.png)
 
-## 4 消息重试
+## 消息重试
 
-### 4.1 顺序消息的重试
+### 顺序消息的重试
 
 对于顺序消息，当消费者消费消息失败后，消息队列 RocketMQ 会自动不断进行消息重试（每次间隔时间为 1 秒），这时，应用会出现消息消费被阻塞的情况。因此，在使用顺序消息时，务必保证应用能够及时监控并处理消费失败的情况，避免阻塞现象的发生。
 
-### 4.2 无序消息的重试
+### 无序消息的重试
 
 对于无序消息（普通、定时、延时、事务消息），当消费者消费消息失败时，您可以通过设置返回状态达到消息重试的结果。
 
@@ -345,13 +345,13 @@ public class MessageListenerImpl implements MessageListener {
 }
 ```
 
-## 5 死信队列
+## 死信队列
 
 当一条消息初次消费失败，消息队列 RocketMQ 会自动进行消息重试；达到最大重试次数后，若消费依然失败，则表明消费者在正常情况下无法正确地消费该消息，此时，消息队列 RocketMQ 不会立刻将消息丢弃，而是将其发送到该消费者对应的特殊队列中。
 
 在消息队列 RocketMQ 中，这种正常情况下无法被消费的消息称为死信消息（Dead-Letter Message），存储死信消息的特殊队列称为死信队列（Dead-Letter Queue）。
 
-### 5.1 死信特性
+### 死信特性
 
 死信消息具有以下特性
 
@@ -364,7 +364,7 @@ public class MessageListenerImpl implements MessageListener {
 - 如果一个 Group ID 未产生死信消息，消息队列 RocketMQ 不会为其创建相应的死信队列。
 - 一个死信队列包含了对应 Group ID 产生的所有死信消息，不论该消息属于哪个 Topic。
 
-### 5.2 查看死信信息
+### 查看死信信息
 
 1. 在控制台查询出现死信队列的主题信息
 
@@ -378,11 +378,11 @@ public class MessageListenerImpl implements MessageListener {
 
 一条消息进入死信队列，意味着某些因素导致消费者无法正常消费该消息，因此，通常需要您对其进行特殊处理。排查可疑因素并解决问题后，可以在消息队列 RocketMQ 控制台重新发送该消息，让消费者重新消费一次。
 
-## 6 消费幂等
+## 消费幂等
 
 消息队列 RocketMQ 消费者在接收到消息以后，有必要根据业务上的唯一 Key 对消息做幂等处理的必要性。
 
-### 6.1 消费幂等的必要性
+### 消费幂等的必要性
 
 在互联网应用中，尤其在网络不稳定的情况下，消息队列 RocketMQ 的消息有可能会出现重复，这个重复简单可以概括为以下情况：
 
@@ -398,7 +398,7 @@ public class MessageListenerImpl implements MessageListener {
 
   当消息队列 RocketMQ 的 Broker 或客户端重启、扩容或缩容时，会触发 Rebalance，此时消费者可能会收到重复消息。
 
-### 6.2 处理方式
+### 处理方式
 
 因为 Message ID 有可能出现冲突（重复）的情况，所以真正安全的幂等处理，不建议以 Message ID 作为处理依据。 最好的方式是以业务唯一标识作为幂等处理的关键依据，而业务的唯一标识可以通过消息 Key 进行设置：
 

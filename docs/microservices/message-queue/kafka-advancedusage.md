@@ -7,6 +7,10 @@ tag:
 
 
 
+> 来源：尚硅谷，Seven对其进行了补充完善
+
+
+
 ## Kafka 生产者
 
 ### 生产者消息发送流程
@@ -126,7 +130,7 @@ public class CustomProducer {
         // 1. 给 kafka 配置对象添加配置信息：bootstrap.servers
         Properties properties = new Properties();
         //服务信息
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"47.106.86.64:9092");
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"192.168.181.131:9092");
         //配置序列化
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,StringSerializer.class.getName());
@@ -177,7 +181,7 @@ public class CustomProducerSync {
         // 1. 给 kafka 配置对象添加配置信息：bootstrap.servers
         Properties properties = new Properties();
         //服务信息
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"47.106.86.64:9092");
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,"192.168.181.131:9092");
         //配置序列化
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,StringSerializer.class.getName());
@@ -264,9 +268,17 @@ properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,MyInterceptor.getClass.
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244313.jpg)
 
-Kafka支持三种分区策略 1) 指定分区； 2）指定key，计算hash得分区； 3）指定随机粘性分区；
+
+
+Kafka支持三种分区策略
+
+- 指定分区；
+- 指定key，计算hash得分区；
+- 指定随机粘性分区；
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244349.jpg)
+
+
 
 #### 自定义分区器
 
@@ -415,7 +427,7 @@ properties.put(ProducerConfig.RETRIES_CONFIG,3);
 
 #### 数据去重-幂等性
 
-1）幂等性原理
+1）[幂等性](https://www.seven97.top/microservices/protocol/idempotence.html) 原理
 
 在一般的MQ模型中，常有以下的消息通信概念
 
@@ -427,25 +439,43 @@ properties.put(ProducerConfig.RETRIES_CONFIG,3);
 
  幂等性，简单地说就是对接口的多次调用所产生的结果和调用一次是一致的。生产者在进行重试的时候有可能会重复写入消息，而使用Kafka 的幂等性功能之后就可以避免这种情况。（不产生重复数据）
 
- 重复数据的判断标准：具有<PID, Partition, SeqNumber>相同主键的消息提交时，Broker只会持久化一条。其中ProducerId（pid）是Kafka每次重启都会分配一个新的；Partition 表示分区号；Sequence Number 序列化号，是单调自增的。
 
- broker中会在内存维护一个pid+分区对应的序列号。如果收到的序列号正好比内存序列号大一，才存储消息，如果小于内存序列号，意味着消息重复，那么会丢弃消息，并应答。如果远大于内存序列号，意味着消息丢失，会抛出异常。
 
-所以幂等解决的是sender到broker间，由于网络波动可能造成的重发问题。用幂等来标识唯一消息。并且幂等性只能保证的是在单分区单会话内不重复。
+重复数据的判断标准：具有<PID, Partition, SeqNumber>相同主键的消息提交时，Broker只会持久化一条。
+
+- ProducerId（pid）是Kafka每次重启都会分配一个新的；
+- Partition 表示分区号；
+- Sequence Number 序列化号，是单调自增的。
+
+
+
+broker中会在内存维护一个 **pid+分区 对应的序列号**。如果收到的序列号正好比内存序列号大一，才存储消息，如果小于内存序列号，意味着消息重复，那么会丢弃消息，并应答。如果远大于内存序列号，意味着消息丢失，会抛出异常。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191654317.png)
+
+所以生产者的幂等解决的是sender到broker间，由于网络波动可能造成的重发问题。用幂等来标识唯一消息。并且幂等性只能保证的是在 **单分区单会话内不重复**。不同分区的会话还是有可能存在重复的消息
+
+
 
 2）如何使用幂等性
 
- 开启幂等性功能的方式很简单，只需要显式地将生产者客户端参数enable.idempotence设置为true即可(这个参数的默认值为true)，并且还需要确保生产者客户端的retries、acks、max.in.filght.request.per.connection参数不被配置错，默认值就是对的。
+ 开启幂等性功能的方式很简单，只需要显式地将生产者客户端参数 enable.idempotence设置为true 即可(这个参数的默认值为true)，并且还需要确保生产者客户端的retries、acks、max.in.filght.request.per.connection参数不被配置错，默认值就是对的。
+
+
 
 #### 消息事务
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244101.jpg)
-
 由于幂等性不能跨分区运作，为了保证同时发的多条消息，要么全成功，要么全失败。kafka引入了事务的概念。
 
-开启事务需要producer设置transactional.id的值并同时开启幂等性。
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244101.jpg)
 
-通过事务协调器，来实现事务，工作流程如下：
+
+
+开启事务需要producer设置 transactional.id 的值并同时开启幂等性。
+
+
+
+通过事务协调器，来实现事务，相关API如下：
 
 ```java
 // 1 初始化事务
@@ -466,7 +496,9 @@ void abortTransaction() throws ProducerFencedException;
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182244067.jpg)
 
-### 消息顺序
+
+
+### 数据有序
 
 消息在单分区内有序，多分区内无序（如果对多分区进行排序，造成分区无法工作需要等待排序，浪费性能）
 
@@ -477,44 +509,54 @@ kafka只能保证单分区下的消息顺序性，为了保证消息的顺序性
 - 如果未开启幂等性，需要 max.in.flight.requests.per.connection 设置为1。（缓冲队列最多放置1个请求）
 
 - 如果开启幂等性，需要 max.in.flight.requests.per.connection 设置为小于5。
-
-这是因为broker端会缓存producer主题分区下的五个request，保证最近5个request是有序的。
+  - 这是因为启用幂等后，broker端会缓存生产者发来的最近5个请求的元数据，故无论如何，都可以保证最近5个请求的数据都是有序的。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182326674.png)
 
-如果Request3在失败重试后才发往到集群中，必然会导致乱序，但是集群会重新按照序列号进行排序（最对一次排序5个）。
+如果 Request3 在失败重试后才发往到集群中，必然会导致乱序，但是集群会重新按照序列号进行排序（最多一次排序5个）。
+
+
 
 ## Kafka Broker
 
 ### Broker设计
 
- 我们都知道kafka能堆积非常大的数据，一台服务器，肯定是放不下的。由此出现的集群的概念，集群不仅可以让消息负载均衡，还能提高消息存取的吞吐量。kafka集群中，会有多台broker，每台broker分别在不同的机器上。
+我们都知道kafka能堆积非常大的数据，一台服务器，肯定是放不下的。由此出现的**集群**的概念，集群不仅可以让消息负载均衡，还能提高消息存取的吞吐量。kafka集群中，会有多台broker，每台broker分别在不同的机器上。
 
 
 
- 为了提高吞吐量，每个topic也会都多个分区，同时为了保持可靠性，每个分区还会有多个副本。这些分区副本被均匀的散落在每个broker上，其中每个分区副本中有一个副本为leader，其他的为follower。
+为了提高吞吐量，每个topic也会都**多个分区**，同时为了保持可靠性，每个分区还会有**多个副本**。这些分区副本被均匀的散落在每个broker上，其中每个分区副本中有一个副本为leader，其他的为follower。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405182328769.png)
 
 
 
-### Zookeeper
+Controller节点的主要职能：
 
-#### Zookeeper作用
+1. **Broker状态管理**：Controller会跟踪集群中所有Broker的在线状态，并在Broker宕机或者恢复时更新集群的状态。
+2. **分区状态管理**：当新的Topic被创建，或者已有的Topic被删除时，Controller会负责管理这些变化，并更新集群的状态。
+3. **分区领导者选举**：当一台Broker节点宕机时，并且宕机的机器上包含分区领导者副本时，Controller会负责对其上的所有Partition进行新的领导者选举。
+4. **副本状态管理**：Controller负责管理Partition的ISR列表，当Follower副本无法及时跟随Leader副本时，Controller会将其从ISR列表中移除。
+5. **分区重平衡**：当添加或删除Broker节点时，Controller会负责对Partition的分布进行重平衡，以确保数据的均匀分布。
+6. **存储集群元数据**：Controller保存了集群中最全的元数据信息，并通过发送请求同步到其他Broker上面。
+
+
+
+### Zookeeper作用
 
 Zookeeper在Kafka中扮演了重要的角色，kafka使用zookeeper进行元数据管理，保存broker注册信息，包括主题（Topic）、分区（Partition）信息等，选择分区leader。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191029053.png)
 
-#### Broker选举Leader
+### Broker选举Leader
 
  这里需要先明确一个概念leader选举，因为kafka中涉及多处选举机制，容易搞混，Kafka由三个方面会涉及到选举：
 
 - broker（控制器）选leader
-- 分区多副本选leader
-- 消费者选Leader
+- 分区多副本选 leader
+- 消费者选 Leader
 
- 在kafka集群中由很多的broker（也叫做控制器），但是他们之间需要选举出一个leader，其他的都是follower。broker的leader有很重要的作用，诸如：创建、删除主题、增加分区并分配leader分区；集群broker管理，包括新增、关闭和故障处理；分区重分配（auto.leader.rebalance.enable=true，后面会介绍），分区leader选举。 
+ 在kafka集群中由很多的broker（也叫做控制器），但是他们之间需要选举出一个leader，其他的都是follower。broker的leader有很重要的作用，诸如：创建、删除主题、增加分区并分配leader分区；集群broker管理，包括新增、关闭和故障处理；分区重分配（auto.leader.rebalance.enable=true），分区leader选举。 
 
 每个broker都有唯一的brokerId，他们在启动后会去竞争注册zookeeper上的Controller结点，谁先抢到，谁就是broker leader。而其他broker会监听该结点事件，以便后续leader下线后触发重新选举。
 
@@ -528,76 +570,38 @@ Zookeeper在Kafka中扮演了重要的角色，kafka使用zookeeper进行元数�
 
 详细图：
 
-- broker（控制器）选leader
+- broker选leader （也就是controller选举leader）
 - 分区多副本选leader
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191030349.png)
 
-模拟 Kafka 上下线，Zookeeper 中数据变化
+流程如下：
 
-（1）查看/kafka/brokers/ids 路径上的节点。
-
-```shell
-[zk: localhost:2181(CONNECTED) 2] ls /kafka/brokers/ids
-[0, 1, 2]
-```
-
-
-（2）查看/kafka/controller 路径上的数据。
-
-```shell
-[zk: localhost:2181(CONNECTED) 15] get /kafka/controller
-{"version":1,"brokerid":0,"timestamp":"1637292471777"}
-```
+1. 注册 Controller 节点
+   当 Kafka 集群启动时，每个 Broker 都会尝试在 Zookeeper 中的 `/controller` 路径下创建一个临时节点。因为同一时刻只能存在一个 `/controller` 节点，所以只有一个 Broker 成功创建节点并成为Controller。其他 Broker 会收到节点创建失败的通知，然后转为观察者（Observer）状态，监视Controller节点路径的变化。
+2. 监听 Controller 节点
+    所有非Controller的 Broker 都会在 Zookeeper 中对 `/controller` 路径设置一个 Watcher 事件。这样当Controller节点发生变化时（例如，Controller失效），所有非Controller就会收到一个 Watcher 事件
+3. 选举新的Controller
+   当某个 Broker 接收到Controller节点变化的通知后，它会再次尝试在 Zookeeper 中的 `/controller` 路径下创建一个临时节点。与启动时的过程类似，只有一个 Broker 能够成功创建节点并成为新的Controller。新Controller会在选举成功后接管集群元数据的管理工作。
+4. 更新集群元数据
+   新Controller在选举成功后需要更新集群元数据，包括分区状态、副本状态等。同时，新控制器会通知所有相关的 Broker 更新它们的元数据信息。这样，集群中的所有 Broker 都能够知道新Controller的身份，并进行协同工作。
 
 
-（3）查看/kafka/brokers/topics/first/partitions/0/state 路径上的数据。
 
-```shell
-[zk: localhost:2181(CONNECTED) 16] get  /kafka/brokers/topics/first/partitions/0/state
-{"controller_epoch":24,"leader":0,"version":1,"leader_epoch":18," isr":[0,1,2]}
-```
+#### 脑裂问题
 
+脑裂问题是分布式系统中经常出现的现象，Kafka脑列问题是由于网络或其他原因导致多个Broker认为自己是Controller，从而导致元数据不一致和分区状态混乱的问题。
 
-（4）停止 hadoop104 上的 kafka。
+Kafka是通过**epoch number（纪元编号）**来解决脑裂问题，epoch number是一个单调递增的版本号。
 
-```shell
-kafka-server-stop.sh
-```
+脑裂问题产生和处理过程如下：
 
-
-（5）再次查看/kafka/brokers/ids 路径上的节点。
-
-```shel
-[zk: localhost:2181(CONNECTED) 3] ls /kafka/brokers/ids
-[0, 1]
-```
+- 假设有三个Broker，分别是Broker 0，Broker 1和Broker 2。Broker 0是Controller，它在ZooKeeper中创建了/controller节点，并设置epoch number值为1。Broker 1和Broker 2在/controller节点设置了Watcher。
+- 由于某种原因，Broker 0出现了Full GC，导致它与ZooKeeper的会话超时。ZooKeeper删除了/controller节点，并通知Broker 1和Broker 2进行新的Controller选举。
+- Broker 1和Broker 2同时尝试在ZooKeeper中创建/controller节点，假设Broker 1成功了，那么它就成为了新的Controller，设置epoch number值为2，并向Broker 2同步数据。
+- Broker 0的Full GC结束后，继续向Broker 1和Broker 2同步数据，Broker 1和Broker 2接收到数据后，发现epoch number小于当前值，就会拒绝这些消息。并通知Broker 0最新的epoch number，然后Broker 0发现自己已经不是Controller了，最后与新的Controller建立连接。
 
 
-（6）再次查看/kafka/controller 路径上的数据。
-
-```shell
-[zk: localhost:2181(CONNECTED) 15] get /kafka/controller
-{"version":1,"brokerid":0,"timestamp":"1637292471777"}
-```
-
-
-（7）再次查看/kafka/brokers/topics/first/partitions/0/state 路径上的数据。
-
-```shell
-[zk: localhost:2181(CONNECTED) 16] get  /kafka/brokers/topics/first/partitions/0/state
-{"controller_epoch":24,"leader":0,"version":1,"leader_epoch":18," isr":[0,1]}
-```
-
-
-（8）启动 hadoop104 上的 kafka。
-
-```shell
-kafka-server-start.sh -daemon ./config/server.properties
-```
-
-
-（9）再次观察（1）、（2）、（3）步骤中的内容。
 
 
 
@@ -618,7 +622,7 @@ kafka-server-start.sh -daemon ./config/server.properties
 (2) 查看原有的 分区信息 describe
 
 ```shell
-$ kafka-topics.sh --bootstrap-server 47.106.86.64:9092 --topic first --describe
+$ kafka-topics.sh --bootstrap-server 192.168.181.131:9092 --topic first --describe
 
 Topic: first	TopicId: 4DtkHPe4R1KyXNF7QyVqBA	PartitionCount: 3	ReplicationFactor: 3	Configs: segment.bytes=1073741824
 	Topic: first	Partition: 0	Leader: 1	Replicas: 2,1,0	Isr: 1,0
@@ -641,12 +645,10 @@ $ vim topics-to-move.json
 }
 ```
 
-
-
 (4) 生成负载均衡计划(只是生成计划)
 
 ```shell
-bin/kafka-reassign-partitions.sh --bootstrap-server 47.106.86.64:9092 --topics-to-move-json-file topics-to-move.json --broker-list "0,1,2,3" --generate
+bin/kafka-reassign-partitions.sh --bootstrap-server 192.168.181.131:9092 --topics-to-move-json-file topics-to-move.json --broker-list "0,1,2,3" --generate
 
 ```
 
@@ -665,8 +667,6 @@ pic":"first","partition":2,"replicas":[0,1,2],"log_dirs":["any","
 any","any"]}]}
 ```
 
-
-
 （3）创建副本存储计划（所有副本存储在 broker0、broker1、broker2、broker3 中）。
 
 ```shell
@@ -681,18 +681,16 @@ pic":"first","partition":2,"replicas":[0,1,2],"log_dirs":["any","
 any","any"]}]}
 ```
 
-
-
 (5) 执行副本计划
 
 ```shell
-kafka-reassign-partitions.sh --bootstrap-server 47.106.86.64:9092 --reassignment-json-file increase-replication-factor.json --execute
+kafka-reassign-partitions.sh --bootstrap-server 192.168.181.131:9092 --reassignment-json-file increase-replication-factor.json --execute
 ```
 
 (6) 验证计划
 
 ```shell
-kafka-reassign-partitions.sh --bootstrap-server 47.106.86.64:9092 --reassignment-json-file increase-replication-factor.json --verify
+kafka-reassign-partitions.sh --bootstrap-server 192.168.181.131:9092 --reassignment-json-file increase-replication-factor.json --verify
 ```
 
 ```shell
@@ -713,7 +711,7 @@ Clearing topic-level throttles on topic first
 不同于服役计划的 --broker-list "0,1,2" 退役了 Broker3 ；
 
 ```shell
-kafka-reassign-partitions.sh --bootstrap-server 47.106.86.64:9092 --topics-to-move-json-file topics-to-move.json --broker-list "0,1,2" --generate
+kafka-reassign-partitions.sh --bootstrap-server 192.168.181.131:9092 --topics-to-move-json-file topics-to-move.json --broker-list "0,1,2" --generate
 ```
 
 ### 副本机制
@@ -726,84 +724,63 @@ kafka-reassign-partitions.sh --bootstrap-server 47.106.86.64:9092 --topics-to-mo
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191037772.png)
 
-- AR:分区中的所有 Replica 统称为 AR = ISR +OSR
-- ISR:所有与 Leader 副本保持一定程度同步的Replica(包括 Leader 副本在内)组成 ISR
-- OSR:与 Leader 副本同步滞后过多的 Replica 组成了 OSR
-- LEO:每个副本都有内部的LEO，代表当前队列消息的最后一条偏移量offset + 1。
-- HW:高水位，代表所有ISR中的LEO最低的那个offset，也是消费者可见的最大消息offset。
+- AR: 分区中的所有 Replica 统称为 AR = ISR +OSR
+- ISR: 表示和Leader保持同步的Follow集合，如果Follow长时间未向Leader发送通信请求或同步数据，则该Fellow将被踢出ISR。该时间阈值由replica.lag.time.max.ms参数设定，默认时间是30s，Leader发生故障后，就会从ISR中选举新的Leader。
+- OSR: 从ISR被踢出的Fellow，就进入OSR，也就是与 Leader 副本同步滞后过多的 Replica 组成了 OSR
+- LEO: 每个副本的最后一个offset，LEO其实就是最新的offset+1.
+- HW: 高水位，代表所有ISR中的LEO最低的那个offset，也是消费者可见的最大消息offset。
 
-#### 副本选举Leader
+#### 副本选举 Leader
 
- Kafka 集群中有一个 broker 的 Controller 会被选举为 Controller Leader (4.2.2) ，负责管理集群Broker 的上下线，所有 topic 的分区副本分配和 Leader 选举等工作。
+ Kafka 集群中有一个 broker 的 Controller 会被选举为 Controller Leader ，负责管理集群Broker 的上下线，所有 topic 的分区副本分配和 Leader 选举等工作。
+
+
+
+##### 触发副本leader的选举的时机
+
+- **Leader Replica 失效：**当 Leader Replica 出现故障或者失去连接时，Kafka 会触发 Leader Replica 选举。
+- **Broker 宕机：**当 Leader Replica 所在的 Broker 节点发生故障或者宕机时，Kafka 也会触发 Leader Replica 选举。
+- **新增 Broker：**当集群中新增 Broker 节点时，Kafka 还会触发 Leader Replica 选举，以重新分配 Partition 的 Leader。
+- **新建分区：**当一个新的分区被创建时，需要选举一个 Leader Replica。
+- **ISR 列表数量减少：**当 Partition 的 ISR 列表数量减少时，可能会触发 Leader Replica 选举。当 ISR 列表中副本数量小于 **Replication Factor（副本因子）**时，为了保证数据的安全性，就会触发 Leader Replica 选举。
+- **手动触发：**通过 Kafka 管理工具（kafka-preferred-replica-election.sh），可以手动触发选举，以平衡负载或实现集群维护。
+
+
+
+#####  Leader Replica 选举策略
+
+有以下三种
+
+1. ISR 选举策略：默认情况下，Kafka 只会从 ISR 集合的副本中选举出新的 Leader Replica，OSR 集合中的副本不具备参选资格。
+
+2. 首选副本选举策略（Preferred Replica Election）：首选副本选举策略也是 Kafka 默认的选举策略。在这种策略下，每个分区都有一个首选副本（Preferred Replica），通常是副本集合中的第一个副本。当触发选举时，控制器会优先选择该首选副本作为新的 Leader Replica，只有在首选副本不可用的情况下，才会考虑其他副本。当然，也可以使用命令手动指定每个分区的首选副本：
+
+   ```shell
+   bin/kafka-topics.sh --zookeeper localhost:2181 --topic my-topic-name --replica-assignment 0:1,1:2,2:0 --partitions 3
+   //意思是：my-topic-name有3个partition，partition0的首选副本是Broker1，partition1首选副本是Broker2，partition2的首选副本是Broker0
+   ```
+
+3. 不干净副本选举策略（Unclean Leader Election）：在某些情况下，ISR 选举策略可能会失败，例如当所有 ISR 副本都不可用时。在这种情况下，可以使用 Unclean Leader 选举策略。Unclean Leader 选举策略会从所有副本中（包含OSR集合）选择一个副本作为新的 Leader 副本，即使这个副本与当前 Leader 副本不同步。这种选举策略可能会导致数据丢失，因此只应在紧急情况下使用。
+   修改下面的配置，可以开启 Unclean Leader 选举策略，默认关闭。
+
+   ```shell
+   unclean.leader.election.enable=true
+   ```
+
+   
 
  Broker中Controller 的信息同步工作是依赖于 Zookeeper 的 ./broker/topic 目录下的信息。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191038640.png)
 
-结论先行： 如果leader副本下线， 会在ISR队列中存活为前提，按照Replicas队列中前面优先的原则。
+分为两个阶段，第一个阶段是候选人的提名和投票阶段，第二个阶段是Leader的确认阶段。具体过程如下：
 
-
-
-（1）创建一个新的 topic，4 个分区，4 个副本
-
-```shell
-kafka-topics.sh --bootstrap-server 47.106.86.64:9092 --create --topic atguigu1 --partitions 4 --replication-factor 4
-```
-
-
-（2）查看 Leader 分布情况
-
-```shell
-kafka-topics.sh --bootstrap-server 47.106.86.64:9092 --describe --topic atguigu1
-```
-
-```shell
-Topic: atguigu1 TopicId: awpgX_7WR-OX3Vl6HE8sVg PartitionCount: 4 ReplicationFactor: 4
-Configs: segment.bytes=1073741824
-Topic: atguigu1 Partition: 0 Leader: 3 Replicas: 3,0,2,1 Isr: 3,0,2,1
-Topic: atguigu1 Partition: 1 Leader: 1 Replicas: 1,2,3,0 Isr: 1,2,3,0
-Topic: atguigu1 Partition: 2 Leader: 0 Replicas: 0,3,1,2 Isr: 0,3,1,2
-Topic: atguigu1 Partition: 3 Leader: 2 Replicas: 2,1,0,3 Isr: 2,1,0,3
-```
-
-
-
-（3）停止掉 hadoop105 的 kafka 进程，并查看 Leader 分区情况
-
-```shell
-kafka-server-stop.sh
-```
-
-```shell
-kafka-topics.sh --bootstrap-server 47.106.86.64:9092 --describe --topic atguigu1
-```
-
-```shell
-Topic: atguigu1 TopicId: awpgX_7WR-OX3Vl6HE8sVg PartitionCount: 4 ReplicationFactor: 4
-Configs: segment.bytes=1073741824
-Topic: atguigu1 Partition: 0 Leader: 0 Replicas: 3,0,2,1 Isr: 0,2,1
-Topic: atguigu1 Partition: 1 Leader: 1 Replicas: 1,2,3,0 Isr: 1,2,0
-Topic: atguigu1 Partition: 2 Leader: 0 Replicas: 0,3,1,2 Isr: 0,1,2
-Topic: atguigu1 Partition: 3 Leader: 2 Replicas: 2,1,0,3 Isr: 2,1,0
-```
-
-
-
-（4）停止掉 hadoop104 的 kafka 进程，并查看 Leader 分区情况
-
-```shell
-kafka-server-stop.sh
-kafka-topics.sh --bootstrap-server 47.106.86.64:9092 --describe  --topic atguigu1
-```
-
-```shell
-Topic: atguigu1 TopicId: awpgX_7WR-OX3Vl6HE8sVg PartitionCount: 4 ReplicationFactor: 4
-Configs: segment.bytes=1073741824
-Topic: atguigu1 Partition: 0 Leader: 0 Replicas: 3,0,2,1 Isr: 0,1
-Topic: atguigu1 Partition: 1 Leader: 1 Replicas: 1,2,3,0 Isr: 1,0
-Topic: atguigu1 Partition: 2 Leader: 0 Replicas: 0,3,1,2 Isr: 0,1
-Topic: atguigu1 Partition: 3 Leader: 1 Replicas: 2,1,0,3 Isr: 1,0
-```
+1. 候选人提名和投票阶段
+   - 在Leader Replica失效时，ISR集合中所有Follower Replica都可以成为新的Leader Replica候选人。每个Follower Replica会在选举开始时向其他Follower Replica发送成为候选人的请求，并附带自己的元数据信息，包括自己的当前状态和Lag值。而Preferred replica优先成为候选人。
+   - 其他Follower Replica在收到候选人请求后，会根据请求中的元数据信息，计算每个候选人的Lag值，并将自己的选票投给Lag最小的候选人。如果多个候选人的Lag值相同，则随机选择一个候选人。
+2. Leader确认阶段
+   - 在第一阶段结束后，所有的Follower Replica会重新计算每位候选人的Lag值，并投票给Lag值最小的候选人。此时，选举的结果并不一定出现对候选人的全局共识。为了避免出现这种情况，Kafka中使用了ZooKeeper来实现分布式锁，确保只有一个候选人能够成为新的Leader Replica。
+   - 当ZooKeeper确认有一个候选人已经获得了分布式锁时，该候选人就成为了新的Leader Replica，并向所有的Follower Replica发送一个LeaderAndIsrRequest请求，更新Partition的元数据信息。其他Follower Replica接收到请求后，会更新自己的Partition元数据信息，将新的Leader Replica的ID添加到ISR列表中。
 
 
 
@@ -819,7 +796,7 @@ Topic: atguigu1 Partition: 3 Leader: 1 Replicas: 2,1,0,3 Isr: 1,0
 
 2. leader故障流程
 
-旧Leader先被从ISR队列中踢出，然后从ISR中选出一个新的Leader来；此时为了保证多个副本之间的数据一致性，其他的follower会先将各自的log文件中高于HW的部分截取掉，然后从新的leader同步数据（由此可知这只能保证副本之间数据一致性，并不能保证数据不丢失或者不重复）。体现了设置ACK-all的重要性。
+旧Leader先被从ISR队列中踢出，然后从ISR中选出一个新的Leader来；此时为了保证多个副本之间的数据一致性，其他的follower会先将各自的log文件中高于HW的部分截取掉，然后从新的leader同步数据（由此可知这只能保证副本之间数据一致性，并不能保证数据不丢失或者不重复）。体现了设置 ACK-all 的重要性。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191040346.png)
 
@@ -836,13 +813,13 @@ Topic: atguigu1 Partition: 3 Leader: 1 Replicas: 2,1,0,3 Isr: 1,0
 （1）创建一个新的 topic，名称为 second。
 
 ```shell
-kafka-topics.sh --bootstrap-server 47.106.86.64:9092 --create --partitions 16 --replication-factor 3 --topic second
+kafka-topics.sh --bootstrap-server 192.168.181.131:9092 --create --partitions 16 --replication-factor 3 --topic second
 ```
 
 （2）查看分区和副本情况。
 
 ```shell
-kafka-topics.sh --bootstrap-server 47.106.86.64:9092  --describe --topic second
+kafka-topics.sh --bootstrap-server 192.168.181.131:9092  --describe --topic second
 Topic: second4 Partition: 0 Leader: 0 Replicas: 0,1,2 Isr: 0,1,2
 Topic: second4 Partition: 1 Leader: 1 Replicas: 1,2,3 Isr: 1,2,3
 Topic: second4 Partition: 2 Leader: 2 Replicas: 2,3,0 Isr: 2,3,0
@@ -872,7 +849,7 @@ Topic: second4 Partition: 15 Leader: 3 Replicas: 3,0,1 Isr: 3,0,1
 （1）创建一个新的 topic，名称为 three。
 
 ```shell
-kafka-topics.sh --bootstrap-server  47.106.86.64:9092  --create --partitions 4 --replication-factor 2 --topic three
+kafka-topics.sh --bootstrap-server  192.168.181.131:9092  --create --partitions 4 --replication-factor 2 --topic three
 ```
 
 （3）创建副本存储计划（所有副本都指定存储在 broker0、broker1 中）。
@@ -893,13 +870,13 @@ $ vim increase-replication-factor.json
 （4）执行副本存储计划。
 
 ```shell
-kafka-reassign-partitions.sh --bootstrap-server  47.106.86.64:9092  --reassignment-json-file increase-replication-factor.json --execute
+kafka-reassign-partitions.sh --bootstrap-server  192.168.181.131:9092  --reassignment-json-file increase-replication-factor.json --execute
 ```
 
 （5）验证副本存储计划。
 
 ```shell
-kafka-reassign-partitions.sh --bootstrap-server  47.106.86.64:9092  --reassignment-json-file increase-replication-factor.json --verify
+kafka-reassign-partitions.sh --bootstrap-server  192.168.181.131:9092  --reassignment-json-file increase-replication-factor.json --verify
 ```
 
 #### 分区自动调整
@@ -919,14 +896,12 @@ kafka-reassign-partitions.sh --bootstrap-server  47.106.86.64:9092  --reassignme
 
 #### 增加副本因子
 
-在生产环境当中，由于某个主题的重要等级需要提升，我们考虑增加副本。副本数的增加需要先制定计划，然后根据计划执行。
-
-不能通过命令行的方法添加副本。
+在生产环境当中，由于某个主题的重要等级需要提升，我们考虑增加副本。副本数的增加需要先制定计划，然后根据计划执行。不能通过命令行的方法添加副本。
 
 1. 创建 topic
 
 ```shell
-bin/kafka-topics.sh --bootstrap-server 47.106.86.64:9092 --create --partitions 3 --replication-factor 1 --topic four
+bin/kafka-topics.sh --bootstrap-server 192.168.181.131:9092 --create --partitions 3 --replication-factor 1 --topic four
 ```
 
 
@@ -951,15 +926,14 @@ vim increase-replication-factor.json
 （2）执行副本存储计划。
 
 ```shell
-kafka-reassign-partitions.sh --bootstrap-server 47.106.86.64:9092 --reassignment-json-file increase-replication-factor.json --execute
-
+kafka-reassign-partitions.sh --bootstrap-server 192.168.181.131:9092 --reassignment-json-file increase-replication-factor.json --execute
 ```
 
 ### 文件存储
 
 #### 存储结构
 
-在Kafka中主题（Topic）是一个逻辑上的概念，分区（partition）是物理上的存在的。每个partition对应一个log文件，该log文件中存储的就是Producer生产的数据。Producer生产的数据会被不断追加到该log文件末端。为防止log文件过大导致数据定位效率低下，Kafka采用了分片和索引机制，将每个partition分为多个segment，每个segment默认1G（ log.segment.bytes ）， 每个segment包括.index文件、.log文件和**.timeindex**等文件。这些文件位于文件夹下，该文件命名规则为：topic名称+分区号。
+在Kafka中主题（Topic）是一个逻辑上的概念，分区（partition）是物理上的存在的。每个partition对应一个log文件，该log文件中存储的就是Producer生产的数据。Producer生产的数据会被不断**追加到该log文件末端**。为防止log文件过大导致数据定位效率低下，Kafka采用了分片和索引机制，将每个partition分为多个segment，每个segment默认1G（ log.segment.bytes ）， 每个segment包括.index文件、.log文件和**.timeindex**等文件。这些文件位于文件夹下，该文件命名规则为：topic名称+分区号。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191046998.png)
 
@@ -967,11 +941,10 @@ Segment的三个文件需要通过特定工具打开才能看到信息
 
 ```shell
 kafka-run-class.sh kafka.tools.DumpLogSegments --files ./00000000000000000000.index
- 
 kafka-run-class.sh kafka.tools.DumpLogSegments --files ./00000000000000000000.log
 ```
 
- 当log文件写入4k（这里可以通过log.index.interval.bytes设置）数据，就会写入一条索引信息到index文件中，这样的index索引文件就是一个稀疏索引，它并不会每条日志都建立索引信息。
+当log文件写入4k（这里可以通过log.index.interval.bytes设置）数据，就会写入一条索引信息到index文件中，这样的index索引文件就是一个稀疏索引，它并不会每条日志都建立索引信息。
 
  当Kafka查询一条offset对应实际消息时，可以通过index进行二分查找，获取最近的低位offset，然后从低位offset对应的position开始，从实际的log文件中开始往后查找对应的消息。
 
@@ -1011,23 +984,17 @@ kafka中默认的日志保存时间为7天，可以通过调整如下参数修�
 
 - 基于时间策略
 
- 日志删除任务会周期检查当前日志文件中是否有保留时间超过设定的阈值来寻找可删除的日志段文件集合；这里需要注意log.retention参数的优先级：log.retention.ms > log.retention.minutes > log.retention.hours，默认只会配置log.retention.hours参数，值为168即为7天。
+  -  日志删除任务会周期检查当前日志文件中是否有保留时间超过设定的阈值来寻找可删除的日志段文件集合；这里需要注意log.retention参数的优先级：log.retention.ms > log.retention.minutes > log.retention.hours，默认只会配置log.retention.hours参数，值为168即为7天。
 
- 删除过期的日志段文件，并不是简单的根据日志段文件的修改时间计算，而是要根据该日志段中最大的时间戳来计算的，首先要查询该日志分段所对应的时间戳索引文件，查找该时间戳索引文件的最后一条索引数据，如果时间戳大于0就取值，否则才会使用最近修改时间。
+  - 删除过期的日志段文件，并不是简单的根据日志段文件的修改时间计算，而是要根据该日志段中最大的时间戳来计算的，首先要查询该日志分段所对应的时间戳索引文件，查找该时间戳索引文件的最后一条索引数据，如果时间戳大于0就取值，否则才会使用最近修改时间。
 
- 在删除的时候先从Log对象所维护的日志段的跳跃表中移除要删除的日志段，用来确保已经没有线程来读取这些日志段；接着将日志段所对应的所有文件，包括索引文件都添加上**.deleted的后缀；最后交给一个以delete-file命名的延迟任务来删除这些以.deleted为后缀的文件，默认是1分钟执行一次，可以通过file.delete.delay.ms**来配置。
-
-
+  -  在删除的时候先从Log对象所维护的日志段的跳跃表中移除要删除的日志段，用来确保已经没有线程来读取这些日志段；接着将日志段所对应的所有文件，包括索引文件都添加上**.deleted的后缀；最后交给一个以delete-file命名的延迟任务来删除这些以.deleted为后缀的文件，默认是1分钟执行一次，可以通过file.delete.delay.ms**来配置。
 
 - 基于日志大小策略
-
-日志删除任务会周期性检查当前日志大小是否超过设定的阈值（log.retention.bytes，默认是-1，表示无穷大），就从第一个日志分段中寻找可删除的日志段文件集合。如果超过阈值，
-
-
+  - 日志删除任务会周期性检查当前日志大小是否超过设定的阈值（log.retention.bytes，默认是-1，表示无穷大），就从第一个日志分段中寻找可删除的日志段文件集合。如果超过阈值，
 
 - 基于日志起始偏移量
-
-该策略判断依据是日志段的下一个日志段的起始偏移量 baseOffset是否小于等于 logStartOffset，如果是，则可以删除此日志分段。这里说一下logStartOffset，一般情况下，日志文件的起始偏移量 logStartOffset等于第一个日志分段的 baseOffset，但这并不是绝对的，logStartOffset的值可以通过 DeleteRecordsRequest请求、使用 kafka-delete-records.sh 脚本、日志的清理和截断等操作进行修改。
+  - 该策略判断依据是日志段的下一个日志段的起始偏移量 baseOffset是否小于等于 logStartOffset，如果是，则可以删除此日志分段。这里说一下logStartOffset，一般情况下，日志文件的起始偏移量 logStartOffset等于第一个日志分段的 baseOffset，但这并不是绝对的，logStartOffset的值可以通过 DeleteRecordsRequest请求、使用 kafka-delete-records.sh 脚本、日志的清理和截断等操作进行修改。
 
 
 
@@ -1040,7 +1007,7 @@ kafka中默认的日志保存时间为7天，可以通过调整如下参数修�
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191049755.png)
 
 
- 这种策略只适合特殊场景，比如消息的key是用户ID，value是用户的资料，通过这种压缩策略，整个消息集里就保存了所有用户最新的资料。
+ 这种策略只适合特殊场景，比如消息的key是用户ID，value是用户的资料，通过这种压缩策略，整个消息集里就保存了所有用户最新的资料。一般用的比较少
 
 
 
@@ -1055,21 +1022,19 @@ kafka之所以可以快速读写的原因如下：
 
 #### 顺序写磁盘
 
-Kafka 的 producer 生产数据，要写入到 log 文件中，写的过程是一直追加到文件末端，为顺序写。官网有数据表明，同样的磁盘，顺序写能到 600M/s，而随机写只有 100K/s。这与磁盘的机械机构有关，顺序写之所以快，是因为其省去了大量磁头寻址的时间。
+Kafka 的 producer 生产数据，要写入到 log 文件中，写的过程是一直**追加**到文件末端，为顺序写。官网有数据表明，同样的磁盘，顺序写能到 600M/s，而随机写只有 100K/s。这与磁盘的机械机构有关，顺序写之所以快，是因为其省去了大量磁头寻址的时间。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191049264.png)
 
 
 
-#### 页缓存与零拷贝
+#### 页缓存
 
 kafka高效读写的原因很大一部分取决于页缓存和零拷贝
 
-1. 页缓存
-
 在 Kafka 中，大量使用了 PageCache， 这也是 Kafka 能实现高吞吐的重要因素之一。
 
- 首先看一下读操作，当一个进程要去读取磁盘上的文件内容时，操作系统会先查看要读取的数据页是否缓冲在PageCache 中，如果存在则直接返回要读取的数据，这就减少了对于磁盘 I/O的 操作；但是如果没有查到，操作系统会向磁盘发起读取请求并将读取的数据页存入 PageCache 中，之后再将数据返回给进程，就和使用redis缓冲是一个道理。
+首先看一下读操作，当一个进程要去读取磁盘上的文件内容时，操作系统会先查看要读取的数据页是否缓冲在PageCache 中，如果存在则直接返回要读取的数据，这就减少了对于磁盘 I/O的 操作；但是如果没有查到，操作系统会向磁盘发起读取请求并将读取的数据页存入 PageCache 中，之后再将数据返回给进程，就和使用redis缓冲是一个道理。
 
  接着写操作和读操作是一样的，如果一个进程需要将数据写入磁盘，操作系统会检查数据页是否在PageCache 中已经存在，如果不存在就在 PageCache中添加相应的数据页，接着将数据写入对应的数据页。另外被修改过后的数据页也就变成了脏页，操作系统会在适当时间将脏页中的数据写入磁盘，以保持数据的一致性。
 
@@ -1077,9 +1042,9 @@ kafka高效读写的原因很大一部分取决于页缓存和零拷贝
 
 
 
-2. 零拷贝
+#### 零拷贝
 
- 零拷贝并不是不需要拷贝，而是减少不必要的拷贝次数，通常使用在IO读写过程中。常规应用程序IO过程如下图，会经过四次拷贝：
+[零拷贝](https://www.seven97.top/cs-basics/operating-system/zerocopytechnology.html) 并不是不需要拷贝，而是减少不必要的拷贝次数，通常使用在IO读写过程中。常规应用程序IO过程如下图，会经过四次拷贝：
 
 - 数据从磁盘经过DMA(直接存储器访问)到内核的Read Buffer；
 - 内核态的Read Buffer到用户态应用层的Buffer
@@ -1159,7 +1124,7 @@ public class CustomConsumer {
     public static void main(String[] args) {
         //0.配置信息
         Properties properties = new Properties();
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "47.106.86.64:9092");
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.181.131:9092");
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "test");
@@ -1268,7 +1233,7 @@ properties.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, "org.apache.
  在配置文件 config/consumer.properties 中添加配置 exclude.internal.topics=false，默认是 true，表示不能消费系统主题。为了查看该系统主题数据，所以该参数修改为 false。
 
 ```shell
-kafka-console-consumer.sh --topic __consumer_offsets --bootstrap-server 47.106.86.64:9092 --consumer.config config/consumer.properties --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" --from-beginning
+kafka-console-consumer.sh --topic __consumer_offsets --bootstrap-server 192.168.181.131:9092 --consumer.config config/consumer.properties --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" --from-beginning
 ```
 
 ```shell

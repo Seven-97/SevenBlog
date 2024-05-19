@@ -7,7 +7,7 @@ tag:
 
 
 
-## 1 环境搭建
+## 环境搭建
 
 依赖工具
 
@@ -15,7 +15,7 @@ tag:
 - Maven
 - IntelliJ IDEA
 
-### 1.1 源码拉取
+### 源码拉取
 
 从官方仓库 <https://github.com/apache/rocketmq> `clone`或者`download`源码。
 
@@ -43,7 +43,7 @@ tag:
 * test：测试相关类
 * tools：工具类，监控命令相关实现类
 
-### 1.2 导入IDEA
+### 导入IDEA
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291952373.png)
 
@@ -53,7 +53,7 @@ tag:
 clean install -Dmaven.test.skip=true
 ```
 
-### 1.3 调试
+### 调试
 
 创建`conf`配置文件夹,从`distribution`拷贝`broker.conf`和`logback_broker.xml`和`logback_namesrv.xml`
 
@@ -140,9 +140,9 @@ consumer.setNamesrvAddr("127.0.0.1:9876");
 
 * 运行`main`方法，消费消息
 
-## 2 NameServer
+## NameServer
 
-### 2.1 架构设计
+### 架构设计
 
 消息中间件的设计思路一般是基于主题订阅发布的机制，消息生产者（Producer）发送某一个主题到消息服务器，消息服务器负责将消息持久化存储，消息消费者（Consumer）订阅该兴趣的主题，消息服务器根据订阅信息（路由信息）将消息推送到消费者（Push模式）或者消费者主动向消息服务器拉去（Pull模式），从而实现消息生产者与消息消费者解耦。为了避免消息服务器的单点故障导致的整个系统瘫痪，通常会部署多台消息服务器共同承担消息的存储。那消息生产者如何知道消息要发送到哪台消息服务器呢？如果某一台消息服务器宕机了，那么消息生产者如何在不重启服务情况下感知呢？
 
@@ -158,7 +158,7 @@ NameServer就是为了解决以上问题设计的。
 
 NameServer本身的高可用是通过部署多台NameServer来实现，但彼此之间不通讯，也就是NameServer服务器之间在某一个时刻的数据并不完全相同，但这对消息发送并不会造成任何影响，这也是NameServer设计的一个亮点，总之，RocketMQ设计追求简单高效。
 
-### 2.2 启动流程
+### 启动流程
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291954063.png)
 
@@ -314,13 +314,13 @@ Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(log, new Callable<Vo
 
 
 
-### 2.3 路由管理
+### 路由管理
 
 NameServer的主要作用是为消息的生产者和消息消费者提供关于主题Topic的路由信息，那么NameServer需要存储路由的基础信息，还要管理Broker节点，包括路由注册、路由删除等。
 
-#### 2.3.1 路由元信息
+#### 路由元信息
 
-***代码：RouteInfoManager***
+**代码：RouteInfoManager**
 
 ```java
 private final HashMap<String/* topic */, List<QueueData>> topicQueueTable;
@@ -348,7 +348,7 @@ private final HashMap<String/* brokerAddr */, List<String>/* Filter Server */> f
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291954083.png)
 
-#### 2.3.2 路由注册
+#### 路由注册
 
 ##### 发送心跳包
 
@@ -606,7 +606,7 @@ if (MixAll.MASTER_ID != brokerId) {
 }
 ```
 
-#### 2.3.3 路由删除
+#### 路由删除
 
 ```Broker```每隔30s向```NameServer```发送一个心跳包，心跳包包含`BrokerId`，`Broker`地址，`Broker`名称，`Broker`所属集群名称、`Broker`关联的`FilterServer`列表。但是如果`Broker`宕机，`NameServer`无法收到心跳包，此时`NameServer`如何来剔除这些失效的`Broker`呢？`NameServer`会每隔10s扫描`brokerLiveTable`状态表，如果`BrokerLive`的**lastUpdateTimestamp**的时间戳距当前时间超过120s，则认为`Broker`失效，移除该`Broker`，关闭与`Broker`连接，同时更新`topicQueueTable`、`brokerAddrTable`、`brokerLiveTable`、`filterServerTable`。
 
@@ -767,7 +767,7 @@ finally {
 }
 ```
 
-#### 2.3.4 路由发现
+#### 路由发现
 
 RocketMQ路由发现是非实时的，当Topic路由出现变化后，NameServer不会主动推送给客户端，而是由客户端定时拉取主题最新的路由。
 
@@ -804,17 +804,17 @@ public RemotingCommand getRouteInfoByTopic(ChannelHandlerContext ctx,
 }
 ```
 
-### 2.4 小结
+### 小结
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291956941.png)
 
-## 3 Producer
+## Producer
 
 消息生产者的代码都在client模块中，相对于RocketMQ来讲，消息生产者就是客户端，也是消息的提供者。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291956349.png)
 
-### 2.3.1 方法和属性
+### 方法和属性
 
 1）主要方法介绍
 
@@ -945,7 +945,7 @@ retryAnotherBrokerWhenNotStoreOK：消息重试时选择另外一个Broker时，
 maxMessageSize：允许发送的最大消息长度，默认为4M
 ```
 
-### 3.2 启动流程
+### 启动流程
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291956371.png)
 
@@ -1014,7 +1014,7 @@ if (startFactory) {
 }
 ```
 
-### 3.3 消息发送
+### 消息发送
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291956341.png)
 
@@ -1647,7 +1647,7 @@ if (this.hasSendMessageHook()) {
 }
 ```
 
-### 3.4 批量消息发送
+### 批量消息发送
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291957930.png)
 
@@ -1690,9 +1690,9 @@ private MessageBatch batch(Collection<Message> msgs) throws MQClientException {
 }
 ```
 
-## 4 消息存储
+## 消息存储
 
-### 4.1 消息存储核心类
+### 消息存储核心类
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291957288.png)
 
@@ -1717,7 +1717,7 @@ private StoreCheckpoint storeCheckpoint;	//文件刷盘监测点
 private final LinkedList<CommitLogDispatcher> dispatcherList;	//CommitLog文件转发请求
 ```
 
-### 4.2 消息存储流程
+### 消息存储流程
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291958625.png)
 
@@ -1933,7 +1933,7 @@ handleDiskFlush(result, putMessageResult, msg);
 handleHA(result, putMessageResult, msg);
 ```
 
-### 4.3 存储文件
+### 存储文件
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291958763.png)
 
@@ -1944,7 +1944,7 @@ handleHA(result, putMessageResult, msg);
 - abort：如果存在改文件寿命Broker非正常关闭
 - checkpoint：文件检查点，存储CommitLog文件最后一次刷盘时间戳、consumerquueue最后一次刷盘时间，index索引文件最后一次刷盘时间戳。
 
-### 4.4 存储文件内存映射
+### 存储文件内存映射
 
 RocketMQ通过使用内存映射文件提高IO访问性能，无论是CommitLog、ConsumerQueue还是IndexFile，单个文件都被设计为固定长度，如果一个文件写满以后再创建一个新文件，文件名就为该文件第一条消息对应的全局物理偏移量。
 
@@ -2354,7 +2354,7 @@ public void init() {
 }
 ```
 
-### 4.5 实时更新消息消费队列与索引文件
+### 实时更新消息消费队列与索引文件
 
 消息消费队文件、消息属性索引文件都是基于CommitLog文件构建的，当消息生产者提交的消息存储在CommitLog文件中，ConsumerQueue、IndexFile需要及时更新，否则消息无法及时被消费，根据消息属性查找消息也会出现较大延迟。RocketMQ通过开启一个线程ReputMessageService来准实时转发CommitLog文件更新事件，相应的任务处理器根据转发的消息及时更新ConsumerQueue、IndexFile文件。
 
@@ -2548,7 +2548,7 @@ public void buildIndex(DispatchRequest req) {
 }
 ```
 
-### 4.6 消息队列和索引文件恢复
+### 消息队列和索引文件恢复
 
 由于RocketMQ存储首先将消息全量存储在CommitLog文件中，然后异步生成转发任务更新ConsumerQueue和Index文件。如果消息成功存储到CommitLog文件中，转发任务未成功执行，此时消息服务器Broker由于某个愿意宕机，导致CommitLog、ConsumerQueue、IndexFile文件数据不一致。如果不加以人工修复的话，会有一部分消息即便在CommitLog中文件中存在，但由于没有转发到ConsumerQueue，这部分消息将永远复发被消费者消费。
 
@@ -2898,7 +2898,7 @@ if (!mappedFiles.isEmpty()) {
 }
 ```
 
-### 4.7 刷盘机制
+### 刷盘机制
 
 RocketMQ的存储是基于JDK NIO的内存映射机制（MappedByteBuffer）的，消息存储首先将消息追加到内存，再根据配置的刷盘策略在不同时间进行刷写磁盘。
 
@@ -3085,7 +3085,7 @@ CommitLog.this.defaultMessageStore.getStoreCheckpoint().setPhysicMsgTimestamp(st
 
 ```
 
-### 4.8 过期文件删除机制
+### 过期文件删除机制
 
 由于RocketMQ操作CommitLog、ConsumerQueue文件是基于内存映射机制并在启动的时候回加载CommitLog、ConsumerQueue目录下的所有文件，为了避免内存与磁盘的浪费，不可能将消息永久存储在消息服务器上，所以要引入一种机制来删除已过期的文件。RocketMQ顺序写CommitLog、ConsumerQueue文件，所有写操作全部落在最后一个CommitLog或者ConsumerQueue文件上，之前的文件在下一个文件创建后将不会再被更新。RocketMQ清除过期文件的方法时：如果当前文件在在一定时间间隔内没有再次被消费，则认为是过期文件，可以被删除，RocketMQ不会关注这个文件上的消息是否全部被消费。默认每个文件的过期时间为72小时，通过在Broker配置文件中设置fileReservedTime来改变过期时间，单位为小时。
 
@@ -3219,7 +3219,7 @@ for (int i = 0; i < mfsLength; i++) {
 }
 ```
 
-### 4.9 小结
+### 小结
 
 RocketMQ的存储文件包括消息文件（Commitlog）、消息消费队列文件（ConsumerQueue）、Hash索引文件（IndexFile）、监测点文件（checkPoint）、abort（关闭异常文件）。单个消息存储文件、消息消费队列文件、Hash索引文件长度固定以便使用内存映射机制进行文件的读写操作。RocketMQ组织文件以文件的起始偏移量来命令文件，这样根据偏移量能快速定位到真实的物理文件。RocketMQ基于内存映射文件机制提供了同步刷盘和异步刷盘两种机制，异步刷盘是指在消息存储时先追加到内存映射文件，然后启动专门的刷盘线程定时将内存中的文件数据刷写到磁盘。
 
@@ -3229,9 +3229,9 @@ CommitLog，消息存储文件，RocketMQ为了保证消息发送的高吞吐量
 
 RocketMQ不会永久存储消息文件、消息消费队列文件，而是启动文件过期机制并在磁盘空间不足或者默认凌晨4点删除过期文件，文件保存72小时并且在删除文件时并不会判断该消息文件上的消息是否被消费。
 
-## 5 Consumer
+## Consumer
 
-### 5.1 消息消费概述
+### 消息消费概述
 
 消息消费以组的模式开展，一个消费组内可以包含多个消费者，每一个消费者组可订阅多个主题，消费组之间有ff式和广播模式两种消费模式。集群模式，主题下的同一条消息只允许被其中一个消费者消费。广播模式，主题下的同一条消息，将被集群内的所有消费者消费一次。消息服务器与消费者之间的消息传递也有两种模式：推模式、拉模式。所谓的拉模式，是消费端主动拉起拉消息请求，而推模式是消息达到消息服务器后，推送给消息消费者。RocketMQ消息推模式的实现基于拉模式，在拉模式上包装一层，一个拉取任务完成后开始下一个拉取任务。
 
@@ -3239,7 +3239,7 @@ RocketMQ不会永久存储消息文件、消息消费队列文件，而是启动
 
 RocketMQ支持局部顺序消息消费，也就是保证同一个消息队列上的消息顺序消费。不支持消息全局顺序消费，如果要实现某一个主题的全局顺序消费，可以将该主题的队列数设置为1，牺牲高可用性。
 
-### 5.2 消息消费初探
+### 消息消费初探
 
 **<u>消息推送模式</u>**
 
@@ -3299,7 +3299,7 @@ private int maxReconsumeTimes = -1;
 private long consumeTimeout = 15;
 ```
 
-### 5.3 消费者启动流程
+### 消费者启动流程
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404292000152.png)
 
@@ -3393,7 +3393,7 @@ public synchronized void start() throws MQClientException {
 }
 ```
 
-### 5.4 消息拉取
+### 消息拉取
 
 消息消费模式有两种模式：广播模式与集群模式。广播模式比较简单，每一个消费者需要拉取订阅主题下所有队列的消息。本文重点讲解集群模式。在集群模式下，同一个消费者组内有多个消息消费者，同一个主题存在多个消费队列，消费者通过负载均衡的方式消费消息。
 
@@ -3996,7 +3996,7 @@ public void arriving(String topic, int queueId, long logicOffset, long tagsCode,
 }
 ```
 
-### 5.5 消息队列负载与重新分布机制
+### 消息队列负载与重新分布机制
 
 RocketMQ消息队列重新分配是由RebalanceService线程来实现。一个MQClientInstance持有一个RebalanceService实现，并随着MQClientInstance的启动而启动。
 
@@ -4107,7 +4107,7 @@ c3:q3,q6
 
 注意：消息队列的分配遵循一个消费者可以分配到多个队列，但同一个消息队列只会分配给一个消费者，故如果出现消费者个数大于消息队列数量，则有些消费者无法消费消息。
 
-### 5.6 消息消费过程
+### 消息消费过程
 
 PullMessageService负责对消息队列进行消息拉取，从远端服务器拉取消息后将消息存储ProcessQueue消息队列处理队列中，然后调用ConsumeMessageService#submitConsumeRequest方法进行消息消费，使用线程池来消费消息，确保了消息拉取与消息消费的解耦。ConsumeMessageService支持顺序消息和并发消息，核心类图如下：
 
@@ -4185,7 +4185,7 @@ if (ConsumeMessageConcurrentlyService.this.defaultMQPushConsumerImpl.hasHook()) 
 }
 ```
 
-### 5.7 定时消息机制
+### 定时消息机制
 
 定时消息是消息发送到Broker后，并不立即被消费者消费而是要等到特定的时间后才能被消费，RocketMQ并不支持任意的时间精度，如果要支持任意时间精度定时调度，不可避免地需要在Broker层做消息排序，再加上持久化方面的考量，将不可避免的带来巨大的性能消耗，所以RocketMQ只支持特定级别的延迟消息。消息延迟级别在Broker端通过messageDelayLevel配置，默认为“1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h”，delayLevel=1表示延迟消息1s,delayLevel=2表示延迟5s,依次类推。
 
@@ -4279,7 +4279,7 @@ for (; i < bufferCQ.getSize(); i += ConsumeQueue.CQ_STORE_UNIT_SIZE) {
 } 
 ```
 
-### 5.8 顺序消息
+### 顺序消息
 
 顺序消息实现类是org.apache.rocketmq.client.impl.consumer.ConsumeMessageOrderlyService
 
@@ -4330,7 +4330,7 @@ synchronized (objLock) {
 }
 ```
 
-### 5.9 小结
+### 小结
 
 RocketMQ消息消费方式分别为集群模式、广播模式。
 

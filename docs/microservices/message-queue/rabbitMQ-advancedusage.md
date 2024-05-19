@@ -48,9 +48,9 @@ tag:
 
 
 
-## 1.发送者的可靠性
+## 发送者的可靠性
 
-### 1.1.生产者重试机制
+### 生产者重试机制
 首先第一种情况，就是生产者发送消息时，出现了网络故障，导致与MQ的连接中断。
 
 为了解决这个问题，SpringAMQP提供的消息发送时的重试机制。即：当`RabbitTemplate`与MQ连接超时后，多次重试。
@@ -79,7 +79,7 @@ docker stop mq
 
 
 
-### 1.2.生产者确认机制
+### 生产者确认机制
 一般情况下，只要生产者与MQ之间的网路连接顺畅，基本不会出现发送消息丢失的情况，因此大多数情况下我们无需考虑这种问题。
 不过，在少数情况下，也会出现消息发送到MQ之后丢失的现象，比如：
 
@@ -101,8 +101,8 @@ docker stop mq
 其中`ack`和`nack`属于**Publisher Confirm**机制，`ack`是投递成功；`nack`是投递失败。而`return`则属于**Publisher Return**机制。
 默认两种机制都是关闭状态，需要通过配置文件来开启。
 
-### 1.3.实现生产者确认
-#### 1.3.1.开启生产者确认
+### 实现生产者确认
+#### 开启生产者确认
 在publisher模块的`application.yaml`中添加配置：
 ```yaml
 spring:
@@ -118,7 +118,7 @@ spring:
 
 一般我们推荐使用`correlated`，回调机制。
 
-#### 1.3.2.定义ReturnCallback
+#### 定义ReturnCallback
 每个`RabbitTemplate`只能配置一个`ReturnCallback`，因此我们可以在配置类中统一设置。我们在publisher模块定义一个配置类：
 ![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291935254.png)
 内容如下：
@@ -157,7 +157,7 @@ public class MqConfig {
 }
 ```
 
-#### 1.3.3.定义ConfirmCallback
+#### 定义ConfirmCallback
 由于每个消息发送时的处理逻辑不一定相同，因此ConfirmCallback需要在每次发消息时定义。具体来说，是在调用RabbitTemplate中的convertAndSend方法时，多传递一个参数：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291935871.png)
 这里的CorrelationData中包含两个核心的东西：
@@ -201,18 +201,18 @@ void testPublisherConfirm() {
 当我们修改为正确的`RoutingKey`以后，就不会触发`return callback`了，只收到ack。
 而如果连交换机都是错误的，则只会收到nack。
 
-:::warning
+
 **注意**：
 开启生产者确认比较消耗MQ性能，一般不建议开启。而且大家思考一下触发确认的几种情况：
 
 - 路由失败：一般是因为RoutingKey错误导致，往往是编程导致
 - 交换机名称错误：同样是编程错误导致
 - MQ内部故障：这种需要处理，但概率往往较低。因此只有对消息可靠性要求非常高的业务才需要开启，而且仅仅需要开启ConfirmCallback处理nack就可以了。
-:::
 
-## 2.MQ的可靠性
+
+## MQ的可靠性
 消息到达MQ以后，如果MQ不能及时保存，也会导致消息丢失，所以MQ的可靠性也非常重要。
-### 2.1.数据持久化
+### 数据持久化
 为了提升性能，默认情况下MQ的数据都是在内存存储的临时数据，重启后就会消失。为了保证数据的可靠性，必须配置数据持久化，包括：
 
 - 交换机持久化
@@ -220,17 +220,17 @@ void testPublisherConfirm() {
 - 消息持久化
 
 我们以控制台界面为例来说明。
-#### 2.1.1.交换机持久化
+#### 交换机持久化
 在控制台的`Exchanges`页面，添加交换机时可以配置交换机的`Durability`参数：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291936083.png)
 设置为`Durable`就是持久化模式，`Transient`就是临时模式。
 
-#### 2.1.2.队列持久化
+#### 队列持久化
 在控制台的Queues页面，添加队列时，同样可以配置队列的`Durability`参数：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291936335.png)
 除了持久化以外，你可以看到队列还有很多其它参数，有一些我们会在后期学习。
 
-#### 2.1.3.消息持久化
+#### 消息持久化
 在控制台发送消息的时候，可以添加很多参数，而消息的持久化是要配置一个`properties`：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291936567.png)
 
@@ -238,7 +238,7 @@ void testPublisherConfirm() {
 **说明**：在开启持久化机制以后，如果同时还开启了生产者确认，那么MQ会在消息持久化以后才发送ACK回执，进一步确保消息的可靠性。
 不过出于性能考虑，为了减少IO次数，发送到MQ的消息并不是逐条持久化到数据库的，而是每隔一段时间批量持久化。一般间隔在100毫秒左右，这就会导致ACK有一定的延迟，因此建议生产者确认全部采用异步方式。
 
-### 2.2.LazyQueue
+### LazyQueue
 在默认情况下，RabbitMQ会将接收到的信息保存在内存中以降低消息收发的延迟。但在某些特殊情况下，这会导致消息积压，比如：
 
 - 消费者宕机或出现网络故障
@@ -255,11 +255,11 @@ void testPublisherConfirm() {
 
 而在3.12版本之后，LazyQueue已经成为所有队列的默认格式。因此官方推荐升级MQ为3.12版本或者所有队列都设置为LazyQueue模式。
 
-#### 2.2.1.控制台配置Lazy模式
+#### 控制台配置Lazy模式
 在添加队列的时候，添加`x-queue-mod=lazy`参数即可设置队列为Lazy模式：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291936677.png)
 
-#### 2.2.2.代码配置Lazy模式
+#### 代码配置Lazy模式
 在利用SpringAMQP声明队列的时候，添加`x-queue-mod=lazy`参数也可设置队列为Lazy模式：
 ```java
 @Bean
@@ -285,7 +285,7 @@ public void listenLazyQueue(String msg){
 }
 ```
 
-#### 2.2.3.更新已有队列为lazy模式
+#### 更新已有队列为lazy模式
 对于已经存在的队列，也可以配置为lazy模式，但是要通过设置policy实现。
 可以基于命令行设置policy：
 ```shell
@@ -303,7 +303,7 @@ rabbitmqctl set_policy Lazy "^lazy-queue$" '{"queue-mode":"lazy"}' --apply-to qu
 当然，也可以在控制台配置policy，进入在控制台的`Admin`页面，点击`Policies`，即可添加配置：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291936295.png)
 
-## 3.消费者的可靠性
+## 消费者的可靠性
 当RabbitMQ向消费者投递消息以后，需要知道消费者的处理状态如何。因为消息投递给消费者并不代表就一定被正确消费了，可能出现的故障有很多，比如：
 
 - 消息投递的过程中出现了网络故障
@@ -315,7 +315,7 @@ rabbitmqctl set_policy Lazy "^lazy-queue$" '{"queue-mode":"lazy"}' --apply-to qu
 但问题来了：RabbitMQ如何得知消费者的处理状态呢？
 
 本章我们就一起研究一下消费者处理消息时的可靠性解决方案。
-### 2.1.消费者确认机制
+### 消费者确认机制
 为了确认消费者是否成功处理消息，RabbitMQ提供了消费者确认机制（**Consumer Acknowledgement**）。即：当消费者处理消息结束后，应该向RabbitMQ发送一个回执，告知RabbitMQ自己消息处理状态。回执有三种可选值：
 
 - ack：成功处理消息，RabbitMQ从队列中删除该消息
@@ -396,7 +396,7 @@ public void listenSimpleQueueMessage(String msg) throws InterruptedException {
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291937954.png)
 当我们把配置改为`auto`时，消息处理失败后，会回到RabbitMQ，并重新投递到消费者。
 
-### 2.2.失败重试机制
+### 失败重试机制
 当消费者出现异常后，消息会不断requeue（重入队）到队列，再重新发送给消费者。如果消费者再次执行依然出错，消息会再次requeue到队列，再次投递，直到消息处理成功为止。
 极端情况就是消费者一直无法执行成功，那么消息requeue就会无限循环，导致mq的消息处理飙升，带来不必要的压力：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291937856.png)
@@ -427,7 +427,7 @@ spring:
 - 开启本地重试时，消息处理过程中抛出异常，不会requeue到队列，而是在消费者本地重试
 - 重试达到最大次数后，Spring会返回reject，消息会被丢弃
 
-### 2.3.失败处理策略
+### 失败处理策略
 在之前的测试中，本地测试达到最大重试次数后，消息会被丢弃。这在某些对于消息可靠性要求较高的业务场景下，显然不太合适了。
 因此Spring允许我们自定义重试次数耗尽后的消息处理策略，这个策略是由`MessageRecovery`接口来定义的，它有3个不同实现：
 
@@ -498,7 +498,7 @@ public class ErrorMessageConfig {
 }
 ```
 
-### 2.4.业务幂等性
+### 业务幂等性
 何为幂等性？
 **幂等**是一个数学概念，用函数表达式来描述是这样的：`f(x) = f(f(x))`，例如求绝对值函数。
 在程序开发中，则是指同一个业务，执行一次或多次对业务状态的影响是一致的。例如：
@@ -532,7 +532,7 @@ public class ErrorMessageConfig {
 - 唯一消息ID
 - 业务状态判断
 
-#### 2.4.1.唯一消息ID
+#### 唯一消息ID
 这个思路非常简单：
 
 1. 每一条消息都生成一个唯一的id，与消息一起投递给消费者。
@@ -553,7 +553,7 @@ public MessageConverter messageConverter(){
 }
 ```
 
-#### 2.4.2.业务判断
+#### 业务判断
 业务判断就是基于业务本身的逻辑或状态来判断是否是重复的请求或消息，不同的业务场景判断的思路也不一样。
 例如我们当前案例中，处理消息的业务逻辑是把订单状态从未支付修改为已支付。因此我们就可以在执行业务时判断订单状态是否是未支付，如果不是则证明订单已经被处理过，无需重复处理。
 
@@ -600,7 +600,7 @@ UPDATE `order` SET status = ? , pay_time = ? WHERE id = ? AND status = 1
 ```
 我们在where条件中除了判断id以外，还加上了status必须为1的条件。如果条件不符（说明订单已支付），则SQL匹配不到数据，根本不会执行。
 
-### 2.5.兜底方案
+### 兜底方案
 虽然我们利用各种机制尽可能增加了消息的可靠性，但也不好说能保证消息100%的可靠。万一真的MQ通知失败该怎么办呢？
 有没有其它兜底方案，能够确保订单的支付状态一致呢？
 
@@ -624,7 +624,7 @@ UPDATE `order` SET status = ? , pay_time = ? WHERE id = ? AND status = 1
 - 其次，为了保证MQ消息的可靠性，我们采用了生产者确认机制、消费者确认、消费者失败重试等策略，确保消息投递的可靠性
 - 最后，我们还在交易服务设置了定时任务，定期查询订单支付状态。这样即便MQ通知失败，还可以利用定时任务作为兜底方案，确保订单支付状态的最终一致性。
 
-## 4.延迟消息
+## 延迟消息
 在电商的支付业务中，对于一些库存有限的商品，为了更好的用户体验，通常都会在用户下单时立刻扣减商品库存。例如电影院购票、高铁购票，下单后就会锁定座位资源，其他人无法重复购买。
 
 但是这样就存在一个问题，假如用户下单后一直不付款，就会一直占有库存资源，导致其他客户无法正常交易，最终导致商户利益受损！
@@ -644,9 +644,9 @@ UPDATE `order` SET status = ? , pay_time = ? WHERE id = ? AND status = 1
 
 这一章我们就一起研究下这两种方案的实现方式，以及优缺点。
 
-### 4.1.死信交换机和延迟消息
+### 死信交换机和延迟消息
 首先我们来学习一下基于死信交换机的延迟消息方案。
-#### 4.1.1.死信交换机
+#### 死信交换机
 什么是死信？
 
 当一个队列中的消息满足下列情况之一时，可以成为死信（dead letter）：
@@ -663,7 +663,7 @@ UPDATE `order` SET status = ? , pay_time = ? WHERE id = ? AND status = 1
 2. 收集那些因队列满了而被拒绝的消息
 3. 收集因TTL（有效期）到期的消息
 
-#### 4.1.2.延迟消息
+#### 延迟消息
 前面两种作用场景可以看做是把死信交换机当做一种消息处理的最终兜底方案，与消费者重试时讲的`RepublishMessageRecoverer`作用类似。
 
 而最后一种场景，大家设想一下这样的场景：
@@ -684,24 +684,24 @@ UPDATE `order` SET status = ? , pay_time = ? WHERE id = ? AND status = 1
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291937843.png)
 也就是说，publisher发送了一条消息，但最终consumer在5秒后才收到消息。我们成功实现了**延迟消息**。
 
-#### 4.1.3.总结
+#### 总结
 
 **注意：**
 RabbitMQ的消息过期是基于追溯方式来实现的，也就是说当一个消息的TTL到期以后不一定会被移除或投递到死信交换机，而是在消息恰好处于队首时才会被处理。
 当队列中消息堆积很多的时候，过期消息可能不会被按时处理，因此你设置的TTL时间不一定准确。
 
-### 4.2.DelayExchange插件
+### DelayExchange插件
 基于死信队列虽然可以实现延迟消息，但是太麻烦了。因此RabbitMQ社区提供了一个延迟消息插件来实现相同的效果。
 官方文档说明：
 [Scheduling Messages with RabbitMQ | RabbitMQ - Blog](https://blog.rabbitmq.com/posts/2015/04/scheduling-messages-with-rabbitmq)
 
-#### 4.2.1.下载
+#### 下载
 插件下载地址：
 [GitHub - rabbitmq/rabbitmq-delayed-message-exchange: Delayed Messaging for RabbitMQ](https://github.com/rabbitmq/rabbitmq-delayed-message-exchange)
 由于我们安装的MQ是`3.8`版本，因此这里下载`3.8.17`版本：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291937414.png)
 
-#### 4.2.2.安装
+#### 安装
 因为我们是基于Docker安装，所以需要先查看RabbitMQ的插件目录对应的数据卷。
 ```shell
 docker volume inspect mq-plugins
@@ -730,7 +730,7 @@ docker exec -it mq rabbitmq-plugins enable rabbitmq_delayed_message_exchange
 运行结果如下：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291937049.png)
 
-#### 4.2.3.声明延迟交换机
+#### 声明延迟交换机
 基于注解方式：
 ```java
 @RabbitListener(bindings = @QueueBinding(
@@ -777,7 +777,7 @@ public class DelayExchangeConfig {
 
 ```
 
-#### 4.2.4.发送延迟消息
+#### 发送延迟消息
 发送消息时，必须通过x-delay属性设定延迟时间：
 ```java
 @Test
@@ -802,7 +802,7 @@ void testPublisherDelayMessage() {
 因此，**不建议设置延迟时间过长的延迟消息**。
 
 
-### 4.5.订单状态同步问题
+### 订单状态同步问题
 接下来，我们就在交易服务中利用延迟消息实现订单支付状态的同步。其大概思路如下：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291938691.jpeg)
 
@@ -864,7 +864,7 @@ public class MultiDelayMessage<T> {
 ```
 
 
-#### 4.5.1.定义常量
+#### 定义常量
 无论是消息发送还是接收都是在交易服务完成，因此我们在`trade-service`中定义一个常量类，用于记录交换机、队列、RoutingKey等常量：
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291938363.png)
@@ -880,7 +880,7 @@ public interface MqConstants {
 }
 ```
 
-#### 4.5.2.抽取共享mq配置
+#### 抽取共享mq配置
 我们将mq的配置抽取到nacos中，方便各个微服务共享配置。
 在nacos中定义一个名为`shared-mq.xml`的配置文件，内容如下：
 
@@ -901,7 +901,7 @@ spring:
 在`trade-service`模块添加共享配置：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291938229.png)
 
-#### 4.5.3.改造下单业务
+#### 改造下单业务
 接下来，我们改造下单业务，在下单完成后，发送延迟消息，查询支付状态。
 
 1）引入依赖
@@ -918,7 +918,7 @@ spring:
 修改`trade-service`模块的`com.hmall.trade.service.impl.OrderServiceImpl`类的`createOrder`方法，添加消息发送的代码：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291938840.png)
 
-#### 4.5.4.编写查询支付状态接口
+#### 编写查询支付状态接口
 由于MQ消息处理时需要查询支付状态，因此我们要在pay-service模块定义一个这样的接口，并提供对应的FeignClient.
 首先，在hm-api模块定义三个类：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291938035.png)
@@ -1036,7 +1036,7 @@ public PayOrderDTO queryPayOrderByBizOrderNo(@PathVariable("id") Long id){
 }
 ```
 
-#### 4.5.5.消息监听
+#### 消息监听
 接下来，我们在trader-service编写一个监听器，监听延迟消息，查询订单支付状态：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291938510.png)
 代码如下：

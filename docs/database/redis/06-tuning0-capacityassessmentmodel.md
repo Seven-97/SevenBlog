@@ -17,7 +17,7 @@ tag:
 
 ## jemalloc内存分配规则
 
-jemalloc是一种通用的内存管理方法，着重于减少内存碎片和支持可伸缩的并发性，我们部门的redis版本中就引入了jemalloc，做redis容量评估前必须对jemalloc的内存分配规则有一定了解。
+jemalloc是一种通用的内存管理方法，着重于减少内存碎片和支持可伸缩的并发性，做redis容量评估前必须对jemalloc的内存分配规则有一定了解。
 
 jemalloc基于申请内存的大小把内存分配分为三个等级：small，large，huge：
 
