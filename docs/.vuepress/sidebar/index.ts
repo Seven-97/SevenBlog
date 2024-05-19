@@ -313,10 +313,12 @@ export default sidebar({
           children: [
             "rabbitMQ-basic",
             "rabbitMQ-advancedusage",
+            "rocketMQ-basic",
             "rocketMQ-advancedusage",
             "rocketMQ-scenarios",
             "rocketMQ-sourcecode",
-
+            "kafka-basic",
+            "kafka-advancedusage",
           ],
         },
         {
@@ -497,6 +499,7 @@ export default sidebar({
             "springboot-annotation",
             "parameterverification",
             "elegantlyclosetheprogram",
+            "kafka-springboot",
           ],
         },
         "paymenttechnology",
