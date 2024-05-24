@@ -146,7 +146,7 @@ public final class String
 }
 ```
 
-显然String字符串内部是使用char[]数组来存储的
+显然String字符串内部是使用char[]数组来存储。
 
 而这个char[]数组是用 **private final**来修饰的，**private**就体现着面向对象的封装特性，并且String没有提供供外部访问的方法，这就意味着这个属性无法被外部访问；**final**则意味着这个属性无法修改，无法重新指向其他对象。且String 类没有提供/暴露修改这个字符串的方法。
 
@@ -181,6 +181,93 @@ System.out.println("修改后的地址值：" + str + ",hash值"+ str.hashCode()
 ```
 
 由于hash是被缓存下来的，所以通过反射修改后hashCode并不会变。除非进行重新计算，但是用反射修改String的值破坏了String的immutable特征，可能会带来一些奇怪的副作用，最好不要这么做。
+
+
+
+### String能存储多少字符
+
+1. 首先String的length方法返回是int。所以理论上长度一定不会超过int的最大值。
+2. 编译器源码如下，限制了字符串长度大于等于65535就会编译不通过：
+
+```java
+private void checkStringConstant(DiagnosticPosition var1, Object var2) {
+    if (this.nerrs == 0 && var2 != null && var2 instanceof String &&   ((String)var2).length() >= 65535) {
+        this.log.error(var1, "limit.string", new Object[0]);
+        ++this.nerrs;
+    }
+}
+```
+
+
+
+Java中的字符常量都是使用UTF 8编码的，UTF 8编码使用1~4个字节来表示具体的Unicode字符。所以有的字符占用一个字节，而平时所用的大部分中文都需要3个字节来存储。
+
+```java
+//65534个字母，编译通过
+String s1 = "dd..d";
+
+//21845个中文”自“,编译通过
+String s2 = "自自...自";
+
+//一个英文字母d加上21845个中文”自“，编译失败
+String s3 = "d自自...自";
+```
+
+- 对于s1，一个字母d的UTF8编码占用一个字节，65534字母占用65534个字节，长度是65534，长度和存储都没超过限制，所以可以编译通过。
+
+- 对于s2，一个中文占用3个字节，21845个正好占用65535个字节，而且字符串长度是21845，长度和存储也都没超过限制，所以可以编译通过。
+
+- 对于s3，一个英文字母d加上21845个中文”自“占用65536个字节，超过了存储最大限制，编译失败。
+
+当然，这个限制是特定于编译器的实现，而不是Java语言本身的限制。
+
+
+
+3. JVM规范对常量池有所限制。
+
+量池中的每一种数据项都有自己的类型。Java中的UTF-8编码的Unicode字符串在常量池中以`CONSTANTUtf8`类型表示。`CONSTANTUtf8`的数据结构如下：
+
+```c++
+CONSTANT_Utf8_info {
+    u1 tag;
+    u2 length;
+    u1 bytes[length];
+}
+```
+
+重点关注长度为 length 的那个bytes数组，这个数组就是真正存储常量数据的地方，而 length 就是数组可以存储的**最大字节数**，而不是字符数。length 的类型是u2，u2是无符号的16位整数，因此理论上允许的的最大长度是`2^16-1=65535`。所以上面byte数组的最大长度可以是65535。
+
+当然，考虑到UTF-8是一种变长编码，一个字符可能需要1到4个字节来表示（取决于字符的具体值）。因此，如果你的字符串包含大量使用多个字节编码的字符，那么它能包含的实际字符数将会少于65535。
+
+
+
+4. 运行时限制
+
+String 运行时的限制主要体现在 String 的构造函数上。下面是 String 的一个构造函数：
+
+```java
+public String(char value[], int offset, int count) {
+    ...
+}
+```
+
+上面的count值就是字符串的最大长度。在Java中，int的最大长度是2^31-1。所以在运行时，String 的最大长度是2^31-1。
+
+但是这个也是理论上的长度，实际的长度还要看JVM的内存。来看下，最大的字符串会占用多大的内存。
+
+```
+(2^31-1)*16/8/1024/1024/1024 = 2GB
+```
+
+所以在最坏的情况下，一个最大的字符串要占用4GB的内存。如果JVM不能分配这么多内存的话，会直接报错的。
+
+
+
+**总结**：因此，主要的还是JVM规范对常量池的限制，使得byte数组的最大长度不能超过65535
+
+**补充**：JDK9以后对String的存储进行了优化。底层不再使用char数组存储字符串，而是使用byte数组。对于LATIN1字符的字符串可以节省一倍的内存空间。详情请看 [Java9 - string字符串的变化](https://www.seven97.top/java/new-features/java9.html#string%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%9A%84%E5%8F%98%E5%8C%96)
+
+
 
 ### String, StringBuffer 和 StringBuilder
 
