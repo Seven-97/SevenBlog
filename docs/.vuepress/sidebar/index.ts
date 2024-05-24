@@ -307,6 +307,19 @@ export default sidebar({
           ],
         },
         {
+          text: "服务注册与发现",
+          icon: "configuration",
+          prefix: "service-registration-and-discovery/",
+          collapsible: true,
+          children: [
+            "nacos-sourcecode",
+            "nacos-interactionmodel",
+            "zookeeper-colony",
+            "zookeeper-distributedlocks",
+            "zookeeper-sourcecode",
+          ],
+        },
+        {
           text: "消息队列",
           icon: "MQ",
           prefix: "message-queue/",
@@ -333,26 +346,6 @@ export default sidebar({
             "dubbo-serviceexposure-sourcecode",
             "dubbo-servicenvocation-sourcecode",
             "dubbo-newfeature",
-          ],
-        },
-        {
-          text: "服务注册与发现",
-          icon: "framework",
-          prefix: "service-registration-and-discovery/",
-          collapsible: true,
-          children: [
-            "zookeeper-colony",
-            "zookeeper-distributedlocks",
-            "zookeeper-sourcecode",
-          ],
-        },
-        {
-          text: "配置中心",
-          icon: "configuration",
-          prefix: "configuration/",
-          collapsible: true,
-          children: [
-            "nacos-interactionmodel",
           ],
         },
         {
