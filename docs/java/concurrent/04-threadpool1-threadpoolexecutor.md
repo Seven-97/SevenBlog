@@ -150,19 +150,109 @@ Tips：当线程调用start()，线程在JVM中不一定立即执行，有可能
 
 ### 拒绝策略
 
-- CallerRunsPolicy（在当前线程中执行）
+- CallerRunsPolicy：调用执行自己的线程运行任务，也就是直接在调用`execute`方法的线程中运行(`run`)被拒绝的任务，如果执行程序已关闭，则会丢弃该任务。因此这种策略会降低对于新任务提交速度，影响程序的整体性能。如果你的应用程序可以承受此延迟并且你要求任何一个任务请求都要被执行的话，你可以选择这个策略。
 
-- AbortPolicy（直接抛出RejectedExecutionException）
+- AbortPolicy：抛出 `RejectedExecutionException`来拒绝新任务的处理。
 
-- DiscardPolicy（直接丢弃线程）
+- DiscardPolicy：不处理新任务，直接丢弃掉。
 
-- DiscardOldestPolicy（丢弃一个未被处理的最久的线程，然后重试）
+- DiscardOldestPolicy：此策略将丢弃最早的未处理的任务请求。
 
 当没有显示指明拒绝策略时，默认使用AbortPolicy
 
 ![image-20240425111751711](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117769.png)
 
 ![image-20240425111756100](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117174.png)
+
+
+
+#### CallerRunsPolicy
+
+如果不允许丢弃任务，就应该选择`CallerRunsPolicy`。`CallerRunsPolicy` 和其他的几个策略不同，它既不会抛弃任务，也不会抛出异常，而是将任务回退给调用者，使用调用者的线程来执行任务。
+
+```java
+public static class CallerRunsPolicy implements RejectedExecutionHandler {
+        public CallerRunsPolicy() { }
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            if (!e.isShutdown()) {
+                // 直接主线程执行，而不是线程池中的线程执行
+                r.run();
+            }
+        }
+}
+```
+
+**存在的问题**：如果走到`CallerRunsPolicy`的任务是个非常耗时的任务，且处理提交任务的线程是主线程，可能会导致主线程阻塞，进而导致后续任务无法及时执行，严重的情况下很可能导致 OOM。
+
+
+
+当然，采用`CallerRunsPolicy`其实就是希望所有的任务都能够被执行，暂时无法处理的任务又被保存在阻塞队列`BlockingQueue`中。这样的话，在内存允许的情况下，就可以增加阻塞队列`BlockingQueue`的大小并调整堆内存以容纳更多的任务，确保任务能够被准确执行。为了充分利用 CPU，还可以调整线程池的`maximumPoolSize` （最大线程数）参数，这样可以提高任务处理速度，避免累计在 `BlockingQueue`的任务过多导致内存用完。
+
+
+
+但是，如果服务器资源达到可利用的极限了呢？导致主线程卡死的本质就是因为不希望任何一个任务被丢弃。换个思路，有没有办法既能保证任务不被丢弃且在服务器有余力时及时处理呢？
+
+可以考虑**任务持久化**的思路，这里所谓的任务持久化，包括但不限于:
+
+1. 设计一张任务表间任务存储到 MySQL 数据库中。
+2. `Redis`缓存任务。
+3. 将任务提交到消息队列中。
+
+
+
+这里以方案一为例，简单介绍一下实现逻辑：
+
+1. 实现`RejectedExecutionHandler`接口自定义拒绝策略，自定义拒绝策略负责将线程池暂时无法处理（此时阻塞队列已满）的任务入库（保存到 MySQL 中）。注意：线程池暂时无法处理的任务会先被放在阻塞队列中，阻塞队列满了才会触发拒绝策略。
+2. 继承`BlockingQueue`实现一个混合式阻塞队列，该队列包含`JDK`自带的`ArrayBlockingQueue`。另外，该混合式阻塞队列需要修改取任务处理的逻辑，也就是重写`take()`方法，取任务时优先从数据库中读取最早的任务，数据库中无任务时再从 `ArrayBlockingQueue`中去取任务。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405241916054.webp)
+
+
+
+也就是说，一旦线程池中线程达到满载时，就可以通过拒绝策略将最新任务持久化到 MySQL 数据库中，等到线程池有了有余力处理所有任务时，让其优先处理数据库中的任务以避免"饥饿"问题。
+
+
+
+当然，对于这个问题，也可以参考其他主流框架的做法:
+
+- 以 Netty 为例，它的拒绝策略则是直接创建一个线程池以外的线程处理这些任务，为了保证任务的实时处理，这种做法可能需要良好的硬件设备且临时创建的线程无法做到准确的监控：
+
+```java
+private static final class NewThreadRunsPolicy implements RejectedExecutionHandler {
+    NewThreadRunsPolicy() {
+        super();
+    }
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        try {
+            //创建一个临时线程处理任务
+            final Thread t = new Thread(r, "Temporary task executor");
+            t.start();
+        } catch (Throwable e) {
+            throw new RejectedExecutionException(
+                    "Failed to start a new thread", e);
+        }
+    }
+}
+```
+
+- ActiveMQ 则是尝试在指定的时效内尽可能的争取将任务入队，以保证最大交付：
+
+```java
+new RejectedExecutionHandler() {
+                @Override
+                public void rejectedExecution(final Runnable r, final ThreadPoolExecutor executor) {
+                    try {
+                        //限时阻塞等待，实现尽可能交付
+                        executor.getQueue().offer(r, 60, TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                        throw new RejectedExecutionException("Interrupted waiting for BrokerService.worker");
+                    }
+                    throw new RejectedExecutionException("Timed Out while attempting to enqueue Task.");
+                }
+            });
+```
+
+
 
 ### 任务执行机制
 
