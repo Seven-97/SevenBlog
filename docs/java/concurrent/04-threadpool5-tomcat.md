@@ -1,8 +1,8 @@
 ---
-title: 线程池 - Tomcat 线程池详解
+title: 线程池 - Tomcat线程池详解
 category: Java
 tag:
- - 并发编程
+ - Tomcat
 ---
 
 
