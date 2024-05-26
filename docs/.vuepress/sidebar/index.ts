@@ -292,7 +292,6 @@ export default sidebar({
             "zab-detail",
             "raft-detail",
             "consistencyhash",
-            "snowflake",
             "loadbalance",
             "requestflowlimitingalgorithm",
             "idempotence",
@@ -357,6 +356,17 @@ export default sidebar({
           children: [
             "serviceprotection-summary",
             "sentinel-sourcecode",
+          ],
+        },
+        {
+          text: "分布式系统",
+          icon: "distributed-network",
+          prefix: "distributed-system/",
+          collapsible: true,
+          children: [
+            "snowflake",
+            "distributedlocks",
+            "distributedtransactions",
           ],
         },
       ],

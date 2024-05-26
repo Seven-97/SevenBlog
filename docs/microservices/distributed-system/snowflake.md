@@ -1,8 +1,8 @@
 ---
-title: 分布式ID - Snowflake 算法
+title: 分布式ID - Snowflake算法
 category: 微服务
 tag:
- - 理论-算法
+ - 分布式
 ---
 
 
@@ -32,7 +32,6 @@ Snowflake，雪花算法是由Twitter开源的分布式ID生成算法，以划�
 Snowflake 的Twitter官方原版是用Scala写的，对Scala语言有研究的同学可以去阅读下，以下是 Java 版本的写法
 
 ```java
-
 /**
  * Twitter_Snowflake<br>
  * SnowFlake的结构如下(每部分用-分开):<br>
