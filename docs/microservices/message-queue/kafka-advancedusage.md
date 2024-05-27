@@ -1079,7 +1079,7 @@ Java的JDK NIO中方法transferTo()方法就能够实现零拷贝操作，这个
 
 #### 消费者总体工作流程
 
- 消费者对消息进行消费，并且将已经消费的消息加入 _consumer_offsets 中。
+ 消费者对消息进行消费，并且将已经消费的消息加入 `_consumer_offsets` 中。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191057142.png)
 
@@ -1087,7 +1087,7 @@ Java的JDK NIO中方法transferTo()方法就能够实现零拷贝操作，这个
 
 Consumer Group（CG）：消费者组，由多个consumer组成。形成一个消费者组的条件，是所有消费者的groupid相同。
 
-- 消费者组内每个消费者负责消费不同分区的数据，一个分区只能由一个组内消费者消费。
+- 消费者**组内每个消费者负责消费不同分区**的数据，一个分区只能由一个组内消费者消费。
 - 消费者组之间互不影响。所有的消费者都属于某个消费者组，即消费者组是逻辑上的一个订阅者。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191057925.png)
@@ -1101,7 +1101,7 @@ Consumer Group（CG）：消费者组，由多个consumer组成。形成一个�
 
 具体的消费者组初始化流程：
 
- 通过对GroupId进行Hash得到那台服务器的coordinator ，coordinator负责选出消费组中的Leader ，并且协调信息。真正存储消费记录的是 _consumer_offsets_partition 。
+通过对GroupId进行Hash得到那台服务器的coordinator ，coordinator负责选出消费组中的Leader ，并且协调信息。真正存储消费记录的是 _consumer_offsets_partition 。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191058931.png)
 

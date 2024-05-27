@@ -507,6 +507,15 @@ export default sidebar({
           ],
         },
         {
+          text: "缓存专栏",
+          prefix: "cache-column/",
+          icon: "planet",
+          collapsible: true,
+          children: [
+             "",
+          ],
+        },
+        {
           text: "SpringBoot相关",
           prefix: "springboot/",
           icon: "bxl-spring-boot",
