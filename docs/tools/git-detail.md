@@ -360,6 +360,8 @@ git merge 用来做分支合并，将其他分支中的内容合并到当前分�
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405032318912.png)
 
+#### 其它分支合并到master分支
+
 假设当前分支是master
 
 > git checkout master
@@ -388,16 +390,7 @@ git merge 用来做分支合并，将其他分支中的内容合并到当前分�
 
 > printf (“test2″);
 
-这个解决方案各采纳了两个分支中的一部分内容，而且删除了 <<<<<<<，=======，和>>>>>>> 这些行。在解决了所有文件里的所有冲突后，运行 git add 将把它们标记为已解决（resolved）。因为一旦暂存，就表示冲突已经解决。如果你想用一个有图形界面的工具来解决这些问题，不妨运行 git mergetool，它会调用一个可视化的合并工具并引导你解决所有冲突：
-
-> $ git mergetool
-> merge tool candidates: kdiff3 tkdiff xxdiff meld gvimdiff opendiff emerge vimdiff
-> Merging the files: index.html
-
-> Normal merge conflict for ‘test.c’:
-> {local}: modified
-> {remote}: modified
-> Hit return to start merge resolution tool (kdiff3):
+这个解决方案各采纳了两个分支中的一部分内容，而且删除了 <<<<<<<，=======，和>>>>>>> 这些行。在解决了所有文件里的所有冲突后，运行 git add 将把它们标记为已解决（resolved）。因为一旦暂存，就表示冲突已经解决。
 
 合并后的分支图如下：
 
@@ -415,6 +408,60 @@ git merge 用来做分支合并，将其他分支中的内容合并到当前分�
 3. 如果合并有冲突，则解决冲突，并在本地提交；
 4. 没有冲突或者解决掉冲突后，再用git push origin 推送就能成功！
 5. 如果git pull提示no tracking information，则说明本地分支和远程分支的链接关系没有创建，用命令git branch --set-upstream-to origin/。
+
+
+
+#### master分支合并到当前分支
+
+以下是合并master分支到你的当前分支的基本步骤：
+
+1. 确保你在正确的分支上：首先，确保你当前所在的分支是你想要合并master分支到的地方。例如，如果你想要将master合并到feature-branch，你需要先切换到feature-branch：
+   ```shell
+   git checkout feature-branch
+   ```
+
+2. 更新你的分支：在合并之前，最好先更新你的分支，以确保它是最新的。可以通过拉取master分支的最新更改来实现这一点：
+
+   ```shell
+   git pull origin master
+   ```
+
+   这会从远程仓库的master分支拉取最新的更改，并尝试将它们合并到你的当前分支。如果master分支有新的提交，这可能会导致合并冲突。
+
+3. 合并master分支：一旦你的分支是最新的，你可以开始合并过程。使用git merge命令来合并master分支：
+
+   ```shell
+   git merge master
+   ```
+
+   这会将master分支的更改合并到你的当前分支。如果两个分支之间没有冲突，合并将自动完成。如果有冲突，Git会告诉你哪些文件有冲突，你需要手动解决这些冲突。
+
+4. 解决冲突（如果有）：如果合并过程中出现冲突，Git会暂停合并并告诉你哪些文件需要手动解决冲突。你需要打开这些文件，找到并解决冲突。解决冲突后，使用以下命令标记冲突已解决：
+   ```shell
+   git add <冲突文件>
+   ```
+
+   然后继续合并：
+   ```shell
+   git commit
+   ```
+
+   这将创建一个新的合并提交，包含所有解决的冲突。
+
+5. 推送更改：一旦合并完成并且所有冲突都已解决，你可以将更改推送到远程仓库：
+   ```shell
+   git push origin feature-branch
+   ```
+
+   确保替换feature-branch为你的分支名称。
+
+
+
+注意事项：
+
+- 在合并之前，始终确保你的分支是最新的，以避免不必要的冲突。
+- 如果你在合并过程中遇到问题，可以使用git merge --abort来中止合并并返回到合并前的状态。
+- 使用git log或gitk可以帮助理解分支的历史和可能的冲突点。
 
 
 
