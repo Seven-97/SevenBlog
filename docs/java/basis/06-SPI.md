@@ -17,7 +17,7 @@ SPI整体机制图如下：
 
  当服务的提供者提供了一种接口的实现之后，需要在classpath下的 META-INF/services/ 目录里创建一个以服务接口命名的文件，这个文件里的内容就是这个接口的具体的实现类。当其他的程序需要这个服务的时候，就可以通过查找这个jar包（一般都是以jar包做依赖）的META-INF/services/中的配置文件，配置文件中有接口的具体实现类名，可以根据这个类名进行加载实例化，就可以使用该服务了。JDK中查找服务的实现的工具类是：java.util.ServiceLoader。
 
-##  
+
 
 ## SPI机制的简单示例
 
@@ -61,10 +61,10 @@ public class DatabaseSearch implements Search{
 
 
 
-- resources 接下来可以在resources下新建META-INF/services/目录，然后新建接口全限定名的文件：com.cainiao.ys.spi.learn.Search，里面加上我们需要用到的实现类
+- 接下来可以在resources下新建META-INF/services/目录，然后新建接口全限定名的文件：com.seven.spi.Search，里面加上需要用到的实现类
 
 ```java
-com.cainiao.ys.spi.learn.FileSearch
+com.seven.spi.FileSearch
 ```
 
 
@@ -88,7 +88,7 @@ public class TestCase {
 
  
 
-如果在com.cainiao.ys.spi.learn.Search文件里写上两个实现类，那最后的输出结果就是两行了。
+如果在com.seven.spi.Search文件里写上两个实现类，那最后的输出结果就是两行了。
 
 这就是因为ServiceLoader.load(Search.class)在加载某接口时，会去 META-INF/services 下找接口的全限定名文件，再根据里面的内容加载相应的实现类。
 
@@ -496,7 +496,7 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
 
 LogFactory的getLog()方法返回类型是org.apache.commons.logging.Log接口，提供了从trace到fatal方法。可以确定，如果日志实现提供者只要实现该接口，并且使用继承自org.apache.commons.logging.LogFactory的子类创建Log，必然可以构建一个松耦合的日志系统。
 
-##  
+
 
 ### Spring中SPI机制
 
@@ -575,7 +575,7 @@ while(driversIterator.hasNext()) {
 
 ![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250822070.jpg)
 
-###  
+
 
 ### SPI和API的区别是什么
 

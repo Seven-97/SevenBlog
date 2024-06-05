@@ -370,35 +370,6 @@ export default sidebar({
       ],
     },
     {
-      text: "开发工具",
-      icon: "tool",
-      prefix: "tools/",
-      collapsible: true,
-      children: [
-          "maven-detail",
-          "git-detail",
-        {
-          text: "Gradle",
-          icon: "gradle",
-          prefix: "gradle/",
-          collapsible: true,
-          children: [
-            "decompilation-jadx",
-          ],
-        },
-        {
-          text: "Docker",
-          icon: "docker1",
-          prefix: "docker/",
-          collapsible: true,
-          children: [
-          ],
-        },
-        "redis-managertools",
-        "onlinetools",
-      ],
-    },
-    {
       text: "计算机基础",
       icon: "computer",
       prefix: "cs-basics/",
@@ -512,12 +483,19 @@ export default sidebar({
           collapsible: true,
           children: [
              "cache-basic",
-             "cacheanddatabaseconsistencyissues",
              "cacheavalancheandbreakdownandpenetration",
+             "cacheanddatabaseconsistencyissues",
+             "localcache1",
+             "localcache2",
+             "javacacherule",
+             "guavacache1",
+             "guavacache3",
+             "guavacache3",
+             "caffeine1",
           ],
         },
         {
-          text: "SpringBoot相关",
+          text: "SpringBoot专栏",
           prefix: "springboot/",
           icon: "bxl-spring-boot",
           collapsible: true,
@@ -556,6 +534,35 @@ export default sidebar({
             "datastructure-LSMtree",
           ],
         },
+      ],
+    },
+    {
+      text: "开发工具",
+      icon: "tool",
+      prefix: "tools/",
+      collapsible: true,
+      children: [
+          "maven-detail",
+          "git-detail",
+        {
+          text: "Gradle",
+          icon: "gradle",
+          prefix: "gradle/",
+          collapsible: true,
+          children: [
+            "decompilation-jadx",
+          ],
+        },
+        {
+          text: "Docker",
+          icon: "docker1",
+          prefix: "docker/",
+          collapsible: true,
+          children: [
+          ],
+        },
+        "redis-managertools",
+        "onlinetools",
       ],
     },
   ],

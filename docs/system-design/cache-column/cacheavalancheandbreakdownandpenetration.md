@@ -8,6 +8,10 @@ tag:
 
 
 
+> 来源：[小林Coding](https://www.xiaolincoding.com/redis/)，Seven进行了部分补充完善
+
+
+
 ## 概述
 
 用户的数据一般都是存储于数据库，数据库的数据是落在磁盘上的，磁盘的读写速度可以说是计算机里最慢的硬件了。
@@ -90,7 +94,7 @@ tag:
     ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270810586.png)
 
 3. 逻辑过期：热点数据不设置过期时间，后台异步更新缓存，适用于**不严格要求缓存一致性**的场景。
-  ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270810346.png)
+    ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270810346.png)
 
 
 
