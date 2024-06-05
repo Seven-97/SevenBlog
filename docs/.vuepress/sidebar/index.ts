@@ -489,7 +489,7 @@ export default sidebar({
              "localcache2",
              "javacacherule",
              "guavacache1",
-             "guavacache3",
+             "guavacache2",
              "guavacache3",
              "caffeine1",
           ],

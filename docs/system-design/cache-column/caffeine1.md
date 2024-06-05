@@ -1,5 +1,5 @@
 ---
-title: GuavaCache - 实现细节与核心机制
+title: Caffeine - 缘何会更强、如何去上手
 category: 系统设计
 tag:
  - 缓存
