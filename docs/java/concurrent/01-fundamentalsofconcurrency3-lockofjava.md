@@ -35,7 +35,7 @@ tag:
 
 而为了让当前线程“稍等一下”，就让当前线程进行自旋，如果在自旋完成后前面锁定同步资源的线程已经释放了锁，那么当前线程就可以不必阻塞而是直接获取同步资源，从而避免切换线程的开销。这就是自旋锁。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251014768.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251014768.jpg)
 
 也就是说尝试获取锁的线程不会立即阻塞，而是采用循环的方式去尝试获取锁。
 
@@ -85,7 +85,7 @@ Monitor的基本结构是什么？
 
  
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251014754.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251014754.gif)
 
 1. 刚开始Monitor中Owner为null
 2. 当Thread-2执行Synchronized(obj)就会将Monitor的所有者owner置为Thread-2。Monitor中只能有一个Owner。
@@ -99,7 +99,7 @@ synchronized通过Monitor来实现线程同步，Monitor是依赖于底层的操
 
 #### 四种锁状态对应的的Mark Word内容：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251014760.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251014760.gif)
 
 ### 无锁
 
@@ -260,7 +260,7 @@ AQS有个state字段，该字段用来描述有多少线程获持有锁。在独
 
 但是在ReentrantReadWriteLock中有读、写两把锁，所以需要在整型变量state上分别描述读锁和写锁的数量（或者也可以叫状态）。于是将state变量“按位切割”切分成了两个部分，高16位表示读锁状态（读锁个数），低16位表示写锁状态（写锁个数）
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251014753.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251014753.gif)
 
 ### 写锁加锁源码：
 
@@ -346,3 +346,20 @@ protected final int tryAcquireShared(int unused) {
 ## 互斥锁和读写锁
 
 互斥锁和读写锁是共享锁和独享锁的具体表现。
+
+
+
+## 分段锁
+
+分段锁并不是具体的一个锁，其目的是细化锁的粒度。
+
+比如要保证数组中数据的线程安全，我们可以对其上锁，但是这样会影响效率，线程A在操作数组的时候，其他线程是不允许操作的。想一下如果线程A修改数组中下标0~9对应的元素，线程B要修改下标10~15的元素，这两个线程同时操作也不会出现线程安全问题，那可以对数组采用两把锁来控制，一把锁控制下标0~9的元素，另一把锁控制下标10~15的元素，这就是分段锁。相比于单个锁来说可以提高性能。
+
+jdk7中的[ConcurrentHashMap](https://www.seven97.top/java/collection/04-juc2-concurrenthashmap.html)就采用了分段锁。
+
+
+## 分布式锁
+
+[Redis实现分布式锁 | Seven的菜鸟成长之路 (seven97.top)](https://www.seven97.top/database/redis/05-implementdistributedlocks.html)
+
+[ZooKeeper - 分布式锁 | Seven的菜鸟成长之路 (seven97.top)](https://www.seven97.top/microservices/service-registration-and-discovery/zookeeper-distributedlocks.html)

@@ -435,7 +435,7 @@ public class WebSocketConfiguration {
 
 **什么是 MQTT 协议？**
 
-MQTT (Message Queue Telemetry Transport)是一种基于发布/订阅（publish/subscribe）模式的轻量级通讯协议，通过订阅相应的主题来获取消息，是物联网（Internet of Thing）中的一个标准传输协议。
+MQTT (Message Queue Telemetry Transport)是一种基于发布/订阅（publish/subscribe）模式的轻量级通讯协议，通过订阅相应的主题来获取消息，是物联网（Internet of Thing）中的一个标准传输协议。MQTT 最大优点在于，可以以极少的代码和有限的带宽，为连接远程设备提供实时可靠的消息服务。
 
 该协议将消息的发布者（publisher）与订阅者（subscriber）进行分离，因此可以在不可靠的网络环境中，为远程连接的设备提供可靠的消息服务，使用方式与传统的 MQ 有点类似。
 
@@ -443,7 +443,9 @@ MQTT (Message Queue Telemetry Transport)是一种基于发布/订阅（publish/s
 
 TCP 协议位于传输层，MQTT 协议位于应用层，MQTT 协议构建于 TCP/IP 协议上，也就是说只要支持 TCP/IP 协议栈的地方，都可以使用 MQTT 协议。
 
-**为什么要用 MQTT 协议？**
+
+
+#### 为什么要用 MQTT ？
 
 MQTT 协议为什么在物联网（IOT）中如此受偏爱？而不是其它协议，比如我们更为熟悉的 HTTP 协议呢？
 
@@ -451,10 +453,51 @@ MQTT 协议为什么在物联网（IOT）中如此受偏爱？而不是其它协
 - HTTP 是单向的，如果要获取消息客户端必须发起连接，而在物联网（IOT）应用程序中，设备或传感器往往都是客户端，这意味着它们无法被动地接收来自网络的命令。
 - 通常需要将一条命令或者消息，发送到网络上的所有设备上。HTTP 要实现这样的功能不但很困难，而且成本极高。
 
-具体的 MQTT 协议介绍和实践，这里我就不再赘述了，大家可以参考我之前的两篇文章，里边写的也都很详细了。
 
-- MQTT 协议的介绍：[我也没想到 SpringBoot + RabbitMQ 做智能家居，会这么简单](https://mp.weixin.qq.com/s/udFE6k9pPetIWsa6KeErrA)
-- MQTT 实现消息推送：[未读消息（小红点），前端 与 RabbitMQ 实时消息推送实践，贼简单~](https://mp.weixin.qq.com/s/U-fUGr9i1MVa4PoVyiDFCg)
+
+#### 相关概念
+
+- Publisher（发布者）：消息的发出者，负责发送消息。
+
+- Subscriber（订阅者）：消息的订阅者，负责接收并处理消息。
+
+- Broker（代理）：消息代理，位于消息发布者和订阅者之间，各类支持 MQTT 协议的消息中间件都可以充当。
+
+- Topic（主题）：可以理解为消息队列中的路由，订阅者订阅了主题之后，就可以收到发送到该主题的消息。
+
+- Payload（负载）；可以理解为发送消息的内容。只存在于`CONNECT`、`PUBLISH`、`SUBSCRIBE`、`SUBACK`、`UNSUBSCRIBE`这几种类型的消息：
+
+  - `CONNECT`：包含客户端的`ClientId`、订阅的`Topic`、`Message`以及`用户名`和`密码`。
+  - `PUBLISH`：向对应主题发送消息。
+  - `SUBSCRIBE`：要订阅的主题以及`QoS`。
+  - `SUBACK`：服务器对于`SUBSCRIBE`所申请的主题及`QoS`进行确认和回复。
+  - `UNSUBSCRIBE`：取消要订阅的主题。
+
+- QoS（消息质量）：全称 Quality of Service，即消息的发送质量，主要有`QoS 0`、`QoS 1`、`QoS 2`三个等级：
+
+- - QoS 0（Almost Once）：至多一次。只发送一次，不保证消息是否成功送达，没有确认机制，**消息可能会丢失或重复**。
+  - QoS 1（Atleast Once）：至少一次。增加了`ack`确认机制，确保消息到达，发送者（`publisher`）推送消息到MQTT代理（`broker`）时，两者自身都会先持久化消息，只有当`publisher` 或者 `Broker`分别收到 `PUBACK`确认时，才会删除自身持久化的消息，否则就会重发。但**消息重复**可能会发生；
+  - QoS 2（Exactly Once）：只有一次，确保消息只到达一次。`publisher` 和 `broker` 同样对消息进行持久化，其中 `publisher` 缓存了`message`和 对应的`msgID`，而 `broker` 缓存了 `msgID`，可以保证消息不重复，由于又增加了一个`confirm` 机制，整个流程变得复杂很多。
+
+
+
+#### MQTT数据包
+
+在`MQTT`协议中，一个`MQTT`数据包由：`固定头`（Fixed header）、 `可变头`（Variable header）、 `消息体`（payload）三部分构成。
+
+- 固定头（Fixed header），所有数据包中都有固定头，包含数据包类型及数据包的分组标识。
+- 可变头（Variable header），部分数据包类型中有可变头。
+- 内容消息体（Payload），存在于部分数据包类，是客户端收到的具体消息内容。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406062340240.png)
+
+
+
+[前端 与 RabbitMQ 实时消息推送实践](https://mp.weixin.qq.com/s/U-fUGr9i1MVa4PoVyiDFCg)
+
+[springboot + rabbitmq 实现实时消息推送](https://mp.weixin.qq.com/s/udFE6k9pPetIWsa6KeErrA)
+
+
 
 ## 总结
 

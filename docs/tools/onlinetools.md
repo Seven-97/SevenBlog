@@ -31,6 +31,8 @@ tag:
   - Zookeeper图形化管理客户端：
     - [ZooInspector](https://issues.apache.org/jira/secure/attachment/12436620/ZooInspector.zip)
     - [PrettyZoo](https://github.com/vran-dev/PrettyZoo)
-  - [Redis - 客户端](https://www.seven97.top/tools/redis-managertools.html)
+  - [Redis - 管理客户端](https://www.seven97.top/tools/redis-managertools.html)
   - [Navicat - 数据库管理客户端](https://www.navicat.com.cn/download/navicat-premium)
   - [MobaXterm - SSH客户端](https://mobaxterm.mobatek.net/)
+  
+  - [MQTTBox](http://workswithweb.com/mqttbox.html)：可用于测试 MQTT 的即时通讯功能

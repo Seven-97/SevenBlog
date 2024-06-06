@@ -791,7 +791,7 @@ top -s
 
 
 
-## netstat命令 – 显示网络状态
+## netstat命令 - 显示网络状态
 
 netstat命令来自英文词组network statistics的缩写，其功能是显示各种网络相关信息，例如网络连接状态、路由表信息、接口状态、NAT、多播成员等。
 
@@ -936,3 +936,245 @@ tcp        0      0 127.0.0.1:631           0.0.0.0:*               LISTEN      
 ```
 
 如果想找出特定端口（例如端口 21）的进程名称，则添加：`| grep -w ':21'` 
+
+
+
+## ss命令 - 网络状态工具
+
+ss命令用来显示处于活动状态的套接字信息。ss命令可以用来获取socket统计信息，它可以显示和 netstat 类似的内容。但ss的优势在于它能够显示更多更详细的有关TCP和连接状态的信息，而且比netstat更快速更高效。
+
+当服务器的socket连接数量变得非常大时，无论是使用netstat命令还是直接 cat /proc/net/tcp，执行速度都会很慢。
+
+ss快的秘诀在于，它利用到了TCP协议栈中tcp_diag。tcp_diag是一个用于分析统计的模块，可以获得Linux 内核中第一手的信息，这就确保了ss的快捷高效。当然，如果你的系统中没有tcp_diag，ss也可以正常运行，只是效率会变得稍慢。
+
+
+
+### 语法格式
+
+```shell
+ss [option]
+```
+
+
+
+常用参数：
+
+- -h：显示帮助信息；
+- -V：显示指令版本信息；
+- -n：不解析服务名称，以数字方式显示；
+- -a：显示所有的套接字；
+- -l：显示处于监听状态的套接字；
+- -o：显示计时器信息；
+- -m：显示套接字的内存使用情况；
+- -p：显示使用套接字的进程信息；
+- -i：显示内部的TCP信息；
+- -4：只显示ipv4的套接字；
+- -6：只显示ipv6的套接字；
+- -t：只显示tcp套接字；
+- -u：只显示udp套接字；
+- -d：只显示DCCP套接字；
+- -w：仅显示RAW套接字；
+- -x：仅显示UNIX域套接字。
+
+
+
+### 实例
+
+只显示监听的套接字
+
+```shell
+ss -lnt
+```
+
+
+
+不解析主机名
+
+```shell
+ss -nt
+```
+
+
+
+打印进程名和进程号
+
+```shell
+ss -ltp
+```
+
+
+
+仅显示IPv4 或 IPv6 连接
+
+```shell
+ss -tl -f inet 或 ss -tl6
+```
+
+
+
+列出处在 time-wait 状态的 IPv4 套接字
+
+```shell
+ss -t4 state time-wait
+```
+
+注意： 状态可以是以下任意一种
+```shell
+stablished 
+yn-sent 
+yn-recv 
+in-wait-1 
+in-wait-2 
+ime-wait 
+losed 
+lose-wait 
+ast-ack 
+closing 
+all – All of the above states 
+connected – All the states except for listen and closed 
+synchronized – All the connected states except for syn-sent 
+bucket – Show states, which are maintained as minisockets, i.e. time-wait and syn-recv. 
+big – Opposite to bucket state.
+```
+
+
+
+显示所有源端口或目的端口为 ssh 的套接字
+
+```shell
+ss -at '( dport = :ssh or sport = :ssh )'
+```
+
+
+
+显示目的端口是443或80的套接字
+
+```shell
+ss -nt '( dst :443 or dst :80 )'
+```
+
+
+
+对地址和端口过滤
+
+```shell
+ss -nt dst 103.245.222.184:80 
+```
+
+
+
+仅过滤端口
+
+```shell
+ss -nt dport = :80 
+```
+
+
+
+显示对方端口号小于100的套接字
+
+```shell
+ss -nt dport \< :100
+```
+
+
+
+显示端口号大于1024的套接字
+
+```shell
+sudo ss -nt sport gt :1024
+```
+
+
+
+显示对方端口是 80的套接字
+
+```shell
+sudo ss -nt state connected dport = :80
+```
+
+
+显示TCP连接
+
+```shell
+[root@localhost ~]# ss -t -a
+State       Recv-Q Send-Q                            Local Address:Port                                Peer Address:Port   
+LISTEN      0      0                                             *:3306                                           *:*       
+LISTEN      0      0                                             *:http                                           *:*       
+LISTEN      0      0                                             *:ssh                                            *:*       
+LISTEN      0      0                                     127.0.0.1:smtp                                           *:*       
+ESTAB       0      0                                112.124.15.130:42071                              42.156.166.25:http    
+ESTAB       0      0                                112.124.15.130:ssh                              121.229.196.235:33398 
+```
+
+
+
+显示 Sockets 摘要
+
+```shell
+[root@localhost ~]# ss -s
+Total: 172 (kernel 189)
+TCP:   10 (estab 2, closed 4, orphaned 0, synrecv 0, timewait 0/0), ports 5
+ 
+Transport Total     ip        IPv6
+*         189       -         -        
+RAW       0         0         0        
+UDP       5         5         0        
+TCP       6         6         0        
+INET      11        11        0        
+FRAG      0         0         0   
+```
+
+列出当前的established, closed, orphaned and waiting TCP sockets
+
+
+
+列出所有打开的网络连接端口
+
+```shell
+[root@localhost ~]# ss -l
+Recv-Q Send-Q                                 Local Address:Port                                     Peer Address:Port   
+0      0                                                  *:3306                                                *:*       
+0      0                                                  *:http                                                *:*       
+0      0                                                  *:ssh                                                 *:*       
+0      0                                          127.0.0.1:smtp                                                *:* 
+```
+
+
+
+查看进程使用的socket
+
+```shell
+[root@localhost ~]# ss -pl
+Recv-Q Send-Q                                          Local Address:Port                                              Peer Address:Port   
+0      0                                                           *:3306                                                         *:*        users:(("mysqld",1718,10))
+0      0                                                           *:http                                                         *:*        users:(("nginx",13312,5),("nginx",13333,5))
+0      0                                                           *:ssh                                                          *:*        users:(("sshd",1379,3))
+0      0                                                   127.0.0.1:smtp                                                         *:*        us
+```
+
+
+
+找出打开套接字/端口应用程序
+
+```shell
+[root@localhost ~]# ss -pl | grep 3306
+0      0                            *:3306                          *:*        users:(("mysqld",1718,10))
+```
+
+
+
+显示所有UDP Sockets  或 ss -aA udp
+
+```shell
+[root@localhost ~]# ss -u -a
+State       Recv-Q Send-Q                                     Local Address:Port                                         Peer Address:Port   
+UNCONN      0      0                                                      *:syslog                                                  *:*       
+UNCONN      0      0                                         112.124.15.130:ntp                                                     *:*       
+UNCONN      0      0                                            10.160.7.81:ntp                                                     *:*       
+UNCONN      0      0                                              127.0.0.1:ntp                                                     *:*       
+UNCONN      0      0                                                      *:ntp                                                     *:*
+```
+
+
+

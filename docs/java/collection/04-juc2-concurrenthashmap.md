@@ -122,11 +122,11 @@ hashtable该类不依赖于synchronization去保证线程操作的安全。Colle
 2. 根据槽位类型进行操作(链表，红黑树)
 3. 根据槽位中成员数量进行数据转换,扩容等操作
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250932684.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250932684.gif)
 
 如何高效的执行并发操作:根据上面hashMap的数据结构可以直观的看到，如果以整个容器为一个资源进行锁定，那么就变为了串行操作。而根据hash表的特性，具有冲突的操作只会出现在同一槽位，而与其它槽位的操作互不影响。基于此种判断，那么就可以将资源锁粒度缩小到槽位上，这样热点一分散，冲突的概率就大大降低，并发性能就能得到很好的增强。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250932687.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250932687.gif)
 
 底层源码：
 
@@ -726,7 +726,54 @@ final long sumCount() {
 
 - ConcurrentHashMap JDK1.8: 则使用数组+链表+红黑树数据结构和CAS原子操作实现；synchronized锁住桶，以及大量的CAS操作
 
-##  
+
+
+### 扩展：JDK7的分段锁机制
+
+在 JDK7 中 ConcurrentHashMap 底层数据结构是数组加链表，源码如下：
+
+```java
+//初始总容量，默认16
+static final int DEFAULT_INITIAL_CAPACITY = 16;
+//加载因子，默认0.75
+static final float DEFAULT_LOAD_FACTOR = 0.75f;
+//并发级别，默认16
+static final int DEFAULT_CONCURRENCY_LEVEL = 16;
+ 
+static final class Segment<K,V> extends ReentrantLock implements Serializable {
+	transient volatile HashEntry<K,V>[] table;
+}
+```
+
+其中并发级别控制了Segment的个数，在一个ConcurrentHashMap创建后Segment的个数是不能变的，扩容过程过改变的是每个Segment的大小。
+
+
+
+段Segment继承了重入锁ReentrantLock，有了锁的功能，每个锁控制的是一段，如下图所示：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406062311508.png)
+
+将一个大的Map分成若干个小的segment，每个segment使用一个独立的锁来保证线程安全，多个线程访问不同segment时可以并发访问，从而提高了并发性能。这相对于直接对整个map同步synchronized是有优势的。
+
+
+
+那为什么J DK8 又舍弃掉了分段锁呢？
+
+- Segment的个数是不能变的，因此随着put的数据越多，每个Segment也就越来越大，锁的粒度也就会变得越大。此时，当某个段很大时，分段锁的性能会下降。
+
+- 分成很多段时会比较浪费内存空间(不连续，碎片化);
+- 操作map时竞争同一个分段锁的概率非常小时，分段锁反而会造成更新等操作的长时间等待; 
+
+因此，Java8中废除了分段锁，采用了一种新的方式来保证线程安全性。
+
+
+
+### 扩展：为什么JDK8不用ReentrantLock而用synchronized 
+
+- 减少内存开销：如果使用ReentrantLock则需要节点继承AQS来获得同步支持，增加内存开销，而1.8中只有头节点需要进行同步。
+- 内部优化：synchronized则是JVM直接支持的，JVM能够在运行时作出相应的优化措施：锁粗化、锁消除、锁自旋等等。
+
+
 
 ## 为什么key 和 value 不允许为 null
 
