@@ -3,6 +3,7 @@ title: GuavaCache - 容量限制与数据淘汰策略
 category: 系统设计
 tag:
  - 缓存
+ - GuavaCache
 ---
 
 

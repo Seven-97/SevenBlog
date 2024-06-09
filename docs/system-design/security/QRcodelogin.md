@@ -1,5 +1,5 @@
 ---
-title: SSO 单点登录详解
+title: 二维码登录详解
 category: 系统设计
 tag:
   - 认证授权

@@ -3,6 +3,7 @@ title: GuavaCache - 实现细节与核心机制
 category: 系统设计
 tag:
  - 缓存
+ - GuavaCache
 ---
 
 

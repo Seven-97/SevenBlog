@@ -70,6 +70,7 @@ export default sidebar({
             "04-threadpool3-futuretask",
             "04-threadpool4-forkjoin",
             "04-threadpool5-tomcat",
+            "05-concurrenttools7-completablefuture",
             "05-concurrenttools1-countdownlatch",
             "05-concurrenttools2-cyclicbarrier",
             "05-concurrenttools3-semaphore",
@@ -471,6 +472,7 @@ export default sidebar({
              "basisofauthoritycertification",
              "jwt-detail",
              "sso-detail",
+             "oauth2",
              "QRcodelogin",
              "designofpermissionsystem",
              "designofpermissionsystemzhuanzhuan",     
@@ -492,6 +494,9 @@ export default sidebar({
              "guavacache2",
              "guavacache3",
              "caffeine1",
+             "caffeine2",
+             "caffeine3",
+             "ehcache1"
           ],
         },
         {
