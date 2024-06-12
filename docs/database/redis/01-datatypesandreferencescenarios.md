@@ -65,8 +65,20 @@ OK
 (integer) 2
 ```
 
-### 分布式锁
+
+
+### [分布式锁](https://www.seven97.top/database/redis/05-implementdistributedlocks.html)
+
+之所以采用Redis来作为分布式锁，可以有几方面理由：
+
+1. redis足够的快
+2. redis提供了`setnx + expire`的机制，完全契合分布式锁的实现要点
+3. `Redisson`客户端的流行，使得基于redis的分布式锁更加简单
+
+
+
 SET 命令有个 NX 参数可以实现「key不存在才插入」，可以用它来实现分布式锁：
+
 - 如果 key 不存在，则显示插入成功，可以用来表示加锁成功；
 - 如果 key 存在，则会显示插入失败，可以用来表示加锁失败。
 

@@ -25,7 +25,7 @@ Redis是一种基于客户端-服务端模型以及请求/响应的TCP服务。�
 2. 服务端处理命令，并且返回处理结果给客户端。
 3. 客户端接收到服务的返回结果，程序从阻塞代码处返回。
 
-![image-20240426201923471](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270803764.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270803764.png)
 
 
 
@@ -33,7 +33,7 @@ Redis是一种基于客户端-服务端模型以及请求/响应的TCP服务。�
 
 Redis客户端和服务端之间通过网络连接进行数据传输，数据包从客户端到达服务器，并从服务器返回数据回复客户端的时间被称之为RTT(Round Trip Time - 往返时间)。我们可以很容易就意识到，Redis在连续请求服务端时，如果RTT时间为250ms, 即使Redis每秒能处理100k请求，但也会因为网络传输花费大量时间，导致每秒最多也只能处理4个请求，导致整体性能的下降。
 
-![image-20240426201928864](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270803314.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270803314.png)
 
 ### 2.3 Redis Pipeline
 
@@ -41,7 +41,7 @@ Redis客户端和服务端之间通过网络连接进行数据传输，数据包
 
 当使用Pipeline时，它允许多个命令的读通过一次read()操作，多个命令的应答使用一次write()操作，它允许客户端可以一次发送多条命令，而不等待上一条命令执行的结果。**不仅减少了RTT，同时也减少了IO调用次数（IO调用涉及到用户态到内核态之间的切换），最终提升程序的执行效率与性能。**如下图：
 
-![image-20240426201935493](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270803022.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270803022.png)
 
 要支持Pipeline，其实既要服务端的支持，也要客户端支持。对于服务端来说，所需要的是能够处理一个客户端通过同一个TCP连接发来的多个命令，可以理解为，这里将多个命令切分，和处理单个命令一样，Redis就是这样处理的。而客户端，则是要将多个命令缓存起来，缓冲区满了就发送，然后再写缓冲，最后才处理Redis的应答。
 
@@ -94,11 +94,11 @@ public class RedisPipelineTestDemo {
 
 测试结果如下:
 
-Jedis逐一给每个set新增一个value耗时：162655ms
+- Jedis逐一给每个set新增一个value耗时：162655ms
 
-Jedis Pipeline模式耗时：504ms
+- Jedis Pipeline模式耗时：504ms
 
-Redisson Pipeline模式耗时：1399ms
+- Redisson Pipeline模式耗时：1399ms
 
 我们发现使用Pipeline模式对应的性能会明显好于单个命令执行的情况。
 
@@ -106,7 +106,7 @@ Redisson Pipeline模式耗时：1399ms
 
 在实际使用过程中有这样一个场景，很多应用在节假日的时候需要更新应用图标样式，在运营进行后台配置的时候, 可以根据圈选的用户标签预先计算出单个用户需要下发的图标样式并存储在Redis里面，从而提升性能，这里就涉及Redis的批量操作问题，业务流程如下：
 
-![image-20240426202000634](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270804062.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270804062.png)
 
 为了提升Redis操作性能，我们决定使用Redis Pipelining机制进行批量执行。
 
@@ -114,7 +114,7 @@ Redisson Pipeline模式耗时：1399ms
 
 针对Java技术栈而言，目前Redis使用较多的客户端为Jedis、Lettuce和Redisson。
 
-![image-20240426202005622](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270804395.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270804395.png)
 
 目前项目主要是基于SpringBoot开发，针对Redis，其默认的客户端为Lettuce，所以我们基于Lettuce客户端进行分析。
 
@@ -669,7 +669,7 @@ public void deleteSet(String updateKey, Set<Integer> deviceIds) {
 
 由于ltrim本身的时间复杂度为O(M)，其中M要移除的元素的个数，相比于原始方案的lrem，效率提升很多，可以不需要使用Redis Pipeline，优化结果使得Redis内存利用率和cpu利用率都极大程度得到缓解。
 
-![image-20240426202453656](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270805913.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270805913.png)
 
 ## 六、Redisson 对 Redis Pipeline 特性支持
 
@@ -1104,14 +1104,3 @@ Redis提供了Pipelining进行批量操作的高级特性，极大地提高了�
  
 
  
-
- 
-
- 
-
- 
-
- 
-
-
-

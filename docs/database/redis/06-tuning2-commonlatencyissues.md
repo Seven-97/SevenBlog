@@ -46,7 +46,7 @@ CONFIG SET slowlog-max-len 1000
 - sunion：用于计算两个或多个集合的并集。时间复杂度可以描述为 `O(N)`，其中 `N` 是所有参与运算集合的元素总数。如果有多个集合，每个集合有不同数量的元素参与运算，那么复杂度会是所有这些集合元素数量的总和。
 
 - zunionstore：用于计算一个或多个有序集合的并集，并将结果存储到一个新的有序集合中。在最简单的情况下，`ZUNIONSTORE` 命令的时间复杂度是 `O(N*log(N))`，其中 `N` 是所有参与计算的集合中元素的总数。
-- keys * ：获取所有的 key 操作；
+- keys * ：获取所有的 key 操作；复杂度`O(n)`，数据量越大执行速度越慢；可以使用`scan`命令替代
 - Hgetall：返回哈希表中所有的字段和；
 - smembers：返回集合中的所有成员；
 
@@ -81,7 +81,7 @@ CONFIG SET slowlog-max-len 1000
 1. 使用 Redis 自带的 --bigkeys 参数来查找：这个命令会扫描(Scan) Redis 中的所有 key ，会对 Redis 的性能有一点影响，最好选择在从节点上执行该命令，因为主节点上执行时，会**阻塞**主节点。并且，这种方式只能找出每种数据结构 top 1 bigkey（占用内存最大的 String 数据类型，包含元素最多的复合数据类型）。然而，一个 key 的元素多并不代表占用内存也多，需要我们根据具体的业务情况来进一步判断。
 
 2. Redis 自带的 SCAN 命令：SCAN 命令可以按照一定的模式和数量返回匹配的 key。获取了 key 之后，可以利用 STRLEN、HLEN、LLEN等命令返回其长度或成员数量。
-  ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270810931.png)
+    ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270810931.png)
 
 3. 借助开源工具分析 RDB 文件：这种方案的前提是Redis 采用的是 RDB 持久化。网上有现成的工具：
 

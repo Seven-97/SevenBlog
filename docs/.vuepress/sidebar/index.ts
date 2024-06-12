@@ -496,7 +496,11 @@ export default sidebar({
              "caffeine1",
              "caffeine2",
              "caffeine3",
-             "ehcache1"
+             "ehcache1",
+             "ehcache2",
+             "ehcache3",
+             "redis",
+             "usecache",
           ],
         },
         {
