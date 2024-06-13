@@ -153,6 +153,7 @@ export default sidebar({
             "02-lock2-howtoaddrowlocks",
             "03-execute1-statementexecutionprocess",
             "03-execute2-executionplan-explain",
+            "04-tuning-databaseconnectionpoolconfiguration",
             "04-tuning-overviewoftuning",
           ],
         },

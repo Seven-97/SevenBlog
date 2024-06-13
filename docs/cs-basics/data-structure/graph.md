@@ -1160,15 +1160,192 @@ int dijkstra(int start, int end, List<Integer>[] graph) {
 
 
 
+### A*算法
+
+Dijkstra算法的优点在于其简单可靠，能够保证找到全局最优解。然而，其缺点也明显：对大规模图的处理效率低下，因为它需要遍历整个图。
+
+Astar 是一种 广搜的改良版。有的 Astar是 dijkstra 的改良版。
+
+其实只是场景不同而已，在搜索最短路的时候， 如果是无权图（边的权值都是1） 那就用广搜，代码简洁，时间效率和 dijkstra 差不多 （具体要取决于图的稠密）如果是有权图（边有不同的权值），优先考虑 dijkstra。
+
+而 Astar 关键在于 启发式函数， 也就是 影响 广搜或者 dijkstra 从 容器（队列）里取元素的优先顺序。
+
+#### 实现机制
+
+1. 启发式搜索的优势
+   A\*算法引入了启发式函数h(v)，它预估了从节点v到目标节点的最优路径成本。这使得A\*能够在搜索过程中具有方向性，优先探索那些更有可能导向目标的路径，从而减少不必要的探索，提高搜索效率。
+
+2. 实现机制
+
+   - 评估函数：A\*的关键在于f(v)=g(v)+h(v)，其中g(v)是从起点到节点v的实际成本，h(v)是启发式函数，通常表示 当前节点 到终点的距离。因此两者相加就是起点到终点的距离。
+
+   - 开放与关闭集合：算法维护两个集合，开放集合存放待评估的节点，关闭集合存放已评估节点。每次迭代从开放集合中选择f值最小的节点进行扩展，直到目标节点被加入关闭集合。
 
 
 
+**BFS 是没有目的性的 一圈一圈去搜索， 而 A\* 是有方向性的去搜索**。
+
+那么 A\* 为什么可以有方向性的去搜索，它的如何知道方向呢？**其关键在于 启发式函数**。
+
+计算两点距离通常有如下三种计算方式：这也一般被选为启发式函数，用来预估当前节点到终点的距离
+
+1. 曼哈顿距离，计算方式：d = abs(x1-x2)+abs(y1-y2)
+2. 欧氏距离（欧拉距离） ，计算方式：d = sqrt( (x1-x2)^2 + (y1-y2)^2 )
+3. 切比雪夫距离，计算方式：d = max(abs(x1 - x2), abs(y1 - y2))
 
 
 
+#### 与Dijkstra的对比分析
+
+- 计算效率：A\*由于采用了启发式信息，通常比Dijkstra算法更快找到解，尤其在复杂路网中更为显著。
+- 路径质量：理论上，只要启发式函数满足可接纳性条件，A\*保证找到最短路径。Dijkstra同样保证最短路径，但缺乏效率优势。
+- 资源消耗：A\*在内存使用上可能更高，因为它需要维护开放集合和关闭集合，而Dijkstra只需维护未访问集合和前驱节点映射。
+- 适用场景：Dijkstra适用于小型或中型规模、对实时性要求不高的场景；A\*更适合大型图搜索或对实时性要求较高的无场景。
 
 
 
+#### 代码实现
+
+实现代码如下：启发式函数 采用 欧拉距离计算方式
+
+```java
+class Node {
+    //表示节点在网格中的位置
+    int x, y;
+    //gCost表示从起点到该节点的实际代价，hCost表示从该节点到目标节点的估计代价（启发式值），fCost是两者之和。
+    double gCost, hCost, fCost;
+    //用于重构路径
+    Node parent;
+
+    public Node(int x, int y) {
+        this.x = x;
+        this.y = x;
+    }
+
+    //计算当前节点到目标节点的欧拉距离。
+    public double calculateHeuristic(Node target) {
+        return Math.sqrt(Math.pow(this.x - target.x, 2) + Math.pow(this.y - target.y, 2));
+    }
+
+    public void updateCosts(Node target, double gCost) {
+        this.gCost = gCost;
+        this.hCost = calculateHeuristic(target);
+        this.fCost = this.gCost + this.hCost;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Node node = (Node) obj;
+        return x == node.x && y == node.y;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
+    }
+}
+
+class AStar {
+    private static final int[][] DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1},
+            {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+
+    public List<Node> findPath(Node start, Node target, int[][] grid) {
+        //表示待处理节点
+        Set<Node> openSet = new HashSet<>();
+        //表示已处理节点
+        Set<Node> closedSet = new HashSet<>();
+        //用于获取具有最小fCost的节点
+        PriorityQueue<Node> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(n -> n.fCost));
+
+        start.updateCosts(target, 0);
+        openSet.add(start);
+        priorityQueue.add(start);
+
+        while (!openSet.isEmpty()) {
+            Node current = priorityQueue.poll();
+            openSet.remove(current);
+            closedSet.add(current);
+
+            if (current.equals(target)) {
+                return reconstructPath(current);
+            }
+
+            for (int[] direction : DIRECTIONS) {
+                int newX = current.x + direction[0];
+                int newY = current.y + direction[1];
+
+                if (!isInBounds(newX, newY, grid) || grid[newX][newY] == 1) {
+                    continue;
+                }
+
+                Node neighbor = new Node(newX, newY);
+                if (closedSet.contains(neighbor)) {
+                    continue;
+                }
+
+                double tentativeGCost = current.gCost + current.calculateHeuristic(neighbor);
+                if (!openSet.contains(neighbor) || tentativeGCost < neighbor.gCost) {
+                    neighbor.updateCosts(target, tentativeGCost);
+                    neighbor.parent = current;
+
+                    if (!openSet.contains(neighbor)) {
+                        openSet.add(neighbor);
+                        priorityQueue.add(neighbor);
+                    }
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    // 检查节点是否在网格范围内。
+    private boolean isInBounds(int x, int y, int[][] grid) {
+        return x >= 0 && y >= 0 && x < grid.length && y < grid[0].length;
+    }
+
+    //从目标节点回溯构建路径。
+    private List<Node> reconstructPath(Node node) {
+        List<Node> path = new ArrayList<>();
+        while (node != null) {
+            path.add(node);
+            node = node.parent;
+        }
+        Collections.reverse(path);
+        return path;
+    }
+}
+```
 
 
 
+#### 复杂度分析
+
+A\* 算法的时间复杂度 其实是不好去量化的，因为他取决于 启发式函数怎么写。
+
+- 最坏情况下，A\* 退化成广搜，算法的时间复杂度 是 O(n \* 2)，n 为节点数量。
+
+- 最佳情况，是从起点直接到终点，时间复杂度为 O(dlogd)，d 为起点到终点的深度。因为在搜索的过程中也需要堆排序，所以是 O(dlogd)。
+
+实际上 A\* 的时间复杂度是介于 最优 和最坏 情况之间， 可以 非常粗略的认为 A\* 算法的时间复杂度是 O(nlogn) ，n 为节点数量。
+
+A\* 算法的空间复杂度 O(b ^ d) ,d 为起点到终点的深度，b 是 图中节点间的连接数量
+
+
+
+#### A\* 的缺点
+
+大家看上述 A * 代码的时候，可以看到 我们向队列里添加了很多节点，但真正从队列里取出来的 仅仅是 靠启发式函数判断 距离终点最近的节点。
+
+相对于普通BFS，A\* 算法只从 队列里取出 距离终点最近的节点。
+
+那么问题来了，A\* 在一次路径搜索中，大量不需要访问的节点都在队列里，会造成空间的过度消耗。
+
+IDA\* 算法对这一空间增长问题进行了优化，关于 IDA\* 算法，后续再更新 //to do
+
+另外还有一种场景 是 A\* 解决不了的。
+
+如果给出多个可能的目标，然后在这多个目标中选择最近的目标，这种 A\* 就不擅长了， A\* 只擅长给出明确的目标 然后找到最短路径。
+
+如果是多个目标找最近目标（特别是潜在目标数量很多的时候），可以考虑 Dijkstra ，BFS 或者 Floyd。

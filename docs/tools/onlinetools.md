@@ -23,6 +23,7 @@ tag:
     - [草料二维码生成器](https://cli.im/)
     - [在线文本比较工具](https://tools.wujingquan.com/textdiff/)
     - [Cron表达式生成器](http://cron.qqe2.com/)
+    - [Banner生成](https://patorjk.com/software/taag/#p=display&f=Graffiti&t=Seven%0A)
 
 
 
