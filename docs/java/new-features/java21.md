@@ -11,7 +11,7 @@ tag:
 
 
 
-Java20中没有太大的变化，这里主要聊下Java21的新特性，21是继Java17之后，最新的LTS版本，该版本中虚拟线程称为了正式版
+Java20中没有太大的变化，这里主要聊下Java21的新特性，21是继Java17之后，最新的LTS版本，该版本中虚拟线程称为了正式版，[Java 19](https://www.seven97.top/java/new-features/java19.html)中是预览版
 
  
 

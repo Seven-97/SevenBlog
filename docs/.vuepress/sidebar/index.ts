@@ -78,6 +78,7 @@ export default sidebar({
             "05-concurrenttools5-phaser",
             "05-concurrenttools6-condition",
             "06-threadlocal",
+            "virtualthreads",
           ],
         },
         {
