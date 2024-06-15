@@ -1,5 +1,5 @@
 ---
-title: 分布式传播 - Gossip 协议详解
+title: 分布式通信 - Gossip 协议详解
 category: 微服务
 tag:
  - 理论-算法
@@ -15,6 +15,8 @@ tag:
 
 于是，**分散式发散消息** 的 **Gossip 协议** 就诞生了。
 
+
+
 ## Gossip 协议介绍
 
 Gossip 直译过来就是闲话、流言蜚语的意思。流言蜚语有什么特点呢？容易被传播且传播速度还快，你传我我传他，然后大家都知道了。
@@ -29,31 +31,62 @@ Gossip 协议最早是在 ACM 上的一篇 1987 年发表的论文 [《Epidemic 
 
 下面我们来对 Gossip 协议的定义做一个总结：**Gossip 协议是一种允许在分布式系统中共享状态的去中心化通信协议，通过这种通信协议，我们可以将信息传播给网络或集群中的所有成员。**
 
+
+
 ## Gossip 协议应用
 
 NoSQL 数据库 Redis 和 Apache Cassandra、服务网格解决方案 Consul 等知名项目都用到了 Gossip 协议，学习 Gossip 协议有助于我们搞清很多技术的底层原理。
 
-我们这里以 Redis Cluster 为例说明 Gossip 协议的实际应用。
+我们这里以 [Redis Cluster](https://www.seven97.top/database/redis/04-ha3-colony.html)为例说明 Gossip 协议的实际应用。
 
 我们经常使用的分布式缓存 Redis 的官方集群解决方案（3.0 版本引入） Redis Cluster 就是基于 Gossip 协议来实现集群中各个节点数据的最终一致性。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404271622133.png)Redis Cluster 是一个典型的分布式系统，分布式系统中的各个节点需要互相通信。既然要相互通信就要遵循一致的通信协议，Redis Cluster 中的各个节点基于 **Gossip 协议** 来进行通信共享信息，每个 Redis 节点都维护了一份集群的状态信息。
 
+
+
+### Gossip 消息介绍
+
 Redis Cluster 的节点之间会相互发送多种 Gossip 消息：
 
-- MEET：在 Redis Cluster 中的某个 Redis 节点上执行 CLUSTER MEET ip port 命令，可以向指定的 Redis 节点发送一条 MEET 信息，用于将其添加进 Redis Cluster 成为新的 Redis 节点。
+- MEET：在 Redis Cluster 中的某个 Redis 节点上执行 `CLUSTER MEET ip port` 命令，可以向指定的 Redis 节点发送一条 MEET 信息，用于将其添加进 Redis Cluster 成为新的 Redis 节点。
 
-- PING/PONG：Redis Cluster 中的节点都会定时地向其他节点发送 PING 消息，来交换各个节点状态信息，检查各个节点状态，包括在线状态、疑似下线状态 PFAIL 和已下线状态 FAIL。
+- PING：Redis Cluster 中的节点都会定时地向其他节点发送 PING 消息，消息中封装了自身节点状态还有其他部分节点的状态数据，检查各个节点状态，包括在线状态、疑似下线状态 PFAIL 和已下线状态 FAIL；也包括自身所管理的槽信息等等。
+  - 因为发送ping命令时要携带一些元数据，如果很频繁，可能会加重网络负担。因此，一般每个节点每秒会执行 10 次 ping，每次会选择 5 个最久没有通信的其它节点。
 
-- FAIL：Redis Cluster 中的节点 A 发现 B 节点 PFAIL ，并且在下线报告的有效期限内集群中半数以上的节点将 B 节点标记为 PFAIL，节点 A 就会向集群广播一条 FAIL 消息，通知其他节点将故障节点 B 标记为 FAIL 。
+  - 如果发现某个节点通信延时达到了 cluster_node_timeout / 2，那么立即发送 ping，避免数据交换延时过长导致信息严重滞后。比如说，两个节点之间都 10 分钟没有交换数据了，那么整个集群处于严重的元数据不一致的情况，就会有问题。所以 cluster_node_timeout 可以调节，如果调得比较大，那么会降低 ping 的频率。
+  - 每次 ping，会带上自己节点的信息，还有就是带上 1/10 其它节点的信息，发送出去，进行交换。至少包含 3 个其它节点的信息，最多包含 （总节点数 – 2）个其它节点的信息。
+
+- PONG：ping和meet消息的响应，同样包含了自身节点的状态和集群元数据信息。
+
+- FAIL：Redis Cluster 中的节点 A 发现 B 节点 PFAIL ，并且在下线报告的有效期限内集群中半数以上的节点将 B 节点标记为 PFAIL，节点 A 就会向集群广播一条 FAIL 消息，通知其他节点将故障节点 B 标记为 FAIL ，其他节点收到消息后标记已下线。
 
 - ……
 
-下图就是主从架构的 Redis Cluster 的示意图，图中的虚线代表的就是各个节点之间使用 Gossip 进行通信 ，实线表示主从复制。
+下图就是主从架构的 [Redis Cluster](https://www.seven97.top/database/redis/04-ha3-colony.html)的示意图，图中的虚线代表的就是各个节点之间使用 Gossip 进行通信 ，实线表示主从复制。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404271622674.png)
 
 有了 Redis Cluster 之后，不需要专门部署 Sentinel 集群服务了。Redis Cluster 相当于是内置了 Sentinel 机制，Redis Cluster 内部的各个 Redis 节点通过 Gossip 协议互相探测健康状态，在故障时可以自动切换。
+
+由于Redis集群的去中心化以及gossip通信机制，Redis集群中的节点只能保证最终一致性。例如当加入新节点时(meet)，只有邀请节点和被邀请节点知道这件事，其余节点要等待 ping 消息一层一层扩散。除了 Fail 是立即全网通知的，其他诸如新节点、节点重上线、从节点选举成为主节点、槽变化等，都需要等待被通知到，也就是Gossip协议是最终一致性的协议。
+
+
+
+### meet命令的实现
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406152122073.png)
+
+1. 节点A会为节点B创建一个clusterNode结构，并将该结构添加到自己的clusterState.nodes字典里面。
+2. 节点A根据CLUSTER MEET命令给定的IP地址和端口号，向节点B发送一条MEET消息。
+3. 节点B接收到节点A发送的MEET消息，节点B会为节点A创建一个clusterNode结构，并将该结构添加到自己的clusterState.nodes字典里面。
+4. 节点B向节点A返回一条PONG消息。
+5. 节点A将受到节点B返回的PONG消息，通过这条PONG消息，节点A可以知道节点B已经成功的接收了自己发送的MEET消息。
+6. 之后，节点A将向节点B返回一条PING消息。
+7. 节点B将接收到的节点A返回的PING消息，通过这条PING消息节点B可以知道节点A已经成功的接收到了自己返回的PONG消息，握手完成。
+8. 之后，节点A会将节点B的信息通过Gossip协议传播给集群中的其他节点，让其他节点也与节点B进行握手，最终，经过一段时间后，节点B会被集群中的所有节点认识。
+
+
 
 ## Gossip 协议消息传播模式
 
@@ -106,13 +139,15 @@ Gossip 设计了两种可能的消息传播模式：**反熵（Anti-Entropy）**
 
 谣言传播比较适合节点数量比较多的情况，不过，这种模式下要尽量避免传播的信息包不能太大，避免网络消耗太大。
 
-### 总结
+### 小结
 
 - 反熵（Anti-Entropy）会传播节点的所有数据，而谣言传播（Rumor-Mongering）只会传播节点新增的数据。
 
 - 我们一般会给反熵设计一个闭环。
 
 - 谣言传播（Rumor-Mongering）比较适合节点数量比较多或者节点动态变化的场景。
+
+
 
 ## Gossip 协议优势和缺陷
 
@@ -124,9 +159,13 @@ Gossip 设计了两种可能的消息传播模式：**反熵（Anti-Entropy）**
 
 **缺陷** :
 
-1. 消息需要通过多个传播的轮次才能传播到整个网络中，因此，必然会出现各节点状态不一致的情况。毕竟，Gossip 协议强调的是最终一致，至于达到各个节点的状态一致需要多长时间，谁也无从得知。
-2. 由于拜占庭将军问题，不允许存在恶意节点。
-3. 可能会出现消息冗余的问题。由于消息传播的随机性，同一个节点可能会重复收到相同的消息。
+1. 消息需要通过多个传播的轮次才能传播到整个网络中，因此，数据更新可能有延迟，可能会出现各节点状态不一致的情况。毕竟，Gossip 协议强调的是最终一致，至于达到各个节点的状态一致需要多长时间，谁也无从得知。
+2. 由于 gossip 协议对服务器时间的要求较高，时间戳不准确会影响节点判断消息的有效性
+3. 节点数量增多后的网络开销也会对服务器产生压力，同时结点数太多，意味着达到最终一致性的时间也相对变长，因此官方推荐最大节点数为1000左右。
+4. 由于拜占庭将军问题，不允许存在恶意节点。
+5. 可能会出现消息冗余的问题。由于消息传播的随机性，同一个节点可能会重复收到相同的消息。
+
+
 
 ## 总结
 

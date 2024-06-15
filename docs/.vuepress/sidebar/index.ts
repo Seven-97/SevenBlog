@@ -176,6 +176,7 @@ export default sidebar({
             "05-implementdistributedlocks",
             "05-transactionofredis",
             "06-tuning0-capacityassessmentmodel",
+            "06-tuning1-connectionnumberadjustment",
             "06-tuning2-commonlatencyissues",
             "06-tuning3-memoryfragmentationissue",
           ],
@@ -225,6 +226,7 @@ export default sidebar({
             "mvc2-servlet",
             "mvc3-initializationprocessofdispatcherservlet",
             "mvc4-processofdispatcherservletprocessingrequests",
+            "spring-async",
           ],
         },
         {
