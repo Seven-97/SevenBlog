@@ -48,17 +48,17 @@ export default defineUserConfig({
     ],
     ["meta", { name: "apple-mobile-web-app-capable", content: "yes" }],
     // 添加百度统计
-    [
-      "script",
-      {},
-      `var _hmt = _hmt || [];
-        (function() {
-          var hm = document.createElement("script");
-          hm.src = "https://hm.baidu.com/hm.js?2b6f565592ba5997ac29585ba88ee4e3";
-          var s = document.getElementsByTagName("script")[0]; 
-          s.parentNode.insertBefore(hm, s);
-        })();`,
-    ],
+    // [
+    //   "script",
+    //   {},
+    //   `var _hmt = _hmt || [];
+    //     (function() {
+    //       var hm = document.createElement("script");
+    //       hm.src = "https://hm.baidu.com/hm.js?2b6f565592ba5997ac29585ba88ee4e3";
+    //       var s = document.getElementsByTagName("script")[0]; 
+    //       s.parentNode.insertBefore(hm, s);
+    //     })();`,
+    // ],
   ],
 
   bundler: viteBundler(),
