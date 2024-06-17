@@ -31,7 +31,7 @@ tag:
 2. 求解：当子问题划分得足够小时，用较简单的方法解决；
 3. 合并：按原问题的要求，将子问题的解逐层合并构成原问题的解。
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506519.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506519.gif)
 
 Fork/Join对任务的拆分和对结果合并过程也是如此，可以用下面伪代码来表示：
 
@@ -50,6 +50,8 @@ solve(problem):
 ```
 
 所以，理解Fork/Join模型和ForkJoinPool线程池，首先要理解其背后的算法的目的和思想。
+
+其实，在 Java 8 中引入的并行流计算，内部就是采用的 ForkJoinPool 来实现的。
 
 ### 应用场景
 
@@ -144,7 +146,13 @@ ForkJoin计算耗时：207
 Process finished with exit code 0
 ```
 
-从计算结果中可以看到，ForkJoinPool总共进行了131071次的任务拆分，最终的计算结果是49999995000000，耗时207毫秒。不过，细心的你可能已经发现了，ForkJoin的并行计算的耗时竟然比单程程还慢？并且足足慢了近5倍！
+从计算结果中可以看到，ForkJoinPool总共进行了131071次的任务拆分，最终的计算结果是49999995000000，耗时207毫秒。不过，细心的你可能已经发现了，ForkJoin的并行计算的耗时竟然比单程程还慢？并且足足慢了近5倍！这种情况可能由以下几个原因造成：
+
+1. **任务分解和管理开销**: ForkJoin框架通过将大任务分解为许多小任务并行执行来提高效率。每个小任务都需要额外的时间来管理和调度。如果这些任务非常小，那么管理任务的开销可能会超过并行处理所带来的性能提升，尤其是当任务分解得过于细致时。因此需要合理选择任务的尺寸，避免任务过小导致调度开销过大。
+2. **线程创建与上下文切换开销**: 尽管ForkJoin框架利用工作窃取算法（work-stealing algorithm）来减少线程间的竞争，但在高并发情况下，线程初始化和上下文切换仍然会造成显著的性能开销。
+3. **内存访问冲突**: 并行程序经常需要访问共享资源或内存，这可能导致多个线程之间发生竞争，从而降低效率。特别是在多核处理器上，不同线程可能会竞争同一缓存行（cache line），导致性能下降。
+4. **负载不均衡**: 如果任务之间的工作量差异较大，ForkJoin框架虽然能通过工作窃取算法尝试均衡负载，但如果初始分配的不均或窃取策略不够高效，也可能导致某些线程比其他线程忙碌得多，从而造成资源的浪费和效率低下。
+5. **适用性问题**: 并不是所有任务都适合并行处理。对于计算密集型少量任务或者由多个依赖步骤组成的任务，单线程执行可能更为高效。因此需要评估任务是否适合并行处理，以及任务之间的依赖关系，避免不必要的并行。
 
 ## Fork/Join框架简介
 
@@ -184,6 +192,10 @@ ForkJoinPool 只接收 ForkJoinTask 任务(在实际使用中，也可以接收 
 
 work-stealing(工作窃取)算法: 线程池内的所有工作线程都尝试找到并执行已经提交的任务，或者是被其他活动任务创建的子任务(如果不存在就阻塞等待)。这种特性使得 ForkJoinPool 在运行多个可以产生子任务的任务，或者是提交的许多小任务时效率更高。尤其是构建异步模型的 ForkJoinPool 时，对不需要合并(join)的事件类型任务也非常适用。
 
+说白了就是，当有线程把当前的任务队列都处理完了之后，它还可以到其它还没处理完任务的队列的尾部窃取任务进行处理。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171333339.png)
+
 在 ForkJoinPool 中，线程池中每个工作线程(ForkJoinWorkerThread)都对应一个任务队列(WorkQueue)，工作线程优先处理来自自身队列的任务(LIFO或FIFO顺序，参数 mode 决定)，然后以FIFO的顺序随机窃取其他队列中的任务。
 
 具体思路如下:
@@ -196,13 +208,15 @@ work-stealing(工作窃取)算法: 线程池内的所有工作线程都尝试找
 
 - 划分的子任务调用fork时，都会被push到自己的队列中。
 
-- 默认情况下，工作线程从自己的双端队列获出任务并执行。
+- 默认情况下，工作线程从自己的双端队列获取出任务并执行。
 
 - 当自己的队列为空时，线程随机从另一个线程的队列末尾调用poll方法窃取任务。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506533.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506533.jpg)
 
- 
+工作窃取算法的**优点是**充分利用线程进行并行计算，并减少了线程间的竞争，其**缺点是**在某些情况下还是存在竞争，比如双端队列里只有一个任务时。并且消耗了更多的系统资源，比如创建多个线程和多个双端队列。
+
+
 
 ### Fork/Join 框架的执行流程
 
@@ -214,13 +228,17 @@ work-stealing(工作窃取)算法: 线程池内的所有工作线程都尝试找
 
 那Fork/Join 框架的执行流程是什么样的?
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506543.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506543.jpg)
+
+
+
+
 
 ## Fork/Join类关系
 
 ### ForkJoinPool继承关系
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506524.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506524.jpg)
 
 内部类介绍:
 
@@ -244,13 +262,27 @@ work-stealing(工作窃取)算法: 线程池内的所有工作线程都尝试找
 
 ### ForkJoinTask继承关系
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506532.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506532.jpg)
 
 ForkJoinTask 实现了 Future 接口，说明它也是一个可取消的异步运算任务，实际上ForkJoinTask 是 Future 的轻量级实现，主要用在纯粹是计算的函数式任务或者操作完全独立的对象计算任务。fork 是主运行方法，用于异步执行；而 join 方法在任务结果计算完毕之后才会运行，用来合并或返回计算结果。 其内部类都比较简单，ExceptionNode 是用于存储任务执行期间的异常信息的单向链表；其余四个类是为 Runnable/Callable 任务提供的适配器类，用于把 Runnable/Callable 转化为 ForkJoinTask 类型的任务(因为 ForkJoinPool 只可以运行 ForkJoinTask 类型的任务)。
 
 ## Fork/Join框架源码解析
 
-> 分析思路: 在对类层次结构有了解以后，先看下内部核心参数，然后分析上述流程图。会分4个部分:
+如果让我们来设计一个 Fork/Join 框架，该如何设计？
+
+1. 第一步分割任务。首先需要有一个 fork 类来把大任务分割成子任务，有可能子任务还是很大，所以还需要不停的分割，直到分割出的子任务足够小。
+2. 第二步执行任务并合并结果。分割的子任务分别放在双端队列里，然后几个启动线程分别从双端队列里获取任务执行。子任务执行完的结果都统一放在一个队列里，启动一个线程从队列里拿数据，然后合并这些数据。
+
+Fork/Join 使用两个类来完成以上两件事情：
+
+- ForkJoinTask：我们要使用 ForkJoin 框架，必须首先创建一个 ForkJoin 任务。它提供在任务中执行 fork() 和 join() 操作的机制，通常情况下我们不需要直接继承 ForkJoinTask 类，而只需要继承它的子类，Fork/Join 框架提供了以下两个子类：
+  - RecursiveAction：用于没有返回结果的任务。
+  - RecursiveTask ：用于有返回结果的任务。
+- ForkJoinPool ：ForkJoinTask 需要通过 ForkJoinPool 来执行，任务分割出的子任务会添加到当前工作线程所维护的双端队列中，进入队列的头部。当一个工作线程的队列里暂时没有任务时，它会随机从其他工作线程的队列的尾部获取一个任务。
+
+
+
+分析思路: 在对类层次结构有了解以后，先看下内部核心参数，然后分析上述流程图。会分4个部分:
 
 - 首先介绍任务的提交流程 - 外部任务(external/submissions task)提交
 
@@ -1267,7 +1299,7 @@ ForkJoinTask的join()和invoke()方法都可以用来获取任务的执行结果
 
 在这些方法中，join()相对比较全面，所以之后的讲解我们将从join()开始逐步向下分析，首先看一下join()的执行流程:
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506529.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506529.jpg)
 
 后面的源码分析中，我们首先讲解比较简单的外部 join 任务(externalAwaitDone)，然后再讲解内部 join 任务(从ForkJoinPool.awaitJoin()开始)。
 

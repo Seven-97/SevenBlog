@@ -43,11 +43,16 @@ Object obj = new Object();
 
 ### 使用线程池的优点
 
-降低资源消耗。通过重复利用已创建的线程降低线程创建和销毁造成的消耗。
+- 降低资源消耗。通过重复利用已创建的线程降低线程创建和销毁造成的消耗。
+- 提高响应速度。当任务到达时，可以不需要等到线程创建就能立即执行。提高线程的可管理性。
+- 统一管理线程，避免系统创建大量同类线程而导致消耗完内存。
 
-提高响应速度。当任务到达时，可以不需要等到线程创建就能立即执行。提高线程的可管理性。
+并且在线程池在提交任务前，可以提前创建线程，`ThreadPoolExecutor` 提供了两个方法帮助我们在提交任务之前，完成核心线程的创建，从而实现线程池预热的效果，以便在应用程序开始处理请求时立即使用这些线程：
 
-统一管理线程，避免系统创建大量同类线程而导致消耗完内存。
+- `prestartCoreThread()`:启动一个线程，等待任务，如果已达到核心线程数，这个方法返回 false，否则返回 true；
+- `prestartAllCoreThreads()`:启动所有的核心线程，并返回启动成功的核心线程数。
+
+
 
 ## 线程池原理
 
@@ -870,6 +875,46 @@ public static void main(String[] args) {
 如果使用的队列是`LinkedBlockingQueue`，那么还要算上`LinkedBlockingQueue`的Node实例的开销；如果提交的方式是submit，那么还要算上`FutureTask`和`RunnableAdapter`的开销。
 
 当然这里只是浅层地讨论了一下创建一个空任务所占用的内存大小，如果是更加复杂的任务，任务内的内存开销需要算上。
+
+
+
+### 线程池中线程异常后，销毁还是复用
+
+先说结论，需要分两种情况：
+
+- **使用`execute()`提交任务**：当任务通过`execute()`提交到线程池并在执行过程中抛出异常时，如果这个异常没有在任务内被捕获，那么该异常会导致当前线程终止，并且异常会被打印到控制台或日志文件中。线程池会检测到这种线程终止，并创建一个新线程来替换它，从而保持配置的线程数不变。
+
+- **使用`submit()`提交任务**：对于通过`submit()`提交的任务，如果在任务执行中发生异常，这个异常不会直接打印出来。相反，异常会被封装在由`submit()`返回的`Future`对象中。当调用`Future.get()`方法时，可以捕获到一个`ExecutionException`。在这种情况下，线程不会因为异常而终止，它会继续存在于线程池中，准备执行后续的任务。
+
+简单来说：使用`execute()`时，未捕获异常导致线程终止，线程池创建新线程替代；使用`submit()`时，异常被封装在`Future`中，线程继续复用。
+
+这种设计允许`submit()`提供更灵活的错误处理机制，因为它允许调用者决定如何处理异常，而`execute()`则适用于那些不需要关注执行结果的场景。
+
+
+
+#### execute()提交
+
+查看execute方法的执行逻辑
+
+![java.util.concurrent.ThreadPoolExecutor#runWorker](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171749947.webp)
+
+
+
+![java.util.concurrent.ThreadPoolExecutor#processWorkerExit](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171749972.webp)
+
+可以发现，如果抛出异常，execute()提交的方式会移除抛出异常的线程，创建新的线程。
+
+#### submit()提交
+
+![java.util.concurrent.AbstractExecutorService#submit(java.lang.Runnable)](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752757.webp)
+
+可以发现，submit也是调用了execute方法，但是在调用之前,包装了一层 RunnableFuture，那一定是在RunnableFuture的实现 FutureTask中有特殊处理了，我们查看源码可以发现。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752066.webp)
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752050.webp)![图片](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752072.webp)![图片](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752076.webp)但是，
+
+也就是说，通过java.util.concurrent.FutureTask#get()，就可以获取对应的异常信息。
 
 
 

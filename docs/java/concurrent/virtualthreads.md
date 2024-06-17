@@ -478,7 +478,7 @@ $ jcmd `jps | grep VtExample | awk '{print $1}'` Thread.dump_to_file -format=jso
  back again again
  ```
 
-PS. 记得在跑的时候加上下面的参数：
+PS：在Java19中还是预览版，需要加上下面的参数：（Java21后已经是正式版了）
 
 ```
 --add-opens java.base/jdk.internal.vm=ALL-UNNAMED

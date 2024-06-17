@@ -431,6 +431,7 @@ export default sidebar({
             "processthreadsanddeadlocks",
             "memorypagereplacementalgorithm",
             "cpucacheconsistency",
+            "pagecache",
             "zerocopytechnology",
           ],
         },

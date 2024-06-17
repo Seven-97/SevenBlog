@@ -13,7 +13,7 @@ tag:
 
 OutputStream是输出字节流，具体的实现类层次结构如下：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250752991.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250752991.jpg)
 
 ## OutputStream 抽象类
 
@@ -446,4 +446,13 @@ public class BufferedOutputStream extends FilterOutputStream {
     }
 }
 ```
+
+
+
+BufferedOutputStream的flush和close方法的区别：
+
+- flush()方法：用来刷新缓冲区，刷新后可以再次写出
+- close()方法
+  - 用来关闭流释放资源
+  - 如果是带缓冲区的流对象的close()方法，不但会关闭流，close()方法还调用了flush()方法，也就是说，在关闭流之前会执行最后一次flush()
 
