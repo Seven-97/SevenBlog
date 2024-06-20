@@ -68,8 +68,10 @@ public class RedisPipelineTestDemo {
  
         //Jedis使用Pipeline模式         Pipeline Pipeline = jedis.Pipelined();
         begin = System.currentTimeMillis();
-        for (int i = 0; i < size; i++) {             Pipeline.sadd(zSetKey + i, "bbb");
-        }         Pipeline.sync();
+        for (int i = 0; i < size; i++) {             
+            Pipeline.sadd(zSetKey + i, "bbb");
+        }         
+        Pipeline.sync();
         log.info("Jedis Pipeline模式耗时：{}ms", (System.currentTimeMillis() - begin));
  
         //Redisson使用Pipeline模式
@@ -95,9 +97,7 @@ public class RedisPipelineTestDemo {
 测试结果如下:
 
 - Jedis逐一给每个set新增一个value耗时：162655ms
-
 - Jedis Pipeline模式耗时：504ms
-
 - Redisson Pipeline模式耗时：1399ms
 
 我们发现使用Pipeline模式对应的性能会明显好于单个命令执行的情况。
