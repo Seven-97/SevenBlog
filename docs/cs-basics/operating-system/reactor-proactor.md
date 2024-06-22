@@ -165,7 +165,171 @@ Redis 是由 C 语言实现的，在 Redis 6.0 版本之前采用的正是「单
 
 采用了「多 Reactor 多进程」方案的开源软件是 Nginx，不过方案与标准的多 Reactor 多进程有些差异。具体差异表现在主进程中仅仅用来初始化 socket，并没有创建 mainReactor 来 accept 连接，而是由子进程的 Reactor 来 accept 连接，通过锁来控制一次只有一个子进程进行 accept（防止出现惊群现象），子进程 accept 新连接后就放到自己的 Reactor 进行处理，不会再分配给其他子进程。
 
+### Reactor模型示例（Java实现）
 
+对于上述Reactor模型，服务端主要有三个角色：Reactor，Acceptor和Handler。这里基于Doug Lea的文档对其进行了实现，如下是Reactor的实现代码：
+
+```java
+public class Reactor implements Runnable {
+  private final Selector selector;
+  private final ServerSocketChannel serverSocket;
+
+  public Reactor(int port) throws IOException {
+    serverSocket = ServerSocketChannel.open();  // 创建服务端的ServerSocketChannel
+    serverSocket.configureBlocking(false);  // 设置为非阻塞模式
+    selector = Selector.open();  // 创建一个Selector多路复用器
+    SelectionKey key = serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+    serverSocket.bind(new InetSocketAddress(port));  // 绑定服务端端口
+    key.attach(new Acceptor(serverSocket));  // 为服务端Channel绑定一个Acceptor
+  }
+
+  @Override
+  public void run() {
+    try {
+      while (!Thread.interrupted()) {
+        selector.select();  // 服务端使用一个线程不断等待客户端的连接到达
+        Set<SelectionKey> keys = selector.selectedKeys();
+        Iterator<SelectionKey> iterator = keys.iterator();
+        while (iterator.hasNext()) {
+          dispatch(iterator.next());  // 监听到客户端连接事件后将其分发给Acceptor
+          iterator.remove();
+        }
+
+        selector.selectNow();
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private void dispatch(SelectionKey key) throws IOException {
+    // 这里的attachement也即前面为服务端Channel绑定的Acceptor，调用其run()方法进行
+    // 客户端连接的获取，并且进行分发
+    Runnable attachment = (Runnable) key.attachment();
+    attachment.run();
+  }
+}
+```
+
+这里Reactor首先开启了一个ServerSocketChannel，然后将其绑定到指定的端口，并且注册到了一个多路复用器上。接着在一个线程中，其会在多路复用器上等待客户端连接。当有客户端连接到达后，Reactor就会将其派发给一个Acceptor，由该Acceptor专门进行客户端连接的获取。下面我们继续看一下Acceptor的代码：
+
+```java
+public class Acceptor implements Runnable {
+  private final ExecutorService executor = Executors.newFixedThreadPool(20);
+
+  private final ServerSocketChannel serverSocket;
+
+  public Acceptor(ServerSocketChannel serverSocket) {
+    this.serverSocket = serverSocket;
+  }
+
+  @Override
+  public void run() {
+    try {
+      SocketChannel channel = serverSocket.accept();  // 获取客户端连接
+      if (null != channel) {
+        executor.execute(new Handler(channel));  // 将客户端连接交由线程池处理
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+}
+```
+
+这里可以看到，在Acceptor获取到客户端连接之后，其就将其交由线程池进行网络读写了，而这里的主线程只是不断监听客户端连接事件。下面我们看看Handler的具体逻辑：
+
+```java
+public class Handler implements Runnable {
+  private volatile static Selector selector;
+  private final SocketChannel channel;
+  private SelectionKey key;
+  private volatile ByteBuffer input = ByteBuffer.allocate(1024);
+  private volatile ByteBuffer output = ByteBuffer.allocate(1024);
+
+  public Handler(SocketChannel channel) throws IOException {
+    this.channel = channel;
+    channel.configureBlocking(false);  // 设置客户端连接为非阻塞模式
+    selector = Selector.open();  // 为客户端创建一个新的多路复用器
+    key = channel.register(selector, SelectionKey.OP_READ);  // 注册客户端Channel的读事件
+  }
+
+  @Override
+  public void run() {
+    try {
+      while (selector.isOpen() && channel.isOpen()) {
+        Set<SelectionKey> keys = select();  // 等待客户端事件发生
+        Iterator<SelectionKey> iterator = keys.iterator();
+        while (iterator.hasNext()) {
+          SelectionKey key = iterator.next();
+          iterator.remove();
+
+          // 如果当前是读事件，则读取数据
+          if (key.isReadable()) {
+            read(key);
+          } else if (key.isWritable()) {
+           // 如果当前是写事件，则写入数据
+            write(key);
+          }
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  // 这里处理的主要目的是处理Jdk的一个bug，该bug会导致Selector被意外触发，但是实际上没有任何事件到达，
+  // 此时的处理方式是新建一个Selector，然后重新将当前Channel注册到该Selector上
+  private Set<SelectionKey> select() throws IOException {
+    selector.select();
+    Set<SelectionKey> keys = selector.selectedKeys();
+    if (keys.isEmpty()) {
+      int interestOps = key.interestOps();
+      selector = Selector.open();
+      key = channel.register(selector, interestOps);
+      return select();
+    }
+
+    return keys;
+  }
+
+  // 读取客户端发送的数据
+  private void read(SelectionKey key) throws IOException {
+    channel.read(input);
+    if (input.position() == 0) {
+      return;
+    }
+
+    input.flip();
+    process();  // 对读取的数据进行业务处理
+    input.clear();
+    key.interestOps(SelectionKey.OP_WRITE);  // 读取完成后监听写入事件
+  }
+
+  private void write(SelectionKey key) throws IOException {
+    output.flip();
+    if (channel.isOpen()) {
+      channel.write(output);  // 当有写入事件时，将业务处理的结果写入到客户端Channel中
+      key.channel();
+      channel.close();
+      output.clear();
+    }
+  }
+    
+  // 进行业务处理，并且获取处理结果。本质上，基于Reactor模型，如果这里成为处理瓶颈，
+  // 则直接将其处理过程放入线程池即可，并且使用一个Future获取处理结果，最后写入客户端Channel
+  private void process() {
+    byte[] bytes = new byte[input.remaining()];
+    input.get(bytes);
+    String message = new String(bytes, CharsetUtil.UTF_8);
+    System.out.println("receive message from client: \n" + message);
+
+    output.put("hello client".getBytes());
+  }
+}
+```
+
+在Handler中，主要进行的就是为每一个客户端Channel创建一个Selector，并且监听该Channel的网络读写事件。当有事件到达时，进行数据的读写，而业务操作这交由具体的业务线程池处理。
 
 ## Proactor
 

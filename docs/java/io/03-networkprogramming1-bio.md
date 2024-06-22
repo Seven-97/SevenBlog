@@ -124,7 +124,6 @@ import org.apache.log4j.BasicConfigurator;
 
 /**
  * 一个SocketClientRequestThread线程模拟一个客户端请求。
- * @author yinwenjie
  */
 public class SocketClientRequestThread implements Runnable {
 
@@ -320,7 +319,6 @@ public class SocketServer2 {
 /**
  * 当然，接收到客户端的socket后，业务的处理过程可以交给一个线程来做。
  * 但还是改变不了socket被一个一个的做accept()的情况。
- * @author yinwenjie
  */
 class SocketServerThread implements Runnable {
 
