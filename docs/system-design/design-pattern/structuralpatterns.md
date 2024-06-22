@@ -636,7 +636,7 @@ public class Client {
 
 - 使用第三方提供的组件，但组件接口定义和自己要求的接口定义不同。
 
-### JDK源码解析
+### JDK源码解析 - InputStreamReader
 
 Reader（字符流）、InputStream（字节流）的适配使用的是InputStreamReader。
 
@@ -864,7 +864,7 @@ public class Client {
 
 - 当对象的功能要求可以动态地添加，也可以再动态地撤销时。
 
-###  JDK源码解析
+###  JDK源码解析 - IO流包装类
 
 IO流中的包装类使用到了装饰者模式。BufferedInputStream，BufferedOutputStream，BufferedReader，BufferedWriter。
 
@@ -1170,7 +1170,7 @@ public class Client {
 
 - 当客户端与多个子系统之间存在很大的联系时，引入外观模式可将它们分离，从而提高子系统的独立性和可移植性。
 
-### 源码解析
+### 源码解析 - ServletRequest
 
 使用tomcat作为web容器时，接收浏览器发送过来的请求，tomcat会将请求信息封装成ServletRequest对象，如下图①处对象。但是大家想想ServletRequest是一个接口，它还有一个子接口HttpServletRequest，而我们知道该request对象肯定是一个HttpServletRequest对象的子实现类对象，到底是哪个类的对象呢？可以通过输出request对象，我们就会发现是一个名为RequestFacade的类的对象。
 
@@ -1489,7 +1489,7 @@ public class BoxFactory {
 
 - 在使用享元模式时需要维护一个存储享元对象的享元池，而这需要耗费一定的系统资源，因此，应当在需要多次重复使用享元对象时才值得使用享元模式。
 
-### JDK源码解析
+### JDK源码解析 - Integer
 
 Integer类使用了享元模式。我们先看下面的例子：
 
