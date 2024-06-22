@@ -1,5 +1,5 @@
 ---
-title: CPU的缓存一致性
+title: 硬件结构 - CPU的缓存一致性
 category: 计算机基础
 tag:
  - 操作系统

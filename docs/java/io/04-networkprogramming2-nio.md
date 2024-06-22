@@ -339,7 +339,7 @@ MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_WRITE, 0, 1024);
 
  
 
-## Java对IO多路复用的支持
+## Java对[IO多路复用](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html)的支持
 
 ![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250804014.jpg)
 

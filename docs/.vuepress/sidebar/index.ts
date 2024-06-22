@@ -416,6 +416,7 @@ export default sidebar({
             "01-fundamentalsofdatacommunicationandheaders",
             "02-tcp1-threehandshakesandfourwaves",
             "02-tcp2-flowcontrol",
+            "02-tcp3-queue",
             "03-http1-statuscodeandheader",
             "03-http2-https",
             "03-http3-http2and3",
@@ -433,6 +434,8 @@ export default sidebar({
             "cpucacheconsistency",
             "pagecache",
             "zerocopytechnology",
+            "reactor-proactor",
+            "selectpollepoll",
           ],
         },
         {
