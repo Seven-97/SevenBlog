@@ -414,6 +414,7 @@ export default sidebar({
           collapsible: true,
           children: [
             "01-fundamentalsofdatacommunicationandheaders",
+            "01-displaywhathappened",
             "02-tcp1-threehandshakesandfourwaves",
             "02-tcp2-flowcontrol",
             "02-tcp3-queue",
