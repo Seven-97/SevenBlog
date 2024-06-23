@@ -7,6 +7,8 @@ tag:
 
 
 
+> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
+
 ## DMA 技术
 在没有 DMA 技术前，I/O 的过程是这样的：
 1. CPU 发出对应的指令给磁盘控制器，然后返回；

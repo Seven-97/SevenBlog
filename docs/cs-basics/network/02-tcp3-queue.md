@@ -5,7 +5,7 @@ tag:
  - 计算机网络
 ---
 
-
+> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
 
 本文以 Linux 2.6.32 版本的内核作为参考
 

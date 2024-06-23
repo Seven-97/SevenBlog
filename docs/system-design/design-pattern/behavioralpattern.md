@@ -177,7 +177,7 @@ public class Client {
 
 - 需要通过子类来决定父类算法中某个步骤是否执行，实现子类对父类的反向控制。
 
-### JDK源码解析
+### 源码解析 - InputStream
 
 InputStream类就使用了模板方法模式。在InputStream类中定义了多个 read() 方法，如下：
 
@@ -347,7 +347,7 @@ public class SalesMan {
 
 - 多个类只区别在表现行为不同，可以使用策略模式，在运行时动态选择具体要执行的行为。
 
-### JDK源码解析
+### 源码解析 - Comparator
 
 Comparator 中的策略模式。在Arrays类中有一个 sort() 方法，如下：
 
@@ -621,7 +621,7 @@ public class Client {
 
 - 系统需要支持命令的撤销(Undo)操作和恢复(Redo)操作。
 
-### JDK源码解析
+### 源码解析 - Runable
 
 Runable是一个典型命令模式，Runnable担当命令的角色，Thread充当的是调用者，start方法就是其执行方法
 
@@ -891,7 +891,7 @@ public class Client {
 
 - 职责链建立的合理性要靠客户端来保证，增加了客户端的复杂性，可能会由于职责链的错误设置而导致系统出错，如可能会造成循环调用。
 
-### 源码解析
+### 源码解析 - FilterChain
 
 在javaWeb应用开发中，FilterChain是职责链（过滤器）模式的典型应用，以下是Filter的模拟实现分析:
 
@@ -1540,7 +1540,7 @@ public class Client {
 
 ### JDK中提供的实现
 
-在 Java 中，通过 java.util.Observable 类和 java.util.Observer 接口定义了观察者模式，只要实现它们的子类就可以编写观察者模式实例。
+在 Java 中，通过 `java.util.Observable` 类和 `java.util.Observer `接口定义了观察者模式，只要实现它们的子类就可以编写观察者模式实例。
 
 **1，Observable类**
 
@@ -1919,7 +1919,7 @@ public class StudentAggregateImpl implements StudentAggregate {
 
 - 当访问一个聚合对象的内容而无须暴露其内部细节的表示时。
 
-### JDK源码解析
+### 源码解析 - Iterator
 
 迭代器模式在JAVA的很多集合类中被广泛应用，接下来看看JAVA源码中是如何使用迭代器模式的。
 

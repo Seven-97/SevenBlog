@@ -5,7 +5,7 @@ tag:
   - 计算机网络
 ---
 
-
+> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
 
 ## HTTP/1.1的改进和不足
 HTTP/1.1 相比 HTTP/1.0 性能上的改进：

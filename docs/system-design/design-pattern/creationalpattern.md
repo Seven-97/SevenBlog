@@ -373,7 +373,7 @@ public class CoffeeFactory {
 
 静态成员变量用来存储创建的对象（键存储的是名称，值存储的是对应的对象），而读取配置文件以及创建对象写在静态代码块中，目的就是只需要执行一次。
 
-### JDK源码解析-Collection.iterator方法
+### 源码解析-Collection.iterator方法
 
 ```java
 public class Demo {
