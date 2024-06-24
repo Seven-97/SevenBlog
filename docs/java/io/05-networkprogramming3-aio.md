@@ -17,7 +17,7 @@ tag:
 
 和同步IO一样，异步IO也是由操作系统进行支持的。微软的windows系统提供了一种异步IO技术: IOCP(I/O Completion Port，I/O完成端口)；
 
-Linux下由于没有这种异步IO技术，所以使用的是epoll对异步IO进行模拟。
+Linux下由于没有这种异步IO技术，所以使用的是epoll对异步IO进行模拟，也叫伪异步IO。
 
 ## JAVA对AIO的支持
 
