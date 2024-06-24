@@ -1,5 +1,5 @@
 ---
-title: 网络系统 - Reactor & Proactor
+title: 网络系统 - Reactor & Proactor模型
 category: 计算机基础
 tag:
  - 操作系统
