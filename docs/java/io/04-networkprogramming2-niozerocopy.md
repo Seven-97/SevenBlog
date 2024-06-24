@@ -233,7 +233,9 @@ public static void clean(final Object buffer) throws Exception {
 
 ### DirectByteBuffer
 
-DirectByteBuffer 的对象引用位于 Java 内存模型的堆里面，JVM 可以对 DirectByteBuffer 的对象进行内存分配和回收管理，一般使用 DirectByteBuffer 的静态方法 allocateDirect() 创建 DirectByteBuffer 实例并分配内存。
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406242129630.png)
+
+DirectByteBuffer 的对象引用位于 Java 内存模型的堆里面，JVM 可以对 DirectByteBuffer 的对象进行内存分配和回收管理，一般使用 DirectByteBuffer 的静态方法 allocateDirect() 创建 DirectByteBuffer 实例并分配内存。 
 
 ```java
 public static ByteBuffer allocateDirect(int capacity) {
@@ -241,7 +243,7 @@ public static ByteBuffer allocateDirect(int capacity) {
 }
 ```
 
-DirectByteBuffer 内部的字节缓冲区位在于堆外的（用户态）直接内存，它是通过 Unsafe 的本地方法 allocateMemory() 进行内存分配，底层调用的是操作系统的 malloc() 函数。
+DirectByteBuffer 内部的字节缓冲区位在于堆外的（用户态）直接内存，它是通过 Unsafe 的本地方法 allocateMemory() 进行内存分配，底层调用的是操作系统的 malloc() 函数，因此DirectByteBuffer 使用的是操作系统内存。
 
 ```java
 DirectByteBuffer(int cap) {
@@ -268,6 +270,14 @@ DirectByteBuffer(int cap) {
     att = null;
 }
 ```
+
+使用 DirectByteBuf 将堆外内存映射到 jvm 内存中来直接访问使用
+
+* 这块内存不受 jvm 垃圾回收的影响，因此内存地址固定，有助于 IO 读写
+* java 中的 DirectByteBuf 对象仅维护了此内存的虚引用，内存回收分成两步
+  * DirectByteBuf 对象被垃圾回收，将虚引用加入引用队列
+  * 通过专门线程访问引用队列，根据虚引用释放堆外内存
+* 减少了一次数据拷贝，用户态与内核态的切换次数没有减少
 
 除此之外，初始化 DirectByteBuffer 时还会创建一个 Deallocator 线程，并通过 Cleaner 的 freeMemory() 方法来对直接内存进行回收操作，freeMemory() 底层调用的是操作系统的 free() 函数。
 
@@ -335,7 +345,7 @@ private static void initDBBRConstructor() {
 }
 ```
 
-DirectByteBuffer 是 MappedByteBuffer 的具体实现类。实际上，Util.newMappedByteBuffer() 方法通过反射机制获取 DirectByteBuffer 的构造器，然后创建一个 DirectByteBuffer 的实例，对应的是一个单独用于内存映射的构造方法：
+**DirectByteBuffer 是 MappedByteBuffer 的具体实现类**，也就是基于底层操作系统的 [mmap](https://www.seven97.top/cs-basics/operating-system/zerocopytechnology.html#mmap-write) 技术。实际上，Util.newMappedByteBuffer() 方法通过反射机制获取 DirectByteBuffer 的构造器，然后创建一个 DirectByteBuffer 的实例，对应的是一个单独用于内存映射的构造方法：
 
 ```java
 protected DirectByteBuffer(int cap, long addr, FileDescriptor fd, Runnable unmapper) {
@@ -400,66 +410,7 @@ public abstract long transferFrom(ReadableByteChannel src, long position, long c
         throws IOException;
 ```
 
-下面给出 FileChannel 利用 transferTo() 和 transferFrom() 方法进行数据传输的使用示例：
-
-```java
-private static final String CONTENT = "Zero copy implemented by FileChannel";
-private static final String SOURCE_FILE = "/source.txt";
-private static final String TARGET_FILE = "/target.txt";
-private static final String CHARSET = "UTF-8";
-```
-
-首先在类加载根路径下创建 source.txt 和 target.txt 两个文件，对源文件 source.txt 文件写入初始化数据。
-
-```java
-@Before
-public void setup() {
-    Path source = Paths.get(getClassPath(SOURCE_FILE));
-    byte[] bytes = CONTENT.getBytes(Charset.forName(CHARSET));
-    try (FileChannel fromChannel = FileChannel.open(source, StandardOpenOption.READ,
-            StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
-        fromChannel.write(ByteBuffer.wrap(bytes));
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-}
-```
-
-对于 transferTo() 方法而言，目的通道 toChannel 可以是任意的单向字节写通道 WritableByteChannel；而对于 transferFrom() 方法而言，源通道 fromChannel 可以是任意的单向字节读通道 ReadableByteChannel。其中，FileChannel、SocketChannel 和 DatagramChannel 等通道实现了 WritableByteChannel 和 ReadableByteChannel 接口，都是同时支持读写的双向通道。为了方便测试，下面给出基于 FileChannel 完成 channel-to-channel 的数据传输示例。
-
-通过 transferTo() 将 fromChannel 中的数据拷贝到 toChannel
-
-```java
-@Test
-public void transferTo() throws Exception {
-    try (FileChannel fromChannel = new RandomAccessFile(
-             getClassPath(SOURCE_FILE), "rw").getChannel();
-         FileChannel toChannel = new RandomAccessFile(
-             getClassPath(TARGET_FILE), "rw").getChannel()) {
-        long position = 0L;
-        long offset = fromChannel.size();
-        fromChannel.transferTo(position, offset, toChannel);
-    }
-}
-```
-
-通过 transferFrom() 将 fromChannel 中的数据拷贝到 toChannel
-
-```java
-@Test
-public void transferFrom() throws Exception {
-    try (FileChannel fromChannel = new RandomAccessFile(
-             getClassPath(SOURCE_FILE), "rw").getChannel();
-         FileChannel toChannel = new RandomAccessFile(
-             getClassPath(TARGET_FILE), "rw").getChannel()) {
-        long position = 0L;
-        long offset = fromChannel.size();
-        toChannel.transferFrom(fromChannel, position, offset);
-    }
-}
-```
-
-下面介绍 transferTo() 和 transferFrom() 方法的底层实现原理，这两个方法也是 java.nio.channels.FileChannel 的抽象方法，由子类 sun.nio.ch.FileChannelImpl.java 实现。transferTo() 和 transferFrom() 底层都是基于 sendfile 实现数据传输的，其中 FileChannelImpl.java 定义了 3 个常量，用于标示当前操作系统的内核是否支持 sendfile 以及 sendfile 的相关特性。
+下面介绍 transferTo() 和 transferFrom() 方法的底层实现原理，这两个方法也是 java.nio.channels.FileChannel 的抽象方法，由子类 sun.nio.ch.FileChannelImpl.java 实现。transferTo() 和 transferFrom() 底层都是基于[sendfile的方式 ](https://www.seven97.top/cs-basics/operating-system/zerocopytechnology.html#sendfile)实现数据传输的，其中 FileChannelImpl.java 定义了 3 个常量，用于标示当前操作系统的内核是否支持 sendfile 以及 sendfile 的相关特性。
 
 ```java
 private static volatile boolean transferSupported = true;
@@ -470,6 +421,18 @@ private static volatile boolean fileSupported = true;
 - `transferSupported`：用于标记当前的系统内核是否支持 sendfile() 调用，默认为 true。
 - `pipeSupported`：用于标记当前的系统内核是否支持文件描述符（fd）基于管道（pipe）的 sendfile() 调用，默认为 true。
 - `fileSupported`：用于标记当前的系统内核是否支持文件描述符（fd）基于文件（file）的 sendfile() 调用，默认为 true。
+
+
+
+来分析一下其中原理：
+
+- transferTo()方法直接将当前通道内容传输到另一个通道，没有涉及到Buffer的任何操作，NIO中的Buffer是JVM堆或者堆外内存，但不论如何他们都是操作系统内核空间的内存。也就是说这种方式不会有内核缓冲区和用户缓冲区之间的拷贝问题。
+- transferTo()的实现方式就是通过系统调用sendfile()（当然这是Linux中的系统调用），根据我们上面所写说这个过程是效率远高于从内核缓冲区到用户缓冲区的读写的。
+- 同理transferFrom()也是这种实现方式。
+
+
+
+
 
 下面以 transferTo() 的源码实现为例。FileChannelImpl 首先执行 transferToDirectly() 方法，以 sendfile 的零拷贝方式尝试数据拷贝。如果系统内核不支持 sendfile，进一步执行 transferToTrustedChannel() 方法，以 mmap 的零拷贝方式进行内存映射，这种情况下目的通道必须是 FileChannelImpl 或者 SelChImpl 类型。如果以上两步都失败了，则执行 transferToArbitraryChannel() 方法，基于传统的 I/O 方式完成读写，具体步骤是初始化一个临时的 DirectBuffer，将源通道 FileChannel 的数据读取到 DirectBuffer，再写入目的通道 WritableByteChannel 里面。
 

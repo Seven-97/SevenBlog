@@ -11,13 +11,16 @@ tag:
 
 ## 概述
 
-异步IO是采用“订阅-通知”模式: 即应用程序向操作系统注册IO监听，然后继续做自己的事情。当操作系统发生IO事件，并且准备好数据后，在主动通知应用程序，触发相应的函数:
+异步IO是采用“订阅-通知”模式： 即应用程序向操作系统注册IO监听，然后继续做自己的事情。当操作系统发生IO事件，并且准备好数据后，在主动通知应用程序，触发相应的函数:
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250814821.jpg)
 
-和同步IO一样，异步IO也是由操作系统进行支持的。微软的windows系统提供了一种异步IO技术: IOCP(I/O Completion Port，I/O完成端口)；
+和同步IO一样，异步IO也是由操作系统进行支持的：
 
-Linux下由于没有这种异步IO技术，所以使用的是epoll对异步IO进行模拟，也叫伪异步IO。
+- 微软的windows系统提供了一种异步IO技术: IOCP(I/O Completion Port，I/O完成端口)；
+- Linux 系统异步 IO 在 2.6 版本引入，但其底层实现还是用epoll模拟了异步 IO，也叫伪异步IO，性能没有优势
+
+
 
 ## JAVA对AIO的支持
 
@@ -27,7 +30,7 @@ Linux下由于没有这种异步IO技术，所以使用的是epoll对异步IO进
 
  
 
-JAVA AIO框架在windows下使用windows IOCP技术，在Linux下使用epoll多路复用IO技术模拟异步IO，这个从JAVA AIO框架的部分类设计上就可以看出来。例如框架中，在Windows下负责实现套接字通道的具体类是“sun.nio.ch.WindowsAsynchronousSocketChannelImpl”，其引用的IOCP类型文档注释如是:
+JAVA AIO框架在windows下使用windows IOCP技术，在Linux下使用epoll多路复用IO技术模拟异步IO，这个从JAVA AIO框架的部分类设计上就可以看出来。例如框架中，在Windows下负责实现套接字通道的具体类是`sun.nio.ch.WindowsAsynchronousSocketChannelImpl`，其引用的IOCP类型文档注释如是:
 
 ```c++
 /** 
@@ -36,13 +39,54 @@ JAVA AIO框架在windows下使用windows IOCP技术，在Linux下使用epoll多�
 */
 ```
 
-如果感兴趣，当然可以去看看全部完整代码(建议从“java.nio.channels.spi.AsynchronousChannelProvider”这个类看起)。
+如果感兴趣，当然可以去看看全部完整代码(建议从“java.nio.channels.spi.AsynchronousChannelProvider`这个类看起)。
 
-特别说明一下，请注意图中的“java.nio.channels.NetworkChannel”接口，这个接口同样被JAVA NIO框架实现了，如下图所示:
+特别说明一下，请注意图中的`java.nio.channels.NetworkChannel`接口，这个接口同样被JAVA NIO框架实现了，如下图所示:
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250814808.jpg)
 
-### 代码实例
+### 文件 AIO
+
+先来看看 AsynchronousFileChannel
+
+```java
+@Slf4j
+public class AioDemo1 {
+    public static void main(String[] args) throws IOException {
+        try{
+            AsynchronousFileChannel s = 
+                AsynchronousFileChannel.open(
+                	Paths.get("1.txt"), StandardOpenOption.READ);
+            ByteBuffer buffer = ByteBuffer.allocate(2);
+            log.debug("begin...");
+            s.read(buffer, 0, null, new CompletionHandler<Integer, ByteBuffer>() {
+                @Override
+                public void completed(Integer result, ByteBuffer attachment) {
+                    log.debug("read completed...{}", result);
+                    buffer.flip();
+                    // 业务处理
+                }
+
+                @Override
+                public void failed(Throwable exc, ByteBuffer attachment) {
+                    log.debug("read failed...");
+                }
+            });
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //主线程不会被 IO 操作阻塞，有可能会先打印出下面这句话
+        log.debug("do other things...");
+        //默认文件 AIO 使用的线程都是守护线程，所以最后要执行 `System.in.read()` 以避免守护线程意外结束
+        System.in.read();
+    }
+}
+```
+
+
+
+### 网络 AIO
 
 ```java
 import java.io.IOException;
@@ -74,11 +118,8 @@ public class SocketServer {
      */
     public static void main(String[] args) throws Exception {
         /*
-         * 对于使用的线程池技术，我一定要多说几句
-         * 1、Executors是线程池生成工具，通过这个工具我们可以很轻松的生成“固定大小的线程池”、“调度池”、“可伸缩线程数量的池”。具体请看API Doc
-         * 2、当然您也可以通过ThreadPoolExecutor直接生成池。
-         * 3、这个线程池是用来得到操作系统的“IO事件通知”的，不是用来进行“得到IO数据后的业务处理的”。要进行后者的操作，您可以再使用一个池(最好不要混用)
-         * 4、您也可以不使用线程池(不推荐)，如果决定不使用线程池，直接AsynchronousServerSocketChannel.open()就行了。
+         * 这个线程池是用来得到操作系统的“IO事件通知”的，不是用来进行“得到IO数据后的业务处理的”。要进行后者的操作，可以再使用一个池(最好不要混用)
+         * 也可以不使用线程池(不推荐)，如果决定不使用线程池，直接AsynchronousServerSocketChannel.open()就行了。
          * */
         ExecutorService threadPool = Executors.newFixedThreadPool(20);
         AsynchronousChannelGroup group = AsynchronousChannelGroup.withThreadPool(threadPool);
@@ -128,7 +169,6 @@ class ServerSocketChannelHandle implements CompletionHandler<AsynchronousSocketC
 
         //为这个新的socketChannel注册“read”事件，以便操作系统在收到数据并准备好后，主动通知应用程序
         //在这里，由于我们要将这个客户端多次传输的数据累加起来一起处理，所以我们将一个stringbuffer对象作为一个“附件”依附在这个channel上
-        //
         ByteBuffer readBuffer = ByteBuffer.allocate(50);
         socketChannel.read(readBuffer, new StringBuffer(), new SocketChannelReadHandle(socketChannel , readBuffer));
     }

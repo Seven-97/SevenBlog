@@ -65,19 +65,7 @@ write(socket, tmp_buf, len);
 
 传统的文件传输需要经历4次用户态与内核态的上下文切换和4次的数据拷贝，因此就提出了零拷贝技术。
 
-
-
-学Java的同学可能不太了解用户空间、内核空间，其实对应到代码层面 用户空间就是下面的byte数组，也就是用户态的缓冲区
-
-```java
-byte[] b = new byte[1024];
-while((read =inputstream.read(b))>=0){
-    total = total + read;
-	// other code...
-}
-```
-
-
+> 学Java的同学可能不太了解用户空间、内核空间，其实对应到代码层面，JavaNIO中的Channel（通道）就相当于操作系统中的内核缓冲区，有可能是读缓冲区，也有可能是网络缓冲区，而[Buffer](https://so.csdn.net/so/search?q=Buffer&spm=1001.2101.3001.7020)就相当于操作系统中的用户空间缓冲区。
 
 
 
