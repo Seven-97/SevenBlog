@@ -7,10 +7,6 @@ tag:
 
 
 
-
-
-
-
 ## ZGC概述
 
 ZGC（The Z Garbage Collector）是JDK 11中推出的一款低延迟垃圾回收器，它的设计目标包括：
@@ -30,9 +26,7 @@ ZGC（The Z Garbage Collector）是JDK 11中推出的一款低延迟垃圾回收
 
 ## GC之痛
 
-> 很多低延迟高可用Java服务的系统可用性经常受GC停顿的困扰。GC停顿指垃圾回收期间STW（Stop The World），当STW时，所有应用线程停止活动，等待GC停顿结束。
-
-以美团风控服务为例，部分上游业务要求风控服务65ms内返回结果，并且可用性要达到99.99%。但因为GC停顿，我们未能达到上述可用性目标。当时使用的是CMS垃圾回收器，单次Young GC 40ms，一分钟10次，接口平均响应时间30ms。通过计算可知，有（40ms + 30ms) * 10次 / 60000ms = 1.12%的请求的响应时间会增加0 ~ 40ms不等，其中30ms * 10次 / 60000ms = 0.5%的请求响应时间会增加40ms。可见，GC停顿对响应时间的影响较大。为了降低GC停顿对系统可用性的影响，我们从降低单次GC时间和降低GC频率两个角度出发进行了调优，还测试过G1垃圾回收器，但这三项措施均未能降低GC对服务可用性的影响。
+很多低延迟高可用Java服务的系统可用性经常受GC停顿的困扰。GC停顿指垃圾回收期间STW（Stop The World），当STW时，所有应用线程停止活动，等待GC停顿结束。
 
 ### CMS与G1停顿时间瓶颈
 
@@ -48,7 +42,7 @@ ZGC（The Z Garbage Collector）是JDK 11中推出的一款低延迟垃圾回收
 
 下面以G1为例，通过G1中标记-复制算法过程（G1的Young GC和Mixed GC均采用该算法），分析G1停顿耗时的主要瓶颈。G1垃圾回收周期如下图所示：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714777.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714777.jpg)
 
 G1的混合回收过程可以分为标记阶段、清理阶段和复制阶段。
 
@@ -80,9 +74,21 @@ G1的Young GC和CMS的Young GC，其标记-复制全过程STW，这里不再详�
 
 ZGC垃圾回收周期如下图所示：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714782.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714782.jpg)
 
 ZGC只有三个STW阶段：初始标记，再标记，初始转移。其中，初始标记和初始转移分别都只需要扫描所有GC Roots，其处理时间和GC Roots的数量成正比，一般情况耗时非常短；再标记阶段STW时间很短，最多1ms，超过1ms则再次进入并发标记阶段。即，ZGC几乎所有暂停都只依赖于GC Roots集合大小，停顿时间不会随着堆的大小或者活跃对象的大小而增加。与ZGC对比，G1的转移阶段完全STW的，且停顿时间随存活对象的大小增加而增加。
+
+### Page内存布局
+
+zgc也是将堆内存划分为一系列的内存分区，称为page(深入理解JVM原书上管这种分区叫做region，但是官方文档还是叫做的page，我们这里引用官方文档的称呼以免和G1搞混)，这种管理方式和G1 GC很相似，但是ZGC的page不具备分代，准确的说应该是ZGC目前不具备分代的特点（目前JDK17版本下的ZGC还是没有分代的）。原因是如果将ZGC设计为支持分代的垃圾回收，设计太复杂，所以先将ZGC设计为无分代的GC模式，后续再迭代。ZGC的page有3种类型。
+
+- 小型page(small page)：容量2M，存放小于256k的对象
+- 中型page(medium page)：容量32M，存放大于等于256k，但是小于4M的page
+- 大型page(large page)：容量不固定，但是必须是2M的整数倍。存放4M以上的对象，且只能存放一个对象。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406272309750.webp)
+
+
 
 ### ZGC关键技术
 
@@ -94,7 +100,7 @@ ZGC通过着色指针和读屏障技术，解决了转移过程中准确访问�
 
 ZGC仅支持64位系统，它把64位虚拟地址空间划分为多个子空间，如下图所示：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714779.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714779.jpg)
 
 其中，[0~4TB) 对应Java堆，[4TB ~ 8TB) 称为M0地址空间，[8TB ~ 12TB) 称为M1地址空间，[12TB ~ 16TB) 预留未使用，[16TB ~ 20TB) 称为Remapped空间。
 
@@ -102,13 +108,13 @@ ZGC仅支持64位系统，它把64位虚拟地址空间划分为多个子空间�
 
 与上述地址空间划分相对应，ZGC实际仅使用64位地址空间的第041位，而第4245位存储元数据，第47~63位固定为0。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714781.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714781.jpg)
 
 ZGC将对象存活信息存储在42~45位中，这与传统的垃圾回收并将对象存活信息放在对象头中完全不同。
 
 #### 读屏障
 
-> 读屏障是JVM向应用代码插入一小段代码的技术。当应用线程从堆中读取对象引用时，就会执行这段代码。需要注意的是，仅“从堆中读取对象引用”才会触发这段代码。
+读屏障是JVM向应用代码插入一小段代码的技术。当应用线程从堆中读取对象引用时，就会执行这段代码。需要注意的是，仅“从堆中读取对象引用”才会触发这段代码。
 
 读屏障示例：
 
@@ -120,33 +126,58 @@ o.dosomething() // 无需加入屏障，因为不是从堆中读取引用
 int i =  obj.FieldB  //无需加入屏障，因为不是对象引用
 ```
 
+读屏障主要是用来改写每个地址的命名空间。这里还涉及到指针的自愈self healing。指针的自愈是指的当访问一个正处于重分配集中的对象时会被读屏障拦截，然后通过转发记录表forwarding table将访问转发到新复制的对象上，并且修正并更新该引用的值，使其直接指向新对象。也是因为这个能力，ZGC的STW时间大大缩短，其他的GC则需要修复所有指向本对象的指针后才能访问。
+
 ZGC中读屏障的代码作用：在对象标记和转移过程中，用于确定对象的引用地址是否满足条件，并作出相应动作。
 
-### ZGC并发处理演示
+#### NUMA
 
-接下来详细介绍ZGC一次垃圾回收周期中地址视图的切换过程：
+numa不是ZGC在垃圾回收器上的创新，但是是ZGC的一大特点。大家了解就可以了。了解NUMA先了解UMA。
 
-- 初始化：ZGC初始化之后，整个内存空间的地址视图被设置为Remapped。程序正常运行，在内存中分配对象，满足一定条件后垃圾回收启动，此时进入标记阶段。
+- uma(Uniform Memory Access Architeture)：统一内存访问，也是一般电脑的正常架构，即一块内存多个CPU访问，所以在多核CPU在访问一块内存时会出现竞争。操作系统为了为了锁住某一块内存会限制总线上对某个内存的访问，当CPU变多时总线就会变成瓶颈。
+- numa(non Uniform Memory Access Architeture)：非统一内存访问，每块CPU都有自己的一块对应内存，一般是距离CPU比较近的，CPU会优先访问这块内存。因为CPU之间访问各自的内存这样就减少了竞争，效率更高。numa技术允许将多台机器组成一个服务供外部使用，这种技术在大型系统上比较流行，也是一种高性能解决方案，而且堆空间也可以由多台机器组成。ZGC对numa的适配就是ZGC能够自己感知numa架构。
 
-- 并发标记阶段：第一次进入标记阶段时视图为M0，如果对象被GC标记线程或者应用线程访问过，那么就将对象的地址视图从Remapped调整为M0。所以，在标记阶段结束之后，对象的地址要么是M0视图，要么是Remapped。如果对象的地址是M0视图，那么说明对象是活跃的；如果对象的地址是Remapped视图，说明对象是不活跃的。
 
-- 并发转移阶段：标记结束后就进入转移阶段，此时地址视图再次被设置为Remapped。如果对象被GC转移线程或者应用线程访问过，那么就将对象的地址视图从M0调整为Remapped。
 
-其实，在标记阶段存在两个地址视图M0和M1，上面的过程显示只用了一个地址视图。**之所以设计成两个，是为了区别前一次标记和当前标记**。也即，第二次进入并发标记阶段后，地址视图调整为M1，而非M0。
+## ZGC流程
 
-着色指针和读屏障技术不仅应用在并发转移阶段，还应用在并发标记阶段：将对象设置为已标记，传统的垃圾回收器需要进行一次内存访问，并将对象存活信息放在对象头中；而在ZGC中，只需要设置指针地址的第42~45位即可，并且因为是寄存器访问，所以速度比访问内存更快。
+这里引入一个概念，good_mask。good_mask是记录JVM垃圾回收阶段的标志，随着GC进行不断切换，并且让JVM根据good_mask和对象的标记位的关系识别对象是不是本轮GC里产生的，good_mask可以说是记录当前JVM视图空间的变量。ZGC流程如下。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714788.jpg)
+1. 初始标记(Init Mark)
+   初始标记，这一步和G1类似，也是记录下所有从GC Roots可达的对象。除此之外，还切换了good_mask的值，good_mask初始化出来是remapped，经过这次切换，就变为了marked1(这里很多人认为第一次是切换到0，其实不是的)。需要注意的是，对象的指针，因为还没有参加过GC，所以对象的标志位是出于Remapped。经过这一步，所有GC Roots可达的对象就被标记为了marked1。
+   ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406272313831.webp)
+2. 并发标记(Concurrent Mark)
+   第一执行标记时，视图为marked1，GC线程从GCRoots出发，如果对象被GC线程访问，那么对象的地址视图会被Remapped切换到marked1，在标记结束时，如果对象的地址空间是marked1，那么说明对象是活跃的，如果是Remapped，那么说明对象是不活跃的。同时还会记录下每个内页中存活的对象的字节数大小，以便后续做页面迁移。这个阶段新分配的对象的染色指针会被置为marked1。
+   这个阶段还有一件事，就是修复上一次GC时被标记的指针，这也是为什么染色指针需要两个命名空间的原因。如果命名空间只有一个，那么本次标记时就区分不出来一个已经被标记过的指针是本次标记还是上次标记的。
+   ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406272313821.webp)
+3. 重新标记(Remark)
+   这个阶段是处理一些并发标记阶段未处理完的任务(少量STW，控制在1ms内)如果没处理完还会再次并发标记，这里其实主要是解决三色标计算法中的漏标的问题,即白色对象被黑色对象持有的问题。并发标记阶段发生引用更改的对象会被记录下来(触发读屏障就会记录)，在这个阶段标记引用被更改的对象。这里我就不画图了，大家理解意思就行。
+4. 并发预备重分配(Concurrent Prepare for Relocate)
+   这一步主要是为了之后的迁移做准备，这一步主要是处理软引用，弱引用，虚引用对象，以及重置page的Forwarding table，收集待回收的page信息到Relocation Set
+   Forwarding table是记录对象被迁移后的新旧引用的映射表。Relocation Set是存放记录需要回收的存活页集合。这个阶段ZGC会扫描所有的page，将需要迁移的page信息存储到Relocation Set，这一点和G1很不一样，G1是只选择部分需要回收的Region。在记录page信息的同时还会初始化page的Forwarding table，记录下每个page里有哪些需要迁移的对象。这一步耗时很长，因为是全量扫描所有的page，但是因为是和用户线程并发运行的，所以并不会STW，而且对比G1，还省去了维护RSet和SATB的成本。
+   ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406272313845.webp)
+5. 初始迁移(Relocate Start)
+   这个阶段是为了找出所有GC Roots直接可达的对象，并且切换good_mask到remapped，这一步是STW的。这里注意一个问题，被GC Roots直接引用的对象可能需要迁移。如果需要，则会将该对象复制到新的page里，并且修正GC Roots指向本对象的指针，这个过程就是"指针的自愈"。当然这不是重点重点是切换good_mask。
+   ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406272313837.webp)
+6. 并发迁移(Concurrent Relocate)
+   这个阶段需要遍历所有的page，并且根据page的forward table将存活的对象复制到其他page，然后再forward table里记录对象的新老引用地址的对应关系。page中的对象被迁移完毕后，page就会被回收，注意这里并不会回收掉forward table，否则新老对象的映射关系就丢失了。
+   这个阶段如果正好用户线程访问了被迁移后的对象，那么也会根据forward table修正这个对象被持有的引用，这也是"指针的自愈"。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406272313864.webp)
+
+7. 并发重映射(Concurrent Remap)
+   这个阶段是为了修正所有的被迁移后的对象的引用。严格来说并发重映射并不属于本轮GC阶段要采取的操作。因为在第6步执行后，我们就得到了所有的需要重新映射的对象被迁移前后地址映射关系，有了这个关系，在以后的访问时刻，都可以根据这个映射关系重新修正对象的引用，即"指针自愈"。如果这里直接了当的再重新根据GC Roots遍历所有对象，当然可以完成所有对象的"指针自愈"，但是实际是额外的产生了一次遍历所有对象的操作。所以ZGC采取的办法是将这个阶段推迟到下轮ZGC的并发标记去完成，这样就共用了遍历所有对象的过程。而在下次ZGC开始之前，任何的线程访问被迁移后的对象的引用，则可以触发读屏障，并根据forward table自己识别出对象被迁移后的地址，自行完成"指针自愈"。
+   ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406272313864.webp)
+
+
 
 ## ZGC调优实践
 
-> ZGC不是“银弹”，需要根据服务的具体特点进行调优。网络上能搜索到实战经验较少，调优理论需自行摸索，我们在此阶段也耗费了不少时间，最终才达到理想的性能。本文的一个目的是列举一些使用ZGC时常见的问题，帮助大家使用ZGC提高服务可用性。
+> ZGC不是“银弹”，需要根据服务的具体特点进行调优。网络上能搜索到实战经验较少，调优理论需自行摸索，最终才达到理想的性能。本文的一个目的是列举一些使用ZGC时常见的问题，帮助大家使用ZGC提高服务可用性。
 
 ### 调优基础知识
 
 #### 理解ZGC重要配置参数
-
-> 以我们服务在生产环境中ZGC参数配置为例，说明各个参数的作用：
 
 重要参数配置样例：
 
@@ -180,7 +211,7 @@ ZGC中读屏障的代码作用：在对象标记和转移过程中，用于确�
 
 #### 理解ZGC触发时机
 
-> 相比于CMS和G1的GC触发机制，ZGC的GC触发机制有很大不同。ZGC的核心特点是并发，GC过程中一直有新的对象产生。如何保证在GC完成之前，新产生的对象不会将堆占满，是ZGC参数调优的第一大目标。因为在ZGC中，当垃圾来不及回收将堆占满时，会导致正在运行的线程停顿，持续时间可能长达秒级之久。
+相比于CMS和G1的GC触发机制，ZGC的GC触发机制有很大不同。ZGC的核心特点是并发，GC过程中一直有新的对象产生。如何保证在GC完成之前，新产生的对象不会将堆占满，是ZGC参数调优的第一大目标。因为在ZGC中，当垃圾来不及回收将堆占满时，会导致正在运行的线程停顿，持续时间可能长达秒级之久。
 
 ZGC有多种GC触发机制，总结如下：
 
@@ -204,7 +235,7 @@ ZGC有多种GC触发机制，总结如下：
 
 一次完整的GC过程，需要注意的点已在图中标出。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714790.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714790.jpg)
 
 注意：该日志过滤了进入安全点的信息。正常情况，在一次GC过程中还穿插着进入安全点的操作。
 
@@ -224,7 +255,7 @@ GC日志中每一行都注明了GC过程中的信息，关键信息如下：
 
 日志中内容较多，关键点已用红线标出，含义较好理解，更详细的解释大家可以自行在网上查阅资料。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714615.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714615.jpg)
 
  
 
@@ -240,15 +271,15 @@ GC日志中每一行都注明了GC过程中的信息，关键信息如下：
 
 - 内存分配阻塞：当内存不足时线程会阻塞等待GC完成，关键字是”Allocation Stall”。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714641.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714641.jpg)
 
 - 安全点：所有线程进入到安全点后才能进行GC，ZGC定期进入安全点判断是否需要GC。先进入安全点的线程需要等待后进入安全点的线程直到所有线程挂起。
 
 - dump线程、内存：比如jstack、jmap命令。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714660.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714660.jpg)
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714679.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251714679.jpg)
 
 ### 调优案例
 

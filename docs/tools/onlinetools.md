@@ -31,9 +31,9 @@ tag:
   - [IDEA - Java开发](https://www.jetbrains.com.cn/idea/)
   - Zookeeper图形化管理客户端：
     - [ZooInspector](https://issues.apache.org/jira/secure/attachment/12436620/ZooInspector.zip)
-    - [PrettyZoo](https://github.com/vran-dev/PrettyZoo)
+    - [PrettyZoo](https://github.com/vran-dev/PrettyZoo)：一个基于 Apache Curator 和 JavaFX 实现的 ZooKeeper 图形化管理客户端，颜值非常高，支持 Mac / Windows / Linux 。你可以使用 PrettyZoo 来实现对 ZooKeeper 的可视化增删改查
+    - [zktools](https://zktools.readthedocs.io/en/latest/#installing)：一个低延迟的 ZooKeeper 图形化管理客户端，颜值非常高，支持 Mac / Windows / Linux 。你可以使用 zktools 来实现对 ZooKeeper 的可视化增删改查
   - [Redis - 管理客户端](https://www.seven97.top/tools/redis-managertools.html)
   - [Navicat - 数据库管理客户端](https://www.navicat.com.cn/download/navicat-premium)
   - [MobaXterm - SSH客户端](https://mobaxterm.mobatek.net/)
-  
   - [MQTTBox](http://workswithweb.com/mqttbox.html)：可用于测试 MQTT 的即时通讯功能

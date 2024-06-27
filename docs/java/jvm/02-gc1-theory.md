@@ -21,13 +21,13 @@ tag:
 
 弊端：循环引用时，两个对象的计数都为1，导致两个对象都无法被释放。JVM不用这种算法
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647806.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647806.gif)
 
 ### 可达性分析算法
 
 通过 GC Root 对象为起点，从这些节点向下搜索，搜索所走过的路径叫引用链，当一个对象到 GC Root没有任何的引用链相连时，说明这个对象是不可用的。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647808.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647808.gif)
 
 - JVM中的垃圾回收器通过可达性分析来探索所有存活的对象
 
@@ -91,7 +91,7 @@ Object object = new Object();
 
 只要一个对象有强引用，垃圾回收器就不会进行回收。即便内存不够了，抛出OutOfMemoryError异常也不会回收。因此强引用是造成java内存泄漏的主要原因之一。 对于一个普通的对象，如果没有其他的引用关系，只要超过了引用的作用域或者显式地将相 应（强）引用赋值为 null，就是可以被垃圾收集的了，具体回收时机还是要看垃圾收集策略。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647804.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647804.gif)
 
 ```java
 /**
@@ -142,7 +142,7 @@ SoftReference<OneObject> oneObjectSr = new SoftReference<>(new OneObject());
 
 
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647817.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647817.gif)
 
 当内存足够的时候，垃圾回收器不会进行回收。当内存不够时，就会回收只存在软引用的对象释放内存。
 
@@ -213,7 +213,7 @@ WeakReference<OneObject> oneObjectWr = new WeakReference<>(new OneObject());
 
 
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647819.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647819.gif)
 
 只要发生gc，就会回收只存在弱引用的对象。
 
@@ -265,17 +265,17 @@ PhantomReference<OneObject> oneObjectPr = new PhantomReference<>(new OneObject()
 
 无论是否gc，其实都获取不到通过PhantomReference创建的对象。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647823.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647823.gif)
 
 **其仅用于管理直接内存，起到通知的作用。**
 
 这里补充一下背景。因为垃圾回收器只能管理JVM内部的内存，无法直接管理系统内存的。对于一些存放在系统内存中的数据，JVM会创建一个引用（类似于指针）指向这部分内存。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647416.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647416.gif)
 
 当这个引用在回收的时候，就需要通过虚引用来管理指向的系统内存。这里还需要依赖一个队列来实现。当触发gc对一个虚引用对象回收时，会将虚引用放入创建时指定的ReferenceQueue中。之后单独对这个队列进行轮询，并做额外处理。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647438.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647438.gif)
 
  
 
@@ -324,7 +324,7 @@ public class ShowPhantomReference {
 
 所有的类都继承自Object类，Object类有一个finalize方法。当某个对象不再被其他的对象所引用时，会先将终结器引用对象放入引用队列中，然后根据终结器引用对象找到它所引用的对象，然后调用该对象的finalize方法。调用以后，该对象就可以被垃圾回收了如上图，B对象不再引用A4对象。这时终结器对象就会被放入引用队列中，引用队列会根据它，找到它所引用的对象。然后调用被引用对象的finalize方法。调用以后，该对象就可以被垃圾回收了
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647458.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647458.gif)
 
 #### 引用队列
 
@@ -421,7 +421,7 @@ JVM 在进行 GC 时，并非每次都对堆内存（新生代、老年代；方
 
 ### Java对象内存分配过程
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647486.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647486.jpg)
 
 对象的分配过程：
 
@@ -443,17 +443,17 @@ TLAB**作用原理**：Java在内存新生代Eden区域开辟了一小块线程�
 
 ### 标记清除算法
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647508.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647508.gif)
 
  
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647531.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647531.gif)
 
 **定义：** 标记清除算法顾名思义，将存活的对象进行标记，然后清理掉未被标记的对象，给堆内存腾出相应的空间
 
 - 这里的腾出内存空间并不是将内存空间的字节清0，而是记录下这段内存的起始结束地址，下次分配内存的时候，会直接覆盖这段内存
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647013.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647013.gif)
 
 **优点：**
 
@@ -471,13 +471,11 @@ TLAB**作用原理**：Java在内存新生代Eden区域开辟了一小块线程�
 
 ### 标记整理
 
- 
-
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647029.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647029.gif)
 
  
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647079.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647079.gif)
 
 GC标记压缩算法分为**标记阶段**和**压缩阶段**。它是将GC标记清除算法的清除阶段换成了压缩，而且这里的压缩不是将活动对象从一个空间复制到另一个空间，而是将活动对象整体前移，挤占非活动对象的空间。
 
@@ -533,43 +531,43 @@ HotSpot 虚拟机的 Eden 和 Survivor 的大小比例默认为 8:1，保证了�
 
 开始新创建的对象都被放在了新生代的伊甸园中
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647108.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647108.gif)
 
 当多创建几个对象的后发现伊甸园装不下了。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647201.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647201.gif)
 
 当伊甸园中的内存不足时，就会进行一次垃圾回收，这时的回收叫做轻GC Minor GC。一次小的垃圾回收，根据可达性算法找到不能被回收的，把这些不能被回收的对象复制到幸存区To中（用的复制算法），然后把幸存的对象的寿命+1，然后回收掉伊甸园里面的全部对象。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647259.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647259.gif)
 
 再把From区和To区的指向互换,那么这是to区就又空出来了
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647553.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647553.gif)
 
 再次创建对象，若新生代的伊甸园又满了，则会再次触发 Minor GC（会触发 stop the world， 暂停其他用户线程，只让垃圾回收线程工作），
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647588.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647588.gif)
 
 这时不仅会回收伊甸园中的垃圾，还会回收幸存区中的垃圾，From也会被垃圾回收检查，再将活跃对象复制到幸存区TO中。回收以后会交换两个幸存区，并让幸存区中的对象寿命加1。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647636.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647636.gif)
 
 > 这里1是从伊甸园区新进幸存区的对象，2是原本就存活在幸存区寿命+1后为2
 
 这时就有对象在两次GC中存活下来那么他的存活次数就会是2，如果幸存区中的对象的寿命超过某个阈值（最大为15，4bit），那么就会晋升到老年代中去
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647663.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647663.gif)
 
 因为老年代的垃圾回收频率比较低,这个对象在新生代里面反复GC都没有回收掉说明长时间在用,那么就没有必要在新生代中反复GC
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647744.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647744.gif)
 
 如果新生代老年代中的内存都满了，就会先触发Minor GC，再触发Full GC，扫描新生代和老年代中所有不再使用的对象并回收。如果两次GC后还是放不下， 就会报OOM异常
 
 在报堆内存溢出之前，还会去尝试minorGC一次如果minorGC了释放出来的空间还是放不下，那么就会触发一次fullGC(类似于大扫除,老年代和新生代都会被GC)，如果还是没办法放下那么就会报java.lang.OutOfMemoryError: Java heap space
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647797.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647797.gif)
 
 **总结:** 在新生代中，每次垃圾收集时都有大批对象死去，只有少量存活，使用复制算法比较合适，只需要付出少量存活对象的复制成本就可以完成收集。老年代对象存活率高，适合使用标记-清理或者标记-整理算法进行垃圾回收。
 
@@ -577,15 +575,15 @@ HotSpot 虚拟机的 Eden 和 Survivor 的大小比例默认为 8:1，保证了�
 
 CMS和G1在并发标记时使用的是同一个算法：三色标记法，使用白灰黑三种颜色标记对象。白色是未标记；灰色自身被标记，引用的对象未标记；黑色自身与引用对象都已标记。
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647055.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647055.gif)
 
 GC 开始前所有对象都是白色，GC 一开始所有根能够直达的对象被压到栈中，待搜索，此时颜色是灰色。然后灰色对象依次从栈中取出搜索子对象，子对象也会被涂为灰色，入栈。当其所有的子对象都涂为灰色之后该对象被涂为黑色。当 GC 结束之后灰色对象将全部没了，剩下黑色的为存活对象，白色的为垃圾。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647114.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647114.gif)
 
 ## 垃圾收集器
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647149.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647149.jpg)
 
 以上是 HotSpot 虚拟机中的 7 个垃圾收集器，连线表示垃圾收集器可以配合使用。
 
@@ -599,7 +597,7 @@ GC 开始前所有对象都是白色，GC 一开始所有根能够直达的对�
 
 特点：单线程、简单高效（与其他收集器的单线程相比），采用**复制算法**。对于限定单个CPU的环境来说，Serial收集器由于没有线程交互的开销，专心做垃圾收集自然可以获得最高的单线程收集效率。收集器进行垃圾回收时，必须暂停其他所有的工作线程，直到它结束（Stop The World）参数：-XX:+UseSerialGC  -XX:+UseSerialOldGC
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647174.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647174.gif)
 
 **安全点：** 让其他线程都在这个点停下来，以免垃圾回收时移动对象地址，使得其他线程找不到被移动的对象因为是串行的，所以只有一个垃圾回收线程。且在该线程执行回收工作时，其他线程进入阻塞状态
 
@@ -629,7 +627,7 @@ ParNew收集器其实就是Serial收集器的多线程版本
 
 - **特点：** 多线程、ParNew收集器默认开启的收集线程数与CPU的数量相同，在CPU非常多的环境中，可以使用-XX:ParallelGCThreads参数来限制垃圾收集的线程数。和Serial收集器一样存在Stop The World问题
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647242.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647242.gif)
 
 ### CMS 收集器
 
@@ -639,7 +637,7 @@ Concurrent Mark Sweep，一种以获取最短回收停顿时间为目标的老�
 
 - **特点：** 基于**标记清除算法**实现。并发收集、低停顿，但是会产生内存碎片
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647453.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647453.jpg)
 
 运行过程分分为下列4步：
 
@@ -716,13 +714,13 @@ class B {
 }
 ```
 
-![image-20240425165926576](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251659654.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251659654.png)
 
 当GC线程标记A时，CPU时间片切换，业务线程进行了对象引用改变，这时候时间片回到了GC线程，继续扫描对象A， 发现A没有任何引用，则会将A赋值黑色扫描完毕，这样B则不会被扫描，会标记B是垃圾， 在清理阶段将B回收掉，错误的回收正常的对象，发生业务异常。
 
-CMS基于这种错误标记的解决方案是采取写屏障 + 增量更新Incremental Update ， 在业务线程发生对象变化时，重新将R标识为灰色，重新扫描一遍，Incremental Update 在特殊场景下还是会产生漏标。
+CMS基于这种错误标记的解决方案是采取**写屏障 + 增量更新Incremental Update** ， 在业务线程发生对象变化时，重新将R标识为灰色，重新扫描一遍，Incremental Update 在特殊场景下还是会产生漏标。即当黑色对象被新增一个白色对象的引用的时候，记录下发生引用变更的黑色对象，并将它重新改变为灰色对象，重新标记。
 
-![image-20240425165944280](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251659457.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251659457.png)
 
  ```java
  public class Demo3 {
@@ -762,7 +760,7 @@ CMS基于这种错误标记的解决方案是采取写屏障 + 增量更新Incre
 
 - JDK1.8默认使用的垃圾回收器
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647585.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251647585.gif)
 
 #### Parallel Scavenge 收集器
 

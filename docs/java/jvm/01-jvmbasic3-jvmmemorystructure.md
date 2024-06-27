@@ -13,13 +13,13 @@ tag:
 
 定义：Java Virtual Machine，JAVA程序的运行环境（JAVA二进制字节码的运行环境）
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633013.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633013.gif)
 
 ## 内存结构
 
 JVM 内存布局规定了 Java 在运行过程中内存申请、分配、管理的策略，保证了 JVM 的高效稳定运行。不同的 JVM 对于内存的划分方式和管理机制存在着部分差异。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633027.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633027.gif)
 
 ### 程序计数器
 
@@ -189,7 +189,7 @@ Native Interface本地接口：本地接口的作用是融合不同的编程语�
 
 - 堆中的区域：新生代（ Eden 空间、 From Survivor 、 To Survivor 空间）和老年代。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633019.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633019.gif)
 
 年轻代被分为三个部分——伊甸园（Eden Memory）和两个幸存区（Survivor Memory，被称为from/to或s0/s1），默认比例是8:1:1
 
@@ -325,9 +325,7 @@ TLAB是虚拟机在堆内存的eden划分出来的一块专用空间，是线程
 
 通俗点讲，如果一个对象的指针被多个方法或者线程引用时，那么我们就称这个对象的指针发生了逃逸。
 
- 
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633044.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633044.gif)
 
 ##### 逃逸分析的好处
 
@@ -432,7 +430,7 @@ JVM 必须保存所有方法的
 
 如下，我们通过 jclasslib 查看一个只有 Main 方法的简单类，字节码中的 #2 指向的就是 Constant Pool
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633055.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633055.jpg)
 
 常量池可以看作是一张表，虚拟机指令根据这张常量表找到要执行的类名、方法名、参数类型、字面量等类型。
 
@@ -720,6 +718,6 @@ class Person //模板在方法区
 
 其内存模型如下：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633035.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633035.gif)
 
 这里虽然描述的常量池在方法区中，只作为理解。也可以理解为在堆中，或者元空间

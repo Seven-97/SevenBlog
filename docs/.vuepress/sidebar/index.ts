@@ -557,6 +557,15 @@ export default sidebar({
       children: [
           "maven-detail",
           "git-detail",
+          {
+            text: "工具类库",
+            icon: "codelibrary-fill",
+            prefix: "tool-library/",
+            collapsible: true,
+            children: [
+              "guava",
+            ],
+          },
         {
           text: "Gradle",
           icon: "gradle",
