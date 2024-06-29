@@ -27,6 +27,20 @@ NIO 常常被叫做非阻塞 IO，主要是因为 NIO 在网络通信中的非�
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406241147089.jpeg)
 
+Java NIO 中的 `Selector` 类是基于操作系统提供的 I/O 多路复用机制实现的，而在 Linux 上，这个机制就是 `epoll`。
+
+关于触发模式，Java NIO 的 `Selector` 默认使用的是水平触发模式（Level-Triggered, LT）。这意味着当一个文件描述符（在 Java 中通常是 `SocketChannel` 或 `ServerSocketChannel`）变得可读或可写时，`Selector` 会持续通知，直到该文件描述符上的事件被处理。这与 `epoll` 的水平触发模式是一致的。
+
+虽然 `epoll` 也支持边缘触发模式（Edge-Triggered, ET），但 Java NIO 的 `Selector` 并没有直接提供对边缘触发模式的支持。如果需要使用边缘触发模式，通常需要直接使用底层的系统调用（如通过 JNI 调用 `epoll` 的边缘触发模式），但这超出了标准 Java NIO 库的范围。
+
+总结一下：
+
+- Java NIO 在 Linux 上使用 `epoll` 作为底层的 I/O 多路复用机制。
+- Java NIO 的 `Selector` 默认使用 `epoll` 的水平触发模式。
+- Java NIO 不直接支持 `epoll` 的边缘触发模式，需要通过其他方式实现。
+
+因此，如果你在 Linux 上使用 Java NIO 的 `Selector`，你可以预期它使用的是 [`epoll` 的水平触发模式]()。
+
 
 
 ## 三大组件
@@ -349,7 +363,7 @@ while (keyIterator.hasNext()) {
 ```
 
 事件发生后，能否不处理？
-不能，事件发生后，要么处理，要么取消（cancel），不能什么都不做，否则下次该事件仍会触发，这是因为 nio 底层使用的是[水平触发](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html#边缘触发和水平触发)
+不能，事件发生后，要么处理，要么取消（cancel），不能什么都不做，否则下次该事件仍会触发，这是因为 nio 底层使用的是[epoll 的水平触发](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html#边缘触发和水平触发)
 
 这里为什么要 keyIterator.remove() 操作？ 
 因为 select 在事件发生后，就会将相关的 key 放入 selectedKeys 集合，但不会在处理完后从 selectedKeys 集合中移除，需要我们自己编码删除。例如
@@ -925,7 +939,40 @@ public class UdpClient {
 
  
 
+## JavaNIO的缺陷
 
+使用 Java 原生 NIO 来编写服务器应用，代码一般类似：
+
+```java
+// 创建、配置 ServerSocketChannel
+ServerSocketChannel serverChannel = ServerSocketChannel.open();
+serverChannel.socket().bind(new InetSocketAddress(9998));
+serverChannel.configureBlocking(false);
+ 
+// 创建 Selector
+Selector selector = Selector.open();
+ 
+// 注册
+serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+ 
+while (true) {
+    selector.select();  // select 可能在无就绪事件时异常返回！
+ 
+    Set<SelectionKey> readyKeys = selector.selectedKeys();
+    Iterator<SelectionKey> it = readyKeys.iterator();
+ 
+    while (it.hasNext()) {
+        SelectionKey key = it.next();
+        ...  // 处理事件
+        it.remove();
+    }
+}
+```
+
+`selector.select()` 应该 **一直阻塞**，直到有就绪事件到达，但很遗憾，由于 Java NIO 实现上存在 bug，`select()` 可能在 **没有** 任何就绪事件的情况下返回，从而导致 `while(true)` 被不断执行，最后导致某个 CPU 核心的利用率飙升到 100%，这就是臭名昭著的 Java NIO 的 epoll bug。
+
+> 实际上，这是 Linux 系统下 poll/epoll 实现导致的 bug，但 Java NIO 并未完善处理它，所以也可以说是 Java NIO 的 bug。
+> 该问题最早在 Java 6 发现，随后很多版本声称解决了该问题，但实际上只是降低了该 bug 的出现频率，起码从网上搜索看，Java 8 还是存在该问题。
 
 
 
