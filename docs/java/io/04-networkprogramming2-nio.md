@@ -39,7 +39,7 @@ Java NIO 中的 `Selector` 类是基于操作系统提供的 I/O 多路复用机
 - Java NIO 的 `Selector` 默认使用 `epoll` 的水平触发模式。
 - Java NIO 不直接支持 `epoll` 的边缘触发模式，需要通过其他方式实现。
 
-因此，如果你在 Linux 上使用 Java NIO 的 `Selector`，你可以预期它使用的是 [`epoll` 的水平触发模式]()。
+因此，如果你在 Linux 上使用 Java NIO 的 `Selector`，你可以预期它使用的是 [`epoll` 的水平触发模式](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html#水平触发)。
 
 
 
@@ -363,7 +363,7 @@ while (keyIterator.hasNext()) {
 ```
 
 事件发生后，能否不处理？
-不能，事件发生后，要么处理，要么取消（cancel），不能什么都不做，否则下次该事件仍会触发，这是因为 nio 底层使用的是[epoll 的水平触发](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html#边缘触发和水平触发)
+不能，事件发生后，要么处理，要么取消（cancel），不能什么都不做，否则下次该事件仍会触发，这是因为 nio 底层使用的是水平触发
 
 这里为什么要 keyIterator.remove() 操作？ 
 因为 select 在事件发生后，就会将相关的 key 放入 selectedKeys 集合，但不会在处理完后从 selectedKeys 集合中移除，需要我们自己编码删除。例如

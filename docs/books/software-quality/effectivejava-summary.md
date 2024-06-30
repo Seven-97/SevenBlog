@@ -1366,15 +1366,729 @@ public class Favorites {
 
 ### 34、用枚举类型代替 int 常量
 
-枚举类型相比int常量有不少优点，如：能提供类型安全性，能提供toString方法打印字符串，还允许添加任意方法和字段并实现任意接口，使得枚举成为功能齐全的抽象（富枚举类型）。
+枚举类型相比int常量有不少优点，如：能提供类型安全性，能提供 toString 方法打印字符串，还允许添加任意方法和字段并实现任意接口，使得枚举成为功能齐全的抽象（富枚举类型）。
 
 一般来说，枚举在性能上可与 int 常量相比，不过加载和初始化枚举类型需要花费空间和时间，实际应用中这一点可能不太明显。
 
  
 
+### 35、使用实例字段替代序数
+
+所有枚举都有一个 ordinal 方法，该方法返回枚举类型中每个枚举常量的数值位置：
+
+```java
+// Abuse of ordinal to derive an associated value - DON'T DO THIS
+public enum Ensemble {
+    SOLO, DUET, TRIO, QUARTET, QUINTET,SEXTET, SEPTET, OCTET, NONET, DECTET;
+
+    public int numberOfMusicians() { return ordinal() + 1; }
+}
+```
+
+这样写虽然可行，但难以维护。如果常量被重新排序，numberOfMusicians 方法将被破坏。 更好的办法是使用一个额外的字段来代表序数：
+
+```java
+public enum Ensemble {
+    SOLO(1), DUET(2), TRIO(3), QUARTET(4), QUINTET(5),SEXTET(6), SEPTET(7), OCTET(8), DOUBLE_QUARTET(8),NONET(9), DECTET(10),TRIPLE_QUARTET(12);
+
+    private final int numberOfMusicians;
+
+    Ensemble(int size) { this.numberOfMusicians = size; }
+
+    public int numberOfMusicians() { return numberOfMusicians; }
+}
+```
+
+ordinal是为基于枚举的通用数据结构（EnumSet 和 EnumMap）设计的。除非你用到这些数据结构，否则最好完全避免使用这个方法。
 
 
 
+### 36、用 EnumSet 替代位字段
+
+如果枚举类型的元素主要在 Set 中使用，传统上使用 int 枚举模式，通过不同的 2 的平方数为每个常量赋值：
+
+```java
+// Bit field enumeration constants - OBSOLETE!
+public class Text {
+    public static final int STYLE_BOLD = 1 << 0; // 1
+    public static final int STYLE_ITALIC = 1 << 1; // 2
+    public static final int STYLE_UNDERLINE = 1 << 2; // 4
+    public static final int STYLE_STRIKETHROUGH = 1 << 3; // 8
+    // Parameter is bitwise OR of zero or more STYLE_ constants
+    public void applyStyles(int styles) { ... }
+}
+```
+
+这种表示方式称为位字段，允许你使用位运算的或操作将几个常量组合成一个 Set：
+
+```java
+text.applyStyles(STYLE_BOLD | STYLE_ITALIC);
+```
+
+位字段具有 int 枚举常量所有缺点，例如：
+
+1. 被打印成数字时难以理解
+2. 没有简单的方法遍历位字段所有元素
+3. 一旦确定了int或long作为位字段的存储类型，就不能超过它的范围（32位或64位）
+
+EnumSet类是一种更好的选择，它避免了以上缺点。而且由于它在底层实现上与位操作类似，因此与位字段性能相当。
+
+将之前的示例修改为使用EnumSet的方法，更加简单清晰：
+
+```java
+// EnumSet - a modern replacement for bit fields
+public class Text {
+    public enum Style { BOLD, ITALIC, UNDERLINE, STRIKETHROUGH }
+    // Any Set could be passed in, but EnumSet is clearly best
+    public void applyStyles(Set<Style> styles) { ... }
+}
+```
+
+下面是将 EnumSet 实例传递给 applyStyles 方法的用户代码。EnumSet 类提供了一组丰富的静态工厂，可以方便地创建 Set：
+
+```java
+text.applyStyles(EnumSet.of(Style.BOLD, Style.ITALIC));
+```
+
+
+
+### 37、使用 EnumMap 替换序数索引
+
+**用序数索引数组不如使用 EnumMap ，应尽量少使用 `ordinal()` 。**
+
+例如这个类表示一种植物：
+
+```java
+class Plant {
+    enum LifeCycle { ANNUAL, PERENNIAL, BIENNIAL }
+    final String name;
+    final LifeCycle lifeCycle;
+
+    Plant(String name, LifeCycle lifeCycle) {
+        this.name = name;
+        this.lifeCycle = lifeCycle;
+    }
+
+    @Override public String toString() {
+        return name;
+    }
+}
+```
+
+假设有一个代表花园全部植物的 Plant 数组 plantsByLifeCycle，用于列出按生命周期（一年生、多年生或两年生）排列的植物：
+
+```java
+// Using ordinal() to index into an array - DON'T DO THIS!
+Set<Plant>[] plantsByLifeCycle =(Set<Plant>[]) new Set[Plant.LifeCycle.values().length];
+
+for (int i = 0; i < plantsByLifeCycle.length; i++)
+    plantsByLifeCycle[i] = new HashSet<>();
+
+for (Plant p : garden)
+    plantsByLifeCycle[p.lifeCycle.ordinal()].add(p);
+
+// Print the results
+for (int i = 0; i < plantsByLifeCycle.length; i++) {
+    System.out.printf("%s: %s%n",
+    Plant.LifeCycle.values()[i], plantsByLifeCycle[i]);
+}
+```
+
+
+
+这种技术有如下问题：
+
+1. 数组与泛型不兼容，需要 unchecked 转换。
+2. 数组不知道索引表示什么，必须手动标记输出。
+3. int 不提供枚举的类型安全性，无法检验int值的正确性。
+
+有一种更好的方法是使用 `java.util.EnumMap`：
+
+```java
+// Using an EnumMap to associate data with an enum
+Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle =new EnumMap<>(Plant.LifeCycle.class);
+
+for (Plant.LifeCycle lc : Plant.LifeCycle.values())
+    plantsByLifeCycle.put(lc, new HashSet<>());
+
+for (Plant p : garden)
+    plantsByLifeCycle.get(p.lifeCycle).add(p);
+
+System.out.println(plantsByLifeCycle);
+```
+
+这个程序比原来的版本更短，更清晰，更安全，速度也差不多。速度相当的原因是，EnumMap 在内部使用这样的数组，但是它向程序员隐藏了实现细节。
+
+
+
+使用流可以进一步缩短程序：
+
+```java
+// Naive stream-based approach - unlikely to produce an EnumMap!
+System.out.println(Arrays.stream(garden).collect(groupingBy(p -> p.lifeCycle)));
+```
+
+
+
+这段代码的性能较差，因为底层不是基于 EnumMap，而是自己实现Map。要改进性能，可以使用 mapFactory 参数指定 Map 实现：
+
+```java
+// Using a stream and an EnumMap to associate data with an enum
+System.out.println(
+    Arrays.stream(garden).collect(groupingBy(p -> p.lifeCycle,() -> new EnumMap<>(LifeCycle.class), toSet()))
+);
+```
+
+
+
+下面例子用二维数组描述了气液固三台之间的装换，并使用序数索引读取二维数组的值：
+
+```java
+// Using ordinal() to index array of arrays - DON'T DO THIS!
+public enum Phase {
+    SOLID, LIQUID, GAS;
+
+    public enum Transition {
+        MELT, FREEZE, BOIL, CONDENSE, SUBLIME, DEPOSIT;
+
+        // Rows indexed by from-ordinal, cols by to-ordinal
+        private static final Transition[][] TRANSITIONS = {
+            { null, MELT, SUBLIME },
+            { FREEZE, null, BOIL },
+            { DEPOSIT, CONDENSE, null }
+        };
+
+        // Returns the phase transition from one phase to another
+        public static Transition from(Phase from, Phase to) {
+            return TRANSITIONS[from.ordinal()][to.ordinal()];
+        }
+    }
+}
+```
+
+这个程序的问题与前面 garden 示例一样，编译器无法知道序数和数组索引之间的关系。如果你在转换表中出错，或者在修改 Phase 或 `Phase.Transition` 枚举类型时忘记更新，程序将在运行时失败。
+
+
+
+使用 EnumMap 可以做得更好：
+
+```java
+// Using a nested EnumMap to associate data with enum pairs
+public enum Phase {
+    SOLID, LIQUID, GAS;
+
+    public enum Transition {
+        MELT(SOLID, LIQUID), FREEZE(LIQUID, SOLID),
+        BOIL(LIQUID, GAS), CONDENSE(GAS, LIQUID),
+        SUBLIME(SOLID, GAS), DEPOSIT(GAS, SOLID);
+        private final Phase from;
+        private final Phase to;
+
+        Transition(Phase from, Phase to) {
+            this.from = from;
+            this.to = to;
+        }
+
+    // Initialize the phase transition map
+    private static final Map<Phase, Map<Phase,Transition> m =
+        new EnumMap<Phase, Map<Phase ,Transition>>(Phase.class);
+
+    static{
+        for (Phase p : Phase. values())
+            m.put(p,new EnumMap<Phase,Transition (Phase.class));
+        for (Transition trans : Transition.values() )
+            m.get(trans. src).put(trans.dst, trans) ;
+    }
+
+    public static Transition from(Phase src, Phase dst) {
+        return m.get(src).get(dst);
+    }
+}
+```
+
+如果你想向系统中加入一种新阶段：等离子体。这个阶段只有两个变化：电离、去离子作用。修改基于EnumMap的版本要比基于数组的版本容易得多，而且更加清晰安全：
+
+```java
+// Adding a new phase using the nested EnumMap implementation
+public enum Phase {
+    SOLID, LIQUID, GAS, PLASMA;
+    public enum Transition {
+        MELT(SOLID, LIQUID), FREEZE(LIQUID, SOLID),
+        BOIL(LIQUID, GAS), CONDENSE(GAS, LIQUID),
+        SUBLIME(SOLID, GAS), DEPOSIT(GAS, SOLID),
+        IONIZE(GAS, PLASMA), DEIONIZE(PLASMA, GAS);
+        ... // Remainder unchanged
+    }
+}
+```
+
+
+
+### 38、使用接口模拟可扩展枚举
+
+**虽然不能编写可扩展枚举类型，但是可以通过编写接口来模拟它。**
+
+Java语言层面不支持可扩展枚举类型，但有时我们需要实现类似的需求，如操作码。操作码是一种枚举类型，其元素表示某些机器上的操作，例如第34条中的 Operation 类，它表示简单计算器上的函数。有时候，我们希望 API 的用户提供自己的操作，从而有效地扩展 API 提供的操作集。
+
+一种思路是为操作码类型定义一个接口，并为接口的标准实现定义一个枚举：
+
+```java
+// Emulated extensible enum using an interface
+public interface Operation {
+    double apply(double x, double y);
+}
+
+public enum BasicOperation implements Operation {
+    PLUS("+") {
+        public double apply(double x, double y) { return x + y; }
+    },
+    MINUS("-") {
+        public double apply(double x, double y) { return x - y; }
+    },
+    TIMES("*") {
+        public double apply(double x, double y) { return x * y; }
+    },
+    DIVIDE("/") {
+        public double apply(double x, double y) { return x / y; }
+    };
+
+    private final String symbol;
+
+    BasicOperation(String symbol) {
+        this.symbol = symbol;
+    }
+
+    @Override
+    public String toString() {
+        return symbol;
+    }
+}
+```
+
+用这种方法可以轻松扩展自己的实现：
+
+```java
+// Emulated extension enum
+public enum ExtendedOperation implements Operation {
+    EXP("^") {
+        public double apply(double x, double y) {
+            return Math.pow(x, y);
+        }
+    },
+    REMAINDER("%") {
+        public double apply(double x, double y) {
+            return x % y;
+        }
+    };
+
+    private final String symbol;
+
+    ExtendedOperation(String symbol) {
+        this.symbol = symbol;
+    }
+
+    @Override
+    public String toString() {
+        return symbol;
+    }
+}
+```
+
+通过传入扩展枚举类型到方法，可以编写一个上述代码的测试程序，它执行了前面定义的所有扩展操作：
+
+```java
+public static void main(String[] args) {
+    double x = Double.parseDouble(args[0]);
+    double y = Double.parseDouble(args[1]);
+    test(ExtendedOperation.class, x, y);
+}
+
+private static <T extends Enum<T> & Operation> void test(Class<T> opEnumType, double x, double y) {
+    for (Operation op : opEnumType.getEnumConstants())
+        System.out.printf("%f %s %f = %f%n",x, op, y, op.apply(x, y));
+}
+```
+
+
+
+第二个选择是传递一个 `Collection<? extends Operation>`，而非类对象：
+
+```java
+public static void main(String[] args) {
+    double x = Double.parseDouble(args[0]);
+    double y = Double.parseDouble(args[1]);
+    test(Arrays.asList(ExtendedOperation.values()), x, y);
+}
+
+private static void test(Collection<? extends Operation> opSet,double x, double y) {
+    for (Operation op : opSet)
+        System.out.printf("%f %s %f = %f%n",x, op, y, op.apply(x, y));
+}
+```
+
+这种方法的优点是：代码更简单，且允许调用者组合来自多个实现类型的操作。缺点是：放弃了在指定操作上使用 EnumSet和EnumMap的能力。
+
+接口模拟可扩展枚举的一个小缺点是实现不能从一个枚举类型继承到另一个枚举类型。如果实现代码不依赖于任何状态，则可以使用默认实现将其放置在接口中。
+
+
+
+### 39、注解优于命名模式
+
+**如果可以使用注解，那么就没有理由使用命名模式。**
+
+历史上，使用命名模式来标明某些程序元素需要框架特殊处理是很常见的。例如，JUnit 4以前的版本要求其用户通过以字符 test 开头的名称来指定测试方法。这种技术是有效的，但是有几个很大的缺点：
+
+1. 拼写错误会导致没有提示的失败，导致一种正确执行了测试的假象。
+2. 无法在类的级别使用test命名模式。例如，命名一个类 为TestSafetyMechanisms，希望 JUnit 3 能够自动测试它的所有方法，是行不通的。
+3. 没有提供将参数值与程序元素关联的好方法。例如，希望支持只有在抛出特定异常时才成功的测试类别。如果将异常类型名称编码到测试方法名称中，那么代码将不好看且脆弱。
+
+JUnit 从版本 4 开始使用注解解决了上述问题。在本条目中，我们将编写自己的示例测试框架来展示注解是如何工作的：
+
+```java
+// Marker annotation type declaration
+import java.lang.annotation.*;
+
+/**
+* Indicates that the annotated method is a test method.
+* Use only on parameterless static methods.
+*/
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Test {
+
+}
+```
+
+`@Retention(RetentionPolicy.RUNTIME)` 元注解表明测试注解在运行时生效。`@Target.get(ElementType.METHOD)` 元注解表明测试注解仅对方法生效。
+
+Test的注释说明它只能用于无参的静态方法，但实际上编译器并没有对此做强制。
+
+下面是 Test 注解实际使用时的样子。如果程序员拼错 Test 或将 Test 注解应用于除方法声明之外的元素，程序将无法编译：
+
+```java
+// Program containing marker annotations
+public class Sample {
+    @Test
+    public static void m1() { } // Test should pass
+
+    public static void m2() { }
+
+    @Test
+    public static void m3() { // Test should fail
+        throw new RuntimeException("Boom");
+    }
+
+    public static void m4() { }
+
+    @Test
+    public void m5() { } // INVALID USE: nonstatic method
+
+    public static void m6() { }
+
+    @Test
+    public static void m7() { // Test should fail
+        throw new RuntimeException("Crash");
+    }
+
+    public static void m8() { }
+}
+```
+
+Sample 类有 7 个静态方法，其中 4 个被注解为 Test。其中两个方法 m3 和 m7 抛出异常，另外两个 m1 和 m5 没有抛出异常。但是，m5 不是静态方法，所以不是有效的用例。总之，Sample 包含四个测试用例：一个通过，两个失败，一个无效。
+
+以下是解析并运行Test 注解标记的测试的例子：
+
+```java
+// Program to process marker annotations
+import java.lang.reflect.*;
+
+public class RunTests {
+    public static void main(String[] args) throws Exception {
+        int tests = 0;
+        int passed = 0;
+        Class<?> testClass = Class.forName(args[0]);
+        for (Method m : testClass.getDeclaredMethods()) {
+            if (m.isAnnotationPresent(Test.class)) {
+                tests++;
+                try {
+                    m.invoke(null);
+                    passed++;
+                } catch (InvocationTargetException wrappedExc) {
+                    Throwable exc = wrappedExc.getCause();
+                    System.out.println(m + " failed: " + exc);
+                } catch (Exception exc) {
+                    System.out.println("Invalid @Test: " + m);
+                }
+        }
+    }
+    System.out.printf("Passed: %d, Failed: %d%n",passed, tests - passed);
+    }
+}
+```
+
+如果在 Sample 上运行 RunTests，输出如下：
+
+```java
+public static void Sample.m3() failed: RuntimeException: Boom
+Invalid @Test: public void Sample.m5()
+public static void Sample.m7() failed: RuntimeException: Crash
+Passed: 1, Failed: 3
+```
+
+现在让我们添加一个只在抛出特定异常时才成功的测试支持。需要一个新的注解类型：
+
+```java
+// Annotation type with a parameter
+import java.lang.annotation.*;
+
+/**
+* Indicates that the annotated method is a test method that
+* must throw the designated exception to succeed.
+*/
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ExceptionTest {
+    Class<? extends Throwable> value();
+}
+```
+
+下面是这个注解的实际应用：
+
+```java
+// Program containing annotations with a parameter
+public class Sample2 {
+    @ExceptionTest(ArithmeticException.class)
+    public static void m1() { // Test should pass
+        int i = 0;
+        i = i / i;
+    }
+
+    @ExceptionTest(ArithmeticException.class)
+    public static void m2() { // Should fail (wrong exception)
+        int[] a = new int[0];
+        int i = a[1];
+    }
+
+    @ExceptionTest(ArithmeticException.class)
+    public static void m3() { } // Should fail (no exception)
+}
+```
+
+修改RunTests类来处理新的注解。向 main 方法添加以下代码：
+
+```java
+if (m.isAnnotationPresent(ExceptionTest.class)) {
+    tests++;
+    try {
+        m.invoke(null);
+        System.out.printf("Test %s failed: no exception%n", m);
+    } catch (InvocationTargetException wrappedEx) {
+        Throwable exc = wrappedEx.getCause();
+        Class<? extends Throwable> excType =m.getAnnotation(ExceptionTest.class).value();
+        if (excType.isInstance(exc)) {
+            passed++;
+        } else {
+            System.out.printf("Test %s failed: expected %s, got %s%n",m, excType.getName(), exc);
+        }
+    }
+    catch (Exception exc) {
+        System.out.println("Invalid @Test: " + m);
+    }
+}
+```
+
+这段代码提取注解参数的值，并使用它来检查测试抛出的异常是否是正确的类型。
+
+进一步修改异常测试示例，将允许的指定异常扩展到多个：
+
+```java
+// Annotation type with an array parameter
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ExceptionTest {
+    Class<? extends Exception>[] value();
+}
+```
+
+以下是对应的测试用例：
+
+```java
+// Code containing an annotation with an array parameter
+@ExceptionTest({ IndexOutOfBoundsException.class,NullPointerException.class })
+public static void doublyBad() {
+    List<String> list = new ArrayList<>();
+    // The spec permits this method to throw either
+    // IndexOutOfBoundsException or NullPointerException
+    list.addAll(5, null);
+}
+```
+
+修改RunTests类：
+
+```java
+if (m.isAnnotationPresent(ExceptionTest.class)) {
+    tests++;
+    try {
+        m.invoke(null);
+        System.out.printf("Test %s failed: no exception%n", m);
+    } catch (Throwable wrappedExc) {
+        Throwable exc = wrappedExc.getCause();
+        int oldPassed = passed;
+        Class<? extends Exception>[] excTypes =m.getAnnotation(ExceptionTest.class).value();
+        for (Class<? extends Exception> excType : excTypes) {
+            if (excType.isInstance(exc)) {
+                passed++;
+                break;
+            }
+        }
+        if (passed == oldPassed)
+            System.out.printf("Test %s failed: %s %n", m, exc);
+    }
+}
+```
+
+Java 8 中可以在注解声明上使用 `@Repeatable` （重复注解）达到类似效果，提升程序可读性：
+
+```java
+// Repeatable annotation type
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@Repeatable(ExceptionTestContainer.class)
+public @interface ExceptionTest {
+    Class<? extends Exception> value();
+}
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ExceptionTestContainer {
+    ExceptionTest[] value();
+}
+```
+
+使用重复注解代替数组值注解的测试用例：
+
+```java
+// Code containing a repeated annotation
+@ExceptionTest(IndexOutOfBoundsException.class)
+@ExceptionTest(NullPointerException.class)
+public static void doublyBad() { ... }
+```
+
+为重复注解版本对应修改RunTests类：
+
+```java
+// Processing repeatable annotations
+if (m.isAnnotationPresent(ExceptionTest.class)|| m.isAnnotationPresent(ExceptionTestContainer.class)) {
+    tests++;
+    try {
+        m.invoke(null);
+        System.out.printf("Test %s failed: no exception%n", m);
+    } catch (Throwable wrappedExc) {
+        Throwable exc = wrappedExc.getCause();
+        int oldPassed = passed;
+        ExceptionTest[] excTests =m.getAnnotationsByType(ExceptionTest.class);
+        for (ExceptionTest excTest : excTests) {
+            if (excTest.value().isInstance(exc)) {
+                passed++;
+                break;
+            }
+        }
+        if (passed == oldPassed)
+            System.out.printf("Test %s failed: %s %n", m, exc);
+    }
+}
+```
+
+
+
+### 40、坚持使用 @Override 注解
+
+**在每个方法声明上都使用 `@Override` 注解来覆盖超类型声明，编译器可以帮助减少有害错误的影响。**
+
+下面的类Bigram表示一个二元有序的字母对：
+
+```java
+// Can you spot the bug?
+public class Bigram {
+    private final char first;
+    private final char second;
+
+    public Bigram(char first, char second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    public boolean equals(Bigram b) {
+        return b.first == first && b.second == second;
+    }
+
+    public int hashCode() {
+        return 31 * first + second;
+    }
+
+    public static void main(String[] args) {
+        Set<Bigram> s = new HashSet<>();
+
+        for (int i = 0; i < 10; i++)
+            for (char ch = 'a'; ch <= 'z'; ch++)
+                s.add(new Bigram(ch, ch));
+
+        System.out.println(s.size());
+    }
+}
+```
+
+主程序重复地向一个集合中添加 26 个 bigram，每个 bigram 由两个相同的小写字母组成。然后它打印该集合的大小。运行该程序，它打印的不是 26 而是 260。
+
+Bigram 类的作者打算覆盖 equals 方法，但实际上重载了它，因为参数类型不同。这个继承来的 equals 方法只能检测对象同一性，就像 == 操作符一样。每组中的每个 bigram 副本都不同于其他 9 个，这就解释了为什么程序最终打印 260。
+
+如果使用Override注解就可以避免这个错误：
+
+```java
+@Override
+public boolean equals(Bigram b) {
+    return b.first == first && b.second == second;
+}
+```
+
+这时编译器将生成如下错误消息：
+
+```java
+Bigram.java:10: method does not override or implement a method from a supertype
+@Override public boolean equals(Bigram b) {
+^
+```
+
+再修改为正确的实现：
+
+```java
+@Override
+public boolean equals(Object o) {
+    if (!(o instanceof Bigram))
+        return false;
+    Bigram b = (Bigram) o;
+    return b.first == first && b.second == second;
+}
+```
+
+因此，应该在要覆盖超类声明的每个方法声明上使用 `@Override` 注解。只有一个例外，如果你正在编写一个非抽象类，并且它覆盖了其超类中的抽象方法，那么不一定需要添加 `@Override` 注解。
+
+
+
+### 41、使用标记接口定义类型
+
+标记接口是一种不包含任何方法声明的接口，它只是标记它的实现类具有某种特性。如 Serializable 接口，实现此接口的类可以写入ObjectOutputStream（被序列化）。
+
+**如果要定义类型，那么使用标记接口优于使用标记注解。**
+
+标记接口相比标记注解有两个优点：
+
+1. 标记接口定义的类型由标记类的实例实现；标记注解不会。前者在编译时捕获错误，后者在运行时才能捕捉错误。
+2. 可以更精确地定位。标记注解可以应用于任何类或接口，而标记接口限定于它的实现类。
+
+标记注解的优点是：它们可以是其他注解功能的一部分。
+
+总之，如果你想要定义一个没有与之关联的新方法的类型，可以使用标记接口。如果你希望标记类和接口之外的程序元素，或者将标记符放入已经大量使用注解类型的框架中，那么应该使用标记注解。
 
 
 

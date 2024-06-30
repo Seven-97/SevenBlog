@@ -135,6 +135,8 @@ select * from _order where shop_id = 1 and created_at > '2021-01-01 00:00:00' an
 ```
 范围查询还有“IN、between”
 
+相关原理可以看这篇文章 [唯一索引范围查询](https://www.seven97.top/database/mysql/02-lock2-howtoaddrowlocks.html#唯一索引范围查询)
+
 ### asc和desc混用
 
 ```sql

@@ -1,5 +1,5 @@
 ---
-title: 整合Kafka - SpringBoot
+title: 整合Kafka
 category: 系统设计
 tag:
   - Kafka

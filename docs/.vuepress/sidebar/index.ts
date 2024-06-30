@@ -517,6 +517,7 @@ export default sidebar({
             "parameterverification",
             "elegantlyclosetheprogram",
             "kafka-springboot",
+            "minio-springboot",
           ],
         },
         "paymenttechnology",
