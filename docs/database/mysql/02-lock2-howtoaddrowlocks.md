@@ -3,6 +3,7 @@ title: 锁 - 行级锁怎么加的？
 category: 数据库
 tag:
  - Mysql
+ - 锁
 ---
 
 

@@ -3,6 +3,7 @@ title: 数据库连接池配置推荐
 category: 数据库
 tag:
   - 最佳实践
+  - Mysql
 ---
 
 > 来源：[阿里云](https://help.aliyun.com/document_detail/181399.html)

@@ -22,9 +22,9 @@
   "packageManager": "pnpm@9.1.1",
   "dependencies": {
     "@vuepress/bundler-vite": "2.0.0-rc.9",
-    "@vuepress/plugin-copyright": "2.0.0-rc.9",
-    "@vuepress/plugin-feed": "2.0.0-rc.9",
-    "@vuepress/plugin-search": "2.0.0-rc.9",
+    "@vuepress/plugin-copyright": "2.0.0-rc.21",
+    "@vuepress/plugin-feed": "2.0.0-rc.21",
+    "@vuepress/plugin-search": "2.0.0-rc.21",
     "husky": "9.0.10",
     "markdownlint-cli2": "0.12.1",
     "mathjax-full": "3.2.2",

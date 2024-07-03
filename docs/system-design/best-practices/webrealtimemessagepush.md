@@ -2,7 +2,8 @@
 title: Web 实时消息推送详解
 category: 系统设计
 tag:
-  - 还没想好
+  - 消息推送
+  - MQTT
 ---
 
 > 原文地址：https://juejin.cn/post/7122014462181113887，Seven 对本文进行了完善总结。
