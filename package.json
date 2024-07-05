@@ -6,7 +6,7 @@
   "license": "MIT",
   "author": "Seven",
   "scripts": {
-    "docs:build": "vuepress build docs",
+   
     "docs:dev": "vuepress dev docs",
     "docs:clean-dev": "vuepress dev docs --clean-cache",
     "lint": "pnpm lint:prettier && pnpm lint:md",
