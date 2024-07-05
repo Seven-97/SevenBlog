@@ -26,7 +26,7 @@ export default hopeTheme({
   navbar,
   sidebar,
   //设置标题能渲染的最高层级:这里设置h2-h5
-  // headerDepth:5,
+  headerDepth:5,
 
   footer:
     '<a href="https://beian.miit.gov.cn/" target="_blank">闽ICP备2022017393号</a>',

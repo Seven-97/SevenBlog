@@ -10,12 +10,12 @@ export default defineUserConfig({
     "Seven的菜鸟成长之路",
   lang: "zh-CN",
 
-  // markdown:{
-  //   headers: {
-  //     // 用到哪一级就提取哪一级
-  //     level: [2, 3, 4, 5],
-  //   },
-  // },
+  markdown:{
+    headers: {
+      // 用到哪一级就提取哪一级
+      level: [2, 3, 4, 5],
+    },
+  },
 
   head: [
     // meta
