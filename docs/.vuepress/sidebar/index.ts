@@ -432,6 +432,7 @@ export default sidebar({
           icon: "caozuoxitong",
           collapsible: true,
           children: [
+            "os-basic",
             "processthreadsanddeadlocks",
             "memorypagereplacementalgorithm",
             "cpucacheconsistency",
