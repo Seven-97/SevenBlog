@@ -11,17 +11,17 @@ tag:
 
 ## 线程状态转换
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004832.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407090028297.png)
 
- 
+
 
 ### 新建(New)
 
-创建后尚未启动。
+NEW：初始状态，线程被构建，但是还没有调用start()方法。
 
 ### 可运行(Runnable)
 
-可能正在运行，也可能正在等待 CPU 时间片。
+RUNNABLE：可运行状态，可运行状态可以包括：运行中状态和就绪状态。也就是 可能正在运行，也可能正在等待 CPU 时间片。
 
 包含了操作系统线程状态中的 Running 和 Ready。
 
