@@ -46,6 +46,7 @@ export default sidebar({
             "04-juc1-copyonwritearrayList",
             "04-juc2-concurrenthashmap",
             "04-juc3-concurrentlinkedqueue",
+            "04-juc4-blockingqueue",
             "05-collection-mining-pit",
           ],
         },
