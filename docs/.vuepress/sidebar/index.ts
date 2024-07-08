@@ -264,7 +264,7 @@ export default sidebar({
           prefix: "netty/",
           collapsible: true,
           children: [
-            
+            "netty-basic",
           ],
         },
         {

@@ -939,6 +939,84 @@ public class UdpClient {
 
  
 
+## 存在的误区
+
+最初在认识上有这样的误区，认为只有在 netty，nio 这样的多路复用 IO 模型时，读写才不会相互阻塞，才可以实现高效的双向通信，但实际上，Java Socket 是全双工的：在任意时刻，线路上存在`A 到 B` 和 `B 到 A` 的双向信号传输。即使是阻塞 IO，读和写是可以同时进行的，只要分别采用读线程和写线程即可，读不会阻塞写、写也不会阻塞读
+
+服务端：
+
+```java
+public class TestServer {
+    public static void main(String[] args) throws IOException {
+        ServerSocket ss = new ServerSocket(8888);
+        Socket s = ss.accept();
+
+        new Thread(() -> {
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                while (true) {
+                    System.out.println(reader.readLine());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+                // 例如在这个位置加入 thread 级别断点，可以发现即使不写入数据，也不妨碍前面线程读取客户端数据
+                for (int i = 0; i < 100; i++) {
+                    writer.write(String.valueOf(i));
+                    writer.newLine();
+                    writer.flush();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+}
+```
+
+客户端：
+
+```java
+public class TestClient {
+    public static void main(String[] args) throws IOException {
+        Socket s = new Socket("localhost", 8888);
+
+        new Thread(() -> {
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                while (true) {
+                    System.out.println(reader.readLine());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+                for (int i = 0; i < 100; i++) {
+                    writer.write(String.valueOf(i));
+                    writer.newLine();
+                    writer.flush();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+}
+```
+
+
+
+
+
 ## JavaNIO的缺陷
 
 使用 Java 原生 NIO 来编写服务器应用，代码一般类似：
