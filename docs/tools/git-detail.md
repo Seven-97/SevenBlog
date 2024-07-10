@@ -171,6 +171,38 @@ $ git clone <git-repo-url>
 $ git remote set-url origin <your-git-url>
 ```
 
+
+
+### 配置自己的Git
+
+- 查看当前的配置
+
+```bash
+$ git config --list
+```
+
+- 配置自己的名字
+
+```bash
+$ git config --global user.name "<name>"
+#  --global为可选参数，该参数表示配置全局信息
+```
+
+- 希望别人看到你的commit可以联系到你
+
+```bash
+$ git config --global user.email "<email address>"
+```
+
+- 有些命令很长，能不能简化一下
+
+```bash
+$ git config --global alias.logg "log --graph --decorate --abbrev-commit --all"
+# 之后就可以开心地使用 git log了
+```
+
+​	
+
 ### 切换分支
 
 > 新建仓库后，默认生成了master分支
@@ -206,12 +238,9 @@ $ git branch -a
 $ git checkout master
 ```
 
-- 将dev分支合并到master分支
 
-```bash
-$ git merge <branch-name>
-# 例如 git merge dev
-```
+
+### 更新本地/远端代码 push/poll
 
 - 将本地master分支推送到远程去
 
@@ -229,33 +258,42 @@ $ git pull origin <branch-name>
 
 - 本地有修改，能不能先git pull
 
-```bash
+```shell
 $ git stash # 工作区修改暂存
 $ git pull  # 更新分支
 $ git stash pop # 暂存修改恢复到工作区
 ```
 
-### 撤销操作
 
-- 恢复暂存区文件到工作区
+
+`git pull` 实际上包含了两个操作：fetch和merge。当使用`git pull`命令时，Git会自动下载最新代码，并尝试将最新代码合并到当前分支。`git fetch`命令只是从远程库下载最新代码，但并不自动合并到本地分支。
+
+- 如果我们希望自动合并最新代码到当前分支，并且不需要查看最新代码的变动，可以使用`git pull`命令。
+- 如果我们只想下载最新代码到本地，并需要查看最新代码的变动后才决定是否进行合并，可以使用`git fetch`命令。
+
+
+
+### 撤销操作 reset
+
+- 恢复**暂存区文件到工作区**
 
 ```bash
 $ git checkout <file-name>
 ```
 
-- 恢复暂存区的所有文件到工作区
+- 恢复**暂存区的所有文件到工作区**
 
 ```bash
 $ git checkout .
 ```
 
-- 重置暂存区的某文件，与上一次commit保持一致，但工作区不变
+- 重置暂存区的某文件，与上一次commit保持一致，但**工作区不变**
 
 ```bash
 $ git reset <file-name>
 ```
 
-- 重置暂存区与工作区，与上一次commit保持一致
+- 重置**暂存区与工作区**，与上一次commit保持一致
 
 ```bash
 $ git reset --hard <file-name>
@@ -277,19 +315,72 @@ $ git reset --hard HEAD{5} #恢复到前五笔操作
 $ git pull origin backend-log #再次拉取代码
 ```
 
-### 版本回退与前进
+
+
+### 版本回退与前进 status、log、reflog
+
+- 查看当前状态
+
+```bash
+$ git status
+```
+
+
 
 - 查看历史版本
 
 ```bash
 $ git log
+commit 9a3d34be1e26563e198ee6aea72d32ad68b607d0 (HEAD -> main, origin/main, origin/HEAD)
+Author: seven <415849169@qq.com>
+Date:   Tue Jul 9 19:10:11 2024 +0800
+
+    更新
+
+commit 47c32de67a28df58ea3bd0b88137f1bd19a12969
+Author: Seven <415849169@qq.com>
+Date:   Tue Jul 9 00:30:11 2024 +0800
+
+    更新
+
+commit 294814faf55fc4f01e3b0a28c96b5acdf1348333
+Author: Seven <415849169@qq.com>
+Date:   Tue Jul 9 00:22:15 2024 +0800
+
+    更新内容
+
+commit 15026d42c4d3a6093bde4578484e2bb64824b9e8
+Author: Seven <415849169@qq.com>
 ```
 
-- 你可能觉得这样的log不好看，试试这个
+- 这样的log不好看，可以试试以下命令
 
 ```bash
 $ git log --graph --decorate --abbrev-commit --all
+* commit 9a3d34b (HEAD -> main, origin/main, origin/HEAD)
+| Author: seven <415849169@qq.com>
+| Date:   Tue Jul 9 19:10:11 2024 +0800
+|
+|     更新
+|
+* commit 47c32de
+| Author: Seven <415849169@qq.com>
+| Date:   Tue Jul 9 00:30:11 2024 +0800
+|
+|     更新
+|
+* commit 294814f
+| Author: Seven <415849169@qq.com>
+| Date:   Tue Jul 9 00:22:15 2024 +0800
+|
+|     更新内容
+|
+* commit 15026d4
+| Author: Seven <415849169@qq.com>
+| Date:   Tue Jul 9 00:16:23 2024 +0800
 ```
+
+
 
 - 检出到任意版本
 
@@ -305,7 +396,7 @@ $ git push origin master --force
 # 或者 git push -f origin master
 ```
 
-- 觉得commit太多了? 多个commit合并为1个
+- 觉得commit太多了? 可以使用rebase将多个commit合并为1个
 
 ```bash
 $ git rebase -i HEAD~4
@@ -333,6 +424,8 @@ $ git reset --hard HEAD^^
 # HEAD^^可以换作具体版本hash值。
 ```
 
+
+
 - 回退错了，想到下一个版本
 
 ```bash
@@ -340,19 +433,17 @@ $ git reflog
 # 这个命令保留了最近执行的操作及所处的版本，每条命令前的hash值，则是对应版本的hash值。使用上述的git checkout 或者 git reset命令 则可以检出或回退到对应版本。
 ```
 
-- 刚才commit信息写错了，可以修改吗
+- 刚才commit信息写错了，修改上一次提交的commit信息
 
 ```bash
 $ git commit --amend
 ```
 
-- 查看当前状态
 
-```bash
-$ git status
-```
 
-### 分支合并
+
+
+### 分支合并 merge
 
 每个分支上都有各自独有的提交，这意味着没有一个分支包含了修改的所有内容。因此通过合并分支来解决这个问题。
 
@@ -362,33 +453,39 @@ git merge 用来做分支合并，将其他分支中的内容合并到当前分�
 
 #### 其它分支合并到master分支
 
-假设当前分支是master
+当前分支是master
 
-> git checkout master
+```shell
+git checkout master
+```
+
+
 
 把issueFix中的内容Merge进来：
 
-> git merge issueFix
+```shell
+git merge issueFix
+```
 
 
 
 如果没有冲突的话，merge完成。有冲突的话，git会提示那个文件中有冲突，比如有如下冲突：
 
-> <<<<<<< HEAD:test.c
->
-> printf (“test1″);
->
-> =======
->
-> printf (“test2″);
->
-> \>>>>>>> issueFix:test.c
+```shell
+<<<<<<< HEAD:test.c
+printf (“test1″);
+=======
+printf (“test2″);
+\>>>>>>> issueFix:test.c
+```
 
 可以看到 ======= 隔开的上半部分，是 HEAD（即 master 分支，在运行 merge 命令时检出的分支）中的内容，下半部分是在 issueFix 分支中的内容。
 
 解决冲突的办法无非是二者选其一或者由你亲自整合到一起。比如你可以通过把这段内容替换为下面这样来解决：
 
-> printf (“test2″);
+```shell
+printf (“test2″);
+```
 
 这个解决方案各采纳了两个分支中的一部分内容，而且删除了 <<<<<<<，=======，和>>>>>>> 这些行。在解决了所有文件里的所有冲突后，运行 git add 将把它们标记为已解决（resolved）。因为一旦暂存，就表示冲突已经解决。
 
@@ -415,12 +512,12 @@ git merge 用来做分支合并，将其他分支中的内容合并到当前分�
 
 以下是合并master分支到你的当前分支的基本步骤：
 
-1. 确保你在正确的分支上：首先，确保你当前所在的分支是你想要合并master分支到的地方。例如，如果你想要将master合并到feature-branch，你需要先切换到feature-branch：
+1. 确保在正确的分支上：首先，确保当前所在的分支是想要合并master分支到的地方。例如，如果想要将master合并到feature-branch，需要先切换到feature-branch：
    ```shell
    git checkout feature-branch
    ```
 
-2. 更新你的分支：在合并之前，最好先更新你的分支，以确保它是最新的。可以通过拉取master分支的最新更改来实现这一点：
+2. 更新分支：在合并之前，最好先更新分支，以确保它是最新的。可以通过拉取master分支的最新更改来实现这一点：
 
    ```shell
    git pull origin master
@@ -428,13 +525,13 @@ git merge 用来做分支合并，将其他分支中的内容合并到当前分�
 
    这会从远程仓库的master分支拉取最新的更改，并尝试将它们合并到你的当前分支。如果master分支有新的提交，这可能会导致合并冲突。
 
-3. 合并master分支：一旦你的分支是最新的，你可以开始合并过程。使用git merge命令来合并master分支：
+3. 合并master分支：一旦分支是最新的，可以开始合并过程。使用git merge命令来合并master分支：
 
    ```shell
    git merge master
    ```
 
-   这会将master分支的更改合并到你的当前分支。如果两个分支之间没有冲突，合并将自动完成。如果有冲突，Git会告诉你哪些文件有冲突，你需要手动解决这些冲突。
+   这会将master分支的更改合并到当前分支。如果两个分支之间没有冲突，合并将自动完成。如果有冲突，Git会告诉你哪些文件有冲突，此时就需要手动解决这些冲突。
 
 4. 解决冲突（如果有）：如果合并过程中出现冲突，Git会暂停合并并告诉你哪些文件需要手动解决冲突。你需要打开这些文件，找到并解决冲突。解决冲突后，使用以下命令标记冲突已解决：
    ```shell
@@ -457,41 +554,11 @@ git merge 用来做分支合并，将其他分支中的内容合并到当前分�
 
 
 
-注意事项：
+#### 注意事项
 
 - 在合并之前，始终确保你的分支是最新的，以避免不必要的冲突。
-- 如果你在合并过程中遇到问题，可以使用git merge --abort来中止合并并返回到合并前的状态。
+- 如果你在合并过程中遇到问题，可以使用`git merge --abort`来中止合并并返回到合并前的状态。
 - 使用git log或gitk可以帮助理解分支的历史和可能的冲突点。
-
-
-
-### 配置自己的Git
-
-- 查看当前的配置
-
-```bash
-$ git config --list
-```
-
-- 估计你需要配置你的名字
-
-```bash
-$ git config --global user.name "<name>"
-#  --global为可选参数，该参数表示配置全局信息
-```
-
-- 希望别人看到你的commit可以联系到你
-
-```bash
-$ git config --global user.email "<email address>"
-```
-
-- 有些命令很长，能不能简化一下
-
-```bash
-$ git config --global alias.logg "log --graph --decorate --abbrev-commit --all"
-# 之后就可以开心地使用 git log了
-```
 
 
 
@@ -528,8 +595,6 @@ release 为预上线分支（预发布分支），UAT测试阶段使用。一般
 分支命名以`hotfix/` 开头的为修复分支，它的命名规则与 feature 分支类似。
 
 ### 分支与环境对应关系
-
-
 
 在系统开发过程中常用的环境：
 

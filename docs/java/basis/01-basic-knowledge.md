@@ -520,7 +520,7 @@ System.out.println("修改前的地址值：" + str + ",hash值"+ str.hashCode()
 Class<? extends String> aClass = str.getClass();
 Field value = aClass.getDeclaredField("value");
 value.setAccessible(true);
-value.set(str,"ghi".getBytes());
+value.set(str,"seven".getBytes());
 System.out.println("修改后的地址值：" + str + ",hash值"+ str.hashCode());
 ```
 
@@ -529,7 +529,7 @@ System.out.println("修改后的地址值：" + str + ",hash值"+ str.hashCode()
 ```java
 修改前的地址值：abcdef,hash值-1424385949
 
-修改后的地址值：ghi,hash值-1424385949
+修改后的地址值：seven,hash值-1424385949
 ```
 
 由于hash是被缓存下来的，所以通过反射修改后hashCode并不会变。除非进行重新计算，但是用反射修改String的值破坏了String的immutable特征，可能会带来一些奇怪的副作用，最好不要这么做。
@@ -549,6 +549,8 @@ private void checkStringConstant(DiagnosticPosition var1, Object var2) {
     }
 }
 ```
+
+> `javac`代码在`jdk8/langtools/src/share/classes/com/sun/tools/javac`之中
 
 
 
@@ -679,7 +681,11 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
 }
 ```
 
-##### String案例
+不一样的地方就在于 String 的value是不可变的，而StringBuilder 的value是可变的
+
+
+
+##### String拼接字符串案例
 
 ```java
 String s1 = "第1个字符串";
@@ -701,7 +707,7 @@ c3[] =  {'第','1','个','字','符','串','第','2','个','字','符','串'};
 
 - 创建str的时候其实就是另外又创建了一个数组，再将s1和s2的数据复制到str中
 
-##### StringBuilder
+##### StringBuilder拼接字符串案例
 
 ```java
 StringBuilder sb = new StringBuilder();
