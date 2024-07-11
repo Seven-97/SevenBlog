@@ -130,7 +130,7 @@ public enum Elvis{
 }
 ```
 
-
+[单例模式](https://www.seven97.top/system-design/design-pattern/singletonpattern.html) 详解看这篇文章
 
  
 
@@ -1477,6 +1477,8 @@ class Plant {
 
 假设有一个代表花园全部植物的 Plant 数组 plantsByLifeCycle，用于列出按生命周期（一年生、多年生或两年生）排列的植物：
 
+有些程序员会将这些集合放到一个按照类型序号进行索引的数组实现这一点。
+
 ```java
 // Using ordinal() to index into an array - DON'T DO THIS!
 Set<Plant>[] plantsByLifeCycle =(Set<Plant>[]) new Set[Plant.LifeCycle.values().length];
@@ -2092,19 +2094,1775 @@ public boolean equals(Object o) {
 
 
 
+## λ表达式和流
+
+### 42、λ 表达式优于匿名类
+
+**表示小函数对象时，lambda表达式优于匿名类。**
+
+带有单个抽象方法的接口称为函数类型，它们的实例称为函数对象。历史上，创建函数对象的主要方法是匿名类。下面是一段按长度对字符串列表进行排序的代码，使用一个匿名类来创建排序的比较函数：
+
+```java
+// Anonymous class instance as a function object - obsolete!
+Collections.sort(words, new Comparator<String>() {
+    public int compare(String s1, String s2) {
+        return Integer.compare(s1.length(), s2.length());
+    }
+});
+```
+
+匿名类的缺点是代码过于冗长。
+
+在 Java 8 中，将具有单个抽象方法的接口称为函数式接口，允许使用 lambda 表达式创建这些接口的实例。Lambda 表达式更加简洁：
+
+```java
+// Lambda expression as function object (replaces anonymous class)
+Collections.sort(words,(s1, s2) -> Integer.compare(s1.length(), s2.length()));
+```
+
+在上面的lambda 表达式中看不到对参数及其返回值类型的定义，这是因为类型是由编译器使用类型推断从上下文中推理出来的。
+
+关于类型推断，需要注意：
+
+1. 第26条：不要使用原始类型。
+
+2. 第29条：优先使用泛型。
+
+3. 第30条：优先使用泛型方法。
+
+这些建议都是为了方便编译器从泛型中获取类型推断所需的信息。否则需要在lambda表达式中手动指定类型，这会使代码更加冗长。
+
+使用 comparator 构造方法代替 lambda 表达式，可以让代码变得更加简洁：
+
+```java
+Collections.sort(words, comparingInt(String::length));
+```
+
+通过 Java 8 中添加到 List 接口的 sort 方法，可以使代码变得更短：
+
+```java
+words.sort(comparingInt(String::length));
+```
+
+我们可以使用lambda表达式优化第34条中的操作枚举类型，以下是原代码：
+
+```java
+// Enum type with constant-specific class bodies & data (Item 34)
+public enum Operation {
+    PLUS("+") {
+        public double apply(double x, double y) { return x + y; }
+    },
+    MINUS("-") {
+        public double apply(double x, double y) { return x - y; }
+    },
+    TIMES("*") {
+        public double apply(double x, double y) { return x * y; }
+    },
+    DIVIDE("/") {
+        public double apply(double x, double y) { return x / y; }
+    };
+
+    private final String symbol;
+
+    Operation(String symbol) { this.symbol = symbol; }
+
+    @Override
+    public String toString() { return symbol; }
+
+    public abstract double apply(double x, double y);
+}
+```
+
+使用lambda表达式优化为可读性更好的版本：
+
+```java
+// Enum with function object fields & constant-specific behavior
+public enum Operation {
+    PLUS ("+", (x, y) -> x + y),
+    MINUS ("-", (x, y) -> x - y),
+    TIMES ("*", (x, y) -> x * y),
+    DIVIDE("/", (x, y) -> x / y);
+
+    private final String symbol;
+
+    private final DoubleBinaryOperator op;
+
+    Operation(String symbol, DoubleBinaryOperator op) {
+        this.symbol = symbol;
+        this.op = op;
+    }
+
+    @Override public String toString() { return symbol; }
+
+    public double apply(double x, double y) {
+        return op.applyAsDouble(x, y);
+    }
+}
+```
+
+其中 DoubleBinaryOperator 接口是 `java.util.function` 中预定义的函数式接口之一。它表示一个函数，接收两个 double 类型参数，返回值也为 double 类型。
+
+lambda表达式并非任何场合都适合，以下情况就不适合： 
+
+1. 算法较难理解时。写在带有名字会更有助于理解。 
+2. 代码行数过多时。一般三行是合理的最大值。
+3. 需要在lambda表达式中访问枚举实例成员时。无法访问，因为传递给enum构造函数的参数在静态上下文中计算。
+
+
+
+有一些匿名类可以做的事情是 lambda 表达式不能做的： 
+
+1. 创建抽象类的实例。Lambda表达式仅限于函数式接口。 
+2. 创建具有多个抽象方法的接口实例。 
+3. 获得对自身的引用。在 lambda 表达式中，this 关键字指的是外层实例，而非lambda表达式本身。
+
+
+
+### 43、方法引用优于 λ 表达式
+
+**方法引用通常比lambda 表达式更简洁，应优先使用。**
+
+下面一个程序的代码片段的功能是：如果数字 1 不在映射中，则将其与键关联，如果键已经存在，则将关联值递增：
+
+```java
+map.merge(key, 1, (count, incr) -> count + incr);
+```
+
+在 Java 8 中，Integer类提供了一个静态方法 sum，它的作用完全相同，且更简单：
+
+```java
+map.merge(key, 1, Integer::sum);
+```
+
+如果 lambda 表达式太长或太复杂，那么可以将代码从 lambda 表达式提取到一个新方法中，并以对该方法的引用替换 lambda 表达式。可以为该方法起一个好名字并将其文档化。
+
+有时候，lambda 表达式也会比方法引用更简洁。当方法与 lambda 表达式在同一个类中时，如以下代码片段发生在一个名为 GoshThisClassNameIsHumongous 的类中：
+
+```java
+service.execute(GoshThisClassNameIsHumongous::action);
+```
+
+使用 lambda 表达式会更简洁：
+
+```java
+service.execute(() -> action());
+```
+
+许多方法引用指向静态方法，但是有四种方法不指向静态方法。其中两个是绑定和非绑定实例方法引用。在绑定引用中，接收对象在方法引用中指定。在未绑定引用中，在应用函数对象时通过方法声明参数之前的附加参数指定接收对象。最后，对于类和数组，有两种构造函数引用。五种类型的方法汇总如下表：
+
+| 方法引用类型 | 例子                   | 等价的lambda表达式                               |
+| ------------ | ---------------------- | ------------------------------------------------ |
+| 静态         | Integer::parseInt      | str -> Integer.parseInt(str)                     |
+| 绑定         | Instant.now()::isAfter | Instant then =Instant.now(); t ->then.isAfter(t) |
+| 非绑定       | String::toLowerCase    | str ->str.toLowerCase()                          |
+| 类构造方法   | TreeMap<K,V>::new      | () -> new TreeMap<K,V>                           |
+| 数组构造方法 | int[]::new             | len -> new int[len]                              |
+
+
+
+### 44、优先使用标准函数式接口
+
+自从 Java 已经有了 lambda 表达式，编写 API 的最佳实践变化很大。例如，以前会用子类覆盖基类方法以实现多态，现代的替代方法是提供一个静态工厂或构造函数，它接受一个函数对象来实现相同的效果。
+
+例如 LinkedHashMap。可以通过覆盖受保护的 removeEldestEntry 方法将该类用作缓存，每当向映射添加新键时，put 都会调用该方法。当该方法返回 true 时，映射将删除传递给该方法的最老条目。下面的覆盖保证在每次添加新键时删除最老的条目，维护 100 个最近的条目：
+
+```java
+protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
+    return size() > 100;
+}
+```
+
+如果使用 lambda 表达式改造，那么LinkedHashMap将有一个静态工厂或构造函数，它接受一个函数对象，函数对象实现的函数式接口如下：
+
+```java
+// Unnecessary functional interface; use a standard one instead.
+@FunctionalInterface interface EldestEntryRemovalFunction<K,V>{
+    boolean remove(Map<K,V> map, Map.Entry<K,V> eldest);
+}
+```
+
+上面对于新接口的声明不是必需的，因为`java.util.function` 包已经提供了大量的标准函数接口。**如果一个标准的函数式接口可以完成这项工作，那么你通常应该优先使用它，而不是使用专门构建的函数式接口。** 在LinkedHashMap 示例中，应该优先使用标准的 `BiPredicate<Map<K,V>`、`Map.Entry<K,V>>` 接口。
+
+`java.util.function` 中有 43 个接口。可以只用记住 6 个基本接口，其余的接口在需要时派生出来：
+
+1. Operator 接口：表示结果和参数类型相同的函数。（根据参数数量可分为一元、二元）
+2. Predicate 接口：表示接受参数并返回布尔值的函数。
+3. Function 接口：表示参数和返回类型不同的函数。
+4. Supplier 接口：表示一个不接受参数并返回值的函数。
+5. Consumer 接口：表示一个函数，该函数接受一个参数，但不返回任何内容，本质上是使用它的参数。
+
+六个基本的函数式接口总结如下：
+
+| 接口              | 方法签名            | 例子                |
+| ----------------- | ------------------- | ------------------- |
+| UnaryOperator<T>  | T apply(T t)        | String::toLowerCase |
+| BinaryOperator<T> | T apply(T t1, T t2) | BigInteger::add     |
+| Predicate<T>      | boolean test(T t)   | Collection::isEmpty |
+| Function<T,R>     | R apply(T t)        | Arrays::asList      |
+| Supplier<T>       | T get()             | Instant::now        |
+| Consumer<T>       | void accept(T t)    | System.out::println |
+
+大多数标准函数式接口的存在只是为了提供对基本类型的支持。例如，一个接受 int 的 Predicate 就是一个 IntPredicate，一个接受两个 long 值并返回一个 long 的二元操作符就是一个 LongBinaryOperator。不要尝试用带有包装类的基本函数式接口替代它们，因为这会带来糟糕的性能。
+
+如果标准的函数式接口都不能满足需求，那么需要自行编写，例如，如果你需要一个接受三个参数的 Predicate，或者一个抛出已检查异常的 Predicate。
+
+但是有时候即使其中一个标准接口在结构上满足需求，也应该编写自己的函数接口。以 `Comparator<T>`为例，它在结构上与 `ToIntBiFunction<T,T>` 接口相同。有几个原因前者优于后者：
+
+1. Comparator的名称提供了优秀的文档，且使用频繁。
+2. 通过实现接口，保证遵守其约定。
+3. 该接口拥有大量用于转换和组合比较器的有用默认方法。
+
+如果需要一个与 Comparator 共享以下特性的函数式接口，那么应该考虑编写一个专用的函数式接口，而不是使用标准接口：
+
+1. 将被广泛使用，并且从描述性名称中获益。
+2. 有一个严格的约定。
+3. 受益于自定义默认方法。
+
+建议总是用 `@FunctionalInterface` 注释你的函数接口。 有三个好处：
+
+1. 告诉文档读者，接口的设计是为了启用 lambda 表达式。
+2. 除非只有一个抽象方法，否则编译会报错。
+3. 防止维护者在接口发展过程中意外地向接口添加抽象方法。
+
+
+
+### 45、明智地使用流
+
+**根据具体场合决定使用流还是迭代。**
+
+在 Java 8 中添加了流 API，以简化序列或并行执行批量操作的任务。其中有两个关键的抽象：流（表示有限或无限的数据元素序列）和流管道（表示对这些元素的多阶段计算）。流中的数据元素可以是对象的引用或基本数据类型。支持三种基本数据类型：int、long 和 double。
+
+流管道由源流、零个或多个中间操作（intermediate）和一个终止操作（terminal ）组成。每个中间操作以某种方式转换流，例如将每个元素映射到该元素的一个函数，或者过滤掉不满足某些条件的所有元素。终止操作做最终计算，例如将其元素存储到集合中、返回特定元素、或打印其所有元素。
+
+流管道的计算是惰性的：直到调用终止操作时才开始计算，并且对完成终止操作不需要的数据元素永远不会计算。注意，没有终止操作的流管道是无动作的，因此不要忘记包含一个终止操作。
+
+如果使用得当，流可以使程序更短、更清晰；否则，它们会降低程序可读性。
+
+下面的程序从字典文件中读取单词并打印所有大小满足用户指定最小值的变位词组。如果两个单词以不同的顺序由相同的字母组成，那么它们就是变位词，属于同一个变位词组：
+
+```java
+// Prints all large anagram groups in a dictionary iteratively
+public class Anagrams {
+    public static void main(String[] args) throws IOException {
+        File dictionary = new File(args[0]);
+        int minGroupSize = Integer.parseInt(args[1]);
+        Map<String, Set<String>> groups = new HashMap<>();
+        try (Scanner s = new Scanner(dictionary)) {
+            while (s.hasNext()) {
+                String word = s.next();
+                groups.computeIfAbsent(alphabetize(word),(unused) -> new TreeSet<>()).add(word);
+            }
+        }
+        for (Set<String> group : groups.values())
+        if (group.size() >= minGroupSize)
+            System.out.println(group.size() + ": " + group);
+    }
+
+    private static String alphabetize(String s) {
+        char[] a = s.toCharArray();
+        Arrays.sort(a);
+        return new String(a);
+    }
+}
+```
+
+将每个单词插入到 Map 中使用了computeIfAbsent方法：如果键存在，那么该方法仅返回与其关联的值；否则，该方法通过将给定的函数对象应用于键来计算一个值，并将该键值对放置到Map中。
+
+将其修改成使用流的版本：
+
+```java
+// Overuse of streams - don't do this!
+public class Anagrams {
+    public static void main(String[] args) throws IOException {
+        Path dictionary = Paths.get(args[0]);
+        int minGroupSize = Integer.parseInt(args[1]);
+        try (Stream<String> words = Files.lines(dictionary)) {
+            words.collect(
+            groupingBy(word -> word.chars().sorted()
+            .collect(StringBuilder::new,(sb, c) -> sb.append((char) c),
+            StringBuilder::append).toString()))
+            .values().stream()
+            .filter(group -> group.size() >= minGroupSize)
+            .map(group -> group.size() + ": " + group)
+            .forEach(System.out::println);
+        }
+    }
+}
+```
+
+上面代码难以阅读，原因是过度使用了流。我们减少一些非必要使用流的地方，优化成如下代码：
+
+```java
+// Tasteful use of streams enhances clarity and conciseness
+public class Anagrams {
+    public static void main(String[] args) throws IOException {
+        Path dictionary = Paths.get(args[0]);
+        int minGroupSize = Integer.parseInt(args[1]);
+        try (Stream<String> words = Files.lines(dictionary)) {
+            words.collect(groupingBy(word -> alphabetize(word)))
+            .values().stream()
+            .filter(group -> group.size() >= minGroupSize)
+            .forEach(g -> System.out.println(g.size() + ": " + g));
+        }
+    }
+    // alphabetize method is the same as in original version
+}
+```
+
+注意，参数 g 实际上应该命名为 group，但是生成的代码太长，在没有显式类型的情况下，lambda 表达式参数的谨慎命名对于流管道的可读性至关重要。另外，单词的字母化是在一个单独的字母化方法中完成的，好处是将实现细节排除在主程序之外，从而增强可读性。
+
+使用流处理 char 值有风险，应尽量避免。例如下面代码：
+
+```java
+"Hello world!".chars().forEach(System.out::print);
+```
+
+你可能希望它打印 Hello world!，但实际打印 721011081081113211911111410810033。这是因为 `"Hello world!".chars()` 返回的流元素不是 char 值，而是 int 值，因此调用了 print 的 int 重载。可以通过强制调用正确的重载来修复：
+
+```java
+"Hello world!".chars().forEach(x -> System.out.print((char) x));
+```
+
+迭代使用的是代码块，而流通常使用的是lambda表达式或方法引用。有些事情可以在代码块中做，却不能在lambda表达式中做：
+
+1. 读取或修改作用域中的任何局部变量。lambda 表达式中不能修改局部变量。
+2. 从封闭方法返回、中断或继续封闭循环。
+3. 抛出声明要抛出的任何已检查异常。
+
+流擅长做的事情：
+
+1. 元素序列的统一变换。
+2. 过滤元素序列。
+3. 使用单个操作组合元素序列（例如添加、连接或计算它们的最小值）。
+4. 将元素序列累积到一个集合中，可能是按某个公共属性对它们进行分组。
+5. 在元素序列中搜索满足某些条件的元素。
+
+使用流很难做到的一件事是从管道的多个阶段同时访问相应的元素：一旦你将一个值映射到另一个值，原始值就会丢失。一个解决方案是将每个值映射到包含原始值和新值的 pair 对象，但这会让代码更加冗长。更好的解决方案是在需要访问早期阶段值时反转映射。
+
+例如，编写一个程序来打印前 20 个 Mersenne 素数。一个 Mersenne 素数的数量是一个数字形式 2p − 1。如果 p 是素数，对应的 Mersenne 数可以是素数；如果是的话，这就是 Mersenne 素数。作为管道中的初始流，我们需要所有质数：
+
+```java
+static Stream<BigInteger> primes() {
+    return Stream.iterate(TWO, BigInteger::nextProbablePrime);
+}
+```
+
+下面是打印前 20 个 Mersenne 素数的程序：
+
+```java
+public static void main(String[] args) {
+    primes().map(p -> TWO.pow(p.intValueExact()).subtract(ONE))
+    .filter(mersenne -> mersenne.isProbablePrime(50))
+    .limit(20)
+    .forEach(System.out::println);
+}
+```
+
+现在假设我们想要在每个 Mersenne 素数之前加上它的指数，这个值只在初始流中存在。幸运的是，通过对第一个中间操作中发生的映射求逆，可以很容易地计算出 Mersenne 数的指数：
+
+```java
+.forEach(mp -> System.out.println(mp.bitLength() + ": " + mp));
+```
+
+在许多任务中，使用流还是迭代并不明显。例如，考虑初始化一副新纸牌的任务。假设 Card 是一个不可变的值类，它封装了 Rank 和 Suit，它们都是 enum 类型。此任务代表需要计算可从两个集合中选择的所有元素对的任何任务，也称为这两个集合的笛卡尔积：
+
+```java
+// Iterative Cartesian product computation
+private static List<Card> newDeck() {
+    List<Card> result = new ArrayList<>();
+    for (Suit suit : Suit.values())
+    for (Rank rank : Rank.values())
+    result.add(new Card(suit, rank));
+    return result;
+}
+```
+
+下面是一个基于流的实现:
+
+```java
+// Stream-based Cartesian product computation
+private static List<Card> newDeck() {
+    return Stream.of(Suit.values())
+    .flatMap(suit ->Stream.of(Rank.values())
+    .map(rank -> new Card(suit, rank)))
+    .collect(toList());
+}
+```
+
+两个版本的 newDeck 哪个更好？这个只能说见仁见智了。
+
+### 46、在流中使用无副作用的函数
+
+**应保证传递到流操作（包括中间操作和终止操作）中的任何函数对象都应该没有副作用。**
+
+下面代码用于构建文本文件中单词的频率表：
+
+```java
+// Uses the streams API but not the paradigm--Don't do this!
+Map<String, Long> freq = new HashMap<>();
+try (Stream<String> words = new Scanner(file).tokens()) {
+    words.forEach(word -> {
+        freq.merge(word.toLowerCase(), 1L, Long::sum);
+    });
+}
+```
+
+上面代码根本不是流代码，而是伪装成流代码的迭代代码，而且比普通迭代代码更冗长。原因是这段代码在一个 终止操作中（forEach）执行它的所有工作，这是一种不当用法，终止操作本应只用来收集计算结果。正确的写法应该是：
+
+```java
+// Proper use of streams to initialize a frequency table
+Map<String, Long> freq;
+try (Stream<String> words = new Scanner(file).tokens()) {
+    freq = words.collect(groupingBy(String::toLowerCase, counting()));
+}
+```
+
+改进后的代码使用了 收集器（collector），它是用来收集计算结果的集合。收集器有三种：`toList()`、`toSet()` 和 `toCollection(collectionFactory)`，分别返回 List、Set 和程序员指定的集合类型。下面代码用收集器从 freq 表中提取前 10 个元素来构成一个新 List。
+
+```java
+// Pipeline to get a top-ten list of words from a frequency table
+List<String> topTen = freq.keySet().stream()
+    .sorted(comparing(freq::get).reversed())
+    .limit(10)
+    .collect(toList());
+```
+
+最简单的 Map 收集器是 `toMap(keyMapper, valueMapper)`，它接受两个函数，一个将流元素映射到键，另一个映射到值。我们在第34条中的 fromString 实现中使用了该收集器来创建枚举的字符串形式到枚举本身的映射：
+
+```java
+// Using a toMap collector to make a map from string to enum
+private static final Map<String, Operation> stringToEnum =Stream.of(values()).collect(toMap(Object::toString, e -> e));
+```
+
+注意：需保证流中的每个元素映射到唯一的键。如果多个流元素映射到同一个键，管道将以 IllegalStateException 结束。
+
+toMap 的三参数形式，允许为toMap 方法提供一个 merge 函数。例如，从有一个由不同艺术家录制的唱片流，可以得到一个从艺术家到最畅销唱片的映射：
+
+```java
+// Collector to generate a map from key to chosen element for key
+Map<Artist, Album> topHits = albums.collect(
+        toMap(Album::artist, a->a, maxBy(comparing(Album::sales)
+    )
+));
+```
+
+toMap 的三参数形式的另一个用途是，当发生键冲突时，它强制执行后写覆盖的策略。例如：
+
+```java
+// Collector to impose last-write-wins policy
+toMap(keyMapper, valueMapper, (v1, v2) -> v2)
+```
+
+toMap 也提供了四参数的版本，当你想要指定一个特定的 Map 实现（如 EnumMap 或 TreeMap）时，可以使用它。
+
+还有前三个版本的 toMap 的变体形式，名为 toConcurrentMap，它们可以有效地并行运行，同时生成 ConcurrentHashMap 实例。
+
+收集器API 还提供 groupingBy 方法，该方法生成基于分类器函数将元素分组为类别的映射。例如下面代码：
+
+```java
+words.collect(groupingBy(word -> alphabetize(word)))
+```
+
+groupingBy也提供两参数形式，将 `counting()` 作为下游收集器传递。这将生成一个 Map，它将每个类别与类别中的元素数量相关联：
+
+```java
+Map<String, Long> freq = words.collect(groupingBy(String::toLowerCase, counting()));
+```
+
+另一个收集器方法是 join，它只对 CharSequence 实例流（如字符串）执行操作。它接受一个名为 delimiter 的 CharSequence 参数，然后在相邻元素之间插入分隔符。如果传入逗号作为分隔符，收集器将返回逗号分隔的值字符串。
+
+
+
+### 47、优先选择 Collection 而不是流作为返回类型
+
+如果一个 API 只返回一个流，而一些用户希望使用 for-each 循环遍历返回的序列，那么这些用户将会感到困难。例如：
+
+```java
+// Won't compile, due to limitations on Java's type inference
+for (ProcessHandle ph : ProcessHandle.allProcesses()::iterator) {
+    // Process the process
+}
+```
+
+编译时会报错：
+
+```java
+Test.java:6: error: method reference not expected here
+for (ProcessHandle ph : ProcessHandle.allProcesses()::iterator) {
+^
+```
+
+解决方法是将方法引用转换为适当参数化的 Iterable：
+
+```java
+// Hideous workaround to iterate over a stream
+for (ProcessHandle ph : (Iterable<ProcessHandle>)ProcessHandle.allProcesses()::iterator)
+```
+
+上面的代码太繁琐，更好的解决方案是使用适配器方法：
+
+```java
+// Adapter from Stream<E> to Iterable<E>
+public static <E> Iterable<E> iterableOf(Stream<E> stream) {
+    return stream::iterator;
+}
+```
+
+通过这个适配器可以使用 for-each 语句遍历流：
+
+```java
+for (ProcessHandle p : iterableOf(ProcessHandle.allProcesses())) {
+    // Process the process
+}
+```
+
+同样，如果返回的是迭代器，而希望使用的是流，那么也需要编写适配器：
+
+```java
+// Adapter from Iterable<E> to Stream<E>
+public static <E> Stream<E> streamOf(Iterable<E> iterable) {
+    return StreamSupport.stream(iterable.spliterator(), false);
+}
+```
+
+如果考虑到作为公共API对外提供，那么建议使用Collection作为方法返回值。Collection 接口是 Iterable 的一个子类型，它有一个流方法，因此它提供了迭代和流两种访问方式。
+
+假设你想要返回给定集合的幂集，该集合由它的所有子集组成。例如`{a, b, c}` 的排列组合有 `{{}, {a}, {b}, {c}, {a, b}, {a, c}, {b, c}, {a, b, c}}`。下面是代码：
+
+```java
+// Returns the power set of an input set as custom collection
+public class PowerSet {
+    public static final <E> Collection<Set<E>> of(Set<E> s) {
+        List<E> src = new ArrayList<>(s);
+        if (src.size() > 30)
+            throw new IllegalArgumentException("Set too big " + s);
+
+        return new AbstractList<Set<E>>() {
+            @Override
+            public int size() {
+                return 1 << src.size(); // 2 to the power srcSize
+            }
+
+            @Override
+            public boolean contains(Object o) {
+                return o instanceof Set && src.containsAll((Set)o);
+            }
+
+            @Override
+            public Set<E> get(int index) {
+                Set<E> result = new HashSet<>();
+                for (int i = 0; index != 0; i++, index >>= 1)
+                    if ((index & 1) == 1)
+                        result.add(src.get(i));
+                return result;
+            }
+        };
+    }
+}
+```
+
+另一个例子是实现一个输入列表的所有子列表的流：
+
+```java
+// Returns a stream of all the sublists of its input list
+public class SubLists {
+    public static <E> Stream<List<E>> of(List<E> list) {
+        return Stream.concat(Stream.of(Collections.emptyList()),prefixes(list).flatMap(SubLists::suffixes));
+    }
+
+    private static <E> Stream<List<E>> prefixes(List<E> list) {
+        return IntStream.rangeClosed(1, list.size()).mapToObj(end -> list.subList(0, end));
+    }
+
+    private static <E> Stream<List<E>> suffixes(List<E> list) {
+        return IntStream.range(0, list.size()).mapToObj(start -> list.subList(start, list.size()));
+    }
+}
+```
+
+我们的子列表实现在本质上类似于嵌套的 for 循环：
+
+```java
+for (int start = 0; start < src.size(); start++)
+    for (int end = start + 1; end <= src.size(); end++)
+        System.out.println(src.subList(start, end));
+```
+
+结论是，在编写返回元素序列的方法时，遵循以下建议：
+
+1. 如果可以返回集合，那么就这样做。
+2. 如果你已经在一个集合中拥有了元素，或者序列中的元素数量足够小，可以创建一个新的元素，那么返回一个标准集合，例如 ArrayList 。
+3. 否则像对 power 集合那样实现自定义集合。
+4. 如果返回集合不可行，则返回流或 iterable，以看起来更自然的方式返回。
+
+### 48、谨慎使用并行流
+
+**绝大多数情况下，不要并行化流，除非通过测试证明它能保持计算的正确性以及提高性能。**
+
+编写正确且快速的并发程序是件困难的事情。考虑第45条中打印素数的程序：
+
+```java
+// Stream-based program to generate the first 20 Mersenne primes
+public static void main(String[] args) {
+    primes().map(p -> TWO.pow(p.intValueExact()).subtract(ONE))
+    .filter(mersenne -> mersenne.isProbablePrime(50))
+    .limit(20)
+    .forEach(System.out::println);
+}
+
+static Stream<BigInteger> primes() {
+    return Stream.iterate(TWO, BigInteger::nextProbablePrime);
+}
+```
+
+假设尝试通过向流管道添加 `parallel()` 来加速它，性能会有提升吗？结果是它不会打印任何东西，但是 CPU 使用率会飙升到 90%，并且会无限期地停留在那里（活跃性失败）。
+
+原因是stream 库不知道如何并行化这个管道。如果源来自 `Stream.iterate` 或使用中间操作限制，并行化管道不太可能提高其性能。
+
+并行性能带来明显性能提升的场合：
+
+1. ArrayList、HashMap、HashSet 和 ConcurrentHashMap 实例
+2. 数组
+3. 有界的IntStream和LongStream
+
+这些数据结构的共同之处是：
+
+1. 可以被精确且廉价地分割成任意大小的子结构，这使得在并行线程之间划分工作变得很容易。
+
+2. 顺序处理时提供了良好的引用局部性（locality of reference）。引用局部性是指，当一个存储位置被处理器访问时，短时间内这个位置及附近位置被重复访问的趋势。良好的引用局部性可以充分利用处理器的多级缓存，带来性能提升。
+
+流管道的终止操作的性质也会影响并行执行的效果。如果在终止操作中做了大量工作，且操作是顺序的，那么并行带来的提升很有限。并行的最佳终止操作是缩减型的方法，如reduce、min、max、count和sum。短路操作anyMatch、allMatch 和 noneMatch 也适用于并行。collect 方法执行的操作称为可变缩减，它们不是并行的好候选，因为组合集合的开销是昂贵的。
+
+并行化流使用的函数对象还需要遵守一些规范，否则可能导致不正确的结果。这些规范例如：传递给流的reduce 操作的累加器和组合器函数必须是**关联的、不干扰的和无状态**的。
+
+并行化流必须经过严格的性能测试，确保带来的收益超过代价。一般的经验是，流中的元素数量乘以每个元素执行的代码行数至少应该是100000。
+
+某些领域，如机器学习和数据处理，特别适合使用并行流。例如下面代码：
+
+```java
+// Prime-counting stream pipeline - parallel version
+static long pi(long n) {
+    return LongStream.rangeClosed(2, n)
+    .parallel()
+    .mapToObj(BigInteger::valueOf)
+    .filter(i -> i.isProbablePrime(50))
+    .count();
+}
+```
+
+
+
 ## 方法
 
- 
+###  49、检查参数的有效性
 
- 
+**每次编写方法或构造函数时，都应该考虑参数存在哪些限制，并在文档中记录下来，然后在方法的开头显式地检查。**
+
+如果没有在方法开头就验证参数，可能会违反故障原子性。因为方法可能会在执行过程中出现让人困惑的异常而失败，或者计算出错误的结果然后返回，甚至可能埋藏隐患，导致将来在不确定的某处代码产生错误。
+
+对于公共方法和受保护的方法，使用`@throws` 标签记录违反参数限制会引发的异常，例如 IllegalArgumentException、IndexOutOfBoundsException 或 NullPointerException。见下面例子：
+
+```java
+/**
+* Returns a BigInteger whose value is (this mod m). This method
+* differs from the remainder method in that it always returns a
+* non-negative BigInteger.
+**
+@param m the modulus, which must be positive
+* @return this mod m
+* @throws ArithmeticException if m is less than or equal to 0
+*/
+public BigInteger mod(BigInteger m) {
+    if (m.signum() <= 0)
+        throw new ArithmeticException("Modulus <= 0: " + m);
+    ... // Do the computation
+}
+```
+
+这里并没有记录m为null导致的NullPointerException，因为它被记录在类级别的文档注释中，这样不用在每个方法上再单独记录。
+
+在 Java 7 中添加的 `Objects.requireNonNull` 方法非常灵活和方便，它可以检查输入对象是否为null，如果是，那么抛出带指定消息的NullPointerException；否则返回输入对象：
+
+```java
+// Inline use of Java's null-checking facility
+this.strategy = Objects.requireNonNull(strategy, "strategy");
+```
+
+对于私有方法，作者应该确保只传递有效的参数值。因此，私有方法可以使用断言检查参数，如下所示：
+
+```java
+// Private helper function for a recursive sort
+private static void sort(long a[], int offset, int length) {
+    assert a != null;
+    assert offset >= 0 && offset <= a.length;
+    assert length >= 0 && length <= a.length - offset;
+    ... // Do the computation
+}
+```
+
+如果断言没有启用，那么不存在成本。你可以通过将 `-ea`标志传递给 java 命令来启用它们。
+
+应在对象构造时就检查参数，而不是等待对象使用时再检查。这样做的好处是让问题第一时间暴露，否则后面再暴露，调试起来会比较麻烦。典型的如一个静态工厂方法，它接受一个 int 数组并返回数组的 List 视图。如果客户端传入 null，那么方法就立即抛出 NullPointerException。类似的例子还有构造函数。
+
+但这条规则也有例外，当有效性检查成本较高或计算过程本身就包含参数检查时，会选择在计算过程中隐式检查。例如，考虑一个为对象 List 排序的方法，比如 `Collections.sort(List)`。List 中的所有对象必须相互比较，如果不能比较，那么将抛出 ClassCastException，这个检查过程放在比较过程中隐式进行，而不是预先检查。
+
+对参数的限制并非越多越好。相反，你应该设计出尽可能通用的方法，对参数的限制越少越好。
+
+### 50、在需要时制作防御性拷贝
+
+Java 是一种安全的语言，在没有本地方法的情况下，它不受缓冲区溢出、数组溢出、非法指针和其他内存损坏错误的影响。
+
+即使使用一种安全的语言，也可能在不经意间提供修改对象内部状态的方法。例如，下面的类表示一个不可变的时间段：
+
+```java
+// Broken "immutable" time period class
+public final class Period {
+    private final Date start;
+    private final Date end;
+
+    /**
+    * @param start the beginning of the period
+    * @param end the end of the period; must not precede start
+    * @throws IllegalArgumentException if start is after end
+    * @throws NullPointerException if start or end is null
+    */
+    public Period(Date start, Date end) {
+        if (start.compareTo(end) > 0)
+            throw new IllegalArgumentException(start + " after " + end);
+        this.start = start;
+        this.end = end;
+    }
+
+    public Date start() {
+        return start;
+    }
+
+    public Date end() {
+        return end;
+    }
+    ... // Remainder omitted
+}
+```
+
+这个类要求时间段的开始时间不能在结束时间之后。然而，可以通过修改内部保存的Date绕过这个约束：
+
+```java
+// Attack the internals of a Period instance
+Date start = new Date();
+Date end = new Date();
+Period p = new Period(start, end);
+end.setYear(78); // Modifies internals of p!
+```
+
+从 Java 8 开始，解决这个问题的典型方法就是使用不可变的 Instant（或 LocalDateTime 或 ZonedDateTime）来代替**已过时的Date**。但是对于包含Date的老代码，必须找到一个通用的解决办法。
+
+解决办法就是将每个可变参数的防御性拷贝复制给构造函数：
+
+```java
+// Repaired constructor - makes defensive copies of parameters
+public Period(Date start, Date end) {
+    this.start = new Date(start.getTime());
+    this.end = new Date(end.getTime());
+    if (this.start.compareTo(this.end) > 0)
+        throw new IllegalArgumentException(this.start + " after " + this.end);
+}
+```
+
+新的构造函数保证之前的攻击不会对 Period 实例产生影响。注意，防御性拷贝是在检查参数的有效性之前制作的，这样保证在检查参数和复制参数之间的时间段，类不受来自其他线程更改的影响。在计算机安全领域，这被称为 time-of-check/time-of-use漏洞或TOCTOU攻击。
+
+之所以没有使用 Date 的 clone 方法来创建防御性拷贝，是因为 Date 不是 final 的，所以不能保证 clone 方法返回一个Date 的实例对象，它可以返回一个不受信任子类的实例，有从这里发起恶意破坏的风险。
+
+还可以用另一种方式修改Period内部状态：
+
+```java
+// Second attack on the internals of a Period instance
+Date start = new Date();
+Date end = new Date();
+Period p = new Period(start, end);
+p.end().setYear(78); // Modifies internals of p!
+```
+
+解决办法是在访问器上返回可变内部字段的防御性拷贝：
+
+```java
+// Repaired accessors - make defensive copies of internal fields
+public Date start() {
+    return new Date(start.getTime());
+}
+
+public Date end() {
+    return new Date(end.getTime());
+}
+```
+
+有了新的构造函数和新的访问器，Period 实际上是不可变的，除非使用反射或本地方法修改。
+
+应尽量使用不可变对象作为对象的组件，这样就不必操心防御性拷贝。
+
+防御性拷贝可能会带来性能损失。如果一个类信任它的调用者不会去修改内部组件，那么可以不用做防御性拷贝，而在类文档上加以说明：调用者不能修改相关的参数对象或返回值。
+
+### 51、仔细设计方法签名
+
+本条目是多条 API 设计经验的汇总。
+
+**仔细选择方法名字。** 应选择可理解的、与同一包中的其他名称风格一致的、被广泛认可的名字。
+
+**提供便利的方法不应做过了头。** 太多的方法会使得类难以维护。对于类或接口支持的每个操作，一般只提供一个功能齐全的方法就可以了，只有在经常使用时才考虑提供快捷方式。
+
+**避免长参数列表。** 设定四个或更少的参数，大多数程序员记不住更长的参数列表。长序列的同类型参数尤其有害，极易导致错误。
+
+有三种方法可以缩短过长的参数列表：
+
+1. 将原方法分解为多个子方法。原方法的功能由多个字方法组合实现，这样每个子方法只需要参数的一个子集。
+2. 创建 helper 类来保存参数组。
+3. 从对象构建到方法调用都采用建造者模式。
+
+**对于方法的参数类型，优先选择接口而不是类**。例如优先选择Map而不是HashMap作为方法的参数类型。
+
+**对于方法的参数类型，优先选择双元素枚举类型而不是boolean** 。枚举使代码更容易维护。此外，它们使以后添加更多选项变得更加容易。例如，你可能有一个Thermometer（温度计）类型与静态工厂，采用枚举：
+
+```java
+public enum TemperatureScale { FAHRENHEIT, CELSIUS } // 华氏、摄氏
+```
+
+`Thermometer.newInstance(TemperatureScale.CELSIUS)` 不仅比 `Thermometer.newInstance(true)` 更有意义，而且你可以在将来的版本中向 TemperatureScale 添加 KELVIN（开尔文、热力学温标）。
+
+### 52、明智地使用重载
+
+> 注意，这里说的重载是指overload，而不是重写override。
+
+下面的程序是一个善意的尝试，根据一个 Collection 是 Set、List 还是其他的集合类型来进行分类：
+
+```java
+// Broken! - What does this program print?
+public class CollectionClassifier {
+    public static String classify(Set<?> s) {
+        return "Set";
+    }
+
+    public static String classify(List<?> lst) {
+        return "List";
+    }
+
+    public static String classify(Collection<?> c) {
+        return "Unknown Collection";
+    }
+
+    public static void main(String[] args) {
+        Collection<?>[] collections = {
+            new HashSet<String>(),new ArrayList<BigInteger>(),new HashMap<String, String>().values()
+        };
+        for (Collection<?> c : collections)
+            System.out.println(classify(c));
+    }
+}
+```
+
+你期望的是：这个程序打印 Set、List 和 Unknown Collection，但结果是：它打印 Unknown Collection 三次。因为classify方法被重载，并且在编译时就决定了要调用哪个重载。
+
+
+
+修复 CollectionClassifier 程序的最佳方法是用一个方法中用instanceof做类型判断：
+
+```java
+public static String classify(Collection<?> c) {
+    return c instanceof Set ? "Set" :c instanceof List ? "List" : "Unknown Collection";
+}
+```
+
+应该避免混淆重载的用法。最保守的策略是永远不生成具有相同参数数量的两个重载。或者为方法提供不同的名字，这样就可以不用重载。
+
+如果必须生成具有相同参数数量的两个重载，那么须保证至少有一个参数在这两个重载中具有**完全不同的**类型。一个反例与Java的自动装箱机制有关：
+
+```java
+public class SetList {
+public static void main(String[] args) {
+    Set<Integer> set = new TreeSet<>();
+    List<Integer> list = new ArrayList<>();
+    for (int i = -3; i < 3; i++) {
+        set.add(i);
+        list.add(i);
+    }
+    for (int i = 0; i < 3; i++) {
+        set.remove(i);
+        list.remove(i);
+    }
+    System.out.println(set +""+list);
+    }
+}
+```
+
+我们期望从set和list中分别删除0、1、2这三个数字，但是只在set中如愿，实际在list中删除的是对应下标0、1、2的三个元素。因为对 `list.remove(i)` 的调用选择的是重载方法 `remove(int i)`，而不是 `remove(Object o)`。正确的写法应该是:
+
+```java
+for (int i = 0; i < 3; i++) {
+    set.remove(i);
+    list.remove((Integer) i); // or remove(Integer.valueOf(i))
+}
+```
+
+lambda 表达式和方法引用也容易引起重载中的混淆。例如：
+
+```java
+new Thread(System.out::println).start();
+ExecutorService exec = Executors.newCachedThreadPool();
+exec.submit(System.out::println);
+```
+
+Thread 构造函数调用和 submit 方法调用看起来很相似，但是前者能通过编译而后者不能。因为submit 方法有一个重载，它接受一个 `Callable<T>`，而线程构造函数没有。所以编译器会组织后者以免产生歧义。
+
+### 53、明智地使用可变参数
+
+可变参数方法接受指定类型的零个或多个参数。可变参数的底层是一个数组。
+
+一个简单的可变参数例子：
+
+```java
+// Simple use of varargs
+static int sum(int... args) {
+    int sum = 0;
+    for (int arg : args)
+        sum += arg;
+    return sum;
+}
+```
+
+假设要编写一个函数来计算其参数的最小值。如果客户端不传递参数，那么在运行时检查参数长度，并抛出异常：
+
+```java
+// The WRONG way to use varargs to pass one or more arguments!
+static int min(int... args) {
+    if (args.length == 0)
+        throw new IllegalArgumentException("Too few arguments");
+    int min = args[0];
+    for (int i = 1; i < args.length; i++)
+        if (args[i] < min)
+    		min = args[i];
+    return min;
+}
+```
+
+这个解决方案有几个问题： 
+
+1. 如果不带参数调用此方法，那么会在运行时而非编译时失败。 
+2. 不美观。不能使用for-each循环，除非将min初始化为Integer.MAX_VALUE。
+
+
+
+以下写法能避免这些问题：
+
+```java
+// The right way to use varargs to pass one or more arguments
+static int min(int firstArg, int... remainingArgs) {
+    int min = firstArg;
+    for (int arg : remainingArgs)
+        if (arg < min)
+    		min = arg;
+    return min;
+}
+```
+
+在性能关键的情况下使用可变参数要小心。每次调用可变参数方法都会导致数组创建和初始化。有一种折中的办法。假设 95% 的调用只需要三个或更少的参数，那么只对三个以上参数使用可变参数：
+
+```java
+public void foo() { }
+public void foo(int a1) { }
+public void foo(int a1, int a2) { }
+public void foo(int a1, int a2, int a3) { }
+public void foo(int a1, int a2, int a3, int... rest) { }
+```
+
+
+
+### 54、返回空集合或数组，而不是 null
+
+如下方法很常见：
+
+```java
+// Returns null to indicate an empty collection. Don't do this!
+private final List<Cheese> cheesesInStock = ...;
+/**
+* @return a list containing all of the cheeses in the shop,
+* or null if no cheeses are available for purchase.
+*/
+public List<Cheese> getCheeses() {
+    return cheesesInStock.isEmpty() ? null: new ArrayList<>(cheesesInStock);
+}
+```
+
+这样写的坏处是方法调用时需做非null的判断：
+
+```java
+List<Cheese> cheeses = shop.getCheeses();
+if (cheeses != null && cheeses.contains(Cheese.STILTON))
+    System.out.println("Jolly good, just the thing.");
+```
+
+当忘记做非null的判断时就会出错，应该改成返回空的列表：
+
+```java
+//The right way to return a possibly empty collection
+public List<Cheese> getCheeses() {
+    return new ArrayList<>(cheesesInStock);
+}
+```
+
+如果新创建空集合会损害性能，那么可以通过重复返回空的不可变集合来避免新的创建：
+
+```java
+// Optimization - avoids allocating empty collections
+public List<Cheese> getCheeses() {
+    return cheesesInStock.isEmpty() ? Collections.emptyList(): new ArrayList<>(cheesesInStock);
+}
+```
+
+数组与集合情况类似。永远不要返回 null，而应该返回零长度的数组。下面代码将一个零长度的数组传递到 toArray 方法中：
+
+```java
+//The right way to return a possibly empty array
+public Cheese[] getCheeses() {
+    return cheesesInStock.toArray(new Cheese[0]);
+}
+```
+
+如果你创建零长度数组会损害性能，你可以重复返回相同的零长度数组：
+
+```java
+// Optimization - avoids allocating empty arrays
+private static final Cheese[] EMPTY_CHEESE_ARRAY = new Cheese[0];
+public Cheese[] getCheeses() {
+    return cheesesInStock.toArray(EMPTY_CHEESE_ARRAY);
+}
+```
+
+不要为了提高性能而预先分配传递给 toArray 的数组:
+
+```java
+// Don’t do this - preallocating the array harms performance!
+return cheesesInStock.toArray(new Cheese[cheesesInStock.size()]);
+```
+
+
+
+### 55、明智地的返回 Optional
+
+在 Java 8 之前，在编写在某些情况下无法返回值的方法时，可以采用两种方法：抛出异常或者返回 null。这两种方法都不完美。抛出异常代价高昂，返回null需对这种情况做特殊判断。
+
+在 Java 8 中，可以通过返回`Optional<T>` 解决上述问题。它表示理论上应返回 T，但在某些情况下可能无法返回 T。
+
+在第30条中，有一个根据集合元素的自然顺序计算集合最大值的例子：
+
+```java
+// Returns maximum value in collection - throws exception if empty
+public static <E extends Comparable<E>> E max(Collection<E> c) {
+    if (c.isEmpty())
+        throw new IllegalArgumentException("Empty collection");
+    E result = null;
+    for (E e : c)
+        if (result == null || e.compareTo(result) > 0)
+    		result = Objects.requireNonNull(e);
+    return result;
+}
+```
+
+更好的替代方法是返回 `Optional<E>`：
+
+```java
+// Returns maximum value in collection as an Optional<E>
+public static <E extends Comparable<E>> Optional<E> max(Collection<E> c) {
+    if (c.isEmpty())
+        return Optional.empty();
+    E result = null;
+    for (E e : c)
+        if (result == null || e.compareTo(result) > 0)
+    		result = Objects.requireNonNull(e);
+    return Optional.of(result);
+}
+```
+
+注意，**永远不要从拥有Optional返回值的方法返回空值**，因为它违背了这个功能的设计初衷。
+
+许多流上的 Terminal 操作返回 Optional。如果我们使用一个流来重写 max 方法，那么流版本的 max 操作会为我们生成一个 Optional：
+
+```java
+// Returns max val in collection as Optional<E> - uses stream
+public static <E extends Comparable<E>> Optional<E> max(Collection<E> c) {
+    return c.stream().max(Comparator.naturalOrder());
+}
+```
+
+对于返回Optional的方法，调用者可以选择如果该方法不能返回值要采取什么操作。你可以指定一个默认值：
+
+```java
+// Using an optional to provide a chosen default value
+String lastWordInLexicon = max(words).orElse("No words...");
+```
+
+或者可以抛出任何适当的异常：
+
+```java
+// Using an optional to throw a chosen exception
+Toy myToy = max(toys).orElseThrow(TemperTantrumException::new);
+```
+
+如果你能判断一个 Optional 非空，那么可以从 Optional 直接获取值，而无需指定空值对应的操作。但如果判断错误，会抛出一个 NoSuchElementException：
+
+```java
+// Using optional when you know there’s a return value
+Element lastNobleGas = max(Elements.NOBLE_GASES).get();
+```
+
+并非所有的返回类型都适合用Optional封装，不适合的类型有：容器类型，包括集合、Map、流、数组和 Optional。例如应返回空的List，而不是`Optional<List>`。
+
+适合使用Optional的场景是：方法有可能不会返回值，如果没有返回值，调用者不得不做特殊处理。
+
+在性能关键的场合请谨慎使用Optional，因为它有封装原始对象的额外性能代价。
+
+不应该在除方法返回值以外的任何地方使用Optional。
+
+
+
+### 56、为所有公开的 API 元素编写文档注释
+
+要正确地编写 API 文档，必须在每个公开的类、接口、构造函数、方法和字段声明之前加上文档注释。
+
+方法的文档注释应该简洁地描述方法与其调用者之间的约定，包括： 
+
+1. 说明方法做了什么，而不是如何做。 
+2. 应列举方法所有的前置条件和后置条件。 
+3. 说明方法产生的副作用。如启动一个新的后台线程。
+4. 应包含必要的@param、@return 和@throw注释。
+
+
+
+以下是一个满足上面要求的方法注释：
+
+```java
+/**
+* Returns the element at the specified position in this list.
+**
+<p>This method is <i>not</i> guaranteed to run in constant
+* time. In some implementations it may run in time proportional
+* to the element position.
+**
+@param index index of element to return; must be
+* non-negative and less than the size of this list
+* @return the element at the specified position in this list
+* @throws IndexOutOfBoundsException if the index is out of range
+* ({@code index < 0 || index >= this.size()})
+*/
+E get(int index);
+```
+
+为泛型类型或方法编写文档时，请确保说明所有的类型参数：
+
+```java
+/**
+* An object that maps keys to values. A map cannot contain
+* duplicate keys; each key can map to at most one value.
+**
+(Remainder omitted)
+**
+@param <K> the type of keys maintained by this map
+* @param <V> the type of mapped values
+*/
+public interface Map<K, V> { ... }
+```
+
+对于枚举类型，文档要覆盖枚举类型本身、常量以及公开的方法：
+
+```java
+/**
+* An instrument section of a symphony orchestra.
+*/
+public enum OrchestraSection {
+/** Woodwinds, such as flute, clarinet, and oboe. */
+WOODWIND,
+/** Brass instruments, such as french horn and trumpet. */
+BRASS,
+/** Percussion instruments, such as timpani and cymbals. */
+PERCUSSION,
+/** Stringed instruments, such as violin and cello. */
+STRING;
+}
+```
+
+对于注解类型，文档要覆盖注解类型本身和所有成员：
+
+```java
+/**
+* Indicates that the annotated method is a test method that
+* must throw the designated exception to pass.
+*/
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface ExceptionTest {
+/**
+* The exception that the annotated test method must throw
+* in order to pass. (The test is permitted to throw any
+* subtype of the type described by this class object.)
+*/
+Class<? extends Throwable> value();
+}
+```
+
+无论类或静态方法是否线程安全，都应该说明它的线程安全级别。如果一个类是可序列化的，那么应该说明它的序列化形式。
+
+Java自带的Javadoc会根据代码自动生成文档，并且检查文档是否符合本条目中提及的许多建议。在 Java 8 和 Java 9 中，默认启用了自动检查。诸如 checkstyle 之类的 IDE 插件在检查是否符合
+
+
+
+
 
 ## 通用程序设计
 
- 
+###  57、将局部变量的作用域最小化
 
- 
+ 将局部变量的作用域最小化，最有效的办法就是在第一次使用它的地方声明。
 
- 
+每个局部变量声明都应该包含一个初始化表达式。如果还没足够的信息初始化，那么应该推迟声明。这个规则的一个例外是try-catch语句，如果一个变量要在try块之外使用，那么就要在try块之前声明，此时可能还没有足够的信息初始化这个变量。
+
+最小化局部变量作用域的第二种方法是使用for循环。如果一个变量在循环之后就不再使用，那么使用for循环优于while循环。下面是一个for-each循环的例子：
+
+```java
+// Preferred idiom for iterating over a collection or array
+for (Element e : c) {
+    ... // Do Something with e
+}
+```
+
+当需要iterator或者remove时，使用传统for循环替代for-each循环：
+
+```java
+// Idiom for iterating when you need the iterator
+for (Iterator<Element> i = c.iterator(); i.hasNext(); ) {
+    Element e = i.next();
+    ... // Do something with e and i
+}
+```
+
+下面的例子说明了为什么for循环优于while循环，因为这个例子暗含了一个bug（将i2错写为i）：
+
+```java
+Iterator<Element> i = c.iterator();
+while (i.hasNext()) {
+    doSomething(i.next());
+}
+...
+Iterator<Element> i2 = c2.iterator();
+while (i.hasNext()) { // BUG!
+    doSomethingElse(i2.next());
+}
+```
+
+如果改成使用for循环，那么在编译期间就可以发现这个问题：
+
+```java
+for (Iterator<Element> i = c.iterator(); i.hasNext(); ) {
+Element e = i.next();
+... // Do something with e and i
+}
+...
+// Compile-time error - cannot find symbol i
+for (Iterator<Element> i2 = c2.iterator(); i.hasNext(); ) {
+Element e2 = i2.next();
+... // Do something with e2 and i2
+}
+```
+
+for循环相对while循环的另一个优点是，它更短，可读性更好。如下面例子：
+
+```java
+for (int i = 0, n = expensiveComputation(); i < n; i++) {
+    ... // Do something with i;
+}
+```
+
+最小化局部变量作用域的第三种方法是保持方法小而集中。例子一个方法包含了两段不同的逻辑，一个变量只用于其中一段逻辑中，那么可以将这个方法按逻辑拆分成两个不同的方法。
+
+
+
+### 58、 for-each 循环优于传统的 for 循环
+
+下面是使用传统for循环遍历容器的例子：
+
+```java
+// Not the best way to iterate over a collection!
+for (Iterator<Element> i = c.iterator(); i.hasNext(); ) {
+    Element e = i.next();
+    ... // Do something with e
+}
+```
+
+改用for-each要简洁得多：
+
+```java
+// The preferred idiom for iterating over collections and arrays
+for (Element e : elements) {
+    ... // Do something with e
+}
+```
+
+嵌套循环中使用传统for循环比for-each循环更容易出bug。如下面使用传统for循环的代码暗含bug，因为执行i.next()的次数超出预期：
+
+```java
+// Can you spot the bug?
+enum Suit { CLUB, DIAMOND, HEART, SPADE }
+enum Rank { ACE, DEUCE, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT,NINE, TEN, JACK, QUEEN, KING }
+...
+static Collection<Suit> suits = Arrays.asList(Suit.values());
+static Collection<Rank> ranks = Arrays.asList(Rank.values());
+List<Card> deck = new ArrayList<>();
+for (Iterator<Suit> i = suits.iterator(); i.hasNext(); )
+	for (Iterator<Rank> j = ranks.iterator(); j.hasNext(); )
+		deck.add(new Card(i.next(), j.next()));
+```
+
+改成使用for-each循环就能避免这个问题：
+
+```java
+// Preferred idiom for nested iteration on collections and arrays
+for (Suit suit : suits)
+	for (Rank rank : ranks)
+		deck.add(new Card(suit, rank));
+```
+
+但是有三种情况不应该使用for-each：
+
+1. 破坏性过滤：如果需要在[遍历过程中删除元素](https://www.seven97.top/java/collection/02-collection1-arraylist.html#遍历时删除-添加-常见陷阱)，那么应该使用iterator和remove方法。Java 8中可以使用Collection类中提供的removeIf方法达到同样效果。
+2. 转换：如果需要在遍历List或者数组的时候替换其中部分元素的值，那么需要使用迭代器或者数组索引。
+3. 并行迭代：如果需要并行遍历多个容器，那么需要使用迭代器，自行控制迭代进度。
+
+for-each循环还可以用来遍历实现Iterable接口的任何对象。
+
+
+
+### 59、了解并使用库
+
+ 有时候程序员喜欢自己造一些轮子。例如实现一个获取随机数的方法：
+
+```java
+// Common but deeply flawed!
+static Random rnd = new Random();
+static int random(int n) {
+    return Math.abs(rnd.nextInt()) % n;
+}
+```
+
+这个方法不仅不能做到输出均匀分布，而且在边界情况运行时可能会报错。
+
+正确的做法是使用java库中的Random类。在Java 7之后，更应该选择性能更好的ThreadLocalRandom取代Random。
+
+使用库的好处有：
+
+1. 利用专家知识，实现特定的复杂算法或逻辑。
+
+2. 让调用者专注于业务开发，不用在底层实现上多费时间。
+
+3. 库的性能会不断提升，调用者无需付出额外努力。
+
+4. 让代码更精简，更容易维护。
+
+在Java每个主要版本中，都会向库中添加许多特性，了解这些新增特性是值得的。
+
+如果说要库的内容太多不好掌握，那么每个程序员至少应该熟悉 java.lang、java.util 和 [http://java.io](https://link.zhihu.com/?target=http%3A//java.io) 及其子包。其中collections框架、streams库和java.util.concurrent库应该重点掌握。
+
+
+
+### 60、若需要精确答案就应避免使用 float 和 double 类型
+
+float 和 double 类型主要用于工程计算和科学计算。它们本质上是二进制浮点类型，因此不能用来表示精确的结果。特别不适合进行货币计算，因为10的任意负次幂无法精确表示为float或double。
+
+假设原有1.03美元，消费掉0.42美元，还剩多少钱？输出会是0.6100000000000001。
+
+```java
+System.out.println(1.03 - 0.42);
+```
+
+假设架上有一排糖果，价格依次为10美分、20美分、30美分......你有1美元，按次数购买糖果，直到把钱用完：
+
+```java
+// Broken - uses floating point for monetary calculation!
+public static void main(String[] args) {
+    double funds = 1.00;
+    int itemsBought = 0;
+    for (double price = 0.10; funds >= price; price += 0.10) {
+        funds -= price;
+        itemsBought++;
+    }
+    System.out.println(itemsBought +"items bought.");
+    System.out.println("Change: $" + funds);
+}
+```
+
+结果显示只买了三颗糖果，而你还剩0.399999999999999999美元。这是错误的答案。解决方案是使用 BigDecimal、int 或 long 进行货币计算。
+
+改为使用BigDecimal计算，可以得到正确结果：
+
+```java
+public static void main(String[] args) {
+    final BigDecimal TEN_CENTS = new BigDecimal(".10");
+    int itemsBought = 0;
+    BigDecimal funds = new BigDecimal("1.00");
+    for (BigDecimal price = TEN_CENTS;funds.compareTo(price) >= 0;price = price.add(TEN_CENTS)) {
+        funds = funds.subtract(price);
+    itemsBought++;
+    }
+    System.out.println(itemsBought +"items bought.");
+    System.out.println("Money left over: $" + funds);
+}
+```
+
+使用[BigDecimal](https://www.seven97.top/java/basis/01-basic-knowledge.html#bigdecimal)的另一个好处是：它有8种舍入模式可以选择，如果业务需要做数值舍入，那么将非常方便。不过它也有两个缺点：它与原始算术类型相比使用很不方便，而且速度要慢得多。
+
+另一种方案是使用int表示的美分来计算：
+
+```java
+public static void main(String[] args) {
+    int itemsBought = 0;
+    int funds = 100;
+    for (int price = 10; funds >= price; price += 10) {
+        funds -= price;
+        itemsBought++;
+    }
+    System.out.println(itemsBought +"items bought.");
+    System.out.println("Cash left over: " + funds + " cents");
+}
+```
+
+
+
+### 61、基本数据类型优于包装类
+
+基本类型和包装类型之间有三个主要区别： 
+
+1. 基本类型只有值，而包装类型具有与其值不同的标识。 
+2. 基本类型只有全功能值，而每个包装类型除了对应的基本类型的所有功能值外，还有一个非功能值null。
+3. 基本类型比包装类型更节省时间和空间。
+
+基本类型和包装类型的区别会带来一些麻烦。例如下面的比较器对Integer做数值比较：
+
+```java
+// Broken comparator - can you spot the flaw?
+Comparator<Integer> naturalOrder =(i, j) -> (i < j) ? -1 : (i == j ? 0 : 1);
+```
+
+这里有个隐藏的bug。当执行`naturalOrder.compare(new Integer(42), new Integer(42))`时，执行结果是1，而非期待中的0。原因是用`==`比较两个不同的Integer对象，结果肯定是false。将`==`操作符应用于包装类型几乎都是错误的。
+
+正确的写法是先自动拆箱再比较：
+
+```java
+Comparator<Integer> naturalOrder = (iBoxed, jBoxed) -> {
+    int i = iBoxed, j = jBoxed; // Auto-unboxing
+    return i < j ? -1 : (i == j ? 0 : 1);
+};
+```
+
+下面的程序不会打印出Unbelievable，而是抛出NullPointerException。原因是在操作中混合使用基本类型和包装类型时，包装类型就会自动拆箱：
+
+```java
+public class Unbelievable {
+static Integer i;
+public static void main(String[] args) {
+    if (i == 42)
+        System.out.println("Unbelievable");
+    }
+}
+```
+
+下面的代码性能很差，因为sum是Long型的变量，它在与long型的变量i计算时，会经历反复的拆箱和装箱：
+
+```java
+// Hideously slow program! Can you spot the object creation?
+public static void main(String[] args) {
+    Long sum = 0L;
+    for (long i = 0; i < Integer.MAX_VALUE; i++) {
+        sum += i;
+    }
+    System.out.println(sum);
+}
+```
+
+下列场合应该使用包装类型，而不能使用基本类型：
+
+1. 作为容器中的元素、键和值。
+2. 参数化的类型和方法的类型参数。
+3. 在做反射方法调用时。
+
+
+
+### 62、其他类型更合适时应避免使用字符串
+
+字符串被设计用来表示文本。当在其他场景时，如果有更适合的其他类型，那么就应该避免使用字符串。
+
+字符串是其他值类型的糟糕替代品。当从IO输入流读取数据时，通常是字符串的形式。但如果数据本质上是别的类型，如数值类型，那么就应该转换成合适的数值类型，如float、int等。
+
+字符串是枚举类型的糟糕替代品。参见第34条中的讨论。
+
+字符串是聚合类型的糟糕替代品。如果一个实体有多个组件，那么就不适合把它表示成单个字符串。如下所示：
+
+```java
+// Inappropriate use of string as aggregate type
+String compoundKey = className + "#" + i.next();
+```
+
+有以下缺点：
+
+1. 如果分隔符#出现在任何一个字段中，将会导致混乱。
+2. 要访问各个字段，需要解析字符串，带来额外的性能代价。
+3. 无法自行提供equals、toString和compareTo方法，只能使用String提供的相应方法。
+
+更好的办法是把这个聚合实体表示成一个类，通常是私有静态成员类。
+
+字符串不能很好地替代capabilities。例如在Java 1.2引入ThreadLocal前，有人提出了如下的线程局部变量设计，用字符串类型的键来标识每个线程局部变量：
+
+```java
+// Broken - inappropriate use of string as capability!
+public class ThreadLocal {
+    private ThreadLocal() { } // Noninstantiable
+
+    // Sets the current thread's value for the named variable.
+    public static void set(String key, Object value);
+
+    // Returns the current thread's value for the named variable.
+    public static Object get(String key);
+}
+```
+
+这样设计的问题是：调用者提供的字符串键必须是惟一的。如果两位调用者恰巧为各自的线程局部变量使用了相同的字符串键，那么无意中就会共享一个变量，造成潜在的bug。
+
+改进方案是用一个不可伪造的键（有时称为 capability）来替换字符串：
+
+```java
+public class ThreadLocal {
+    private ThreadLocal() { } // Noninstantiable
+
+    public static class Key { // (Capability)
+        Key() { }
+}
+
+// Generates a unique, unforgeable key
+public static Key getKey() {
+    return new Key();
+}
+
+public static void set(Key key, Object value);
+
+public static Object get(Key key);
+}
+```
+
+做进一步的优化。键不再是线程局部变量的键值，而是成为线程局部变量本身：
+
+```java
+public final class ThreadLocal {
+    public ThreadLocal();
+    public void set(Object value);
+    public Object get();
+}
+```
+
+最后的优化是修改为支持泛型的类。这样能保证类型安全。
+
+```java
+public final class ThreadLocal<T> {
+    public ThreadLocal();
+    public void set(T value);
+    public T get();
+}
+```
+
+
+
+### 63、当心字符串连接引起的性能问题
+
+使用字符串连接运算符（+）连接 n 个字符串需要 n 的平方级时间。因为连接两个字符串时，会复制这两个字符串的内容。
+
+详情可以看这篇文章 [拼接字符串建议stringbuilder](https://www.seven97.top/java/basis/01-basic-knowledge.html#拼接字符串建议stringbuilder)
+
+不要使用字符串连接符操作多个字符串，除非性能无关紧要。
+
+
+
+### 64、通过接口引用对象
+
+如果存在合适的接口类型，那么应该使用接口类型声明参数、返回值、变量和字段。下面例子遵循了这个准则：
+
+```java
+// Good - uses interface as type
+Set<Son> sonSet = new LinkedHashSet<>();
+```
+
+而不应该像下面例子这样：
+
+```java
+// Bad - uses class as type!
+LinkedHashSet<Son> sonSet = new LinkedHashSet<>();
+```
+
+使用接口作为类型会使程序更加灵活。例如可以灵活调整Set的实现：
+
+```java
+Set<Son> sonSet = new HashSet<>();
+```
+
+如果没有合适的接口存在，那么用类引用对象是完全合适的。 此时应使用类层次结构中提供所需功能最底层的类。
+
+
+
+### 65、接口优于反射
+
+反射机制java.lang.reflect提供对任意类的编程访问。反射提供的功能包括：
+
+1. 获取类的成员名、字段类型、方法签名。
+2. 构造类的实例，调用类的方法，访问类的字段。
+3. 允许一个类使用另一个编译时还不存在的类。
+
+但是反射也有一些缺点：
+
+1. 失去了编译时类型检查的所有好处，包括异常检查。
+2. 执行反射访问时所需的代码比普通代码更加冗长。
+3. 反射方法调用比普通方法调用慢得多。
+
+对于许多程序，它们必须用到在编译时无法获取的类。这时可以用反射创建实例，并通过它们的接口或超类访问它们。
+
+下面例子是一个创建 `Set<String>` 实例的程序，类由第一个命令行参数指定，剩余的命令行参数被插入到集合中打印出来：
+
+```java
+// Reflective instantiation with interface access
+public static void main(String[] args) {
+
+    // Translate the class name into a Class object
+    Class<? extends Set<String>> cl = null;
+    try {
+        cl = (Class<? extends Set<String>>) // Unchecked cast!
+        Class.forName(args[0]);
+    } catch (ClassNotFoundException e) {
+        fatalError("Class not found.");
+    }
+
+    // Get the constructor
+    Constructor<? extends Set<String>> cons = null;
+    try {
+        cons = cl.getDeclaredConstructor();
+    } catch (NoSuchMethodException e) {
+        fatalError("No parameterless constructor");
+    }
+
+    // Instantiate the set
+    Set<String> s = null;
+    try {
+        s = cons.newInstance();
+    } catch (IllegalAccessException e) {
+        fatalError("Constructor not accessible");
+    } catch (InstantiationException e) {
+        fatalError("Class not instantiable.");
+    } catch (InvocationTargetException e) {
+        fatalError("Constructor threw " + e.getCause());
+    } catch (ClassCastException e) {
+        fatalError("Class doesn't implement Set");
+    }
+
+    // Exercise the set
+    s.addAll(Arrays.asList(args).subList(1, args.length));
+    System.out.println(s);
+}
+
+private static void fatalError(String msg) {
+    System.err.println(msg);
+    System.exit(1);
+}
+```
+
+
+
+### 66、慎重使用本地方法
+
+Java 本地接口（JNI）允许 Java 程序调用本地方法。本地方法有三种用途： 
+
+1. 提供对特定于平台的功能（如注册表）的访问。 
+2. 提供对现有本地代码库的访问。 
+3. 通过本地语言编写应用程序中注重性能的部分，以提高性能。
+
+使用本地方法访问特定于平台的机制是合法的，但是很少有必要。因为随着Java的发展，它不断提供以前只能在特定平台上才有的特性。
+
+为了提高性能，很少建议使用本地方法。同样也是因为Java不断对底层类库做着优化，很多时候本地方法并未有明显性能优势。
+
+使用本地方法有严重的缺点：
+
+1. 不再免受内存毁坏错误的影响。
+2. 可移植性较差，也更难调试。
+3. 垃圾收集器无法自动跟踪本地内存使用情况。
+4. 需要粘合代码，更难维护。
+
+
+
+### 67、明智地进行优化
+
+有三条关于优化的格言是每个人都应该知道的：
+
+1. William A. Wulf：与任何其他单一原因（包括盲目愚蠢）相比，以效率为名（不一定能够实现）犯下的错误更多。
+2. Donald E. Knuth：不要去计较效率上的一些小小的得失，在 97% 的情况下，不成熟的优化才是一切问题的根源。
+3. M. A. Jackson：在你还没有绝对清晰的未优化方案之前，请不要进行优化。
+
+以上格言说明：优化很容易弊大于利，过早的优化是万恶之源。
+
+不要为了性能而牺牲合理的架构。努力编写好的程序，而不是快速的程序。 如果一个好的程序还不够快，那么再着手去优化。
+
+尽量避免限制性能的设计决策。设计中最难更改是那些与外部世界交互的组件。例如API、线路协议和持久数据格式。这些组件可能对系统性能造成重大限制。
+
+考虑API设计决策的性能后果。例如，如果一个公共类型是可变的，那么可能需要大量不必要的防御性拷贝。
+
+通常情况下，好的 API 设计与好的性能是一致的。为了获得良好的性能而改变 API 是一个非常糟糕的想法。因为API的性能可能会在未来的版本有改进，但是改变API带来的问题却会一直存在。
+
+在每次尝试优化之前和之后测量性能。自己的估计可能会和实际的测量结果有差距。有时候花大量时间做的优化没有明显的性能提升。
+
+
+
+### 68、遵守被广泛认可的命名约定
+
+命名约定分为两类：排版和语法。
+
+排版约定包括：
+
+1. 包名和模块名应该是分层的，组件之间用句点分隔。
+
+2. 包名以当前组织的域名开头，并将组件颠倒过来，如com.google。包名其余部分应该由描述包的一个或多个组件组成，如util、awt。
+
+3. 类和接口名称，包括枚举和注释类型名称，应该由一个或多个单词组成，每个单词的首字母大写，如List、FutureTask。
+
+4. 方法和字段名遵循与类和接口名相同的排版约定，除了方法或字段名的第一个字母应该是小写，如如 remove、ensureCapacity。
+
+5. 常量字段的名称应该由一个或多个大写单词组成，由下划线分隔，如NEGATIVE_INFINITY。
+
+6. 局部变量名与成员名具有类似的排版命名约定，但允许缩写，如i、denom、houseNum。
+
+7. 类型参数名通常由单个字母组成。最常见的是以下五种类型之一：T 表示任意类型，E 表示集合的元素类型，K 和 V 表示 Map 的键和值类型，X 表示异常，R表示函数的返回类型。
+
+排版约定举例参见下表：
+
+| 标识符类型 | 例子                                             |
+| ---------- | ------------------------------------------------ |
+| 包或者模块 | org.junit.jupiter.api, com.google.common.collect |
+| 类或接口   | Stream, FutureTask, LinkedHashMap,HttpClient     |
+| 方法或字段 | remove, groupingBy, getCrc                       |
+| 常量字段   | MIN_VALUE, NEGATIVE_INFINITY                     |
+| 局部变量   | i, denom, houseNum                               |
+| 类型参数   | T, E, K, V, X, R, U, V, T1, T2                   |
+
+语法约定包括：
+
+1. 实例化的类，包括枚举类型，通常使用一个或多个名词短语来命名，例如 Thread、PriorityQueue 或 ChessPiece。
+2. 不可实例化的实用程序类通常使用复数名词来命名，例如 Collectors 或 Collections。
+3. 接口的名称类似于类，例如 Collection 或 Comparator，或者以 able 或 ible 结尾的形容词，例如 Runnable、Iterable 或 Accessible。
+4. 执行某些操作的方法通常用动词或动词短语命名，例如，append 或 drawImage。
+5. 返回布尔值的方法的名称通常以单词 is 或 has开头，后面跟一个名词或者形容词，例如 isDigit、isProbablePrime、isEmpty、isEnabled 或 hasSiblings。
+6. 获取对象属性的方法通常使用以 get 开头的名词、名词短语或动词短语来命名，例如 size、hashCode 或 getTime。
+7. 类型为 boolean 的字段的名称通常类似于 boolean 访问器方法，省略了初始值 is，例如 initialized、composite。
+
+详情可以看 [阿里巴巴Java开发手册(黄山版)](https://www.seven97.top/books/software-quality/alibaba-developmentmanual.html)
+
+
 
 ## 异常
 
@@ -2114,18 +3872,1267 @@ public boolean equals(Object o) {
 
  
 
+### 69、仅在有异常条件时使用异常
+
+下面的代码用来遍历一个数组。不过写法很糟糕，需要仔细读才能弄懂用意：
+
+```java
+// Horrible abuse of exceptions. Don't ever do this!
+try {
+    int i = 0;
+    while(true)
+        range[i++].climb();
+    }
+    catch (ArrayIndexOutOfBoundsException e) {
+}
+```
+
+正常的写法应该是：
+
+```java
+for (Mountain m : range)
+    m.climb();
+```
+
+这样的写的原因可能是代码编写者误认为标准for-each循环做结束判断性能不佳，应该使用异常机制来提升性能。这种思路有三点误区：
+
+1. 异常是为特殊场合设计的，所以 JVM 实现几乎不会让它们像显式判断一样快。
+2. 将代码放在 try-catch 块中会抑制 JVM 可能执行的某些优化。
+3. 遍历数组的标准习惯用法不一定会导致冗余检查。许多 JVM 实现对它们进行了优化。
+
+实际上，建立一个异常对象，是建立一个普通Object耗时的约20倍，详情可以看这篇文章[异常耗时](https://www.seven97.top/java/basis/04-exceptions.html#异常耗时)
+
+并且使用异常做循环终止，性能远低于标准用法。而且这样做还可能导致对真正数组越界报错的掩盖。所以，异常只适用于确实有异常的情况，它们不应该用于一般的控制流程。
+
+API的设计也应该遵循同样的思路。例如，迭代器中应同时提供hasNext()和next()方法，我们称next()为“状态依赖”的，因为它需要通过一个“状态测试”的方法hasNext()才能判断调用是否合法。我们通过hasNext()判断循环是否应该终止：
+
+```java
+for (Iterator<Foo> i = collection.iterator(); i.hasNext(); ) {
+    Foo foo = i.next();
+    ...
+}
+```
+
+而不应该使用异常来终止循环：
+
+```java
+// Do not use this hideous code for iteration over a collection!
+try {
+    Iterator<Foo> i = collection.iterator();
+    while(true) {
+        Foo foo = i.next();
+        ...
+    }
+}
+catch (NoSuchElementException e) {
+}
+```
+
+除了提供“状态测试”，另一种设计思路是让“状态依赖”的方法返回一个Optional对象，或者在不能执行计算时返回null。
+
+
+
+### 70、对可恢复情况使用受检异常，对编程错误使用运行时异常
+
+Java 提供了三种可抛出项：受检异常（checked exception）、运行时异常（runtime exception）和错误（error）。
+
+使用受检异常的情况是为了期望调用者能够从中恢复。其他两种可抛出项都是非受检的。
+
+使用运行时异常来表示编程错误。 例如数组越界ArrayIndexOutOfBoundsException。如果对于选择受检异常还是运行时异常有疑问，那么推荐还是使用运行时异常。
+
+错误保留给 JVM 使用，用于表示：资源不足、不可恢复故障或其他导致无法继续执行的条件。不要自己定义新的错误类型。
+
+详情请看[异常详解](https://www.seven97.top/java/basis/04-exceptions.html)
+
+
+
+### 71、避免不必要地使用受检异常
+
+使用受检异常应满足：正确使用 API 也不能防止异常情况，并且使用 API 在遇到异常时可以采取一些有用的操作；否则应使用非受检异常。
+
+```java
+} catch (TheCheckedException e) {
+    throw new AssertionError(); // Can't happen!
+}
+} catch (TheCheckedException e) {
+    e.printStackTrace(); // Oh well, we lose.
+    System.exit(1);
+}
+```
+
+以上两种处理受检异常的方式都很糟糕。
+
+受检异常会给程序员带来额外负担，消除受检异常的最简单方法是返回所需结果类型的 Optional 对象，当存在受检异常时返回空的Optional对象。这种方法缺点是无法提供附加信息说明为何不能继续执行计算。
+
+另一种消除受检异常的方法是拆分方法逻辑。例如下面的方法原本需要捕获受检异常：
+
+```java
+// Invocation with checked exception
+try {
+    obj.action(args);
+}
+catch (TheCheckedException e) {
+    ... // Handle exceptional condition
+}
+```
+
+可以将其逻辑拆分：若参数合法，则走第一部分无受检异常的逻辑；否则走第二部分处理异常条件的逻辑。
+
+```java
+// Invocation with state-testing method and unchecked exception
+if (obj.actionPermitted(args)) {
+    obj.action(args);
+}
+else {
+    ... // Handle exceptional condition
+}
+```
+
+如果我们确定调用一定成功，或者不介意调用失败导致线程中止，甚至可以简化逻辑为下面语句：
+
+```java
+obj.action(args);
+```
+
+
+
+### 72、鼓励复用标准异常
+
+Java 库提供了一组标准异常，涵盖了日常的大多数异常抛出需求。
+
+复用异常的好处是使代码易于阅读和维护。
+
+此表总结了最常见的可复用异常：
+
+| Exception                       | Occasion for Use                       |
+| ------------------------------- | -------------------------------------- |
+| IllegalArgumentException        | 非null参数值不合适                     |
+| IllegalStateException           | 对象状态不适用于方法调用               |
+| NullPointerException            | 禁止参数为null时仍传入 null            |
+| IndexOutOfBoundsException       | 索引参数值超出范围                     |
+| ConcurrentModificationException | 在禁止并发修改对象的地方检测到并发修改 |
+| UnsupportedOperationException   | 对象不支持该方法调用                   |
+
+不要直接复用 Exception、RuntimeException、Throwable 或 Error，应当将这些类当做抽象类。实际使用的异常类应该是这些类的继承类。
+
+异常复用必须基于文档化的语义，而不仅仅是基于名称。另外，如果你想添加更多的细节，可以子类化标准异常。
+
+
+
+### 73、抛出与抽象级别相匹配的异常
+
+为了保证抽象的层次性，高层应该捕获低层异常，并确保抛出的异常可以用高层抽象解释。 这个习惯用法称为异常转换：
+
+```java
+// Exception Translation
+try {
+    ... // Use lower-level abstraction to do our bidding
+} catch (LowerLevelException e) {
+    throw new HigherLevelException(...);
+}
+```
+
+下面是来自 AbstractSequentialList 类的异常转换示例：
+
+```java
+/**
+* Returns the element at the specified position in this list.
+* @throws IndexOutOfBoundsException if the index is out of range
+* ({@code index < 0 || index >= size()}).
+*/
+public E get(int index) {
+    ListIterator<E> i = listIterator(index);
+    try {
+        return i.next();
+    }
+    catch (NoSuchElementException e) {
+        throw new IndexOutOfBoundsException("Index: " + index);
+    }
+}
+```
+
+如果低层异常有助于调试高层异常的问题，那么需要一种称为链式异常的特殊异常转换形式。低层异常作为原因传递给高层异常，高层异常提供一个访问器方法（Throwable 的 getCause 方法）来访问低层异常：
+
+```java
+// Exception Chaining
+try {
+    ... // Use lower-level abstraction to do our bidding
+}
+catch (LowerLevelException cause) {
+    throw new HigherLevelException(cause);
+}
+```
+
+这个链式异常的实现代码如下：
+
+```java
+// Exception with chaining-aware constructor
+class HigherLevelException extends Exception {
+    HigherLevelException(Throwable cause) {
+        super(cause);
+    }
+}
+```
+
+虽然异常转换可以有助于屏蔽低层异常，但不应被滥用。更好的办法是确保低层方法避免异常，例如在将高层方法的参数传递到低层之前检查它们的有效性。
+
+另一种让屏蔽低层异常的方法是：让高层静默处理这些异常。例如可以使用一些适当的日志工具（如 java.util.logging）来记录异常。
+
+
+
+### 74、为每个方法记录会抛出的所有异常
+
+仔细记录每个方法抛出的所有异常是非常重要的。
+
+始终单独声明受检异常，并使用 Javadoc 的 @throw 标记精确记录每次抛出异常的条件。
+
+使用 Javadoc 的 @throw 标记记录方法会抛出的每个异常，但是不要对非受检异常使用 throws 关键字。
+
+如果一个类中的许多方法都因为相同的原因抛出异常，你可以在类的文档注释中记录异常， 而不是为每个方法单独记录异常。例如，在类的文档注释中可以这样描述NullPointerException：“如果在任何参数中传递了 null 对象引用，该类中的所有方法都会抛出 NullPointerException”。
+
+
+
+### 75、详细消息中应包含失败捕获的信息
+
+要捕获失败，异常的详细消息应该包含导致异常的所有参数和字段的值。例如，IndexOutOfBoundsException 的详细消息应该包含下界、上界和未能位于下界之间的索引值。
+
+详细消息中不应包含密码、加密密钥等敏感信息。
+
+确保异常在其详细信息中包含足够的故障捕获信息的一种方法是，在其构造函数中配置，而不是以传入字符串方式引入这些信息：
+
+```java
+/**
+* Constructs an IndexOutOfBoundsException.
+**
+@param lowerBound the lowest legal index value
+* @param upperBound the highest legal index value plus one
+* @param index the actual index value
+*/
+public IndexOutOfBoundsException(int lowerBound, int upperBound, int index) {
+    // Generate a detail message that captures the failure
+    super(String.format("Lower bound: %d, Upper bound: %d, Index: %d",lowerBound, upperBound, index));
+    // Save failure information for programmatic access
+    this.lowerBound = lowerBound;
+    this.upperBound = upperBound;
+    this.index = index;
+}
+```
+
+
+
+### 76、尽力保证故障原子性
+
+失败的方法调用应该使对象能恢复到调用之前的状态。 具有此属性的方法称为具备故障原子性。
+
+保证故障原子性的方法有如下几种： 
+
+1. 设计不可变对象。
+
+2. 对于操作可变对象的方法，在执行操作之前检查参数的有效性：
+   ```java
+   public Object pop() {
+       if (size == 0)
+           throw new EmptyStackException();
+       Object result = elements[--size];
+       elements[size] = null; // Eliminate obsolete reference
+       return result;
+   }
+   ```
+
+3. 对计算进行排序，以便可能发生故障的部分都先于修改对象的部分发生。
+
+4. 以对象的临时副本执行操作，并在操作完成后用临时副本替换对象的内容。
+
+1. 编写恢复代码，拦截在操作过程中发生的故障，并使对象回滚到操作开始之前的状态。这种方法主要用于持久的（基于磁盘的）数据结构。
+
+故障原子性并不总是可以实现的。例如，多线程修改同一个容器类对象，导致抛出ConcurrentModificationException，此时是不可恢复的。
+
+
+
+### 77、不要忽略异常
+
+以上的空 catch 块违背了异常的目的， 异常的存在是为了强制你处理异常情况。
+
+```java
+// Empty catch block ignores exception - Highly suspect!
+try {
+    ...
+}
+catch (SomeException e) {
+}
+```
+
+
+
+在某些情况下忽略异常是合适的，例如在关闭 FileInputStream 时。你没有更改文件的状态，因此不需要执行任何恢复操作，也没有理由中止正在进行的操作。也可选择记录异常。如果你选择忽略异常，catch 块应该包含一条注释，解释为什么这样做是合适的，并且应该将变量命名为 ignore：
+
+```java
+Future<Integer> f = exec.submit(planarMap::chromaticNumber);
+int numColors = 4; // Default; guaranteed sufficient for any map
+try {
+    numColors = f.get(1L, TimeUnit.SECONDS);
+}
+catch (TimeoutException | ExecutionException ignored) {
+    // Use default: minimal coloring is desirable, not required
+}
+```
+
+
+
 ## 并发
 
- 
+###  78、对共享可变数据的同步访问
+
+同步不仅能防止线程修改的对象处于不一致状态，而且保证每个线程修改的结果为其他线程可见。
+
+线程之间能可靠通信以及实施互斥，同步是所必需的。
+
+即使是原子读写，没有设置同步也会造成糟糕的后果。下面代码展示从一个线程中使另一个线程停止，不要使用 Thread.stop，而是通过设置标志变量：
+
+```java
+// Broken! - How long would you expect this program to run?
+public class StopThread {
+    private static boolean stopRequested;
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread backgroundThread = new Thread(() -> {
+        int i = 0;
+        while (!stopRequested)
+            i++;
+        });
+
+    backgroundThread.start();
+    TimeUnit.SECONDS.sleep(1);
+    stopRequested = true;
+    }
+}
+```
+
+在某些机器上，线程永远不会停止。这是因为在没有同步的情况下，虚拟机可能会将下面代码
+
+```java
+while (!stopRequested)
+    i++;
+```
+
+优化为如下代码：
+
+```java
+if (!stopRequested)
+    while (true)
+        i++;
+```
+
+解决上面问题的办法是对stopRequested变量做同步读写，程序会立即结束：
+
+```java
+// Properly synchronized cooperative thread termination
+public class StopThread {
+    private static boolean stopRequested;
+
+    private static synchronized void requestStop() {
+        stopRequested = true;
+    }
+
+    private static synchronized boolean stopRequested() {
+        return stopRequested;
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread backgroundThread = new Thread(() -> {
+            int i = 0;
+            while (!stopRequested())
+            i++;
+        });
+
+        backgroundThread.start();
+        TimeUnit.SECONDS.sleep(1);
+        requestStop();
+    }
+}
+```
+
+仅同步写方法是不够的。除非读和写操作都同步，否则不能保证同步生效。
+
+一种更简单、更高效的做法是使用[volatile](https://www.seven97.top/java/concurrent/02-keyword2-volatile.html)。虽然 volatile 不保证互斥，但是它保证任何读取字段的线程都会看到最近修改的值：
+
+```java
+// Cooperative thread termination with a volatile field
+public class StopThread {
+    private static volatile boolean stopRequested;
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread backgroundThread = new Thread(() -> {
+        int i = 0;
+        while (!stopRequested)
+            i++;
+    });
+
+    backgroundThread.start();
+    TimeUnit.SECONDS.sleep(1);
+    stopRequested = true;
+    }
+}
+```
+
+注意volatile不保证变量读写的原子性，因此下面的代码不能保证每次生成的序列号是严格递增的：
+
+```java
+// Broken - requires synchronization!
+private static volatile int nextSerialNumber = 0;
+
+public static int generateSerialNumber() {
+    return nextSerialNumber++;
+}
+```
+
+解决办法是使用原子变量，如[原子类atomic](https://www.seven97.top/java/concurrent/03-juclock1-cas-unsafe-atomic.html#原子类atomic)：
+
+```java
+// Lock-free synchronization with java.util.concurrent.atomic
+private static final AtomicLong nextSerialNum = new AtomicLong();
+
+public static long generateSerialNumber() {
+    return nextSerialNum.getAndIncrement();
+}
+```
+
+为避免出现本条目中出现的问题，最好办法是不共享可变数据。应当将可变数据限制在一个线程中。
+
+
+
+### 79、避免过度同步
+
+为避免活性失败和安全故障，永远不要在同步方法或块中将控制权交给用户。
+
+为了展示这个问题，下面的代码实现了观察者模式，当元素被添加到集合中时，允许用户订阅通知：
+
+```java
+// Broken - invokes alien method from synchronized block!
+public class ObservableSet<E> extends ForwardingSet<E> {
+    public ObservableSet(Set<E> set) { super(set); }
+
+    private final List<SetObserver<E>> observers= new ArrayList<>();
+
+    public void addObserver(SetObserver<E> observer) {
+        synchronized(observers) {
+            observers.add(observer);
+        }
+    }
+
+    public boolean removeObserver(SetObserver<E> observer) {
+        synchronized(observers) {
+            return observers.remove(observer);
+        }
+    }
+
+    private void notifyElementAdded(E element) {
+        synchronized(observers) {
+            for (SetObserver<E> observer : observers)
+                observer.added(this, element);
+        }
+    }
+
+    @Override
+    public boolean add(E element) {
+        boolean added = super.add(element);
+        if (added)
+            notifyElementAdded(element);
+        return added;
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends E> c) {
+        boolean result = false;
+        for (E element : c)
+            result |= add(element); // Calls notifyElementAdded
+        return result;
+    }
+}
+```
+
+观察者通过调用 addObserver 方法订阅通知，调用 removeObserver 方法取消订阅：
+
+```java
+@FunctionalInterface
+public interface SetObserver<E> {
+    // Invoked when an element is added to the observable set
+    void added(ObservableSet<E> set, E element);
+}
+```
+
+粗略地检查一下，ObservableSet 似乎工作得很好。例如，打印从 0 到 99 的数字：
+
+```java
+public static void main(String[] args) {
+    ObservableSet<Integer> set =new ObservableSet<>(new HashSet<>());
+    set.addObserver((s, e) -> System.out.println(e));
+    for (int i = 0; i < 100; i++)
+        set.add(i);
+}
+```
+
+现在让我们尝试一些更有想象力的事情。假设我们将 addObserver 调用替换为一个传递观察者的调用，该观察者打印添加到集合中的整数值，如果该值为 23，则该调用将删除自身：
+
+```java
+set.addObserver(new SetObserver<>() {
+    public void added(ObservableSet<Integer> s, Integer e) {
+        System.out.println(e);
+        if (e == 23)
+            s.removeObserver(this);
+    }
+});
+```
+
+你可能期望这个程序会打印数字0到23，然后终止。但是实际上它会抛出ConcurrentModificationException，虽然我们对observers加了并发，也无法阻止对它的并发修改。
+
+现在让我们尝试一些奇怪的事情：编写一个观察者来取消订阅，但是它没有直接调用 removeObserver，而是使用executor启动另一个线程来执行：
+
+```java
+// Observer that uses a background thread needlessly
+set.addObserver(new SetObserver<>() {
+    public void added(ObservableSet<Integer> s, Integer e) {
+        System.out.println(e);
+        if (e == 23) {
+            ExecutorService exec = Executors.newSingleThreadExecutor();
+            try {
+                exec.submit(() -> s.removeObserver(this)).get();
+            } catch (ExecutionException | InterruptedException ex) {
+                throw new AssertionError(ex);
+            } finally {
+                exec.shutdown();
+            }
+        }
+    }
+});
+```
+
+结果是它不会抛出异常，而是形成死锁，原因是主线程调用addObserver后一直持有observers锁并等待子线程执行完毕，可是子线程调用removeObserver也需要获取observers锁，形成循环依赖。
+
+一种解决办法是把遍历集合的代码移到同步块以外：
+
+```java
+// Alien method moved outside of synchronized block - open calls
+private void notifyElementAdded(E element) {
+    List<SetObserver<E>> snapshot = null;
+    synchronized(observers) {
+        snapshot = new ArrayList<>(observers);
+    }
+    for (SetObserver<E> observer :snapshot)
+        observer.added(this, element);
+}
+```
+
+另一种更好的办法是使用CopyOnWriteArrayList，适合用在很少修改和经常遍历的场合：
+
+```java
+// Thread-safe observable set with CopyOnWriteArrayList
+private final List<SetObserver<E>> observers =new CopyOnWriteArrayList<>();
+
+public void addObserver(SetObserver<E> observer) {
+    observers.add(observer);
+}
+
+public boolean removeObserver(SetObserver<E> observer) {
+    return observers.remove(observer);
+}
+
+private void notifyElementAdded(E element) {
+    for (SetObserver<E> observer : observers)
+        observer.added(this, element);
+}
+```
+
+应该在同步区域内做尽可能少的工作，将耗时的代码移出同步块。
+
+对一些Java类库的选择：
+
+1. 以java.util.concurrent中的类取代Vector和Hashtable。
+2. 在单线程环境下，以StringBuilder取代StringBuffer。
+3. 在单线程环境下，以ThreadLocalRandom取代Random。
+
+
+
+### 80、Executor、task、stream优于直接使用线程
+
+Executor框架使用非常方便：
+
+```java
+ExecutorService exec = Executors.newSingleThreadExecutor();
+exec.execute(runnable);
+exec.shutdown();
+```
+
+应该使用Executor，而非直接使用线程。后者既是工作单元，又是执行机制；前者做了对工作单元和执行机制做了很好的分离，可以根据实际情况灵活选择执行机制。
+
+
+
+### 81、并发实用工具优于wait-notify
+
+直接使用wait-notify就像使用“并发汇编语言”编程一样原始，你应该使用更高级别的并发实用工具。
+
+并发集合接口配备了依赖于状态的修改操作，这些操作将多个基本操作组合成单个原子操作。例如下面例子演示了Map的putIfAbsent(key, value)方法的使用，用于模拟实现String.intern的行为：
+
+```java
+// Concurrent canonicalizing map atop ConcurrentMap - not optimal
+private static final ConcurrentMap<String, String> map =new ConcurrentHashMap<>();
+public static String intern(String s) {
+    String previousValue = map.putIfAbsent(s, s);
+    return previousValue == null ? s : previousValue;
+}
+```
+
+事实上可以进一步优化。ConcurrentHashMap 针对 get 等检索操作进行了优化。因此，只有在 get 表明有必要时，才值得调用 putIfAbsent:
+
+```java
+// Concurrent canonicalizing map atop ConcurrentMap - faster!
+public static String intern(String s) {
+    String result = map.get(s);
+    if (result == null) {
+        result = map.putIfAbsent(s, s);
+        if (result == null)
+        result = s;
+    }
+    return result;
+}
+```
+
+使用并发集合而非同步集合。例如，使用 ConcurrentHashMap 而不是 Collections.synchronizedMap。
+
+下面例子展示了如何构建一个简单的框架来为一个操作的并发执行计时。在 wait 和 notify 的基础上直接实现这种逻辑会有点麻烦，但是在 CountDownLatch 的基础上实现起来却非常简单：
+
+```java
+// Simple framework for timing concurrent execution
+public static long time(Executor executor, int concurrency,Runnable action) throws InterruptedException {
+    CountDownLatch ready = new CountDownLatch(concurrency);
+    CountDownLatch start = new CountDownLatch(1);
+    CountDownLatch done = new CountDownLatch(concurrency);
+
+    for (int i = 0; i < concurrency; i++) {
+        executor.execute(() -> {
+            ready.countDown(); // Tell timer we're ready
+            try {
+                start.await(); // Wait till peers are ready
+                action.run();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                done.countDown(); // Tell timer we're done
+            }
+        });
+    }
+
+    ready.await(); // Wait for all workers to be ready
+    long startNanos = System.nanoTime();
+    start.countDown(); // And they're off!
+    done.await(); // Wait for all workers to finish
+    return System.nanoTime() - startNanos;
+}
+```
+
+对于间隔计时，始终使用 System.nanoTime 而不是 System.currentTimeMillis。 System.nanoTime 不仅更准确和精确，而且不受系统实时时钟调整的影响。
+
+有时候维护老代码还需要使用wait-notify。下面是wait-notify的基本用法：
+
+```java
+// The standard idiom for using the wait method
+synchronized (obj) {
+    while (<condition does not hold>)
+        obj.wait(); // (Releases lock, and reacquires on wakeup)
+    ... // Perform action appropriate to condition
+}
+```
+
+始终使用循环来调用 wait 方法。 notifyAll 方法通常应该优先于 notify。如果使用 notify，则必须非常小心以确保其活性。
+
+
+
+### 82、使线程安全文档化
+
+每个类都应该详细描述或使用线程安全注解记录其线程安全属性。
+
+不要依赖synchronized修饰符来记录线程安全，它只是实现细节，而不是API的一部分，不能可靠表明方法是线程安全的。
+
+类必须仔细地记录它支持的线程安全级别，级别可分为：
+
+1. 不可变的：常量，不需要同步，如String、Integer。
+2. 无条件线程安全：可变但有足够的内部同步，无需依赖外部同步，如AtomicLong和ConcurrentHashMap。
+3. 有条件的线程安全：与无条件线程安全类似，但有些方法需要外部同步才能使用，如Collections.synchronized包装器返回的集合，其迭代器需要外部同步。
+4. 非线程安全：可变，需使用外部同步包围每个方法调用，例如ArrayList和HashMap。
+5. 线程对立：即使每个方法调用都被外部同步包围，也不是线程安全的。
+
+在记录一个有条件的线程安全类时需要小心，要指出哪些调用方法需要外部同步。如Collections.synchronizedMap在遍历集合时，需要在map上做同步：
+
+```java
+Map<K, V> m = Collections.synchronizedMap(new HashMap<>());
+Set<K> s = m.keySet(); // Needn't be in synchronized block
+...
+synchronized(m) { // Synchronizing on m, not s!
+    for (K key : s)
+        key.f();
+}
+```
+
+为了防止用户恶意长期持有公开锁，可以使用私有锁，并放在对外提供的方法内部：
+
+```java
+// Private lock object idiom - thwarts denial-of-service attack
+private final Object lock = new Object();
+public void foo() {
+    synchronized(lock) {
+        ...
+    }
+}
+```
+
+Lock 字段应该始终声明为 final，防止无意中对其修改。
+
+
+
+### 83、明智地使用延迟初始化
+
+在大多数情况下，常规初始化优于延迟初始化。延迟初始化只有在必要时才这么做。
+
+延迟初始化适合的场景：如果一个字段只在类的一小部分实例上访问，并且初始化该字段的代价很高，那么可以考虑延迟初始化。如 [单例模式](https://www.seven97.top/system-design/design-pattern/singletonpattern.html)
+
+在多线程竞争的情况下，使用延迟初始化容易导致错误。
+
+下面是一个常规初始化的例子：
+
+```java
+// Normal initialization of an instance field
+private final FieldType field = computeFieldValue();
+```
+
+改成延迟初始化的版本，需使用synchronized同步：
+
+```java
+// Lazy initialization of instance field - synchronized accessor
+private FieldType field;
+private synchronized FieldType getField() {
+    if (field == null)
+        field = computeFieldValue();
+    return field;
+}
+```
+
+如果需要在静态字段上使用延迟初始化提升性能，请使用延迟初始化持有类模式：
+
+```java
+// Lazy initialization holder class idiom for static fields
+private static class FieldHolder {
+    static final FieldType field = computeFieldValue();
+}
+private static FieldType getField() { return FieldHolder.field; }
+```
+
+如果需要在实例字段上使用延迟初始化提升性能，请使用双重检查模式：
+
+```java
+// Double-check idiom for lazy initialization of instance fields
+private volatile FieldType field;
+private FieldType getField() {
+    FieldType result = field;
+    if (result == null) { // First check (no locking)
+        synchronized(this) {
+            if (field == null) // Second check (with locking)
+                field = result = computeFieldValue();
+        }
+    }
+    return result;
+}
+```
+
+如果可以容忍重复初始化，可以改为单检查模式：
+
+```java
+// Single-check idiom - can cause repeated initialization!
+private volatile FieldType field;
+private FieldType getField() {
+    FieldType result = field;
+    if (result == null)
+        field = result = computeFieldValue();
+    return result;
+}
+```
+
+
+
+### 84、不要依赖线程调度器
+
+任何依赖线程调度器来保证正确性或性能的程序都无法保证可移植性。
+
+线程不应该在循环中检查共享对象状态变化。除了使程序容易受到线程调度器变化无常的影响之外，循环检查状态变化还大幅增加了处理器的负载，并影响其他线程获取处理器进行工作。例如下面实现的CountDownLatch版本性能很糟糕：
+
+```java
+// Awful CountDownLatch implementation - busy-waits incessantly!
+public class SlowCountDownLatch {
+
+    private int count;
+
+    public SlowCountDownLatch(int count) {
+        if (count < 0)
+            throw new IllegalArgumentException(count + " < 0");
+        this.count = count;
+    }
+
+    public void await() {
+        while (true) {
+            synchronized(this) {
+                if (count == 0)
+                return;
+            }
+        }
+    }
+
+    public synchronized void countDown() {
+        if (count != 0)
+            count--;
+    }
+}
+```
+
+当有1000个线程竞争时，上面例子的执行时间是Java中CountDownLatch的10倍。
+
+通过调用Thread.yield来优化上面的程序，可以勉强让程序运行起来，但它是不可移植的。更好的做法是重构代码，减少并发线程的数量。
+
+类似地，不要依赖调整线程优先级。线程优先级是 Java 中最不可移植的特性之一。
 
  
 
 ## 序列化
 
- 
+### 85、优先选择 Java 序列化的替代方案
+
+当序列化特性被引入Java时，它还从未在生产语言中出现过。当时的设计者评估认为收益大于风险。
+
+后来的历史证明并非如此。序列化导致了严重的安全漏洞，而且由于它的可攻击范围太大，难以防范，问题还在不断增多。
+
+下面例子演示了一个“反序列化炸弹”，反序列化需要执行很长时间：
+
+```java
+// Deserialization bomb - deserializing this stream takes forever
+static byte[] bomb() {
+    Set<Object> root = new HashSet<>();
+    Set<Object> s1 = root;
+    Set<Object> s2 = new HashSet<>();
+    for (int i = 0; i < 100; i++) {
+        Set<Object> t1 = new HashSet<>();
+        Set<Object> t2 = new HashSet<>();
+        t1.add("foo"); // Make t1 unequal to t2
+        s1.add(t1); s1.add(t2);
+        s2.add(t1); s2.add(t2);
+        s1 = t1;
+        s2 = t2;
+    }
+    return serialize(root); // Method omitted for brevity
+}
+```
+
+避免序列化漏洞的最好方法是永远不要反序列化任何东西。没有理由在你编写的任何新系统中使用Java序列化。
+
+用于取代Java序列化，领先的跨平台结构化数据是JSON和Protobuf。
+
+如果需要在老系统中使用序列化，那么永远不要反序列化不可信的数据。
+
+Java 9中添加的对象反序列化筛选机制，允许接收或拒绝某些类。优先选择白名单而不是黑名单， 因为黑名单只保护你免受已知的威胁。
+
+
+
+### 86、非常谨慎地实现Serializable
+
+实现Serializable接口会带来以下代价： 
+
+1. 一旦类的实现被发布，它就会降低更改该类实现的灵活性。需要永远支持序列化的形式。
+2. 增加了出现 bug 和安全漏洞的可能性。 
+3. 它增加了与发布类的新版本相关的测试负担。
+
+实现 Serializable 接口并不是一个轻松的决定。
+
+为继承而设计的类很少情况适合实现 Serializable 接口，接口也很少适合继承Serializable。
+
+内部类不应该实现 Serializable。
+
+
+
+### 87、考虑使用自定义序列化形式
+
+ 在没有考虑默认序列化形式是否合适之前，不要接受它。
+
+如果对象的物理表示与其逻辑内容相同，则默认的序列化形式可能是合适的。如下面的类表示一个人的名字：
+
+```java
+// Good candidate for default serialized form
+public class Name implements Serializable {
+    /**
+    * Last name. Must be non-null.
+    * @serial
+    */
+    private final String lastName;
+
+    /**
+    * First name. Must be non-null.
+    * @serial
+    */
+    private final String firstName;
+
+    /**
+    * Middle name, or null if there is none.
+    * @serial
+    */
+    private final String middleName;
+    ... // Remainder omitted
+}
+```
+
+即使你认为默认的序列化形式是合适的，你通常也必须提供readObject方法来确保不变性和安全性。
+
+下面的例子不适合使用默认序列化，因为它会镜像出链表中的所有项，以及这些项之间的双向链接：
+
+```java
+// Awful candidate for default serialized form
+public final class StringList implements Serializable {
+    private int size = 0;
+    private Entry head = null;
+    private static class Entry implements Serializable {
+        String data;
+        Entry next;
+        Entry previous;
+    }
+    ... // Remainder omitted
+}
+```
+
+当对象的物理表示与其逻辑数据内容有很大差异时，使用默认的序列化形式有四个缺点： 
+
+1. 将导出的 API 永久地绑定到当前的内部实现。 
+2. 占用过多的空间。 
+3. 消耗过多的时间。 
+4. 可能导致堆栈溢出。
+
+StringList的合理序列化形式是列表中的字符串数量和字符串本身。这构成了由StringList表示的逻辑数据，去掉了其物理表示的细节。下面是修改后的StringList版本，其中transient修饰符表示要从类的默认序列化中省略该实例字段：
+
+```java
+// StringList with a reasonable custom serialized form
+public final class StringList implements Serializable {
+    private transient int size = 0;
+    private transient Entry head = null;
+    // No longer Serializable!
+
+    private static class Entry {
+        String data;
+        Entry next;
+        Entry previous;
+    }
+    // Appends the specified string to the list
+    public final void add(String s) { ... }
+
+    /**
+    * Serialize this {@code StringList} instance.
+    **
+    @serialData The size of the list (the number of strings
+    * it contains) is emitted ({@code int}), followed by all of
+    * its elements (each a {@code String}), in the proper
+    * sequence.
+    */
+    private void writeObject(ObjectOutputStream s) throws IOException {
+        s.defaultWriteObject();
+        s.writeInt(size);
+        // Write out all elements in the proper order.
+        for (Entry e = head; e != null; e = e.next)
+            s.writeObject(e.data);
+    }
+
+    private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+        s.defaultReadObject();
+        int numElements = s.readInt();
+        // Read in all elements and insert them in list
+        for (int i = 0; i < numElements; i++)
+            add((String) s.readObject());
+    }
+
+    ... // Remainder omitted
+}
+```
+
+必须对对象序列化强制执行任何同步操作，就如同对读取对象整个状态的任何其他方法那样强制执行：
+
+```java
+// writeObject for synchronized class with default serialized form
+private synchronized void writeObject(ObjectOutputStream s) throws IOException {
+    s.defaultWriteObject();
+}
+```
+
+无论选择哪种序列化形式，都要在编写的每个可序列化类中声明显式的序列化版本UID：
+
+```java
+private static final long serialVersionUID = randomLongValue;
+```
+
+不要更改序列化版本UID，除非你想破坏与现有序列化所有实例的兼容性。
+
+
+
+### 88、防御性地编写readObject方法
+
+第50条中编写了一个包含Date字段的不变日期范围类，它通过防御性地复制Date对象来保证其不变性：
+
+```java
+// Immutable class that uses defensive copying
+public final class Period {
+    private final Date start;
+    private final Date end;
+
+    /**
+    * @param start the beginning of the period
+    * @param end the end of the period; must not precede start
+    * @throws IllegalArgumentException if start is after end
+    * @throws NullPointerException if start or end is null
+    */
+    public Period(Date start, Date end) {
+        this.start = new Date(start.getTime());
+        this.end = new Date(end.getTime());
+        if (this.start.compareTo(this.end) > 0)
+            throw new IllegalArgumentException(start + " after " + end);
+    }
+
+    public Date start () { return new Date(start.getTime()); }
+
+    public Date end () { return new Date(end.getTime()); }
+
+    public String toString() { return start + " - " + end; }
+
+    ... // Remainder omitted
+}
+```
+
+如果我们让这个类支持Java默认的序列化，那么会产生漏洞：可以从字节流反序列出一个有问题的对象，其结束时间小于开始时间，绕过原构造方法做的限制：
+
+```java
+public class BogusPeriod {
+// Byte stream couldn't have come from a real Period instance!
+    private static final byte[] serializedForm = {
+        (byte)0xac, (byte)0xed, 0x00, 0x05, 0x73, 0x72, 0x00, 0x06,
+        0x50, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x40, 0x7e, (byte)0xf8,
+        0x2b, 0x4f, 0x46, (byte)0xc0, (byte)0xf4, 0x02, 0x00, 0x02,
+        0x4c, 0x00, 0x03, 0x65, 0x6e, 0x64, 0x74, 0x00, 0x10, 0x4c,
+        0x6a, 0x61, 0x76, 0x61, 0x2f, 0x75, 0x74, 0x69, 0x6c, 0x2f,
+        0x44, 0x61, 0x74, 0x65, 0x3b, 0x4c, 0x00, 0x05, 0x73, 0x74,
+        0x61, 0x72, 0x74, 0x71, 0x00, 0x7e, 0x00, 0x01, 0x78, 0x70,
+        0x73, 0x72, 0x00, 0x0e, 0x6a, 0x61, 0x76, 0x61, 0x2e, 0x75,
+        0x74, 0x69, 0x6c, 0x2e, 0x44, 0x61, 0x74, 0x65, 0x68, 0x6a,
+        (byte)0x81, 0x01, 0x4b, 0x59, 0x74, 0x19, 0x03, 0x00, 0x00,
+        0x78, 0x70, 0x77, 0x08, 0x00, 0x00, 0x00, 0x66, (byte)0xdf,
+        0x6e, 0x1e, 0x00, 0x78, 0x73, 0x71, 0x00, 0x7e, 0x00, 0x03,
+        0x77, 0x08, 0x00, 0x00, 0x00, (byte)0xd5, 0x17, 0x69, 0x22,
+        0x00, 0x78
+    };
+
+    public static void main(String[] args) {
+        Period p = (Period) deserialize(serializedForm);
+        System.out.println(p);
+    }
+
+    // Returns the object with the specified serialized form
+    static Object deserialize(byte[] sf) {
+        try {
+            return new ObjectInputStream(new ByteArrayInputStream(sf)).readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+}
+```
+
+解决办法是在readObject方法中检查反序列化对象的有效性：
+
+```java
+// readObject method with validity checking - insufficient!
+private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+    s.defaultReadObject();
+    // Check that our invariants are satisfied
+    if (start.compareTo(end) > 0)
+        throw new InvalidObjectException(start +" after "+ end);
+}
+```
+
+然而还有另外的问题。攻击者可以通过反序列化访问Period对象中原有的私有Date字段。通过修改这些Date实例，攻击者可以修改Period实例：
+
+```java
+public class MutablePeriod {
+    // A period instance
+    public final Period period;
+
+    // period's start field, to which we shouldn't have access
+    public final Date start;
+
+    // period's end field, to which we shouldn't have access
+    public final Date end;
+
+    public MutablePeriod() {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bos);
+
+            // Serialize a valid Period instance
+            out.writeObject(new Period(new Date(), new Date()));
+
+            /*
+            * Append rogue "previous object refs" for internal
+            * Date fields in Period. For details, see "Java
+            * Object Serialization Specification," Section 6.4.
+            */
+            byte[] ref = { 0x71, 0, 0x7e, 0, 5 }; // Ref #5
+            bos.write(ref); // The start field
+            ref[4] = 4; // Ref # 4
+            bos.write(ref); // The end field
+
+            // Deserialize Period and "stolen" Date references
+            ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+            period = (Period) in.readObject();
+            start = (Date) in.readObject();
+            end = (Date) in.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+}
+```
+
+在作者的机器上，可以产生如下输出：
+
+```java
+Wed Nov 22 00:21:29 PST 2017 - Wed Nov 22 00:21:29 PST 1978
+Wed Nov 22 00:21:29 PST 2017 - Sat Nov 22 00:21:29 PST 1969
+public static void main(String[] args) {
+    MutablePeriod mp = new MutablePeriod();
+    Period p = mp.period;
+    Date pEnd = mp.end;
+
+    // Let's turn back the clock
+    pEnd.setYear(78);
+    System.out.println(p);
+
+    // Bring back the 60s!
+    pEnd.setYear(69);
+    System.out.println(p);
+}
+Wed Nov 22 00:21:29 PST 2017 - Wed Nov 22 00:21:29 PST 1978
+Wed Nov 22 00:21:29 PST 2017 - Sat Nov 22 00:21:29 PST 1969
+```
+
+对象被反序列化时，对任何私有字段进行防御性地复制至关重要。例如：
+
+```java
+// readObject method with defensive copying and validity checking
+private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
+    s.defaultReadObject();
+    // Defensively copy our mutable components
+    start = new Date(start.getTime());
+    end = new Date(end.getTime());
+    // Check that our invariants are satisfied
+    if (start.compareTo(end) > 0)
+        throw new InvalidObjectException(start +" after "+ end);
+}
+```
+
+修改后会产生如下输出：
+
+```java
+Wed Nov 22 00:23:41 PST 2017 - Wed Nov 22 00:23:41 PST 2017
+Wed Nov 22 00:23:41 PST 2017 - Wed Nov 22 00:23:41 PST 2017
+```
+
+下面是编写 readObject 方法的指导原则：
+
+1. 对象引用字段必须保持私有的的类，应防御性地复制该字段中的每个对象。不可变类的可变组件属于这一类。
+2. 检查任何不变量，如果检查失败，那么抛出InvalidObjectException。检查动作应该跟在任何防御性复制之后。
+3. 如果必须在反序列化后验证整个对象图，那么使用ObjectInputValidation接口。
+4. 不要直接或间接地调用类中任何可被覆盖的方法。
+
+
+
+### 89、对于实例控制，枚举类型优于readResolve
+
+第3条中编写了如下的单例模式代码：
+
+```java
+public class Elvis {
+    public static final Elvis INSTANCE = new Elvis();
+    private Elvis() { ... }
+    public void leaveTheBuilding() { ... }
+}
+```
+
+如果该类实现序列化接口，那么它就不再是单例的。因为readObject方法会返回一个新的实例，与类初始化时创建的实例不同。
+
+不过如果在类中定义了readResolve方法，那么反序列化新创建的对象将调用这个方法，并以这个方法返回的对象引用替代新创建的对象。故可以通过以下代码实现单例：
+
+```java
+// readResolve for instance control - you can do better!
+private Object readResolve() {
+    // Return the one true Elvis and let the garbage collector
+    // take care of the Elvis impersonator.
+    return INSTANCE;
+}
+```
+
+如果你依赖readResolve进行实例控制，那么所有具有对象引用类型的实例字段都必须声明为 transient。否则，有的攻击者有可能在运行反序列化对象的readResolve方法之前”窃取“对该对象的引用，并之后发起攻击。
+
+
+
+### 90、考虑以序列化代理代替序列化实例
+
+使用序列化代理可以降低使用普通序列化面临的风险。
+
+以下代码实现一个序列化代理。
+
+首先，编写一个私有静态内部类，它的字段与外围类一样，拥有一个以外围类对象为参数的构造方法：
+
+```java
+// Serialization proxy for Period class
+private static class SerializationProxy implements Serializable {
+    private final Date start;
+    private final Date end;
+    SerializationProxy(Period p) {
+        this.start = p.start;
+        this.end = p.end;
+    }
+    private static final long serialVersionUID =234098243823485285L; // Any number will do (Item 87)
+}
+```
+
+为外围类编写writeReplace方法，它在序列化之前将外围类的实例转换为其序列化代理：
+
+```java
+// writeReplace method for the serialization proxy pattern
+private Object writeReplace() {
+    return new SerializationProxy(this);
+}
+```
+
+这样，序列化系统将永远不会生成外围类的序列化实例，但是攻击者可能会创建一个实例，试图违反类的不变性。为了保证这样的攻击会失败，只需将这个readObject方法添加到外围类中：
+
+```java
+// readObject method for the serialization proxy pattern
+private void readObject(ObjectInputStream stream) throws InvalidObjectException {
+    throw new InvalidObjectException("Proxy required");
+}
+```
+
+最后，在SerializationProxy类上提供一个readResolve方法，该方法返回外围类的逻辑等效实例。此方法的存在导致序列化系统在反序列化时将序列化代理转换回外围类的实例：
+
+```java
+// readResolve method for Period.SerializationProxy
+private Object readResolve() {
+    return new Period(start, end); // Uses public constructor
+}
+```
+
+不过，使用序列化代理的开销通常比用保护性拷贝要高。
 
 
 
 
 
- 

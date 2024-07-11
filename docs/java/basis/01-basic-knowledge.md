@@ -250,7 +250,7 @@ BigDecimal b = new BigDecimal("0.9");
 System.out.println(a.compareTo(b));// 1
 ```
 
-#### 保留几位小数
+#### 保留几位小数 setScale
 
 通过 `setScale`方法设置保留几位小数以及保留规则。保留规则有挺多种，不需要记，IDEA 会提示。
 
@@ -259,6 +259,8 @@ BigDecimal m = new BigDecimal("1.255433");
 BigDecimal n = m.setScale(3,RoundingMode.HALF_DOWN);
 System.out.println(n);// 1.255
 ```
+
+
 
 ### BigDecimal 等值比较问题
 
@@ -287,6 +289,87 @@ BigDecimal a = new BigDecimal("1");
 BigDecimal b = new BigDecimal("1.0");
 System.out.println(a.compareTo(b));//0
 ```
+
+### BigDecimal 存在的性能问题
+
+由于其精确性和灵活性，`BigDecimal` 在某些场景下同样可能会带来性能问题。
+
+ BigDecimal的性能问题主要源于以下几点：
+
+1. 内存占用：BigDecimal 对象的内存占用较大，尤其是在处理大数字时。每个 BigDecimal 实例都需要维护其精度和标度等信息，这会导致内存开销增加。
+2. 不可变性：BigDecimal 是不可变类，每次进行运算或修改值时都会生成一个新的 BigDecimal 实例。这意味着频繁的操作可能会导致大量的对象创建和垃圾回收，对性能造成一定的影响。
+3. 运算复杂性：由于 BigDecimal 要求精确计算，它在执行加、减、乘、除等运算时会比较复杂。这些运算需要更多的计算和处理时间，相比原生的基本类型，会带来一定的性能损耗。
+
+
+
+性能问题验证：
+
+```java
+import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+ 
+@Slf4j
+public class BigDecimalEfficiency {
+ 
+    //执行次数
+    public static int REPEAT_TIMES = 10000000;
+ 
+    // 转BigDecimal 类型计算
+    public static double computeByBigDecimal(double a, double b) {
+        BigDecimal result = BigDecimal.valueOf(0);
+        BigDecimal decimalA = BigDecimal.valueOf(a);
+        BigDecimal decimalB = BigDecimal.valueOf(b);
+        for (int i = 0; i < REPEAT_TIMES; i++) {
+            result = result.add(decimalA.multiply(decimalB));
+        }
+        return result.doubleValue();
+    }
+ 
+    // 转double 类型计算
+    public static double computeByDouble(double a, double b) {
+        double result = 0;
+        for (int i = 0; i < REPEAT_TIMES; i++) {
+            result += a * b;
+        }
+        return result;
+    }
+ 
+    public static void main(String[] args) {
+        long start1 = System.nanoTime();
+        double result1 = computeByBigDecimal(0.120001110034, 11.22);
+        long end1 = System.nanoTime();
+        long start2 = System.nanoTime();
+        double result2 = computeByDouble(0.120001110034, 11.22);
+        long end2 = System.nanoTime();
+ 
+        long timeUsed1 = (end1 - start1);
+        long timeUsed2 = (end2 - start2);
+        log.info("result by BigDecimal:{},time used:{}", result1, timeUsed1);
+        log.info("result by Double:{},time used:{}", result2, timeUsed2);
+        log.info("timeUsed1/timeUsed2=" + timeUsed1 / timeUsed2);
+    }
+}
+```
+
+运行结果：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407111043096.png)
+
+
+
+#### 性能优化策略
+
+`BigDecimal` 性能问题优化策略，可以考虑以下几点优化策略：
+
+1. 避免频繁的对象创建：尽量复用 BigDecimal 对象，而不是每次运算都创建新的实例。可以使用 BigDecimal 的 setScale() 方法设置精度和舍入模式，而不是每次都创建新的对象。
+2. 使用原生类型替代：对于一些不需要精确计算的场景，可以使用原生类型（如 int、double、long）来进行运算，以提高性能。只在最后需要精确结果时再转换为 BigDecimal。
+3. 使用适当的缓存策略：对于频繁使用的 BigDecimal 对象，可以考虑使用缓存来避免重复创建和销毁。例如，使用对象池或缓存来管理常用的 BigDecimal 对象，以减少对象创建和垃圾回收的开销。
+4. 考虑并行计算：对于大规模的计算任务，可以考虑使用并行计算来提高性能。Java 8 提供了 Stream API 和并行流（parallel stream），可以方便地实现并行计算。
+
+需要根据具体的应用场景和需求来权衡精确性和性能，选择合适的处理方式。在对性能要求较高的场景下，可以考虑使用其他更适合的数据类型或算法来替代 BigDecimal。在需要精度计算的情况下，也不能因为BigDecimal存在一定的性能问题二选择弃用，顾此失彼。
+
+
+
 
 ### BigDecimal 工具类分享
 
