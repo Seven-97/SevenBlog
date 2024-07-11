@@ -20,7 +20,7 @@ Guava 提供了一系列用于字符串处理的工具：
 ```java
 public static String nullToEmpty(@Nullable String string) {
     //如果string为null则返回空字符串，否则返回给定的string
-    return string == null?"":string;
+    return string == null ? "" : string;
 }
 ```
 
@@ -28,70 +28,49 @@ public static String nullToEmpty(@Nullable String string) {
 
 2. .isNullOrEmpty(@Nullable String string)
 
-
-
-
-
-2. commonPrefix & commonsuffix 获取公共前后缀
-
-源码如下：
+如果字符串为空或长度为0返回true，否则返回false
 
 ```java
-public static String commonPrefix(CharSequence a, CharSequence b) {
-    //检查输入的两个字符序列a和b是否为空
-    Preconditions.checkNotNull(a);
-    Preconditions.checkNotNull(b);
-    //计算两个字符序列中较短的一个的长度，作为可能的最大前缀长度。
-    int maxPrefixLength = Math.min(a.length(), b.length());
-
-    //使用一个for循环从头开始比较两个字符序列中的每一个字符，找出共享的前缀。
-    int p;
-    for(p = 0; p < maxPrefixLength && a.charAt(p) == b.charAt(p); ++p) {
-    } //循环将在以下任一条件发生时停止：已经达到可能的最大前缀长度，或者找到了一个不匹配的字符。
-
-    //特殊情况：当最后一个匹配的字符是一个UTF-16编码的代理对的一部分时，需要把指针向前移动一位，以避免在返回结果时切断代理对，因为这将产生无效的Unicode序列
-    if (validSurrogatePairAt(a, p - 1) || validSurrogatePairAt(b, p - 1)) {
-        --p;
-    }
-
-    return a.subSequence(0, p).toString();
+public static boolean isNullOrEmpty(@Nullable String string) {
+    return string == null || string.length() == 0;
 }
 ```
 
 
 
-3. padStart、padEnd、repeat
+3. emptyToNull(@Nullable String string)
+
+如果非空，则返回给定的字符串；否则返回null
 
 ```java
-String str = "a";
-System.out.println(Strings.padStart(str, 5, '*'));
-System.out.println(Strings.padStart(str, 5, '*'));
-System.out.println(Strings.repeat(str, 5));
-
-//输出：
-****a
-****a
-aaaaa
+public static String emptyToNull(@Nullable String string) {
+    //调用isNullOrEmpty方法，如果返回true则return null，否则返回原字符串
+    return isNullOrEmpty(string)?null:string;
+}
 ```
 
 
 
-源码如下：
+#### 生成指定字符串的字符串副本
+
+1. padStart(String string, int minLength, char padChar)
+
+根据传入的minLength进行补充，如果minLength小于原来字符串的长度，则直接返回原来字符串，否则在字符串开头添加`string.length() - minLength`个padChar字符
 
 ```java
-// com.google.common.base.Strings#padStart
 public static String padStart(String string, int minLength, char padChar) {
+    //使用Preconditions工具类进行字符串验空处理   
     Preconditions.checkNotNull(string);
-    if (string.length() >= minLength) {
+    //如果原字符串长度大于传入的新长度则直接返回原字符串
+    if(string.length() >= minLength) {
         return string;
-    } else {
-        //其实就是new了一个StringBuilder,再进行填充
+    } else { //否则
         StringBuilder sb = new StringBuilder(minLength);
-
+        //先在字符串前面添加string.length()-minLength个padChar字符
         for(int i = string.length(); i < minLength; ++i) {
             sb.append(padChar);
         }
-
+        //最后将原始字符串添加到尾部
         sb.append(string);
         return sb.toString();
     }
@@ -100,69 +79,171 @@ public static String padStart(String string, int minLength, char padChar) {
 
 
 
+2. padEnd(String string, int minLength, char padChar)
+
+根据传入的minLength进行补充，如果minLength小于原来字符串的长度，则直接返回原来字符串，否则在字符串结尾添加 `string.length() - minLength` 个padChar字符
+
 ```java
-// com.google.common.base.Strings#repeat
+public static String padEnd(String string, int minLength, char padChar) {
+    Preconditions.checkNotNull(string);   
+    //如果原字符串长度大于传入的新长度则直接返回原字符串
+    if(string.length() >= minLength) {
+        return string;
+    } else {
+        StringBuilder sb = new StringBuilder(minLength);
+        //先将原始字符串添加到预生成的字符串当中
+        sb.append(string);
+        //在使用padChar进行填补
+        for(int i = string.length(); i < minLength; ++i) {
+            sb.append(padChar);
+        }
+        return sb.toString();
+    }
+}
+```
+
+
+
+3. repeat(String string, int count)
+
+返回count个 string字符串拼接成的字符串
+
+```java
 public static String repeat(String string, int count) {
-        Preconditions.checkNotNull(string);
-        if (count <= 1) {
-            Preconditions.checkArgument(count >= 0, "invalid count: %s", count);
-            return count == 0 ? "" : string;
+    Preconditions.checkNotNull(string);
+    //如果小于1，则抛出异常
+    if(count <= 1) {
+        Preconditions.checkArgument(count >= 0, "invalid count: %s", new Object[]{Integer.valueOf(count)});
+        return count == 0 ? "":string;
+    } else {
+        int len = string.length();
+        long longSize = (long)len * (long)count;
+        int size = (int)longSize;
+        //如果新创建的字符串长度超出int最大值，则抛出需要的数组过长的异常
+        if((long)size != longSize) {
+            throw new ArrayIndexOutOfBoundsException((new StringBuilder(51)).append("Required array size too large: ").append(longSize).toString());
         } else {
-            int len = string.length();
-            long longSize = (long)len * (long)count;
-            int size = (int)longSize;
-            if ((long)size != longSize) {
-                throw new ArrayIndexOutOfBoundsException((new StringBuilder(51)).append("Required array size too large: ").append(longSize).toString());
-            } else {
-                //new了一个char数组，再对数组里进行填充
-                char[] array = new char[size];
-                string.getChars(0, len, array, 0);
-
-                int n;
-                for(n = len; n < size - n; n <<= 1) {
-                    System.arraycopy(array, 0, array, n, n);
-                }
-
-                System.arraycopy(array, 0, array, n, size - n);
-                return new String(array);
+            //实际上新建一个相当长度的字符数组，再将数据复制进去
+            char[] array = new char[size];
+            //将string从0开始len结束之间的字符串复制到array数组中，且array数组从0开始存储
+            string.getChars(0, len, array, 0);
+            int n;
+            //复制数组，复制的步长为（1,2,4...n^2），所以这快提供了一个外层循环为ln2的算法
+            for(n = len; n < size - n; n <<= 1) {
+                System.arraycopy(array, 0, array, n, n);
             }
+            System.arraycopy(array, 0, array, n, size - n);
+            return new String(array);
         }
     }
+}
+```
+
+
+
+#### 查找两个字符串的公共前缀或后缀
+
+在看commonPrefix和commonSuffix 这两个方法之前需要先看下validSurrogatePairAt方法
+
+```java
+static boolean validSurrogatePairAt(CharSequence string, int index) {
+    return index >= 0 && index <= string.length() - 2 && Character.isHighSurrogate(string.charAt(index)) && Character.isLowSurrogate(string.charAt(index + 1));
+}
+```
+
+这个方法的作用是  判断最后两个字符是不是合法的“Java 平台增补字符
+
+- Character.isHighSurrogate：确定给定char值是否为Unicode高位代理。这个值并不代表字符本身，而是在UTF-16编码的补充的字符的表示被使用。
+- Character.isLowSurrogate：确定给定char值是否为一个Unicode低代理项代码单元（也称为尾部代理项代码单元）。这些值并不代表本身的字符，但用于表示增补字符的UTF-16编码。
+
+> 简单的说就是Java 语言内部的字符信息是使用 UTF-16 编码。因为char 这个类型是 16 bit 的。它可以有65536种取值，即65536个编号，每个编号可以代表1种字符。而在Unicode字符集中，有一些字符的编码超出了16 bit的范围，也就是超过了`char`类型能够直接表示的范围，65536 就不够用。
+>
+> 为了能够在Java中表示这些字符，Unicode引入了一种叫做“代理对”（Surrogate Pair）的机制。从这65536个编号里，拿出2048个，规定它们是「Surrogates」，让它们两个为一组，来代表编号大于65536的那些字符。 更具体地，编号为 D800 至 DBFF 的规定为「High Surrogates」，共1024个。编号为 DC00至 DFFF 的规定为「Low Surrogates」，也是1024个。它们两两组合出现，就又可以多表示1048576种字符。
+>
+> 如果丢失一个高位代理Surrogates或者低位代理Surrogates，就会出现乱码。这就是为什么emoji会出现乱码了。例如输入了一个emoji:😆，假如可以写成这样：\uD83D\uDC34
+>
+> String s = '\uD83D' + '\uDC34' + "";
+>
+> 那么在按字节截取s的时候，就要考虑这个字符是不是高位代理Surrogates或者低位代理Surrogates，避免出现半个字符。
+
+
+
+1. commonPrefix(CharSequence a, CharSequece b)
+
+返回a和b两个字符串的公共前缀
+
+```java
+public static String commonPrefix(CharSequence a, CharSequence b) {
+    Preconditions.checkNotNull(a);
+    Preconditions.checkNotNull(b);
+    //将字符串a和字符串b两个中短的字符串长度赋值给maxPrefixLength
+    int maxPrefixLength = Math.min(a.length(), b.length());
+    int p;
+    //遍历直到第一个两个字符不相等的位置，找出公共的前缀
+    for(p = 0; p < maxPrefixLength && a.charAt(p) == b.charAt(p); ++p) {
+        ;
+    }
+     //特殊情况：当最后一个匹配的字符是一个UTF-16编码的代理对的一部分时，需要把指针向前移动一位，以避免在返回结果时切断代理对，因为这将产生无效的Unicode序列
+    if(validSurrogatePairAt(a, p - 1) || validSurrogatePairAt(b, p - 1)) {
+        --p;
+    }
+    return a.subSequence(0, p).toString();
+}
+```
+
+
+
+2. commonSuffix(CharSequence a, CharSequence b)
+
+返回字符串a和字符串b的公共后缀
+
+```java
+public static String commonSuffix(CharSequence a, CharSequence b) {
+    Preconditions.checkNotNull(a);
+    Preconditions.checkNotNull(b);
+    //将字符串a和字符串b两个中短的字符串长度赋值给maxPrefixLength
+    int maxSuffixLength = Math.min(a.length(), b.length());
+    int s;
+    //遍历直到第一个两个字符不相等的位置，找出公共的后缀
+    for(s = 0; s < maxSuffixLength && a.charAt(a.length() - s - 1) == b.charAt(b.length() - s - 1); ++s) {
+        ;
+    }
+    if(validSurrogatePairAt(a, a.length() - s - 1) || validSurrogatePairAt(b, b.length() - s - 1)) {
+        --s;
+    }
+    return a.subSequence(a.length() - s, a.length()).toString();
+}
 ```
 
 
 
 ### Ints
 
-| S.N.\ | 方法及说明                                                   |
-| ----- | ------------------------------------------------------------ |
-| 1     | **static List&lt;Integer> asList(int... backingArray)**  			<br />返回由指定数组支持的固定大小的列表，类似Arrays.asList(Object[])。 |
-| 2     | **static int checkedCast(long value)**  			<br />返回int值等于值，如果可能的话。 |
-| 3     | **static int compare(int a, int b)**  			<br />比较两个指定的int值。 |
-| 4     | **static int[] concat(int[]... arrays)**  			<br />每个阵列提供组合成一个单一的阵列，则返回值。 |
-| 5     | **static boolean contains(int[] array, int target)** ：JDK中没有数组中是否包含某个元素的防范，Guava提供了。<br />返回true，如果target是否存在在任何地方数组元素。 |
-| 6     | **static int[] ensureCapacity(int[] array, int minLength, int padding)**  			<br />返回一个包含相同的值数组的数组，但保证是一个规定的最小长度。 |
-| 7     | **static int fromByteArray(byte[] bytes)**  			<br />返回int值，其大端表示存储在第一个4字节的字节;相当于ByteBuffer.wrap(bytes).getInt(). |
-| 8     | **static int fromBytes(byte b1, byte b2, byte b3, byte b4)**  			<br />返回int值的字节表示的是给定的4个字节，在big-endian的顺序;相当于 Ints.fromByteArray(new byte[] {b1, b2, b3, b4}). |
-| 9     | **static int hashCode(int value)**  			<br />返回值的哈希码; 等于调用 ((Integer) value).hashCode() 的结果 |
-| 10    | **static int indexOf(int[] array, int target)**  			<br />返回值目标数组的第一次亮相的索引。 |
-| 11    | **static int indexOf(int[] array, int[] target)**  			<br />返回指定目标的第一个匹配的起始位置数组内，或-1，如果不存在。 |
-| 12    | **static String join(String separator, int... array)**  			<br />返回包含由分离器分离所提供的整型值的字符串。 |
-| 13    | **static int lastIndexOf(int[] array, int target)**  			<br />返回target 在数组中最后一个出场的索引值。 |
-| 14    | **static Comparator<int[]> lexicographicalComparator()**  			<br />返回一个比较，比较两个int数组字典顺序。 |
-| 15    | **static int max(int... array)**  			<br />返回出现在数组中的最大值。 |
-| 16    | **static int min(int... array)**  			<br />返回最小值出现在数组。 |
-| 17    | **static int saturatedCast(long value)**  			<br />返回最接近的int值。 |
-| 18    | **static Converter<String,Integer> stringConverter()**  			<br />返回使用字符串和整数之间的一个转换器序列化对象 Integer.decode(java.lang.String) 和 Integer.toString(). |
-| 19    | **static int[] toArray(Collection<? extends Number> collection)**  			<br />返回包含集合的每个值的数组，转换为int值的方式Number.intValue(). |
-| 20    | **static byte[] toByteArray(int value)**  			<br />返回一个4元素的字节数组值大端表示;相当于 ByteBuffer.allocate(4).putInt(value).array(). |
-| 21    | **static Integer tryParse(String string)**  <br />解析指定的字符串作为符号十进制整数。 |
+1. compare(int a, int b)
+
+比较两个指定的int值
+
+```java
+public static int compare(int a, int b) {
+    return a < b ? -1 : (a > b ? 1 : 0);
+}
+```
 
 
 
-特殊说明：
+2. asList(int... backingArray)
 
-Ints的asList与JDK的Arrays.asLis的不同点：
+返回由指定数组支持的固定大小的列表，类似Arrays.asList(Object[]).
+
+```java
+public static List<Integer> asList(int... backingArray) {
+    return (List)(backingArray.length == 0?Collections.emptyList():new Ints.IntArrayAsList(backingArray));
+}
+```
+
+由源码可以看到，如果传入的参数长度为0，那么就会创建一个Collections.emptyList()，如果参数长度不为0，那么就会创建一个Ints的内部类IntArrayAsList。
+
+**特殊说明**：Ints的asList与JDK的Arrays.asLis的不同点：
 
 1. Arrays.asList(Object[])返回的是一个List<数组>，而Ints的asList返回的是List&lt;Integer>。
 
@@ -170,11 +251,33 @@ Ints的asList与JDK的Arrays.asLis的不同点：
 
    ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407111711922.png)
 
-   
+
+3. contains(int[] array, int target)
+
+如果array中存在target返回true，反之返回false
+
+```java
+public static boolean contains(int[] array, int target) {
+    int[] var2 = array;
+    int var3 = array.length;
+
+    for(int var4 = 0; var4 < var3; ++var4) {
+        int value = var2[var4];
+        //循环查找array中与target相等的元素，如果有相等的直接返回true
+        if (value == target) {
+            return true;
+        }
+   }
+
+   return false;
+}
+```
+
+
 
 ### Joiner
 
-字符串拼接工具，创建的都是不可变实例
+将字符串数组按指定分隔符连接起来，或字符串串按指定索引开始使用指定分隔符连接起来，创建的都是不可变实例
 
 ```java
 Joiner joiner = Joiner.on(";").useForNull("^");
@@ -184,7 +287,7 @@ String joined = joiner.join("A", "B", null, "D");
 
 
 
-源码如下：
+#### 静态创建Joiner方法
 
 ```java
 // 静态创建Joiner方法
@@ -204,6 +307,91 @@ public static Joiner on(char separator) {
 #### join()方法
 
 对于4个join方法实际可以分为两类，一类是join实现类，另一类是join解析参数类
+
+1. 解析参数类：
+
+```java
+//1. 因为 Iterable是所有集合类的顶级接口（除了Map系列），所以此参数为集合类或实现Iterable的类即可
+public final String join(Iterable<?> parts) {
+     //调用join实现类
+     return this.join((Iterator)parts.iterator());
+}
+ 
+//2. 传入数组
+public final String join(Object[] parts) {
+     //将数组转为ArrayList然后强转为Iterable  
+     return this.join((Iterable)Arrays.asList(parts));
+}
+ 
+//3. 传入两个参数和一个数组，最终这两个参数个数组一起构成一个新的数组
+public final String join(@Nullable Object first, @Nullable Object second, Object... rest) {
+     //使用iterable方法将参数和数组融合成一个数组
+     return this.join((Iterable)iterable(first, second, rest));
+}
+```
+
+第3个实现方法需要 iterable方法对数组进行融合，所以看一下 iterable的实现方式：
+
+```java
+private static Iterable<Object> iterable(final Object first, final Object second, final Object[] rest) {
+    Preconditions.checkNotNull(rest);
+    //返回一个AbstractList对象，并且这个对象重写了size和get方法
+    return new AbstractList() {
+        //使得当前容量比rest数组多2个
+        public int size() {
+        return rest.length + 2;
+    }
+ 
+    public Object get(int index) {
+        switch(index) {
+            case 0:
+                return first;
+            case 1:
+                return second;
+           default:
+               return rest[index - 2];
+        }
+    }};  
+}
+```
+
+
+
+2. join实现类
+
+```java
+public final String join(Iterator<?> parts) {
+     //实际使用appendTo(StringBuilder,Iterator)方法
+     return this.appendTo((StringBuilder)(new StringBuilder()), (Iterator)parts).toString();
+}
+ 
+public final StringBuilder appendTo(StringBuilder builder, Iterator<?> parts) {
+     try {
+         //调用了appendTo(A, Iterator)方法
+         this.appendTo((Appendable)builder, (Iterator)parts);
+         return builder;
+     } catch (IOException var4) {
+         throw new AssertionError(var4);
+     }
+}
+ 
+public <A extends Appendable> A appendTo(A appendable, Iterator<?> parts) throws IOException {  
+     Preconditions.checkNotNull(appendable);
+     if(parts.hasNext()) {
+         //如果第一个迭代器存在，将其添加到出传入的StringBuilder中
+         appendable.append(this.toString(parts.next()));
+         //从第二个迭代器开始就会循环方式就会发生变化，每个元素前都会添加规定的分隔符
+         while(parts.hasNext()) {
+             appendable.append(this.separator);
+             appendable.append(this.toString(parts.next()));
+         }
+     }
+     return appendable;
+}
+ 
+```
+
+
 
 
 
