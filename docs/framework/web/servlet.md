@@ -1,5 +1,5 @@
 ---
-title: MVC - Servlet介绍
+title: Servlet介绍和规范
 category: 常用框架
 tag:
   - SpringMVC

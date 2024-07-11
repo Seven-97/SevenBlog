@@ -227,7 +227,6 @@ export default sidebar({
             "aop3-proxy",
             "spring-transactions",
             "mvc1-summary",
-            "mvc2-servlet",
             "mvc3-initializationprocessofdispatcherservlet",
             "mvc4-processofdispatcherservletprocessingrequests",
             "spring-async",
@@ -274,6 +273,7 @@ export default sidebar({
           prefix: "web/",
           collapsible: true,
           children: [
+            "servlet",
             "tomcat1",
             "tomcat-logs",
           ],

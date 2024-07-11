@@ -1,11 +1,279 @@
 ---
-title: Guava
+title: Guava用法&源码
 category: 开发工具
 tag:
  - 工具类库
 ---
 
 ## 基本工具
+
+### Strings
+
+Guava 提供了一系列用于字符串处理的工具：
+
+#### 对字符串为null或空的处理
+
+1. nullToEmpty(@Nullable String string)
+
+如果非空，则返回给定的字符串；否则返回空字符串
+
+```java
+public static String nullToEmpty(@Nullable String string) {
+    //如果string为null则返回空字符串，否则返回给定的string
+    return string == null?"":string;
+}
+```
+
+
+
+2. .isNullOrEmpty(@Nullable String string)
+
+
+
+
+
+2. commonPrefix & commonsuffix 获取公共前后缀
+
+源码如下：
+
+```java
+public static String commonPrefix(CharSequence a, CharSequence b) {
+    //检查输入的两个字符序列a和b是否为空
+    Preconditions.checkNotNull(a);
+    Preconditions.checkNotNull(b);
+    //计算两个字符序列中较短的一个的长度，作为可能的最大前缀长度。
+    int maxPrefixLength = Math.min(a.length(), b.length());
+
+    //使用一个for循环从头开始比较两个字符序列中的每一个字符，找出共享的前缀。
+    int p;
+    for(p = 0; p < maxPrefixLength && a.charAt(p) == b.charAt(p); ++p) {
+    } //循环将在以下任一条件发生时停止：已经达到可能的最大前缀长度，或者找到了一个不匹配的字符。
+
+    //特殊情况：当最后一个匹配的字符是一个UTF-16编码的代理对的一部分时，需要把指针向前移动一位，以避免在返回结果时切断代理对，因为这将产生无效的Unicode序列
+    if (validSurrogatePairAt(a, p - 1) || validSurrogatePairAt(b, p - 1)) {
+        --p;
+    }
+
+    return a.subSequence(0, p).toString();
+}
+```
+
+
+
+3. padStart、padEnd、repeat
+
+```java
+String str = "a";
+System.out.println(Strings.padStart(str, 5, '*'));
+System.out.println(Strings.padStart(str, 5, '*'));
+System.out.println(Strings.repeat(str, 5));
+
+//输出：
+****a
+****a
+aaaaa
+```
+
+
+
+源码如下：
+
+```java
+// com.google.common.base.Strings#padStart
+public static String padStart(String string, int minLength, char padChar) {
+    Preconditions.checkNotNull(string);
+    if (string.length() >= minLength) {
+        return string;
+    } else {
+        //其实就是new了一个StringBuilder,再进行填充
+        StringBuilder sb = new StringBuilder(minLength);
+
+        for(int i = string.length(); i < minLength; ++i) {
+            sb.append(padChar);
+        }
+
+        sb.append(string);
+        return sb.toString();
+    }
+}
+```
+
+
+
+```java
+// com.google.common.base.Strings#repeat
+public static String repeat(String string, int count) {
+        Preconditions.checkNotNull(string);
+        if (count <= 1) {
+            Preconditions.checkArgument(count >= 0, "invalid count: %s", count);
+            return count == 0 ? "" : string;
+        } else {
+            int len = string.length();
+            long longSize = (long)len * (long)count;
+            int size = (int)longSize;
+            if ((long)size != longSize) {
+                throw new ArrayIndexOutOfBoundsException((new StringBuilder(51)).append("Required array size too large: ").append(longSize).toString());
+            } else {
+                //new了一个char数组，再对数组里进行填充
+                char[] array = new char[size];
+                string.getChars(0, len, array, 0);
+
+                int n;
+                for(n = len; n < size - n; n <<= 1) {
+                    System.arraycopy(array, 0, array, n, n);
+                }
+
+                System.arraycopy(array, 0, array, n, size - n);
+                return new String(array);
+            }
+        }
+    }
+```
+
+
+
+### Ints
+
+| S.N.\ | 方法及说明                                                   |
+| ----- | ------------------------------------------------------------ |
+| 1     | **static List&lt;Integer> asList(int... backingArray)**  			<br />返回由指定数组支持的固定大小的列表，类似Arrays.asList(Object[])。 |
+| 2     | **static int checkedCast(long value)**  			<br />返回int值等于值，如果可能的话。 |
+| 3     | **static int compare(int a, int b)**  			<br />比较两个指定的int值。 |
+| 4     | **static int[] concat(int[]... arrays)**  			<br />每个阵列提供组合成一个单一的阵列，则返回值。 |
+| 5     | **static boolean contains(int[] array, int target)** ：JDK中没有数组中是否包含某个元素的防范，Guava提供了。<br />返回true，如果target是否存在在任何地方数组元素。 |
+| 6     | **static int[] ensureCapacity(int[] array, int minLength, int padding)**  			<br />返回一个包含相同的值数组的数组，但保证是一个规定的最小长度。 |
+| 7     | **static int fromByteArray(byte[] bytes)**  			<br />返回int值，其大端表示存储在第一个4字节的字节;相当于ByteBuffer.wrap(bytes).getInt(). |
+| 8     | **static int fromBytes(byte b1, byte b2, byte b3, byte b4)**  			<br />返回int值的字节表示的是给定的4个字节，在big-endian的顺序;相当于 Ints.fromByteArray(new byte[] {b1, b2, b3, b4}). |
+| 9     | **static int hashCode(int value)**  			<br />返回值的哈希码; 等于调用 ((Integer) value).hashCode() 的结果 |
+| 10    | **static int indexOf(int[] array, int target)**  			<br />返回值目标数组的第一次亮相的索引。 |
+| 11    | **static int indexOf(int[] array, int[] target)**  			<br />返回指定目标的第一个匹配的起始位置数组内，或-1，如果不存在。 |
+| 12    | **static String join(String separator, int... array)**  			<br />返回包含由分离器分离所提供的整型值的字符串。 |
+| 13    | **static int lastIndexOf(int[] array, int target)**  			<br />返回target 在数组中最后一个出场的索引值。 |
+| 14    | **static Comparator<int[]> lexicographicalComparator()**  			<br />返回一个比较，比较两个int数组字典顺序。 |
+| 15    | **static int max(int... array)**  			<br />返回出现在数组中的最大值。 |
+| 16    | **static int min(int... array)**  			<br />返回最小值出现在数组。 |
+| 17    | **static int saturatedCast(long value)**  			<br />返回最接近的int值。 |
+| 18    | **static Converter<String,Integer> stringConverter()**  			<br />返回使用字符串和整数之间的一个转换器序列化对象 Integer.decode(java.lang.String) 和 Integer.toString(). |
+| 19    | **static int[] toArray(Collection<? extends Number> collection)**  			<br />返回包含集合的每个值的数组，转换为int值的方式Number.intValue(). |
+| 20    | **static byte[] toByteArray(int value)**  			<br />返回一个4元素的字节数组值大端表示;相当于 ByteBuffer.allocate(4).putInt(value).array(). |
+| 21    | **static Integer tryParse(String string)**  <br />解析指定的字符串作为符号十进制整数。 |
+
+
+
+特殊说明：
+
+Ints的asList与JDK的Arrays.asLis的不同点：
+
+1. Arrays.asList(Object[])返回的是一个List<数组>，而Ints的asList返回的是List&lt;Integer>。
+
+2. Ints的asList返回的是内部的一个不可变的List，没有重写add方法，因此执行add操作会抛异常。
+
+   ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407111711922.png)
+
+   
+
+### Joiner
+
+字符串拼接工具，创建的都是不可变实例
+
+```java
+Joiner joiner = Joiner.on(";").useForNull("^");
+// "A;B;^;D"
+String joined = joiner.join("A", "B", null, "D");
+```
+
+
+
+源码如下：
+
+```java
+// 静态创建Joiner方法
+public static Joiner on(String separator) {
+    return new Joiner(separator);
+}
+ 
+public static Joiner on(char separator) {
+    return new Joiner(String.valueOf(separator));
+}
+```
+
+这两个方法一个传入字符串，一个传入字符，然后直接分别使用两个构造器构造
+
+
+
+#### join()方法
+
+对于4个join方法实际可以分为两类，一类是join实现类，另一类是join解析参数类
+
+
+
+
+
+
+
+
+
+**Splitter**: 字符串分割工具，创建的也是不可变实例
+
+```java
+// String#split 反直觉的输出：["", "a", "", "b"]
+Arrays.stream(",a,,b,".split(",")).toList().forEach(System.out::println);
+// ["foo", "bar", "qux"]
+Iterable<String> split = Splitter.on(",")
+    	// 结果自动 trim
+        .trimResults()
+    	// 忽略结果中的空串
+        .omitEmptyStrings()
+        // 限制分割数
+        .limit(3)
+        .split("foo,bar,,   qux");
+Map<String, String> splitMap = Splitter.on(";")
+	// 指定 K-V 的分隔符可以将键值对的串解析为 Map
+	.withKeyValueSeparator("->")
+	.split("A->1;B->2");
+```
+
+3. CharMatchers：字符序列匹配和处理的工具，内置了大量常用的匹配器。使用上通常分两步：
+
+- 确定匹配的字符和模式
+- 用匹配的字符做处理
+
+```java
+// 确定匹配的字符和模式，例如 anyOf, none, whitespace, digit, javaLetter, javaIsoControl...
+CharMatcher matcher = CharMatcher.anyOf("abc");
+// defg
+log.debug("{}", matcher.removeFrom("abcdefg"));
+// abc
+log.debug("{}", matcher.retainFrom("abcdefg"));
+// true
+log.debug("{}", matcher.matchesAllOf("abc"));
+// hhh 
+log.debug("{}", matcher.trimFrom("abchhhabc"));
+// ___hhh___
+log.debug("{}", matcher.replaceFrom("abc hhh abc", "_"));
+```
+
+4. **Charsets**: 提供了6种标准的字符集常量引用，例如`Charsets.UTF_8`。JDK 7 以后建议使用内置的 `StandardCharsets`
+5. **CaseFormat**: 大小写转换的工具
+
+```java
+// UPPER_UNDERSCORE -> LOWER_CAMEL
+CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, "CONSTANT_NAME"));
+```
+
+| **Format**                                                   | **Example**      |
+| ------------------------------------------------------------ | ---------------- |
+| [LOWER_CAMEL](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#LOWER_CAMEL) | lowerCamel       |
+| [LOWER_HYPHEN](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#LOWER_HYPHEN) | lower-hyphen     |
+| [LOWER_UNDERSCORE](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#LOWER_UNDERSCORE) | lower_underscore |
+| [UPPER_CAMEL](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#UPPER_CAMEL) | UpperCamel       |
+| [UPPER_UNDERSCORE](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#UPPER_UNDERSCORE) | UPPER_UNDERSCORE |
+
+5. **Strings**：也提供了几个没什么大用的小工具
+
+
+
+
 
 ### Optional
 
@@ -461,76 +729,6 @@ public void testService() {
     serviceManager.stopAsync().awaitStopped();
 }
 ```
-
-## Strings
-
-Guava 提供了一系列用于字符串处理的工具：
-
-1. **Joiner**：字符串拼接工具，创建的都是不可变实例
-
-```java
-Joiner joiner = Joiner.on(";").useForNull("^");
-// "A;B;^;D"
-String joined = joiner.join("A", "B", null, "D");
-```
-
-2. **Splitter**: 字符串分割工具，创建的也是不可变实例
-
-```java
-// String#split 反直觉的输出：["", "a", "", "b"]
-Arrays.stream(",a,,b,".split(",")).toList().forEach(System.out::println);
-// ["foo", "bar", "qux"]
-Iterable<String> split = Splitter.on(",")
-    	// 结果自动 trim
-        .trimResults()
-    	// 忽略结果中的空串
-        .omitEmptyStrings()
-        // 限制分割数
-        .limit(3)
-        .split("foo,bar,,   qux");
-Map<String, String> splitMap = Splitter.on(";")
-	// 指定 K-V 的分隔符可以将键值对的串解析为 Map
-	.withKeyValueSeparator("->")
-	.split("A->1;B->2");
-```
-
-3. CharMatchers：字符序列匹配和处理的工具，内置了大量常用的匹配器。使用上通常分两步：
-
-- 确定匹配的字符和模式
-- 用匹配的字符做处理
-
-```java
-// 确定匹配的字符和模式，例如 anyOf, none, whitespace, digit, javaLetter, javaIsoControl...
-CharMatcher matcher = CharMatcher.anyOf("abc");
-// defg
-log.debug("{}", matcher.removeFrom("abcdefg"));
-// abc
-log.debug("{}", matcher.retainFrom("abcdefg"));
-// true
-log.debug("{}", matcher.matchesAllOf("abc"));
-// hhh 
-log.debug("{}", matcher.trimFrom("abchhhabc"));
-// ___hhh___
-log.debug("{}", matcher.replaceFrom("abc hhh abc", "_"));
-```
-
-4. **Charsets**: 提供了6种标准的字符集常量引用，例如`Charsets.UTF_8`。JDK 7 以后建议使用内置的 `StandardCharsets`
-5. **CaseFormat**: 大小写转换的工具
-
-```java
-// UPPER_UNDERSCORE -> LOWER_CAMEL
-CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, "CONSTANT_NAME"));
-```
-
-| **Format**                                                   | **Example**      |
-| ------------------------------------------------------------ | ---------------- |
-| [LOWER_CAMELopen in new window](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#LOWER_CAMEL) | lowerCamel       |
-| [LOWER_HYPHENopen in new window](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#LOWER_HYPHEN) | lower-hyphen     |
-| [LOWER_UNDERSCOREopen in new window](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#LOWER_UNDERSCORE) | lower_underscore |
-| [UPPER_CAMELopen in new window](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#UPPER_CAMEL) | UpperCamel       |
-| [UPPER_UNDERSCOREopen in new window](http://google.github.io/guava/releases/snapshot/api/docs/com/google/common/base/CaseFormat.html#UPPER_UNDERSCORE) | UPPER_UNDERSCORE |
-
-5. **Strings**：也提供了几个没什么大用的小工具
 
 
 
