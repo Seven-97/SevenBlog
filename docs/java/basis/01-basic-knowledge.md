@@ -1239,7 +1239,7 @@ public class Person {
 
 - 在set和map中，首先判断两个对象的hashCode方法返回的值是否相等，如果相等然后再判断两个对象的equals方法，如果hashCode方法返回的值不相等，则直接会认为两个对象不相等，不进行equals方法的判断。因此在set添加对象时，因为hashCode值已经不一致，判断出p1和p2是两个对象，都会添加进set集合中，因此返回集合中数据个数为 2 (第四个输出)
 
-![image-20240425065031351](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250650480.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250650480.png)
 
 重写hashCode方法：重写hashcode方法时，一般也是对属性值进行hash
 
@@ -1306,7 +1306,7 @@ HashMap，HashSet其实都是采用的拉链法来解决哈希冲突的，就是
 
 di =1，2，3，…，m-1；这种方法的特点是：冲突发生时，顺序查看表中下一单元，直到找出一个空单元或查遍全表。
 
-![image-20240425065332769](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250653895.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250653895.png)
 
 **（使用例子：ThreadLocal里面的ThreadLocalMap中的set方法）**
 
@@ -1348,9 +1348,9 @@ private void set(ThreadLocal<?> key, Object value) {
 
 但是这样会有一个问题，就是随着键值对的增多，会在哈希表里形成连续的键值对。当插入元素时，任意一个落入这个区间的元素都要一直探测到区间末尾，并且最终将自己加入到这个区间内。这样就会导致落在区间内的关键字Key要进行多次探测才能找到合适的位置，并且还会继续增大这个连续区间，使探测时间变得更长，这样的现象被称为“一次聚集（primary clustering）”。
 
-![image-20240425065402242](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250654349.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250654349.png)
 
-![image-20240425065409114](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250654208.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250654208.png)
 
 ###### 平方探测
 
@@ -1358,9 +1358,9 @@ private void set(ThreadLocal<?> key, Object value) {
 
 di=12，-12，22，-22，…，k2，-k2；这种方法的特点是：冲突发生时，在表的左右进行跳跃式探测，比较灵活。虽然平方探测法解决了线性探测法的一次聚集，但是它也有一个小问题，就是关键字key散列到同一位置后探测时的路径是一样的。这样对于许多落在同一位置的关键字而言，越是后面插入的元素，探测的时间就越长。
 
-![image-20240425065419835](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250654938.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250654938.png)
 
-![image-20240425065426444](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250654538.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250654538.png)
 
 这种现象被称作“二次聚集(secondary clustering)”,其实这个在线性探测法里也有。
 
@@ -1822,6 +1822,84 @@ if (obj instanceof String) {
 因为序列化是针对对象而言的，而 static 属性优先于对象存在，随着类的加载而加载，所以不会被序列化.
 
 看到这个结论，是不是有人会问，serialVersionUID 也被 static 修饰，为什么 serialVersionUID 会被序列化? 其实 serialVersionUID 属性并没有被序列化，JVM 在序列化对象时会自动生成一个 serialVersionUID，然后将显示指定的 serialVersionUID 属性值赋给自动生成的 serialVersionUID。
+
+
+
+
+
+## 时间类库相关
+
+在 Java 中，处理日期和时间的方式经历了演变。在 Java 8 之前，主要使用 `java.util.Date` 类来表示日期和时间，但它存在一些问题，如不可变性、线程安全性等。Java 8 引入了新的日期时间 API，位于 `java.time` 包中，提供了更加强大、易用和安全的日期时间处理方式。
+
+
+
+### LocalDate、LocalTime、LocalDateTime
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407121801562.gif)
+
+
+
+```java
+LocalDate now = LocalDate.now();
+System.out.println(now.getYear());
+System.out.println(now.getMonthValue());
+System.out.println(now.getDayOfMonth());
+System.out.println("------------");
+
+LocalTime nowTime = LocalTime.now();
+System.out.println(nowTime.getHour());
+System.out.println(nowTime.getMinute());
+System.out.println(nowTime.getSecond());
+System.out.println("------------");
+        
+LocalDateTime localDateTime = LocalDateTime.now();
+System.out.println(localDateTime.getYear());
+System.out.println(localDateTime.getMonthValue());
+System.out.println(localDateTime.getDayOfMonth());
+System.out.println(localDateTime.getHour());
+System.out.println(localDateTime.getMinute());
+System.out.println(localDateTime.getSecond());
+```
+
+输出：
+
+```java
+2024
+7
+12
+------------
+18
+0
+48
+------------
+2024
+7
+12
+18
+0
+48
+```
+
+
+
+> 说个题外话：如果在国际化应用中使用 `LocalDate` 时，需要明确理解其不包含时区信息的特点。这意味着，如果直接使用 `LocalDate.now()` 来获取“当前日期”，实际上会使用系统默认的时区来确定当前的日期。这对于那些严格依赖于用户所在地的具体日期的应用来说，可能会引入一些问题。
+>
+> 例如，假设服务器位于美国东部时间区（EST），而用户位于新西兰（NZST）。当美国东部时间是4月1日的晚上11点时，在新西兰已经是4月2日的下午3点。使用 `LocalDate.now()` 得到的日期将基于服务器的时区，而不是用户的时区，这在某些情况下可能不是期望的行为。
+
+
+
+### Instant时间戳
+
+Instant类是为了方便计算机理解的而设计的，它表示一个持续时间段上某个点的单一大整型数，实际上它是以Unix元年时间（传统的设定为UTC时区1970年1月1日午夜时分）开始所经历的秒数进行计算（最小计算单位为纳秒）。
+
+
+
+
+
+### Duration与Period
+
+ Duration是用于比较两个LocalTime对象或者两个Instant之间的时间差值。
+
 
 
 

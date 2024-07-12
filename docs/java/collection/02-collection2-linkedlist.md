@@ -17,7 +17,7 @@ tag:
 
 对于频繁的插入或删除元素的操作，建议使用LinkedList类，效率较高；底层使用双向链表存储
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250842836.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250842836.gif)
 
  
 
@@ -31,7 +31,7 @@ transient Node<E> last;
 
 
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250842845.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250842845.jpg)
 
 **LinkedList**的实现方式决定了所有跟下标相关的操作都是线性时间，而在首段或者末尾删除元素只需要常数时间。为追求效率**LinkedList**没有实现同步(synchronized)，如果需要多个线程并发访问，可以先采用Collections.synchronizedList()方法对其进行包装。
 
@@ -177,7 +177,7 @@ remove()方法也有两个版本
 
 - 删除指定下标处的元素remove(int index)
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250842847.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250842847.jpg)
 
 删除元素 - 指的是删除第一次出现的这个元素, 如果没有这个元素，则返回false；判断的依据是equals方法， 如果equals，则直接unlink这个node；由于LinkedList可存放null元素，故也可以删除第一次出现null的元素；
 
@@ -294,7 +294,7 @@ void linkLast(E e) {
 
 
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250842849.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250842849.jpg)
 
  
 

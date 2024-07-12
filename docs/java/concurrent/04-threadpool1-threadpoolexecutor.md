@@ -1069,6 +1069,8 @@ private void interruptWorkers() {
 
 但是阿里为什么不推荐使用Executors来创建线程池，这是为了让写的同学更加明确线程池的运行规则，规避资源耗尽的风险。
 
+
+
 ### FixedThreadPool:
 
 固定线程数的线程池。任何时间点，最多只有 nThreads 个线程处于活动状态执行任务。

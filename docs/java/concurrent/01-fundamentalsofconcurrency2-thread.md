@@ -51,7 +51,7 @@ RUNNABLE：可运行状态，可运行状态可以包括：运行中状态和就
 
 
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004836.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004836.gif)
 
  
 
@@ -81,7 +81,7 @@ new Thread(() -> {
 
 
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004847.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004847.gif)
 
  
 
@@ -119,7 +119,7 @@ new Thread(() -> {
 
 
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004842.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004842.gif)
 
 ### 死亡(Terminated)
 
@@ -144,6 +144,33 @@ new Thread(() -> {
 - 使用线程池
 
 实现 Runnable 和 Callable 接口的类只能当做一个可以在线程中运行的任务，不是真正意义上的线程，因此最后还需要通过 Thread 来调用。可以说任务是通过线程驱动从而执行的。
+
+
+
+### 继承 Thread 类
+
+同样也是需要实现 run() 方法，因为 Thread 类也实现了 Runable 接口。
+
+当调用 start() 方法启动一个线程时，虚拟机会将该线程放入就绪队列中等待被调度，当一个线程被调度时会执行该线程的 run() 方法。
+
+```java
+public class MyThread extends Thread {
+    public void run() {
+        // ...
+    }
+}
+```
+
+
+
+ ```java
+public static void main(String[] args) {
+    MyThread mt = new MyThread();
+    mt.start();
+}
+ ```
+
+
 
 ### 实现 Runnable 接口
 
@@ -206,31 +233,6 @@ System.out.println(submit.get());
 
 
 
-### 继承 Thread 类
-
-同样也是需要实现 run() 方法，因为 Thread 类也实现了 Runable 接口。
-
-当调用 start() 方法启动一个线程时，虚拟机会将该线程放入就绪队列中等待被调度，当一个线程被调度时会执行该线程的 run() 方法。
-
-```java
-public class MyThread extends Thread {
-    public void run() {
-        // ...
-    }
-}
-```
-
-
-
- ```java
- public static void main(String[] args) {
-     MyThread mt = new MyThread();
-     mt.start();
- }
- ```
-
-
-
 ### 实现接口 VS 继承 Thread
 
 实现接口会更好一些，因为:
@@ -238,6 +240,8 @@ public class MyThread extends Thread {
 - Java 不支持多重继承，因此继承了 Thread 类就无法继承其它类，但是可以实现多个接口；
 
 - 类可能只要求可执行就行，继承整个 Thread 类开销过大。
+
+
 
 ## 基础线程机制
 
@@ -247,7 +251,7 @@ public class MyThread extends Thread {
 
 当所有非守护线程结束时，程序也就终止，同时会杀死所有守护线程。
 
-main() 属于非守护线程。
+main() 属于非守护线程。因此如果设置这个，可以让子线程随着主线程的退出而退出
 
 使用 setDaemon() 方法将一个线程设置为守护线程。
 
@@ -310,7 +314,7 @@ public void run() {
 
 stop 方法虽然可以停止线程，但它已经是不建议使用的废弃方法了，这一点可以通过 Thread 类中的源码发现，stop 源码如下：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004858.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004858.gif)
 
 stop 方法是被 @Deprecated 修饰的不建议使用的过期方法，并且在注释的第一句话就说明了 stop 方法为非安全的方法。
 
@@ -370,7 +374,7 @@ class InterruptFlag {
 
 输出：我们期望的是：线程执行了步骤 1 之后，收到中断线程的指令，然后就不要再执行步骤 2 了，但从上述执行结果可以看出，使用自定义中断标识符是没办法实现我们预期的结果的，这就是自定义中断标识符，响应不够及时的问题。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004853.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004853.gif)
 
 ### interrupted中断
 
@@ -407,7 +411,7 @@ public static void main(String[] args) throws InterruptedException {
 
 输出：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004555.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004555.gif)
 
 从上述结果可以看出，线程在接收到中断指令之后，立即中断了线程，相比于上一种自定义中断标识符的方法来说，它能更及时的响应中断线程指令。
 
@@ -439,9 +443,7 @@ public void run() {
 
 
 
- 
-
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004577.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004577.gif)
 
 ### Executor 的中断操作
 
@@ -557,7 +559,7 @@ B
 
 #### 原理
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004601.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004601.gif)
 
  
 
@@ -619,7 +621,7 @@ synchronized (t1) {
 >
 > 而这里的 wait 方法被调用以后，是让持有锁的线程进入等待队列，即主线程调用，因此 t1 线程并不会被阻塞，阻塞的是主线程。
 
-也就是说，join方法是一个同步方法，当主线程调用t1.join()方法时，主线程先获得了t1对象的锁，随后进入方法，调用了t1对象的wait()方法，使主线程进入了t1对象的等待池
+也就是说，join方法是一个同步方法，当主线程调用t1.join()方法时，主线程先获得了t1对象的锁，随后进入方法，调用了t1对象的wait()方法，使主线程进入了t1对象的等待池。
 
  
 
@@ -656,7 +658,7 @@ static void ensure_join(JavaThread* thread) {
 
 所以简化一下，流程即：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004626.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251004626.gif)
 
  
 

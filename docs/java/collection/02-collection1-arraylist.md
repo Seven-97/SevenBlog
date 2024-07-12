@@ -14,7 +14,7 @@ tag:
 
 **ArrayList**实现了**List**接口，是顺序容器，即元素存放的数据与放进去的顺序相同，允许放入null元素，底层通过**数组实现**。除该类未实现同步外，其余跟**Vector**大致相同。每个**ArrayList**都有一个容量(capacity)，表示底层数组的实际大小，容器内存储元素的个数不能多于当前容量。当向容器中添加元素时，如果容量不足，容器会自动增大底层数组的大小。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250836769.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250836769.jpg)
 
 ArrayList 在JDK1.8 前后的实现区别：
 
@@ -127,7 +127,7 @@ if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
 
 实际上，对数组的copy需要创建一个新数组，并对原数组进行复制的操作，这会造成资源消耗。因此在添加大量元素前，建议使用ensureCapacity操作先增加 ArrayList 实例的容量，先进行稍少量数组数据的copy，再添加元素
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250836779.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250836779.jpg)
 
 ### add(), addAll()
 
@@ -375,7 +375,7 @@ if (modCount != expectedModCount)
     throw new ConcurrentModificationException();
 ```
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250836775.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250836775.gif)
 
 fail-fast 机制并不保证在不同步的修改下抛出异常，他只是尽最大努力去抛出，所以这种机制一般仅用于检测 bug
 
@@ -395,7 +395,7 @@ List<Integer> arrsyn = Collections.synchronizedList(arr);
 
 继承关系结构图：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250836772.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250836772.gif)
 
 ArrayList和Vector和CopyOnWriteArrayList的区别：
 
