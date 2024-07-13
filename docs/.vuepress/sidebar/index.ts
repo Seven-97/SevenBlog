@@ -281,7 +281,7 @@ export default sidebar({
       ],
     },
     {
-      text: "微服务",
+      text: "微服务/分布式",
       icon: "distributed-network",
       prefix: "microservices/",
       collapsible: true,
@@ -577,6 +577,7 @@ export default sidebar({
             prefix: "tool-library/",
             collapsible: true,
             children: [
+              "guava-string-ints",
               "guava",
             ],
           },
