@@ -578,6 +578,8 @@ export default sidebar({
             collapsible: true,
             children: [
               "guava-string-ints",
+              "guava-collections",
+              "guava-newcollections",
               "guava",
             ],
           },
