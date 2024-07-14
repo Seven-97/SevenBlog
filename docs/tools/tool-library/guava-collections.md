@@ -1248,5 +1248,33 @@ private static class FilteredKeyMap<K, V> extends Maps.AbstractFilteredMap<K, V>
 
 
 
+## Sets
+
+### 功能函数
+
+| 功能                              | 方法                                                         |
+| --------------------------------- | ------------------------------------------------------------ |
+| 创建一个不可变的set               | 1、ImmutableSet&lt;E> immutableEnumSet(E anElement, E... otherElements)<br />2、ImmutableSet&lt;E> immutableEnumSet(Iterable&lt;E> elements) |
+| 创建一个HashSet                   | 1、HashSet&lt;E> newHashSet()<br/>2、HashSet&lt;E> newHashSet(E... elements)<br/>3、HashSet&lt;E> newHashSetWithExpectedSize(int expectedSize)<br/>4、HashSet&lt;E> newHashSet(Iterable<? extends E> elements)<br/>5、HashSet&lt;E> newHashSet(Iterator<? extends E> elements) |
+| 创建一个线程安全的Set             | 1、Set&lt;E> newConcurrentHashSet()<br />2、Set&lt;E> newConcurrentHashSet(Iterable<? extends E> elements) |
+| 创建一个LinkedHashMap             | 1、LinkedHashSet&lt;E> newLinkedHashSet()<br/>2、LinkedHashSet&lt;E> newLinkedHashSetWithExpectedSize(int expectedSize)<br/>3、LinkedHashSet&lt;E> newLinkedHashSet(Iterable<? extends E> elements) |
+| 创建一个TreeSet                   | 1、TreeSet&lt;E> newTreeSet()<br />2、TreeSet&lt;E> newTreeSet(Iterable<? extends E> elements)<br />3、TreeSet&lt;E> newTreeSet(Comparator<? super E> comparator) |
+| 创建一个IdentityHashSet           | Set&lt;E> newIdentityHashSet()                               |
+| 创建一个CopyOnWriteArraySet       | 1、CopyOnWriteArraySet&lt;E> newCopyOnWriteArraySet()<br />2、CopyOnWriteArraySet&lt;E> newCopyOnWriteArraySet(Iterable<? extends E> elements) |
+| 创建一个EnumSet                   | 1、EnumSet&lt;E> newEnumSet(Iterable&lt;E> iterable, Class&lt;E> elementType)<br/>2、EnumSet&lt;E> complementOf(Collection&lt;E> collection)<br/>3、EnumSet&lt;E> complementOf(Collection&lt;E> collection, Class&lt;E> type)<br/>4、EnumSet&lt;E> makeComplementByHand(Collection&lt;E> collection, Class&lt;E> type) |
+| 根据一个Map创建一个Set            | Set&lt;E> newSetFromMap(Map<E, Boolean> map)                 |
+| 以两个Set的并集作为视图           | Sets.SetView&lt;E> union(final Set<? extends E> set1, final Set<? extends E> set2) |
+| 以两个Set的交集作为视图           | Sets.SetView&lt;E> intersection(final Set&lt;E> set1, final Set<?> set2) |
+| 以两个Set的互不重叠的部分作为视图 | Sets.SetView&lt;E> difference(final Set&lt;E> set1, final Set<?> set2) |
+| 以两个Set的对称部分作为视图       | Sets.SetView&lt;E> symmetricDifference(Set<? extends E> set1, Set<? extends E> set2) |
+| 过滤Set                           | 1、filter(Set&lt;E> unfiltered, Predicate<? super E> predicate)<br/>2、SortedSet&lt;E> filter(SortedSet&lt;E> unfiltered, Predicate<? super E> predicate)<br/>3、SortedSet&lt;E> filterSortedIgnoreNavigable(SortedSet&lt;E> unfiltered, Predicate<? super E> predicate)<br/>4、NavigableSet&lt;E> filter(NavigableSet&lt;E> unfiltered, Predicate<? super E> predicate) |
+| 获取两个Set集合的笛卡尔积         | 1、Set<List&lt;B>> cartesianProduct(List<? extends Set<? extends B>> sets)<br />2、Set<List&lt;B>> cartesianProduct(Set<? extends B>... sets) |
+
+
+
+### 创建一个不可变的Set
+
+
+
 
 
