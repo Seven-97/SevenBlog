@@ -848,8 +848,6 @@ private Splitter(Splitter.Strategy strategy, boolean omitEmptyStrings, CharMatch
 
 
 
-
-
 2. 返回值是List对象的函数
 
    ```java

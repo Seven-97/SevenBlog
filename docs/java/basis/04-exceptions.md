@@ -50,9 +50,123 @@ Error 类及其子类：程序中无法处理的错误，表示运行应用程�
 2. 非运行时异常**（也是unchecked exceptions）**
    - 是RuntimeException以外的异常，类型上都属于Exception类及其子类。从程序语法角度讲是必须进行处理的异常，如果不处理，程序就不能编译通过。如IOException、SQLException等以及用户自定义的Exception异常，一般情况下不自定义检查异常。
 
-### try-catch-finally
 
-#### 执行顺序
+
+### 常见的异常
+
+在Java中提供了一些异常用来描述经常发生的错误，对于这些异常，有的需要程序员进行捕获处理或声明抛出，有的是由Java虚拟机自动进行捕获处理。Java中常见的异常类:
+
+- RuntimeException
+
+  -  java.lang.ArrayIndexOutOfBoundsException 数组索引越界异常。当对数组的索引值为负数或大于等于数组大小时抛出。
+
+  -  java.lang.ArithmeticException 算术条件异常。譬如：整数除零等。
+
+  -  java.lang.NullPointerException 空指针异常。当应用试图在要求使用对象的地方使用了null时，抛出该异常。譬如：调用null对象的实例方法、访问null对象的属性、计算null对象的长度、使用throw语句抛出null等等
+
+  -  java.lang.ClassNotFoundException 找不到类异常。当应用试图根据字符串形式的类名构造类，而在遍历CLASSPAH之后找不到对应名称的class文件时，抛出该异常。
+
+  -  java.lang.NegativeArraySizeException 数组长度为负异常
+
+  -  java.lang.ArrayStoreException 数组中包含不兼容的值抛出的异常
+
+  -  java.lang.SecurityException 安全性异常
+
+  -  java.lang.IllegalArgumentException 非法参数异常
+
+- IOException
+
+  - IOException：操作输入流和输出流时可能出现的异常。
+
+  - EOFException 文件已结束异常
+
+  - FileNotFoundException 文件未找到异常
+
+- 其他
+
+  - ClassCastException 类型转换异常类
+
+  - ArrayStoreException 数组中包含不兼容的值抛出的异常
+
+  - SQLException 操作数据库异常类
+
+  - NoSuchFieldException 字段未找到异常
+
+  - NoSuchMethodException 方法未找到抛出的异常
+
+  - NumberFormatException 字符串转换为数字抛出的异常
+
+  - StringIndexOutOfBoundsException 字符串索引超出范围抛出的异常
+
+  - IllegalAccessException 不允许访问某类异常
+
+  - InstantiationException 当应用程序试图使用Class类中的newInstance()方法创建一个类的实例，而指定的类对象无法被实例化时，抛出该异常
+
+
+
+这些异常时Java内置的异常类，当然用户也可以根据业务自定义自己的异常类：
+
+```java
+public class MyException extends RuntimeException {
+    // 无参构造器
+    public MyException() {}
+
+    // 带有详细信息的构造器
+    public MyException(String message) {
+        super(message);
+    }
+
+    // 带有引起此异常的原因的构造器
+    public MyException(Throwable cause) {
+        super(cause);
+    }
+
+    // 同时包含错误信息和原因的构造器
+    public MyException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+
+```
+
+
+
+
+
+### 异常的处理方式
+
+- try-catch：希望出现异常后程序继续运行，则在选中语句后，采用：
+
+-  throw：在出现异常的条件下的方法体内直接throw出异常：执行throw则一定抛出了异常。可以理解为，在编程之前就预想到可能发生的异常，那么：
+  ```java
+  if（预想的异常情况出现）{    
+      throw new 相应的异常()；//可以是自定义的异常
+  } //还可以在括号内写上出现异常时的”输出语句“
+  ```
+
+  即：既要**发现**异常，又要**处理**异常。
+
+  另外：这种具有针对性的声明只能抛出单个异常
+
+- throws：与throw方法不同，throws跟在方法声明后面，扔出使用此方法可能发生（或者在定义可能出现异常的变量的当前类后面throws出异常）的异常。其只是发现异常，而不处理，交给方法的调用者来处理。并且一次可以抛出多个异常。
+
+
+
+### 异常常用方法
+
+1. **getMessage()**：返回关于发生的异常的详细信息，如有必要，还需要带上抛出异常时一些状态变量。
+2. **printStackTrace()**：在标准错误流中输出异常堆栈。这个方法对于打印详细的错误信息非常有用，因为它显示了异常从发生到被捕获的代码执行路径，但是这个方法无论何时都不应该被调用。
+3. **toString()**：返回一个简短的描述，包括：Throwable的非完全限定类名，然后是getMessage()的结果。
+4. **getCause()**：返回造成此Throwable的原因，或者返回null如果原因不存在或者未知。
+5. **getStackTrace()**：返回一个表示该Throwable堆栈跟踪的StackTraceElement数组。
+
+
+
+
+
+## try-catch-finally
+
+### 执行顺序
 
 - 当try没有捕获到异常时：try语句块中的语句逐一被执行，程序将跳过catch语句块，执行finally语句块和其后的语句；
 
@@ -80,9 +194,9 @@ finally遇见如下情况不会执行：
 
 - 关闭CPU。
 
-#### finally 经典异常处理代码题
+### finally 经典异常处理代码题
 
-##### 题目一
+#### 题目一
 
 ```java
 public class Test {
@@ -106,7 +220,7 @@ public class Test {
 
 try、catch、finally 的基础用法，在 return 前会先执行 finally 语句块，所以会先输出 finally 里的 3，再输出 return 的 1。由于这里try中没有异常发生，因此catch中的return不会执行
 
-##### 题目二
+#### 题目二
 
 ```java
 public class Test {
@@ -131,7 +245,7 @@ public class Test {
 
 在 return 前会先执行 finally 语句块，所以会先输出 finally 里的 3，再输出 catch 中 return 的 2。由于这里try中有异常发生，因此try后续语句不会再执行
 
-##### 题目三
+#### 题目三
 
 ```java
 public class Test {
@@ -152,7 +266,7 @@ public class Test {
 
 try中的return前先执行 finally，结果 finally 直接 return 了，自然也就走不到 try 里面的 return 了。
 
-##### 题目四
+#### 题目四
 
 ```java
 public class Test {
@@ -175,7 +289,7 @@ public class Test {
 
 在执行 finally 之前，JVM 会先将 i 的结果暂存起来，然后 finally 执行完毕后，会返回之前暂存的结果，而不是返回 i，所以即使 i 已经被修改为 3，最终返回的还是之前暂存起来的结果 2。
 
-##### 总结
+#### 总结
 
 1. 无论try中是否有return，是否有异常，finally都一定会执行。
 2. 如果try中有异常发生，会执行catch中的句子，try中异常后续的位置的语句不会再被执行
@@ -184,9 +298,9 @@ public class Test {
 
  
 
-### try-with-resources
+## try-with-resources
 
-#### 背景
+### 背景
 
 每当有关闭资源的需求都会使用到try-finally这个语句，比如在使用锁的时候，无论是本地的可重入锁还是分布式锁都会有下面类似的结构代码，会在finally里面进行unlock，用于强制解锁：
 
@@ -277,7 +391,7 @@ public class CloseTest {
 
 上面这个代码，期望的是能抛出doSomething的这个异常，但是实际的数据结果却是close的异常，这和预期不符合。
 
-#### try-with-resources如何解决的
+### try-with-resources如何解决的
 
 上面介绍了两个问题，于是在java7中引入了try-with-resources的语句，只要资源实现了AutoCloseable这个接口那就可以使用这个语句了,之前的文件流已经实现了这个接口，因此可以直接使用：
 
@@ -329,55 +443,7 @@ Exception in thread "main" java.lang.RuntimeException: Something
 
  
 
-## 常见的异常
 
-在Java中提供了一些异常用来描述经常发生的错误，对于这些异常，有的需要程序员进行捕获处理或声明抛出，有的是由Java虚拟机自动进行捕获处理。Java中常见的异常类:
-
-- RuntimeException
-
-  -  java.lang.ArrayIndexOutOfBoundsException 数组索引越界异常。当对数组的索引值为负数或大于等于数组大小时抛出。
-
-  - java.lang.ArithmeticException 算术条件异常。譬如：整数除零等。
-
-  - java.lang.NullPointerException 空指针异常。当应用试图在要求使用对象的地方使用了null时，抛出该异常。譬如：调用null对象的实例方法、访问null对象的属性、计算null对象的长度、使用throw语句抛出null等等
-
-  - java.lang.ClassNotFoundException 找不到类异常。当应用试图根据字符串形式的类名构造类，而在遍历CLASSPAH之后找不到对应名称的class文件时，抛出该异常。
-
-  - java.lang.NegativeArraySizeException 数组长度为负异常
-
-  - java.lang.ArrayStoreException 数组中包含不兼容的值抛出的异常
-
-  - java.lang.SecurityException 安全性异常
-
-  - java.lang.IllegalArgumentException 非法参数异常
-
-- IOException
-
-  - IOException：操作输入流和输出流时可能出现的异常。
-
-  -  EOFException 文件已结束异常
-
-  - FileNotFoundException 文件未找到异常
-
-- 其他
-
-  - ClassCastException 类型转换异常类
-
-  - ArrayStoreException 数组中包含不兼容的值抛出的异常
-
-  - SQLException 操作数据库异常类
-
-  - NoSuchFieldException 字段未找到异常
-
-  - NoSuchMethodException 方法未找到抛出的异常
-
-  - NumberFormatException 字符串转换为数字抛出的异常
-
-  - StringIndexOutOfBoundsException 字符串索引超出范围抛出的异常
-
-  - IllegalAccessException 不允许访问某类异常
-
-  - InstantiationException 当应用程序试图使用Class类中的newInstance()方法创建一个类的实例，而指定的类对象无法被实例化时，抛出该异常
 
 ## 异常原理
 

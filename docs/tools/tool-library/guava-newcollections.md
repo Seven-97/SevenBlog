@@ -429,7 +429,7 @@ final class Count implements Serializable {
         this.value = result + delta;
         return result;
     }
-    //加上指定个数，先返回，在进行想加
+    //加上指定个数，先返回，在进行相加
     public int addAndGet(int delta) {
         return this.value += delta;
     }
@@ -687,11 +687,7 @@ System.out.println(rangeMap);
 
 JDK 自带的`java.util.Collections`提供了很多实用的功能，而 Guava 针对特定接口提供了更多工具，例如：
 
-- 提供很多静态工厂方法、包装器
 - Iterables 支持懒加载的集合视图操作
-- Sets 提供集合论运算
-- Maps 提供 diff 计算
-- Multimaps 提供 Map -> Multimap 的转换，并支持反向映射
 - Tables 提供行列转置 | **Interface** | **JDK or Guava** | **Guava Utility Class** | | --- | --- | --- | | Collection | JDK | Collections2 | | List | JDK | Lists | | Set | JDK | Sets | | Map | JDK | Maps | | Queue | JDK | Queues | | Multiset | Guava | Multisets | | Multimap | Guava | Multimaps | | BiMap | Guava | Maps | | Table | Guava | Tables |
 
 另外，还可以继承 Forwarding 通过装饰器模式装饰特殊实现，PeekingIterator 可以 peek 下一次返回的元素，AbstractIterator 自定义迭代方式等等。（PS：这些东西也许有点用，可是能用吗，业务里写这种代码怕是要被人喷死...）

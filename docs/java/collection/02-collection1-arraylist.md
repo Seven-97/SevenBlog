@@ -409,9 +409,56 @@ ArrayList和LinkedList的区别：
 
 - LinkedList基于链表实现。对于随机index访问的get和set方法，ArrayList的速度要优于LinkedList。因为ArrayList直接通过数组下标直接找到元素；LinkedList要移动指针遍历每个元素直到找到为止。
 
-- 新增和删除元素，LinkedList的速度要优于ArrayList。因为ArrayList在新增和删除元素时，可能扩容和复制数组；LinkedList只需要修改指针即可。
+- 对于 add(int index, E element)，remove(int index)的操作：LinkedList 和 ArrayList的时间复杂度一样，都是O(n)；虽然时间复杂度一样，但实际执行时间是不一样的，如下代码所示：
+  ```java
+  List<Integer> a = Lists.newArrayList();
+  List<Integer> b = Lists.newLinkedList();
+  
+  Random r = new Random();
+  a.add(0);
+  b.add(0);
+  
+  long startTime = System.currentTimeMillis();
+  for (int i = 0; i <= 20000; i++) {
+      int p = r.nextInt(a.size());
+      a.add(p, 0);
+  }
+  System.out.println(System.currentTimeMillis() - startTime);// 6
+  
+  startTime = System.currentTimeMillis();
+  for (int i = 0; i <= 20000; i++) {
+      int p = r.nextInt(b.size());
+      b.add(p, 0);
+  }
+  System.out.println(System.currentTimeMillis() - startTime);// 205
+  ```
 
- 
+  虽然ArrayList在索引位置新增或删除数据时需要移动数据（往前移、往后移），但是在连续内存中的块的数据，是可以操作整片内存的。而LinkedList需要一个一个的先查找到具体索引位置的元素，所以在寻址方面数组的效率高于链表。
+
+- 对于add新增元素：理论上来说LinkedList的速度（O(1)）要优于ArrayList（O(n)），因为ArrayList在新增和删除元素时，可能会扩容和复制数组；LinkedList只需要修改指针即可。但在实际测试中，在数据量小的情况下，两者执行时间几乎一致；增大数据量后，就能看出区别了，如下代码所示：
+  ```java
+  List<Integer> a = Lists.newArrayList();
+  List<Integer> b = Lists.newLinkedList();
+  
+  a.add(0);
+  b.add(0);
+  
+  long startTime = System.currentTimeMillis();
+  for (int i = 0; i <= 2000000; i++) {
+      int p = r.nextInt(a.size());
+      a.add(0);
+  }
+  System.out.println(System.currentTimeMillis() - startTime);// 34
+  
+  startTime = System.currentTimeMillis();
+  for (int i = 0; i <= 2000000; i++) {
+      int p = r.nextInt(b.size());
+      b.add(0);
+  }
+  System.out.println(System.currentTimeMillis() - startTime);// 271
+  ```
+
+  这是因为[LinkedList 存在一定的性能问题](https://www.seven97.top/java/collection/02-collection2-linkedlist.html#linkedlist-存在的性能问题)
 
  
 

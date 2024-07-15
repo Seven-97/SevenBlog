@@ -349,7 +349,7 @@ final Node<K,V>[] resize() {
 
 显然，HashMap的扩容机制，就是当达到扩容条件时会进行扩容。扩容条件就是当HashMap中的元素个数超过临界值时就会自动扩容（threshold = loadFactor * capacity）。如果是初始化扩容，只执行resize的前半部分代码，但如果是随着元素的增加而扩容，HashMap需要重新计算oldTab中每个值的位置，即重建hash表，随着元素的不断增加，HashMap会发生多次扩容，这样就会非常影响性能。所以一般建议创建HashMap的时候指定初始化容量
 
-但是当使用HashMap(int initialCapacity)来初始化容量的时候，HashMap并不会使用传进来的initialCapacity直接作为初始容量。JDK会默认计算一个相对合理的值当做初始容量。所谓合理值，其实是找到第一个比用户传入的值大的**2的幂**。也就是说，当new HashMap(7)创建HashMap的时候，JDK会通过计算，创建一个容量为8的Map；当new HashMap(9)创建HashMap的时候，JDK会通过计算，创建一个容量为16的Map。
+但是当使用HashMap(int initialCapacity)来初始化容量的时候，HashMap并不会使用传进来的initialCapacity直接作为初始容量。JDK会默认计算一个相对合理的值当做初始容量。所谓合理值，其实是找到第一个比用户传入的值大的**2的幂**。也就是说，当new HashMap(7)创建HashMap的时候，JDK会通过计算，创建一个容量为8的Map；当new HashMap(9)创建HashMap的时候，JDK会通过计算，创建一个容量为16的Map。当然了，当创建一个`HashMap`时，表的大小并不会立即分配，而是在第一次put元素时进行分配，并且分配的大小会是大于或等于初始容量的最小的2的幂。
 
 > 一般来说，initialCapacity = (需要存储的元素个数 / 负载因子) + 1。注意负载因子（即 loaderfactor）默认为 0.75，如果暂时无法确定初始值大小，请设置为 16（即默认值）。HashMap 需要放置 1024 个元素，由于没有设置容量初始大小，随着元素增加而被迫不断扩容，resize() 方法总共会调用 8 次，反复重建哈希表和数据迁移。当放置的集合元素个数达千万级时会影响程序性能。
 
@@ -514,7 +514,7 @@ final void treeify(Node<K,V>[] tab) {
 
 总结HashMap的扩容和树形化：
 
-1. 当HashMap中的元素个数超过数组大小(数组总大小length,不是数组中个数size)*loadFactor 时，就会进行数 组扩容，loadFactor的默认值(DEFAULT_LOAD_FACTOR)为0.75，这是一个折中的取值。也就是说，默认情况下，数组大小(DEFAULT_INITIAL_CAPACITY)为16，那么当HashMap中元素个数超过16*0.75=12（这个值就是代码中的threshold值，也叫做临界值）的时候，就把数组的大小扩展为 2*16=32，即扩大一倍，然后重新计算每个元素在数组中的位置，而这是一个非常消耗性能的操作，所以如果我们已经预知HashMap中元素的个数，那么预设元素的个数能够有效的提高HashMap的性能
+1. 当HashMap中的元素个数超过数组大小(数组总大小length,不是数组中个数size)\*loadFactor 时，就会进行数 组扩容，loadFactor的默认值(DEFAULT_LOAD_FACTOR)为0.75，这是一个折中的取值。也就是说，默认情况下，数组大小(DEFAULT_INITIAL_CAPACITY)为16，那么当HashMap中元素个数超过16*0.75=12（这个值就是代码中的threshold值，也叫做临界值）的时候，就把数组的大小扩展为 2*16=32，即扩大一倍，然后重新计算每个元素在数组中的位置，而这是一个非常消耗性能的操作，所以如果我们已经预知HashMap中元素的个数，那么预设元素的个数能够有效的提高HashMap的性能
 2. 当HashMap中的其中一个链的对象个数如果达到了8个，此时如果capacity没有达到64，那么HashMap会先扩容解决，如果已经达到了64，那么这个链会变成树，结点类型由Node变成TreeNode类型。当然，如果当映射关系被移除后，下次resize方法时判断树的结点个数低于6个，也会把树再转为链表。
 
 即当数组的某一个索引位置上的元素以链表形式存在的数据个数>8且当前数组的长度>64时，此时此索引位置上的所有数据改为使用红黑树存储

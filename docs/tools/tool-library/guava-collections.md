@@ -15,7 +15,7 @@ tag:
 2. 可以更灵活地创建对象，比如缓式初始化，缓存已创建对象。
 3. 静态方法内部返回的对象类型，可以是其声明类型的子类。
 
-`ImmutableList`遵循了最佳实践。首先，`ImmutableList`不可以通过构造函数实例化，更准确地说，不可以在`package`外部通过构造函数实例化。
+同样，如[《Effective Java》Item17](https://www.seven97.top/books/software-quality/effectivejava-summary.html#_17、最小化可变性)所述，需要最小化可变性，`ImmutableList`遵循了最佳实践。首先，`ImmutableList`不可以通过构造函数实例化，更准确地说，不可以在`package`外部通过构造函数实例化。
 
 而在程序设计中使用不可变对象，也可以提高代码的可靠性和可维护性，其优势包括：
 
@@ -59,7 +59,9 @@ System.out.println("往unmodifiableList添加一个元素:" + unmodifiableList);
 
 ### Guava不可变集合案例
 
-而 Guava 提供的不可变集合更加简单高效，确保了真正的不可变性。
+而 Guava 提供的不可变集合不是原容器的视图，而是原容器的一份拷贝，因此更加简单高效，确保了真正的不可变性。
+
+> 但是还要注意，由于immutable只是copy了元容器本身，并不是deep copy，因此对原容器的引用的内容进行修改，也会影响immutableXXX
 
 **注意**：每个Guava immutable集合类的实现都拒绝null值。如果确实需要能接受null值的集合类，可以考虑用Collections.unmodifiableXXX。
 
@@ -223,17 +225,17 @@ private Lists() {
 
 首先根据每一个函数的更能进行了分类：
 
-| 功能                                                     | 方法                                                         |
-| -------------------------------------------------------- | ------------------------------------------------------------ |
-| 创建ArrayList方法                                        | 1、newArrayList()<br/>2、newArrayList(E... elements)<br/>3、newArrayList(Iterable<? extends E> elements)<br/>4、newArrayList(Iterator<? extends E> elements)<br/>5、newArrayListWithCapacity(int initialArraySize)<br/>6、newArrayListWithExpectedSize(int estimatedSize) |
-| 创建LinkedList方法                                       | 1、newLinkedList()<br />2、newLinkedList(Iterable<? extends E> elements) |
-| 创建CopyOnWriteArrayList方法                             | 1、newCopyOnWriteArrayList()<br />2、newCopyOnWriteArrayList(Iterable<? extends E> elements) |
-| 创建自制List规则                                         | 1、asList(@Nullable E first, E[] rest)<br />2、asList(@Nullable E first, @Nullable E second, E[] rest) |
-| 对多个List做笛卡尔乘积                                   | 1、cartesianProduct(List<? extends List<? extends B>> lists)<br />2、cartesianProduct(List<? extends B>... lists) |
-| 将一个fromList中的元素根据指定的function转换为另一种类型 | transform(List&lt;F> fromList, Function<? super F, ? extends T> function) |
-| 对list进行分批输出的方法（作用之一：分页）               | partition(List&lt;T> list, int size)                         |
-| 将字符串作为字符数组进行操作                             | 1、charactersOf(String string)<br />2、charactersOf(CharSequence sequence) |
-| 将list逆序                                               | reverse(List&lt;T> list)                                     |
+| 功能                         | 方法                                                         |
+| ---------------------------- | ------------------------------------------------------------ |
+| 创建ArrayList方法            | 1、newArrayList()<br/>2、newArrayList(E... elements)<br/>3、newArrayList(Iterable<? extends E> elements)<br/>4、newArrayList(Iterator<? extends E> elements)<br/>5、newArrayListWithCapacity(int initialArraySize)<br/>6、newArrayListWithExpectedSize(int estimatedSize) |
+| 创建LinkedList方法           | 1、newLinkedList()<br />2、newLinkedList(Iterable<? extends E> elements) |
+| 创建CopyOnWriteArrayList方法 | 1、newCopyOnWriteArrayList()<br />2、newCopyOnWriteArrayList(Iterable<? extends E> elements) |
+| 创建自制List规则             | 1、asList(@Nullable E first, E[] rest)<br />2、asList(@Nullable E first, @Nullable E second, E[] rest) |
+| List笛卡尔乘积               | 1、cartesianProduct(List<? extends List<? extends B>> lists)<br />2、cartesianProduct(List<? extends B>... lists) |
+| List变形                     | transform(List&lt;F> fromList, Function<? super F, ? extends T> function) |
+| 分割list（作用之一：分页）   | partition(List&lt;T> list, int size)                         |
+| 将字符串作为字符数组进行操作 | 1、charactersOf(String string)<br />2、charactersOf(CharSequence sequence) |
+| 将list逆序                   | reverse(List&lt;T> list)                                     |
 
 
 
@@ -373,7 +375,7 @@ System.out.println(group);
 
 这样做的一个好处是可以提高代码的可读性，因为它明确地区分了 "leader" 和 "members"，而不是将它们混在一起。而且，如果 "members" 是动态确定的（例如，它们来自另一个方法或计算结果），那么这个 `asList` 方法将比手动创建 `List` 并添加元素更为方便。
 
-
+**注意**：asList返回的是视图，也就是说，原容器的变更会影响这些方法返回的容器内容
 
 1. 根据参数生成一个多一个参数的List
 
@@ -447,7 +449,7 @@ System.out.println(group);
 
    
 
-### 对多个List做笛卡尔乘积
+### List笛卡尔乘积
 
 ```java
 public static <B> List<List<B>> cartesianProduct(List<? extends List<? extends B>> lists) {
@@ -477,7 +479,7 @@ static <E> List<List<E>> create(List<? extends List<? extends E>> lists) {
 
 
 
-### 将fromList中的元素根据指定的function转换为另一种类型
+### List变形
 
 使用案例：
 
@@ -521,7 +523,7 @@ private static class TransformingRandomAccessList<F, T> extends AbstractList<T> 
 
 
 
-### 对list进行分批输出的方法（作用之一：分页）
+### 分割list（作用之一：分页）
 
 
 
@@ -1069,7 +1071,7 @@ System.out.println("Price of Product 2: " + priceMap.get(2));  // 输出 20.0
    }
    ```
 
-3. 传入一个value值容器和一个规则，直接交给重载函数去处理，返回一个不可变的Map容器
+3. 根据value值容器和一个规则，直接交给重载函数去处理，返回一个不可变的Map容器
    ```java
    public static <K, V> ImmutableMap<K, V> uniqueIndex(Iterable<V> values, Function<? super V, K> keyFunction) {
        return uniqueIndex((Iterator)values.iterator(), keyFunction);
@@ -1093,7 +1095,7 @@ System.out.println("Price of Product 2: " + priceMap.get(2));  // 输出 20.0
 
    
 
-### 从配置文件中读取数据，创建不可变的Map
+### 从properties文件中读取数据，创建不可变的Map
 
 从Properties获取的key和value，返回一个不可变的Map
 ```java
@@ -1273,6 +1275,57 @@ private static class FilteredKeyMap<K, V> extends Maps.AbstractFilteredMap<K, V>
 
 
 ### 创建一个不可变的Set
+
+1. 根据传入的参数，创建一个不可变的Set
+   ```java
+   public static <E extends Enum<E>> ImmutableSet<E> immutableEnumSet(E anElement, E... otherElements) {
+       //使用ImmutableEnumSet.asImmutable函数将EnumSet转为ImmutableSet
+       return ImmutableEnumSet.asImmutable(EnumSet.of(anElement, otherElements));
+   }
+   
+   //EnumSet.of方法是将anElement和otherElements合并成一个EnumSet
+   public static <E extends Enum<E>> EnumSet<E> of(E first, E... rest) {
+       EnumSet<E> result = noneOf(first.getDeclaringClass());
+       //将第一个参数先插入到EnumSet中
+       result.add(first);
+       //在将传入的数组全部插入到EnumSet中
+       for (E e : rest)
+           result.add(e);
+       return result;
+   }
+   ```
+
+2. 根据一个集合创建一个不可变的Set
+   ```java
+   public static <E extends Enum<E>> ImmutableSet<E> immutableEnumSet(Iterable<E> elements) {
+       //如果是一个ImmutableEnumSet，则直接转换为ImmutableEnumSet
+       if(elements instanceof ImmutableEnumSet) {
+           return (ImmutableEnumSet)elements;
+       } else if(elements instanceof Collection) {
+           //如果是一个Collection且不为空则，直接使用ImmutableEnumSet.asImmutable方法转化为ImmutableEnumSet
+           Collection itr1 = (Collection)elements;
+           return itr1.isEmpty()?ImmutableSet.of():ImmutableEnumSet.asImmutable(EnumSet.copyOf(itr1));
+       } else {
+           //其他类型，则获取他的迭代器，然后制作一个ImmutableEnumSet
+           Iterator itr = elements.iterator();
+           if(itr.hasNext()) {
+               EnumSet enumSet = EnumSet.of((Enum)itr.next());
+               Iterators.addAll(enumSet, itr);
+               return ImmutableEnumSet.asImmutable(enumSet);
+           } else {
+               return ImmutableSet.of();
+           }
+       }
+   }
+   ```
+
+   
+
+
+
+
+
+
 
 
 

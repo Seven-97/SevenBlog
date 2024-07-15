@@ -112,6 +112,20 @@ public class MyThreadFactory implements ThreadFactory {
 
    - CallerRunsPolicy：由调用线程处理该任务CallerRunsPolicy：由调用线程处理该任务
 
+### 线程池的核心组成
+
+ ![image-20240425111726558](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117645.png)
+
+一个完整的线程池，应该包含以下几个核心部分：
+
+- 任务提交：提供接口接收任务的提交；
+
+- 任务管理：选择合适的队列对提交的任务进行管理，包括对拒绝策略的设置；
+
+- 任务执行：由工作线程来执行提交的任务；
+
+- 线程池管理：包括基本参数设置、任务监控、工作线程管理等
+
 ### 线程池执行具体过程
 
 ![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251113478.gif)
@@ -139,19 +153,35 @@ Tips：千万不要把线程池的状态和线程的状态弄混了。补一张�
 
 Tips：当线程调用start()，线程在JVM中不一定立即执行，有可能要等待操作系统分配资源，此时为READY状态，当线程获得资源时进入RUNNING状态，才会真正开始执行。
 
-### 线程池的核心组成
 
- ![image-20240425111726558](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117645.png)
 
-一个完整的线程池，应该包含以下几个核心部分：
+### 线程池的预初始化机制
 
-- 任务提交：提供接口接收任务的提交；
+线程池的预初始化机制是指在线程池创建后，立即创建并启动一定数量的线程，即使这些线程暂时还没有任务要执行。这样做的目的是减少在实际接收到任务时创建线程所需的时间，从而提高响应速度。ThreadPoolExecutor提供了预初始化线程的功能。
 
-- 任务管理：选择合适的队列对提交的任务进行管理，包括对拒绝策略的设置；
+预初始化方法（prestartCoreThread / prestartAllCoreThreads）: ThreadPoolExecutor提供了两个方法来预初始化线程：
 
-- 任务执行：由工作线程来执行提交的任务；
+- prestartCoreThread()：预初始化一个核心线程。如果核心线程数已经达到了设定的数量，则此方法不会有任何效果。
+  ```java
+  public boolean prestartCoreThread() {
+      return workerCountOf(ctl.get()) < corePoolSize &&
+          addWorker(null, true);
+  }
+  ```
 
-- 线程池管理：包括基本参数设置、任务监控、工作线程管理等
+- prestartAllCoreThreads()：预初始化所有核心线程，即创建并启动等于核心线程数的线程
+  ```java
+  public int prestartAllCoreThreads() {
+      int n = 0;
+      while (addWorker(null, true))
+          ++n;
+      return n;
+  }
+  ```
+
+  
+
+
 
 ### 拒绝策略
 
@@ -586,7 +616,7 @@ final void runWorker(Worker w) {
              // 根据线程是否允许超时判断用poll还是take（会阻塞）方法从任务队列头部取出一个任务
              Runnable r = timed ?
                  workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :
-                 workQueue.take();
+                 workQueue.take();//线程池重用逻辑：没有任务了就阻塞在这里，等待新的任务
              if (r != null)
                  return r; // 返回从队列中取出的任务
              timedOut = true;
@@ -1030,6 +1060,15 @@ private void interruptWorkers() {
     }
 }
 ```
+
+
+
+### 池化带来的问题
+
+- **线程污染**：如果线程池中的线程被用于执行不同类型的任务，而这些任务之间存在状态共享或依赖关系，可能会导致线程状态被污染，进而影响任务的正确执行。
+- **内存泄漏**：如果池化资源（如对象池中的对象）没有被正确地回收或重置，可能会导致内存泄漏。
+
+当然，解决方法就是确保每次使用池化资源后，资源状态被正确重置，避免污染；正确回收，避免泄露。并且通过监控池化资源的使用情况，及时调优配置，以适应不同的负载和需求。
 
 
 

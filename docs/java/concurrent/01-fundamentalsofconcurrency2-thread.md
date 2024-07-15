@@ -763,6 +763,55 @@ after
 
 
 
+## 线程中的异常处理
+
+### Runnable中异常如何被吞掉
+
+`Runnable` 接口的 `run()` 方法不允许抛出任何被检查的异常（checked exceptions），只能处理或抛出运行时异常（unchecked exceptions）。当在 `run()` 方法内发生异常时，如果没有显式地捕获和处理这些异常，它们通常会在执行该 `Runnable` 的线程中被“吞掉”，即异常会导致线程终止，但不会影响其他线程的执行。
+
+```java
+public void uncaughtException(Thread t, Throwable e) {
+   if (parent != null) {
+        parent.uncaughtException(t, e);
+   } else {
+        Thread.UncaughtExceptionHandler ueh =
+            Thread.getDefaultUncaughtExceptionHandler();
+        if (ueh != null) {
+            ueh.uncaughtException(t, e);
+        } else if (!(e instanceof ThreadDeath)) {
+            System.err.print("Exception in thread \""
+                             + t.getName() + "\" ");
+            e.printStackTrace(System.err);
+        }
+    }
+}
+```
+
+
+
+解决方案：
+
+1. setUncaughtExceptionHandler
+   ```java
+   Thread t = new Thread(() -> {
+      int i = 1 / 0;
+   }, "t1");
+   t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+      @Override
+      public void uncaughtException(Thread t, Throwable e) {
+           logger.error('---', e);
+      }
+   });
+   ```
+
+2. 使用原子类
+
+
+
+### Callable中异常如何被吞掉
+
+
+
  
 
  

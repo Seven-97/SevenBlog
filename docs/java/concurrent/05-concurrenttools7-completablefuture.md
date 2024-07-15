@@ -261,7 +261,7 @@ public void testCreateFuture(String product) {
 | 方法名称    | 作用描述                                                     |
 | ----------- | ------------------------------------------------------------ |
 | thenApply   | 对`CompletableFuture`的执行后的具体结果进行追加处理，并将当前的`CompletableFuture`泛型对象更改为处理后新的对象类型，返回当前`CompletableFuture`对象。 |
-| thenCompose | 与`thenApply`类似。区别点在于：此方法的入参函数返回一个`CompletableFuture`类型对象。 |
+| thenCompose | 与`thenApply`类似。区别点在于：此方法的入参函数返回的是一个`CompletableFuture`类型对象，适用于回调函数需要启动另一个异步计算，并且想要一个扁平化的结果CompletableFuture，而不是嵌套的`CompletableFuture<CompletableFuture<U>>` |
 | thenAccept  | 与`thenApply`方法类似，区别点在于`thenAccept`返回**void**类型，**没有具体结果输出**，适合无需返回值的场景。 |
 | thenRun     | 与`thenAccept`类似，区别点在于`thenAccept`可以将前面`CompletableFuture`执行的实际结果作为入参进行传入并使用，但是`thenRun`方法**没有任何入参**，只能执行一个Runnable函数，并且**返回void类型**。 |
 
