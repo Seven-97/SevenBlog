@@ -791,7 +791,20 @@ public void uncaughtException(Thread t, Throwable e) {
 
 解决方案：
 
-1. setUncaughtExceptionHandler
+1. 在run方法中显示的捕获异常
+   ```java
+   public void run() {
+       try {
+           // 可能抛出异常的代码
+       } catch (Exception e) {
+           // 记录日志或处理异常
+           throw new RuntimeException(e);
+       }
+   }
+   ```
+
+2. 为创建的线程设置一个`UncaughtExceptionHandler`
+
    ```java
    Thread t = new Thread(() -> {
       int i = 1 / 0;
@@ -804,7 +817,23 @@ public void uncaughtException(Thread t, Throwable e) {
    });
    ```
 
-2. 使用原子类
+3. 使用原子类
+
+4. 使用`Callable`代替`Runnable`，`Callable`的`call`方法允许抛出异常，然后可以通过提交给`ExecutorService`返回的`Future`来捕获和处理这些异常
+   ```java
+   ExecutorService executor = Executors.newFixedThreadPool(1);
+   Future<?> future = executor.submit(() -> {
+       // 可能抛出异常的代码
+   });
+   
+   try {
+       future.get(); // 这里会捕获到Callable中的异常
+   } catch (ExecutionException e) {
+       Throwable cause = e.getCause(); // 获取原始异常
+   }
+   ```
+
+   
 
 
 

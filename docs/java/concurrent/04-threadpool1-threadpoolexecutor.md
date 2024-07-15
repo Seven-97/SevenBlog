@@ -114,7 +114,7 @@ public class MyThreadFactory implements ThreadFactory {
 
 ### 线程池的核心组成
 
- ![image-20240425111726558](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117645.png)
+ ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117645.png)
 
 一个完整的线程池，应该包含以下几个核心部分：
 
@@ -128,7 +128,7 @@ public class MyThreadFactory implements ThreadFactory {
 
 ### 线程池执行具体过程
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251113478.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251113478.gif)
 
 1. 当线程池里存活的线程数小于核心线程数corePoolSize时，这时对于一个新提交的任务，线程池会创建一个线程去处理任务。当线程池里面存活的线程数小于等于核心线程数corePoolSize时，线程池里面的线程会一直存活着，就算空闲时间超过了keepAliveTime，线程也不会被销毁，而是一直阻塞在那里一直等待任务队列的任务来执行。因为keepAliveTime只对非核心线程有效。
 2. 当线程池里面存活的线程数已经等于corePoolSize了，这是对于一个新提交的任务，会被放进任务队列workQueue排队等待执行。
@@ -149,7 +149,7 @@ public class MyThreadFactory implements ThreadFactory {
 
 Tips：千万不要把线程池的状态和线程的状态弄混了。补一张网上的线程状态图
 
-![image-20240425111716736](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117843.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117843.png)
 
 Tips：当线程调用start()，线程在JVM中不一定立即执行，有可能要等待操作系统分配资源，此时为READY状态，当线程获得资源时进入RUNNING状态，才会真正开始执行。
 
@@ -157,7 +157,7 @@ Tips：当线程调用start()，线程在JVM中不一定立即执行，有可能
 
 ### 线程池的预初始化机制
 
-线程池的预初始化机制是指在线程池创建后，立即创建并启动一定数量的线程，即使这些线程暂时还没有任务要执行。这样做的目的是减少在实际接收到任务时创建线程所需的时间，从而提高响应速度。ThreadPoolExecutor提供了预初始化线程的功能。
+线程池的预初始化机制是指在线程池创建后，立即创建并启动一定数量的线程，即使这些线程暂时还没有任务要执行。这样做的目的是**减少在实际接收到任务时创建线程所需的时间，从而提高响应速度**。ThreadPoolExecutor提供了预初始化线程的功能。
 
 预初始化方法（prestartCoreThread / prestartAllCoreThreads）: ThreadPoolExecutor提供了两个方法来预初始化线程：
 
@@ -195,9 +195,9 @@ Tips：当线程调用start()，线程在JVM中不一定立即执行，有可能
 
 当没有显示指明拒绝策略时，默认使用AbortPolicy
 
-![image-20240425111751711](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117769.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117769.png)
 
-![image-20240425111756100](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117174.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251117174.png)
 
 
 
@@ -293,21 +293,19 @@ new RejectedExecutionHandler() {
 
 - 通过执行execute方法 该方法无返回值，为ThreadPoolExecutor自带方法，传入Runnable类型对象
 
-![image-20240425111806429](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251118495.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251118495.png)
 
 - 通过执行submit方法 该方法返回值为Future对象，为抽象类AbstractExecutorService的方法，被ThreadPoolExecutor继承，其内部实现也是调用了接口类Executor的execute方法，通过上面的类图可以看到，该方法的实现依然是ThreadPoolExecutor的execute方法
 
-![image-20240425111813578](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251118645.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251118645.png)
 
-![image-20240425111819130](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251118194.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251118194.png)
 
 #### execute()执行流程图
 
- ![image-20240425111822399](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251118470.png)
+ ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251118470.png)
 
 
-
- 
 
 #### execute()源码
 
@@ -506,8 +504,7 @@ final void tryTerminate() {
 Worker是ThreadPoolExecutor类的内部类，此处只讲最重要的构造函数和run方法
 
 ```java
-private final class Worker extends AbstractQueuedSynchronizer implements Runnable
-{
+private final class Worker extends AbstractQueuedSynchronizer implements Runnable {
     // 该worker正在运行的线程
     final Thread thread;
     
@@ -683,9 +680,7 @@ private void processWorkerExit(Worker w, boolean completedAbruptly) {
 
 #### submit源码
 
-提交任务到线程池有两种方法，一种是execute，一种是submit。
-
-
+提交任务到线程池有两种方法，一种是execute，另一种是submit。区别是execute没有返回值，submit是有返回值的，如果有异常抛出，submit同样可以获取异常结果。
 
 ```java
 // AbstractExecutorService.submit
@@ -760,8 +755,6 @@ run(){
 }
 ```
 
-
-
 为什么要这么麻烦封装一层又一层呢？
 
 可能是为了适配。submit的返回值是`futureTask`，但是传给submit的是个runnable，然后submit会把这个runnable继续传给`futureTask`，`futureTask`的结果值是null，但是又由于`futureTask`的run方法已经被重写成执行call方法了，所以只能在call方法里面跑真正的run方法了
@@ -820,7 +813,7 @@ static class Node<E> {
 
 如果是使用`ArrayBlockingQueue`的话，只有lambda实例这一个开销，所以只会使用320w个字节，约3.05MB内存，比起`LinkedBlockingQueue`少了一倍不止
 
-![图片](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406112342798.webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406112342798.webp)
 
 
 
@@ -856,7 +849,7 @@ final T result;
 
 如果submit 20w个任务，会占用1920w个字节，约18.31MB内存
 
-![图片](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406112345411.webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406112345411.webp)
 
 如果使用的是`ArrayBlockingQueue`会省去Node的占用的内存。
 
@@ -954,17 +947,17 @@ public static void main(String[] args) {
 
 在runWorker方法里，线程会循环getTask()获取阻塞队列中的任务。
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251113483.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251113483.gif)
 
 不断地的从阻塞队列中获取任务，主要调用的是workQueue.poll()方法或take()， 这两个方法都会阻塞式的从队列中获取元素，区别是poll()方法可以设置一个超时时间， take()不能设置超时时间，所以这也间接的使得线程池中的线程阻塞等待从而达到保活的效果。
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251113491.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251113491.gif)
 
 当然并不是线程池中的所有线程都需要一直保活，比如只有核心线程需要保活，非核心线程就不需要保活,那非核心线程是怎么回收的呢?
 
 底层是这样的，当一个线程处理完当前任务后，就会开始去阻塞队列中获取任务，只不过，在调用poll或take方法之前， 会判断当前线程池中有多少个线程，如果多余核心线程数(也就是wc > corePlloSize)，那么timed为true，此时当前线程就会调用poll()并设置超时时间来获取阻塞队列中的任务,这样一旦时间到了还没有获取到任务，那么poll方法获取到的r就是null，返回给上一级，runWorker()里的getTask方法就获取到null了，此时while循环就会退出。那么就会调用processWorkerExit()方法，remove当前线程
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251113498.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251113498.gif)
 
 这里其实可以看到timed还有一个参数，allowCoreThreadTimeOut，这个主要是用来控制核心线程是否可以回收，默认是false，上面是讨论默认值false的情况，即核心线程不会超时。如果为true，工作线程可以全部销毁
 

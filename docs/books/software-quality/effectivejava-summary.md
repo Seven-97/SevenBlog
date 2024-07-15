@@ -1480,13 +1480,14 @@ class Plant {
 有些程序员会将这些集合放到一个按照类型序号进行索引的数组实现这一点。
 
 ```java
-// Using ordinal() to index into an array - DON'T DO THIS!
+// 泛型数组
 Set<Plant>[] plantsByLifeCycle =(Set<Plant>[]) new Set[Plant.LifeCycle.values().length];
 
 for (int i = 0; i < plantsByLifeCycle.length; i++)
     plantsByLifeCycle[i] = new HashSet<>();
 
 for (Plant p : garden)
+    // Using ordinal() to index into an array - DON'T DO THIS!
     plantsByLifeCycle[p.lifeCycle.ordinal()].add(p);
 
 // Print the results
@@ -1496,50 +1497,61 @@ for (int i = 0; i < plantsByLifeCycle.length; i++) {
 }
 ```
 
-
-
 这种技术有如下问题：
 
 1. 数组与泛型不兼容，需要 unchecked 转换。
+
+   1. **类型擦除**：Java 的泛型是在编译时实现的，也就是说，在运行时，泛型类型信息会被擦除。而在Java中，数组是一个协变的、具有运行时类型信息的数据结构。由于泛型信息在运行时被擦除，因此在运行时无法知道具体的泛型参数类型，这和数组的运行时类型信息是相冲突的。
+   2. **类型安全性**：Java为了保证类型安全，禁止了泛型数组的创建。假设Java允许我们创建泛型数组，则有可能发生下面的情况：
+
+      ```java
+      List<String>[] stringLists = new List<String>[1];
+      Object[] objects = stringLists;
+      objects[0] = new ArrayList<Integer>();
+      ```
+
+      这里，将一个`ArrayList<Integer>`赋给了一个`Object[]`引用，并没有引发任何警告或错误。但是，现在`stringLists[0]`实际上就是一个Integer列表，如果我们试图在其中放入一个字符串，就会在运行时抛出`ClassCastException`。
+
 2. 数组不知道索引表示什么，必须手动标记输出。
 3. int 不提供枚举的类型安全性，无法检验int值的正确性。
 
-有一种更好的方法是使用 `java.util.EnumMap`：
-
-```java
-// Using an EnumMap to associate data with an enum
-Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle =new EnumMap<>(Plant.LifeCycle.class);
-
-for (Plant.LifeCycle lc : Plant.LifeCycle.values())
-    plantsByLifeCycle.put(lc, new HashSet<>());
-
-for (Plant p : garden)
-    plantsByLifeCycle.get(p.lifeCycle).add(p);
-
-System.out.println(plantsByLifeCycle);
-```
-
-这个程序比原来的版本更短，更清晰，更安全，速度也差不多。速度相当的原因是，EnumMap 在内部使用这样的数组，但是它向程序员隐藏了实现细节。
 
 
+解决方案：
 
-使用流可以进一步缩短程序：
+1. 使用 `java.util.EnumMap`：
+   ```java
+   // Using an EnumMap to associate data with an enum
+   Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle =new EnumMap<>(Plant.LifeCycle.class);
+   
+   for (Plant.LifeCycle lc : Plant.LifeCycle.values())
+       plantsByLifeCycle.put(lc, new HashSet<>());
+   
+   for (Plant p : garden)
+       plantsByLifeCycle.get(p.lifeCycle).add(p);
+   
+   System.out.println(plantsByLifeCycle);
+   ```
 
-```java
-// Naive stream-based approach - unlikely to produce an EnumMap!
-System.out.println(Arrays.stream(garden).collect(groupingBy(p -> p.lifeCycle)));
-```
+   这个程序比原来的版本更短，更清晰，更安全，速度也差不多。速度相当的原因是，EnumMap 在内部使用这样的数组，但是它向程序员隐藏了实现细节。
 
+2. 使用流可以进一步缩短程序：
+   ```java
+   // Naive stream-based approach - unlikely to produce an EnumMap!
+   System.out.println(Arrays.stream(garden).collect(groupingBy(p -> p.lifeCycle)));
+   ```
 
+   这段代码的性能较差，因为底层不是基于 EnumMap，而是自己实现Map。
 
-这段代码的性能较差，因为底层不是基于 EnumMap，而是自己实现Map。要改进性能，可以使用 mapFactory 参数指定 Map 实现：
+3. 要改进性能，可以使用 mapFactory 参数指定 Map 实现：
+   ```java
+   // Using a stream and an EnumMap to associate data with an enum
+   System.out.println(
+       Arrays.stream(garden).collect(groupingBy(p -> p.lifeCycle,() -> new EnumMap<>(LifeCycle.class), toSet()))
+   );
+   ```
 
-```java
-// Using a stream and an EnumMap to associate data with an enum
-System.out.println(
-    Arrays.stream(garden).collect(groupingBy(p -> p.lifeCycle,() -> new EnumMap<>(LifeCycle.class), toSet()))
-);
-```
+   
 
 
 
