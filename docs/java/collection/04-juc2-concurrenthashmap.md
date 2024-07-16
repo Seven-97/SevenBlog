@@ -684,29 +684,29 @@ ConcurrentHashMap的size()操作中没有加任何锁，那么它是如何在多
 
 ```java
 public int size() {
-        long n = sumCount();
-        return ((n < 0L) ? 0 :
-                (n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
-                (int)n);
-    }
+    long n = sumCount();
+    return ((n < 0L) ? 0 :
+           (n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
+           (int)n);
+}
 
 final long sumCount() {
-        CounterCell[] as = counterCells; 
-        // CAS修改baseCount失败后，使用CounterCell用来统计那个线程要修改的
-        CounterCell a;
-        // 当没有并发竞争的时候，只使用baseCount统计map的size。
-        long sum = baseCount;
-        // 遍历counterCells，将CounterCell数组中元素的 value 累加 到 sum变量上。
-        if (as != null) {
-            for (int i = 0; i < as.length; ++i) {
-                if ((a = as[i]) != null)
-                    sum += a.value;
-            }
+    CounterCell[] as = counterCells; 
+    // CAS修改baseCount失败后，使用CounterCell用来统计那个线程要修改的
+    CounterCell a;
+    // 当没有并发竞争的时候，只使用baseCount统计map的size。
+    long sum = baseCount;
+    // 遍历counterCells，将CounterCell数组中元素的 value 累加 到 sum变量上。
+    if (as != null) {
+        for (int i = 0; i < as.length; ++i) {
+            if ((a = as[i]) != null)
+                sum += a.value;
         }
-        
-        // 这个数字可能是不准确的,所以ConCurrentHashMap的size是一个参考值，并不是实时确切值。
-        return sum;
     }
+        
+    // 这个数字可能是不准确的,所以ConCurrentHashMap的size是一个参考值，并不是实时确切值。
+    return sum;
+}
 ```
 
 1. ConCurrentHashMap的大小 size 通过 baseCount 和 counterCells 两个变量维护：
@@ -718,6 +718,29 @@ final long sumCount() {
 2. 最终在sumCount()方法中通过累加 baseCount和CounterCells数组里每个CounterCell的值得出Map的总大小Size。
 3. 然而 返回的值是一个估计值；如果有并发插入或者删除操作，和实际的数量可能有所不同。
 4. 另外size()方法的最大值是 Integer 类型的最大值，而 Map 的 size 有可能超过 Integer.MAX_VALUE，所以JAVA8 建议使用 mappingCount()。
+
+## compute方法
+
+需要知道的是，业务线程安全并不等于集合线程安全，并不是说使用了线程安全的集合 如ConcurrentHashMap 就能保证业务的线程安全。这是因为，ConcurrentHashMap只能保证put时是安全的，但是在put操作前如果还有其他的操作，那业务并不一定是线程安全的。
+
+以下是`compute()`方法的一些典型使用场景：
+
+1. **原子更新键值对**：当你需要确保对键值对的更新是原子的，即在一个线程对键值对进行更新时，其他线程无法看到中间状态。
+2. **计算键对应的值**：如果需要根据键计算新的值来更新映射，`compute()`  可以确保计算和更新操作的原子性。
+3. **缓存更新**：在缓存实现中，当缓存项需要根据某些条件动态更新时，可以使用`compute()`方法来确保更新操作的原子性。
+4. **并行处理**：在并行计算中，当多个线程需要更新同一个`ConcurrentHashMap`中的项时，`compute()`可以用来确保每个键的处理是互不干扰的。
+
+使用示例：
+
+```java
+ConcurrentHashMap<String,  Integer>  map  =  new  ConcurrentHashMap<>();
+map.put("key1",  1);
+
+//  使用compute方法更新键为"key1"的值
+map.compute("key1",  (key,  value)  ->  value  +  1);
+```
+
+
 
 ## 对比总结
 

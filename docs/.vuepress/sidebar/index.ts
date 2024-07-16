@@ -43,6 +43,7 @@ export default sidebar({
             "03-map1-hashset-hashmap",
             "03-map2-treeset-treemap",
             "03-map3-linkedhashset-map",
+            "03-map4-enumset-map",
             "03-map4-weakhashmap",
             "04-juc1-copyonwritearrayList",
             "04-juc2-concurrenthashmap",
