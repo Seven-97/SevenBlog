@@ -817,8 +817,6 @@ public void uncaughtException(Thread t, Throwable e) {
    });
    ```
 
-3. 使用原子类
-
 4. 使用`Callable`代替`Runnable`，`Callable`的`call`方法允许抛出异常，然后可以通过提交给`ExecutorService`返回的`Future`来捕获和处理这些异常
    ```java
    ExecutorService executor = Executors.newFixedThreadPool(1);
@@ -841,6 +839,162 @@ public void uncaughtException(Thread t, Throwable e) {
 
 
 
- 
+```java
+class MyCallable implements Callable<String> {
+    @Override
+    public String call() throws Exception {
+        System.out.println("===> 开始执行callable");
+        int i = 1 / 0; //异常的地方
+        return "callable的结果";
+    }
+}
+
+public class CallableAndRunnableTest {
+
+    public static void main(String[] args) {
+        System.out.println(" =========> main start ");
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(3, 5, 1, TimeUnit.SECONDS, new ArrayBlockingQueue<>(100));
+        Future<String> submit = threadPoolExecutor.submit(new MyCallable());
+        try {
+            TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(" =========> main end ");
+    }
+}
+```
+
+运行结果
+
+```java
+ =========> main start 
+ ===> 开始执行callable
+ =========> main end 
+```
+
+
+
+源码如下：
+
+```java
+public <T> Future<T> submit(Callable<T> task) {
+    if (task == null) throw new NullPointerException();
+    RunnableFuture<T> ftask = newTaskFor(task);
+    execute(ftask);
+    return ftask;
+}
+
+protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
+    return new FutureTask<T>(callable);
+}
+```
+
+`RunableFuture<T>` 是个接口，但是它继承了Runnable 接口 ， 实现类是 FutureTask ，因此就需要看下 FutureTask里的run方法 是不是和 构造时的Callable 有关系：
+
+```java
+public void run() {
+     // 状态不属于初始状态的情况下，不进行后续逻辑处理
+     // 那也就是run 方法只能执行一次
+     if (state != NEW ||
+        !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                   null, Thread.currentThread()))
+        return;
+    try { 
+        Callable<V> c = callable;
+        if (c != null && state == NEW) {
+            V result;
+            // 
+            boolean ran;
+            try {
+                // 执行 Callable 里的 call 方法 ，将结果存入result变量中
+                result = c.call();
+                ran = true;
+            } catch (Throwable ex) {
+                result = null;
+                ran = false;
+                 // call 方法异常 ， 记录下异常结果
+                setException(ex);
+            }
+            // call 方法正常执行完毕 ，进行结果存储
+            if (ran)
+                set(result);
+        }
+    } finally {
+        // runner must be non-null until state is settled to
+        // prevent concurrent calls to run()
+        runner = null;
+        // state must be re-read after nulling runner to prevent
+        // leaked interrupts
+        int s = state;
+        if (s >= INTERRUPTING)
+            handlePossibleCancellationInterrupt(s);
+    }
+}
+```
+
+接下来就要看，如果存储正常结果的`set(result)`方法 和存储异常结果的 `setException(ex)` 方法
+
+```java
+protected void setException(Throwable t) {
+    if (UNSAFE.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)) {
+        outcome = t;
+        UNSAFE.putOrderedInt(this, stateOffset, EXCEPTIONAL); // final state
+        finishCompletion();
+    }
+}
+
+protected void set(V v) {
+    if (UNSAFE.compareAndSwapInt(this, stateOffset, NEW, COMPLETING)) {
+        outcome = v;
+        UNSAFE.putOrderedInt(this, stateOffset, NORMAL); // final state
+        finishCompletion();
+    }
+}
+```
+
+这两个代码都做了一个操作，就是将正常结果`result` 和 异常结果 `exception` 都赋值给了 `outcome` 这个变量 。
+
+接着再看下future的get方法
+
+```java
+//这里有必须看下Task的结束时的状态，如果正常结束，状态为 NORMAL ， 异常结果，状态为EXCEPTIONAL 。 看下几个状态的定义，如下：  
+private volatile int state;
+private static final int NEW          = 0;
+private static final int COMPLETING   = 1;
+private static final int NORMAL       = 2;
+private static final int EXCEPTIONAL  = 3;
+private static final int CANCELLED    = 4;
+private static final int INTERRUPTING = 5;
+private static final int INTERRUPTED  = 6;
+
+/**
+* @throws CancellationException {@inheritDoc}
+*/
+public V get() throws InterruptedException, ExecutionException {
+    int s = state;
+    // NORMAL(2) 、EXCEPTIONAL(3) 都大于 COMPLETING（1）,所以Task结束之后，不会走该if
+    if (s <= COMPLETING)
+         s = awaitDone(false, 0L);
+    // 重点： 返回结果
+    return report(s);
+}
+
+private V report(int s) throws ExecutionException {
+    // 之前正常结果或者异常都存放在Object outcomme 中了
+    Object x = outcome;
+    // 正常返回
+    if (s == NORMAL)
+        return (V)x;
+    // EXCEPTIONAL(3) 小于 CANCELLED(4) ，所以不会走该if分支，直接后续的throw 抛异常的逻辑
+    if (s >= CANCELLED)
+        throw new CancellationException();
+    // 不等于NORMAL 且 大于等于 CANCELLED  ,  再结合 调用 report(int s ) 之前也做了state 的过滤
+    //到这一步，那只能是EXCEPTIONAL(3) 
+    throw new ExecutionException((Throwable)x);
+}
+```
+
+因此可以通过get方法获取到异常结果
 
  

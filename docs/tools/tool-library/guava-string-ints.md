@@ -912,6 +912,23 @@ private Splitter(Splitter.Strategy strategy, boolean omitEmptyStrings, CharMatch
 
 
 
+#### MapSpliter
+
+Spliter和MapSpliter跟Joiner以及MapJoiner功能正好相反。
+
+```java
+Map<String,String> maps = Maps.newHashMap();		
+maps.put("id", "1");		
+maps.put("name", "2");		
+
+String ss= Joiner.on("&").withKeyValueSeparator("=").join(maps);		
+maps =Splitter.on("&").withKeyValueSeparator("=").split(ss);
+```
+
+
+
+
+
 ## 通用/其它工具
 
 ### Preconditions

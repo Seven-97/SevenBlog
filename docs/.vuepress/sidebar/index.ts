@@ -22,6 +22,7 @@ export default sidebar({
           children: [
             "01-basic-knowledge",
             "02-generics",
+            "enum",
             "03-annotations",
             "04-exceptions",
             "05-reflection",
