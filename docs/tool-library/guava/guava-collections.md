@@ -1257,15 +1257,15 @@ private static class FilteredKeyMap<K, V> extends Maps.AbstractFilteredMap<K, V>
 
 | 功能                              | 方法                                                         |
 | --------------------------------- | ------------------------------------------------------------ |
-| 创建一个不可变的set               | 1、ImmutableSet&lt;E> immutableEnumSet(E anElement, E... otherElements)<br />2、ImmutableSet&lt;E> immutableEnumSet(Iterable&lt;E> elements) |
-| 创建一个HashSet                   | 1、HashSet&lt;E> newHashSet()<br/>2、HashSet&lt;E> newHashSet(E... elements)<br/>3、HashSet&lt;E> newHashSetWithExpectedSize(int expectedSize)<br/>4、HashSet&lt;E> newHashSet(Iterable<? extends E> elements)<br/>5、HashSet&lt;E> newHashSet(Iterator<? extends E> elements) |
-| 创建一个线程安全的Set             | 1、Set&lt;E> newConcurrentHashSet()<br />2、Set&lt;E> newConcurrentHashSet(Iterable<? extends E> elements) |
-| 创建一个LinkedHashMap             | 1、LinkedHashSet&lt;E> newLinkedHashSet()<br/>2、LinkedHashSet&lt;E> newLinkedHashSetWithExpectedSize(int expectedSize)<br/>3、LinkedHashSet&lt;E> newLinkedHashSet(Iterable<? extends E> elements) |
-| 创建一个TreeSet                   | 1、TreeSet&lt;E> newTreeSet()<br />2、TreeSet&lt;E> newTreeSet(Iterable<? extends E> elements)<br />3、TreeSet&lt;E> newTreeSet(Comparator<? super E> comparator) |
-| 创建一个IdentityHashSet           | Set&lt;E> newIdentityHashSet()                               |
-| 创建一个CopyOnWriteArraySet       | 1、CopyOnWriteArraySet&lt;E> newCopyOnWriteArraySet()<br />2、CopyOnWriteArraySet&lt;E> newCopyOnWriteArraySet(Iterable<? extends E> elements) |
-| 创建一个EnumSet                   | 1、EnumSet&lt;E> newEnumSet(Iterable&lt;E> iterable, Class&lt;E> elementType)<br/>2、EnumSet&lt;E> complementOf(Collection&lt;E> collection)<br/>3、EnumSet&lt;E> complementOf(Collection&lt;E> collection, Class&lt;E> type)<br/>4、EnumSet&lt;E> makeComplementByHand(Collection&lt;E> collection, Class&lt;E> type) |
-| 根据一个Map创建一个Set            | Set&lt;E> newSetFromMap(Map<E, Boolean> map)                 |
+| 创建不可变的set                   | 1、ImmutableSet&lt;E> immutableEnumSet(E anElement, E... otherElements)<br />2、ImmutableSet&lt;E> immutableEnumSet(Iterable&lt;E> elements) |
+| 创建HashSet                       | 1、HashSet&lt;E> newHashSet()<br/>2、HashSet&lt;E> newHashSet(E... elements)<br/>3、HashSet&lt;E> newHashSetWithExpectedSize(int expectedSize)<br/>4、HashSet&lt;E> newHashSet(Iterable<? extends E> elements)<br/>5、HashSet&lt;E> newHashSet(Iterator<? extends E> elements) |
+| 创建线程安全的Set                 | 1、Set&lt;E> newConcurrentHashSet()<br />2、Set&lt;E> newConcurrentHashSet(Iterable<? extends E> elements) |
+| 创建LinkedHashMap                 | 1、LinkedHashSet&lt;E> newLinkedHashSet()<br/>2、LinkedHashSet&lt;E> newLinkedHashSetWithExpectedSize(int expectedSize)<br/>3、LinkedHashSet&lt;E> newLinkedHashSet(Iterable<? extends E> elements) |
+| 创建TreeSet                       | 1、TreeSet&lt;E> newTreeSet()<br />2、TreeSet&lt;E> newTreeSet(Iterable<? extends E> elements)<br />3、TreeSet&lt;E> newTreeSet(Comparator<? super E> comparator) |
+| 创建IdentityHashSet               | Set&lt;E> newIdentityHashSet()                               |
+| 创建CopyOnWriteArraySet           | 1、CopyOnWriteArraySet&lt;E> newCopyOnWriteArraySet()<br />2、CopyOnWriteArraySet&lt;E> newCopyOnWriteArraySet(Iterable<? extends E> elements) |
+| 创建EnumSet                       | 1、EnumSet&lt;E> newEnumSet(Iterable&lt;E> iterable, Class&lt;E> elementType)<br/>2、EnumSet&lt;E> complementOf(Collection&lt;E> collection)<br/>3、EnumSet&lt;E> complementOf(Collection&lt;E> collection, Class&lt;E> type)<br/>4、EnumSet&lt;E> makeComplementByHand(Collection&lt;E> collection, Class&lt;E> type) |
+| 根据Map创建一个Set                | Set&lt;E> newSetFromMap(Map<E, Boolean> map)                 |
 | 以两个Set的并集作为视图           | Sets.SetView&lt;E> union(final Set<? extends E> set1, final Set<? extends E> set2) |
 | 以两个Set的交集作为视图           | Sets.SetView&lt;E> intersection(final Set&lt;E> set1, final Set<?> set2) |
 | 以两个Set的互不重叠的部分作为视图 | Sets.SetView&lt;E> difference(final Set&lt;E> set1, final Set<?> set2) |
@@ -1275,7 +1275,7 @@ private static class FilteredKeyMap<K, V> extends Maps.AbstractFilteredMap<K, V>
 
 
 
-### 创建一个不可变的Set
+### 创建不可变的Set
 
 1. 根据传入的参数，创建一个不可变的Set
    ```java
@@ -1322,13 +1322,356 @@ private static class FilteredKeyMap<K, V> extends Maps.AbstractFilteredMap<K, V>
 
    
 
+### 创建HashSet
+
+1. 直接new一个HashSet
+   ```java
+   public static <E> HashSet<E> newHashSet() {
+       return new HashSet();
+   }
+   ```
+
+2. 传入一个数组，返回一个HashSet
+   ```java
+   public static <E> HashSet<E> newHashSet(E... elements) {
+       //创建一个期望大小为elements.length的HashSet
+       HashSet set = newHashSetWithExpectedSize(elements.length);
+       //将数组中的元素，全部赋值给新的HashSet
+       Collections.addAll(set, elements);
+       return set;
+   }
+   ```
+
+3. 创建一个期望大小的HashSet
+   ```java
+   public static <E> HashSet<E> newHashSetWithExpectedSize(int expectedSize) {
+       //创建一个HashSet，大小为Maps.capacity方法计算后的值，这个方法最终返回原值的4/3
+       return new HashSet(Maps.capacity(expectedSize));
+   }
+   ```
+
+4. 根据传入的集合创建一个HashSet
+   ```java
+   public static <E> HashSet<E> newHashSet(Iterable<? extends E> elements) {
+       return elements instanceof Collection?new HashSet(Collections2.cast(elements)):newHashSet((Iterator)elements.iterator());
+   }
+   ```
+
+5. 根据传入的迭代器创建一个HashSet
+   ```java
+   public static <E> HashSet<E> newHashSet(Iterator<? extends E> elements) {
+       //创建一个HashSet
+       HashSet set = newHashSet();
+       //使用Guava中的Iterators.addAll方法将迭代器中的元素添加到set中
+       Iterators.addAll(set, elements);
+       return set;
+   }
+   ```
+
+   
+
+### 创建线程安全的Set
+
+1. 使用ConcurrentHashMap创建一个Set
+   ```java
+   public static <E> Set<E> newConcurrentHashSet() {
+       //创建一个ConcurrentHashMap，使用newSetFromMap方法将ConcurrentHashMap的值转为Set
+       return newSetFromMap(new ConcurrentHashMap());
+   }
+   ```
+
+2. 使用传入的集合创建一个线程安全的Set
+   ```java
+   public static <E> Set<E> newConcurrentHashSet(Iterable<? extends E> elements) {
+       //创建一个ConcurrentHashSet
+       Set set = newConcurrentHashSet();
+       //使用Guava中的Iterables.addAll方法将集合elements中的元素添加到set中
+       Iterables.addAll(set, elements);
+       return set;
+   }
+   ```
+
+   
+
+### 创建LinkedHashSet
+
+1. 直接创建一个LinkedHashSet
+   ```java
+   public static <E> LinkedHashSet<E> newLinkedHashSet() {
+       return new LinkedHashSet();
+   }
+   ```
+
+2. 创建一个期望大小的LinkedHashSet
+   ```java
+   public static <E> LinkedHashSet<E> newLinkedHashSetWithExpectedSize(int expectedSize) {
+       //返回一个LinkedHashSet，大小为expectedSize的4/3
+       return new LinkedHashSet(Maps.capacity(expectedSize));
+   }
+   ```
+
+3. 根据传入的集合，返回一个LinkedHashSet
+   ```java
+   public static <E> LinkedHashSet<E> newLinkedHashSet(Iterable<? extends E> elements) {
+       //如果是一个Collection类型，则直接创建LinkedHashSet，并将集合中的值赋值给新的LinkedHashSet
+       if(elements instanceof Collection) {
+           return new LinkedHashSet(Collections2.cast(elements));
+       } else {
+           LinkedHashSet set = newLinkedHashSet();
+           Iterables.addAll(set, elements);
+           return set;
+       }
+   }
 
 
 
+### 创建TreeSet
+
+1. 直接创建一个TreeSet
+   ```java
+   public static <E extends Comparable> TreeSet<E> newTreeSet() {
+       return new TreeSet();
+   }
+   ```
+
+2. 传入一个集合，返回一个TreeSet，并将集合中的元素赋值给TreeSet
+   ```java
+   public static <E extends Comparable> TreeSet<E> newTreeSet(Iterable<? extends E> elements) {
+       //创建一个TreeSet
+       TreeSet set = newTreeSet();
+       //将集合中的元素赋值给TreeSet
+       Iterables.addAll(set, elements);
+       return set;
+   }
+   ```
+
+3. 传入一个Comparator，根据Comparator的规则创建一个TreeSet
+   ```java
+   public static <E> TreeSet<E> newTreeSet(Comparator<? super E> comparator) {
+       return new TreeSet((Comparator)Preconditions.checkNotNull(comparator));
+   }
+   ```
+
+   
+
+### 创建IdentityHashSet
+
+根据Maps.newIdentityHashMap()和Sets.newSetFromMap两个方法创建一个IdentityHashSet
+
+```java
+public static <E> Set<E> newIdentityHashSet() {
+    //使用Maps.newIdentityHashMap()方法创建一个IdentityHashMap，然后使用newSetFromMap方法将Map转为Set
+    return newSetFromMap(Maps.newIdentityHashMap());
+}
+```
 
 
 
+### 创建CopyOnWriteArraySet
 
+1. 直接创建一个CopyOnWriteArraySet
+   ```java
+   public static <E> CopyOnWriteArraySet<E> newCopyOnWriteArraySet() {
+       return new CopyOnWriteArraySet();
+   }
+   ```
+
+2. 根据传入的集合创建一个CopyOnWriteArraySet，并将集合中的数据赋值给CopyOnWriteArraySet
+   ```java
+   public static <E> CopyOnWriteArraySet<E> newCopyOnWriteArraySet(Iterable<? extends E> elements) {
+       //如果是一个Collection，直接将其转为Collection，如果不是则使用Lists创建一个List
+       Object elementsCollection = elements instanceof Collection?Collections2.cast(elements):Lists.newArrayList(elements);
+       return new CopyOnWriteArraySet((Collection)elementsCollection);
+   }
+   ```
+
+   
+
+### 创建EnumSet
+
+1. 根据传入的集合和一个类型，返回一个EnumSet
+   ```java
+   public static <E extends Enum<E>> EnumSet<E> newEnumSet(Iterable<E> iterable, Class<E> elementType) {
+       //根据传入的类型，创建一个set
+       EnumSet set = EnumSet.noneOf(elementType);
+       //将集合中的元素添加到set中
+       Iterables.addAll(set, iterable);
+       return set;
+   }
+   ```
+
+2. 传入一个集合，返回一个EnumSet
+   ```java
+   public static <E extends Enum<E>> EnumSet<E> complementOf(Collection<E> collection) {
+       if(collection instanceof EnumSet) {
+           return EnumSet.complementOf((EnumSet)collection);
+       } else {
+           Preconditions.checkArgument(!collection.isEmpty(), "collection is empty; use the other version of this method");
+           Class type = ((Enum)collection.iterator().next()).getDeclaringClass();
+           return makeComplementByHand(collection, type);
+       }
+   }
+   ```
+
+   
+
+### 根据一个Map创建一个Set
+
+根据Map创建一个Set
+```java
+public static <E> Set<E> newSetFromMap(Map<E, Boolean> map) {
+    return Platform.newSetFromMap(map);
+}
+//Platform.newSetFromMap方法，一层一层往上追，最终可以看到，实际上使用的是Collections.SetFromMap类：
+
+private static class SetFromMap<E> extends AbstractSet<E> implements Set<E>, Serializable{
+    private final Map<E, Boolean> m;  // The backing map
+    private transient Set<E> s;       // Its keySet
+    SetFromMap(Map<E, Boolean> map) {//其实就是将map中的key集合作为一个Set了
+        if (!map.isEmpty())
+            throw new IllegalArgumentException("Map is non-empty");
+        m = map;
+        s = map.keySet();
+    }
+}
+```
+
+
+
+### 以两个Set的互不重叠的部分作为视图
+
+传入两个Set，返回一个两个set1中不包含set2中的元素
+
+```java
+public static <E> Sets.SetView<E> difference(final Set<E> set1, final Set<?> set2) {
+    Preconditions.checkNotNull(set1, "set1");
+    Preconditions.checkNotNull(set2, "set2");
+    //创建一个过滤规则（规则为，不能包含set2中的元素）
+    final Predicate notInSet2 = Predicates.not(Predicates.in(set2));
+    return new Sets.SetView(null) {
+        //重写iterator，使用Iterators.filter过滤出不含set2元素的一个迭代器
+        public Iterator<E> iterator() {
+            return Iterators.filter(set1.iterator(), notInSet2);
+        }
+        //根据最终返回的迭代器计算长度
+        public int size() {
+            return Iterators.size(this.iterator());
+        }
+        //如果set1和set2中全部相等，就为空
+        public boolean isEmpty() {
+            return set2.containsAll(set1);
+        }
+        public boolean contains(Object element) {
+            return set1.contains(element) && !set2.contains(element);
+        }
+    };
+}
+```
+
+
+
+### 以两个Set的并集作为视图
+
+```java
+public static <E> Sets.SetView<E> union(final Set<? extends E> set1, final Set<? extends E> set2) {
+    Preconditions.checkNotNull(set1, "set1");
+    Preconditions.checkNotNull(set2, "set2");
+    //获取set2，中不包含set1的所有元素
+    final Sets.SetView set2minus1 = difference(set2, set1);
+    return new Sets.SetView(null) {
+        //获取set1的全部长度和set2minus1视图的长度
+        public int size() {
+            return set1.size() + set2minus1.size();
+        }
+        public boolean isEmpty() {
+            return set1.isEmpty() && set2.isEmpty();
+        }
+        public Iterator<E> iterator() {
+            return Iterators.unmodifiableIterator(Iterators.concat(set1.iterator(), set2minus1.iterator()));
+        }
+        public boolean contains(Object object) {
+            return set1.contains(object) || set2.contains(object);
+        }
+        //返回所有元素
+        public <S extends Set<E>> S copyInto(S set) {
+            set.addAll(set1);
+            set.addAll(set2);
+            return set;
+        }
+        public ImmutableSet<E> immutableCopy() {
+            return (new Builder()).addAll(set1).addAll(set2).build();
+        }
+    };
+}
+```
+
+
+
+### 以两个Set的交集作为视图
+
+```java
+public static <E> Sets.SetView<E> intersection(final Set<E> set1, final Set<?> set2) {
+    Preconditions.checkNotNull(set1, "set1");
+    Preconditions.checkNotNull(set2, "set2");
+    //创建一个过滤规则（规则为：全部set2元素）
+    final Predicate inSet2 = Predicates.in(set2);
+    return new Sets.SetView(null) {
+        //返回set1中包含set2中的所有元素
+        public Iterator<E> iterator() {
+            return Iterators.filter(set1.iterator(), inSet2);
+        }
+        //根据计算出的迭代器计算长度
+        public int size() {
+            return Iterators.size(this.iterator());
+        }
+        //根据迭代器判断是否为空
+        public boolean isEmpty() {
+            return !this.iterator().hasNext();
+        }
+        public boolean contains(Object object) {
+            return set1.contains(object) && set2.contains(object);
+        }
+        public boolean containsAll(Collection<?> collection) {
+            return set1.containsAll(collection) && set2.containsAll(collection);
+        }
+    };
+}
+```
+
+
+
+### 以两个Set的对称部分作为视图
+
+```java
+public static <E> Sets.SetView<E> symmetricDifference(Set<? extends E> set1, Set<? extends E> set2) {
+    Preconditions.checkNotNull(set1, "set1");
+    Preconditions.checkNotNull(set2, "set2");
+    return difference(union(set1, set2), intersection(set1, set2));
+}
+```
+
+
+
+### 过滤Set
+
+Set的过滤和Maps中实现的各种过滤都是大同小异。
+
+传入一个Set和一个过滤规则，返回一个过滤后的Set：
+
+```java
+public static <E> Set<E> filter(Set<E> unfiltered, Predicate<? super E> predicate) {
+    //如果传入的Set为SortedSet类型，使用传入SortedSet的方法进行处理
+    if(unfiltered instanceof SortedSet) {
+        return filter((SortedSet)((SortedSet)unfiltered), predicate);
+    } else if(unfiltered instanceof Sets.FilteredSet) {
+        Sets.FilteredSet filtered = (Sets.FilteredSet)unfiltered;
+        Predicate combinedPredicate = Predicates.and(filtered.predicate, predicate);
+        return new Sets.FilteredSet((Set)filtered.unfiltered, combinedPredicate);
+    } else {
+        return new Sets.FilteredSet((Set)Preconditions.checkNotNull(unfiltered), (Predicate)Preconditions.checkNotNull(predicate));
+    }
+}
+```
 
 
 

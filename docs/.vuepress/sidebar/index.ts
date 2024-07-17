@@ -396,7 +396,7 @@ export default sidebar({
             "guava-newcollections",
             "guava-io",
             "guava-cocurrent",
-            "guava",
+            "guava-cache",
           ],
         }
       ]
