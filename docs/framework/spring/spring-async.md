@@ -46,9 +46,9 @@ AsyncAnnotationAdvisor类是Spring框架中用于处理Async注解的切面，**
 
 
 
-## Async注解底层异步线程池
 
-### 获取Async注解线程池主流程解析
+
+## 获取Async注解线程池主流程解析
 
 进入到Spring源码Async注解AOP切面实现部分，我们重点剖析异步调用实现中线程池是怎么处理的。下图是org.springframework.aop.interceptor.AsyncExecutionInterceptor#invoke方法的实现，可以看出是调用determineAsyncExecutor方法获取异步线程池。
 
@@ -72,9 +72,7 @@ AsyncAnnotationAdvisor类是Spring框架中用于处理Async注解的切面，**
 
 
 
-## Spring是怎么为Async注解提供
-
-### 默认线程池的
+## Spring是怎么为Async注解提供默认线程池的
 
 Async注解默认线程池有下面两个方法实现：  
 

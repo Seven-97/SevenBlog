@@ -380,6 +380,28 @@ export default sidebar({
       ],
     },
     {
+      text: "工具类库",
+      icon: "codelibrary-fill",
+      prefix: "tool-library/",
+      collapsible: true,
+      children: [
+        {
+          text: "Guava工具类",
+          icon: "tool",
+          prefix: "guava/",
+          collapsible: true,
+          children: [
+            "guava-string-ints",
+            "guava-collections",
+            "guava-newcollections",
+            "guava-io",
+            "guava-cocurrent",
+            "guava",
+          ],
+        }
+      ]
+    },
+    {
       text: "计算机基础",
       icon: "computer",
       prefix: "cs-basics/",
@@ -573,18 +595,6 @@ export default sidebar({
       children: [
           "maven-detail",
           "git-detail",
-          {
-            text: "工具类库",
-            icon: "codelibrary-fill",
-            prefix: "tool-library/",
-            collapsible: true,
-            children: [
-              "guava-string-ints",
-              "guava-collections",
-              "guava-newcollections",
-              "guava",
-            ],
-          },
         {
           text: "Gradle",
           icon: "gradle",

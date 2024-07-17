@@ -15,25 +15,29 @@ tag:
 
 ## 前言
 
+作为`JAVA8`之后加入的新成员，`CompletableFuture`的实现与使用上，也处处体现出了**函数式异步编程**的味道。一个`CompletableFuture`对象可以被一个环节接一个环节的处理、也可以对两个或者多个`CompletableFuture`进行组合处理或者等待结果完成。通过对`CompletableFuture`各种方法的合理使用与组合搭配，可以在很多的场景都可以应付自如。
+
+
+
 例如现在有这么个需求：
 
 > **需求描述**： 实现一个全网比价服务，比如可以从某宝、某东、某夕夕去获取某个商品的价格、优惠金额，并计算出实际付款金额，最终返回价格最优的平台与价格信息。
 
 这里假定每个平台获取原价格与优惠券的接口已经实现、且都是需要调用HTTP接口查询的耗时操作，Mock接口每个耗时`1s`左右。
 
-根据最初的需求理解，我们可以很自然的写出对应实现代码：
+根据最初的需求理解，可以很自然的写出对应实现代码：
 
 ```java
 public PriceResult getCheapestPlatAndPrice(String product) {
-    PriceResult mouBaoPrice = computeRealPrice(HttpRequestMock.getMouBaoPrice(product),            HttpRequestMock.getMouBaoDiscounts(product));
-    PriceResult mouDongPrice = computeRealPrice(HttpRequestMock.getMouDongPrice(product),            HttpRequestMock.getMouDongDiscounts(product));
-    PriceResult mouXiXiPrice = computeRealPrice(HttpRequestMock.getMouXiXiPrice(product),            HttpRequestMock.getMouXiXiDiscounts(product));
+    PriceResult mouBaoPrice = computeRealPrice(HttpRequestMock.getMouBaoPrice(product)， HttpRequestMock.getMouBaoDiscounts(product));
+    PriceResult mouDongPrice = computeRealPrice(HttpRequestMock.getMouDongPrice(product), HttpRequestMock.getMouDongDiscounts(product));
+    PriceResult mouXiXiPrice = computeRealPrice(HttpRequestMock.getMouXiXiPrice(product), HttpRequestMock.getMouXiXiDiscounts(product));
     // 计算并选出实际价格最低的平台
-    return Stream.of(mouBaoPrice, mouDongPrice, mouXiXiPrice).            min(Comparator.comparingInt(PriceResult::getRealPrice))            .get();
+    return Stream.of(mouBaoPrice, mouDongPrice, mouXiXiPrice).min(Comparator.comparingInt(PriceResult::getRealPrice)).get();
 }
 ```
 
-一切顺利成章，运行测试下：
+一切顺理成章，运行测试下：
 
 ```ini
 05:24:54.779[main|1]获取某宝上 Iphone13的价格完成： 5199
@@ -65,7 +69,9 @@ public PriceResult getCheapestPlatAndPrice(String product) {
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406092116907.webp)
 
-为了提升性能，我们采用**线程池**来负责多线程的处理操作，因为我们需要得到各个子线程处理的结果，所以我们需要使用 `Future`来实现：
+
+
+为了提升性能，可以采用**线程池**来负责多线程的处理操作，因为需要得到各个子线程处理的结果，所以需要使用 `Future`来实现：
 
 ```java
 public PriceResult getCheapestPlatAndPrice2(String product) {
@@ -118,13 +124,13 @@ public PriceResult getCheapestPlatAndPrice2(String product) {
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406092116849.webp)
 
-我们当然可以继续使用上面提到的`线程池+Future`的方式，但`Future`在应对并行结果组合以及后续处理等方面显得力不从心，**弊端**明显：
+当然也可以继续使用上面提到的`线程池+Future`的方式，但`Future`在应对并行结果组合以及后续处理等方面显得力不从心，**弊端**明显：
 
 > 代码写起来会**非常拖沓**：先封装`Callable`函数放到线程池中去执行查询操作，然后分三组`阻塞等待`结果并计算出各自结果，最后再`阻塞等待`价格计算完成后汇总得到最终结果。
 
 
 
-说到这里呢，就需要`CompletableFuture`登场了，通过它可以很轻松的来完成任务的并行处理，以及各个并行任务结果之间的组合再处理等操作。使用`CompletableFuture`编写实现代码如下：
+说到这里呢，就需要`CompletableFuture`登场了，通过可以很轻松的来完成任务的并行处理，以及各个并行任务结果之间的组合再处理等操作。使用`CompletableFuture`编写实现代码如下：
 
 ```java
 public PriceResult getCheapestPlatAndPrice3(String product) {
@@ -141,7 +147,7 @@ public PriceResult getCheapestPlatAndPrice3(String product) {
 }
 ```
 
-看下执行结果符合预期，而接口耗时则降到了`1s`（因为我们依赖的每一个查询实际操作的接口耗时都是模拟的1s，所以这个结果已经算是此复合接口能达到的极限值了）。
+看下执行结果符合预期，而接口耗时则降到了`1s`（因为依赖的每一个查询实际操作的接口耗时都是模拟的1s，所以这个结果已经算是此复合接口能达到的极限值了）。
 
 ```ini
 06:01:13.354[ForkJoinPool.commonPool-worker-6|17]获取某夕夕上 Iphone13的优惠完成： -5300
@@ -161,19 +167,11 @@ public PriceResult getCheapestPlatAndPrice3(String product) {
 
 
 
-## CompletableFuture深入了解
-
-作为`JAVA8`之后加入的新成员，`CompletableFuture`的实现与使用上，也处处体现出了**函数式异步编程**的味道。一个`CompletableFuture`对象可以被一个环节接一个环节的处理、也可以对两个或者多个`CompletableFuture`进行组合处理或者等待结果完成。通过对`CompletableFuture`各种方法的合理使用与组合搭配，可以让我们在很多的场景都可以应付自如。
-
-下面就来一起了解下这些方法以及对应的使用方式吧。
-
-
-
-### Future与CompletableFuture
+## Future与CompletableFuture
 
 首先，先来理一下Future与CompletableFuture之间的关系。
 
-#### Future
+### Future
 
 如果接触过多线程相关的概念，那`Future`应该不会陌生，早在**Java5**中就已经存在了。
 
@@ -203,7 +201,7 @@ public void buyCoffeeAndOthers() throws ExecutionException, InterruptedException
 
 
 
-#### CompletableFuture
+### CompletableFuture
 
 Future在应对一些简单且相互独立的异步执行场景很便捷，但是在一些复杂的场景，比如同时需要多个有依赖关系的异步独立处理的时候，或者是一些类似流水线的异步处理场景时，就显得力不从心了。比如：
 
@@ -218,11 +216,11 @@ Future在应对一些简单且相互独立的异步执行场景很便捷，但�
 
 
 
-### CompletableFuture使用方式
+## CompletableFuture使用方式
 
-#### 创建**CompletableFuture**并执行
+### 创建**CompletableFuture**并执行
 
-当我们需要进行异步处理的时候，我们可以通过`CompletableFuture.supplyAsync`方法，传入一个具体的要执行的处理逻辑函数，这样就轻松的完成了**CompletableFuture**的创建与触发执行。
+当需要进行异步处理的时候，可以通过`CompletableFuture.supplyAsync`方法，传入一个具体的要执行的处理逻辑函数，这样就轻松的完成了**CompletableFuture**的创建与触发执行。
 
 | 方法名称    | 作用描述                                                     |
 | ----------- | ------------------------------------------------------------ |
@@ -250,7 +248,9 @@ public void testCreateFuture(String product) {
 
 
 
-#### 环环相扣处理
+### 环环相扣处理
+
+#### 使用方法
 
 在流水线处理场景中，往往都是一个任务环节处理完成后，下一个任务环节接着上一环节处理结果继续处理。`CompletableFuture`用于这种流水线环节驱动类的方法有很多，相互之间主要是在返回值或者给到下一环节的入参上有些许差异，使用时需要注意区分：
 
@@ -271,7 +271,7 @@ public void testCreateFuture(String product) {
 
 
 
-期望总是美好的，但是实际情况却总不尽如人意。在我们编排流水线的时候，如果某一个环节执行抛出异常了，会导致整个流水线后续的环节就没法再继续下去了，比如下面的例子：
+期望总是美好的，但是实际情况却总不尽如人意。在编排流水线的时候，如果某一个环节执行抛出异常了，会导致整个流水线后续的环节就没法再继续下去了，比如下面的例子：
 
 ```java
 public void testExceptionHandle() {
@@ -286,7 +286,11 @@ public void testExceptionHandle() {
 
 执行之后会发现，supplyAsync抛出异常后，后面的thenApply并没有被执行。
 
-那如果我们想要让流水线的每个环节处理失败之后都能让流水线继续往下面环节处理，让后续环节可以拿到前面环节的结果或者是抛出的异常并进行对应的应对处理，就需要用到`handle`和`whenCompletable`方法了。
+
+
+#### 异常处理
+
+那如果想要让流水线的每个环节处理失败之后都能让流水线继续往下面环节处理，让后续环节可以拿到前面环节的结果或者是抛出的异常并进行对应的应对处理，就需要用到`handle`和`whenCompletable`方法了。
 
 先看下两个方法的作用描述：
 
@@ -295,7 +299,7 @@ public void testExceptionHandle() {
 | handle       | 与`thenApply`类似，区别点在于handle执行函数的入参有两个，一个是`CompletableFuture`执行的实际结果，一个是是**Throwable对象**，这样如果前面执行出现异常的时候，可以通过handle获取到异常并进行处理。 |
 | whenComplete | 与`handle`类似，区别点在于`whenComplete`执行后**无返回值**。 |
 
-我们对上面一段代码示例修改使用handle方法来处理：
+对上面一段代码示例修改使用handle方法来处理：
 
 ```java
 public void testExceptionHandle() {
@@ -318,7 +322,7 @@ thenApply executed, exception occurred...
 
 
 
-#### 多个**CompletableFuture组合操作**
+### 多个**CompletableFuture组合操作**
 
 前面一直在介绍流水线式的处理场景，但是很多时候，流水线处理场景也不会是一个链路顺序往下走的情况，很多时候为了提升并行效率，一些没有依赖的环节我们会让他们同时去执行，然后在某些环节需要依赖的时候，进行结果的依赖合并处理，类似如下图的效果。
 
@@ -339,9 +343,9 @@ thenApply executed, exception occurred...
 
 
 
-#### 结果等待与获取
+### 结果等待与获取
 
-在执行线程中将任务放到工作线程中进行处理的时候，执行线程与工作线程之间是异步执行的模式，如果执行线程需要获取到共工作线程的执行结果，则可以通过`get`或者`join`方法，阻塞等待并从`CompletableFuture`中获取对应的值。
+在执行线程中将任务放到工作线程中进行处理的时候，执行线程与工作线程之间是异步执行的模式，如果执行线程需要获取到共工作线程的执行结果，则可以通过`get`或者`join`方法，**阻塞等待**并从`CompletableFuture`中获取对应的值。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406092148982.webp)
 
@@ -373,9 +377,9 @@ public void testGetAndJoin(String product) {
 
 
 
-### **CompletableFuture**方法及其Async版本
+## **CompletableFuture**方法及其Async版本
 
-我们在使用**CompletableFuture**的时候会发现，有很多的方法，都会同时有两个以**Async**命名结尾的方法版本。以前面我们用的比较多的`thenCombine`方法为例：
+在使用**CompletableFuture**的时候会发现，有很多的方法，都会同时有两个以**Async**命名结尾的方法版本。以前面我们用的比较多的`thenCombine`方法为例：
 
 1. thenCombine(CompletionStage, BiFunction)
 2. thenCombineAsync(CompletionStage, BiFunction)
@@ -393,7 +397,7 @@ public void testGetAndJoin(String product) {
 
 
 
-为了更好的理解下上述的三个差异点，我们通过下面的代码来演示下：
+为了更好的理解下上述的三个差异点，通过下面的代码来演示下：
 
 - **用法1： **其中一个supplyAsync方法以及thenCombineAsync指定使用自定义线程池，另一个supplyAsync方法不指定线程池（使用默认线程池）
 
@@ -446,7 +450,7 @@ public PriceResult getCheapestPlatAndPrice5(String product) {
 
 
 
-现在，我们知道了方法名称带有Async和不带Async的实现策略上的差异点就在于使用哪个线程池来执行而已。那么，对我们实际的指导意义是啥呢？实际使用的时候，我们怎么判断自己应该使用带Async结尾的方法、还是不带Async结尾的方法呢？
+现在，我们知道了方法名称带有Async和不带Async的实现策略上的差异点就在于使用哪个线程池来执行而已。那么，对我们实际的指导意义是啥呢？实际使用的时候，应该怎么判断自己应该使用带Async结尾的方法、还是不带Async结尾的方法呢？
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406092200130.webp)
 
@@ -460,9 +464,9 @@ public PriceResult getCheapestPlatAndPrice5(String product) {
 
 
 
-### 与Stream结合使用的注意点
+## 与Stream结合使用的注意点
 
-在涉及批量进行并行处理的时候，通过`Stream`与`CompletableFuture`结合使用，可以简化我们的很多编码逻辑。但是**在使用细节方面需要注意下**，避免达不到使用`CompletableFuture`的预期效果。
+在涉及批量进行并行处理的时候，通过`Stream`与`CompletableFuture`结合使用，可以简化很多编码逻辑。但是**在使用细节方面需要注意下**，避免达不到使用`CompletableFuture`的预期效果。
 
 > **需求场景：** 在同一个平台内，传入多个商品，查询不同商品对应的价格与优惠信息，并选出实付价格最低的商品信息。
 
@@ -558,9 +562,9 @@ public PriceResult comparePriceInOnePlat2(List<String> products) {
 
 从执行结果可以看出，三个商品并行处理，整体处理耗时相比前面编码方式有很大提升，达到了预期的效果。
 
-**归纳下**：
 
-> 因为Stream的操作具有**延迟执行**的特点，且只有遇到终止操作（比如collect方法）的时候才会真正的执行。所以遇到这种需要并行处理且需要合并多个并行处理流程的情况下，需要将并行流程与合并逻辑放到两个Stream中，这样分别触发完成各自的处理逻辑，就可以了。
+
+**归纳下**：因为Stream的操作具有**延迟执行**的特点，且只有遇到终止操作（比如collect方法）的时候才会真正的执行。所以遇到这种需要并行处理且需要合并多个并行处理流程的情况下，需要将并行流程与合并逻辑放到两个Stream中，这样分别触发完成各自的处理逻辑，就可以了。
 
 
 

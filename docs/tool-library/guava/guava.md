@@ -3,6 +3,7 @@ title: Guava
 category: 开发工具
 tag:
  - 工具类库
+ - Guava
 ---
 
 
@@ -87,105 +88,6 @@ Guava 提供了三种基础的失效策略：
 
 整体看下来，感觉还是挺复杂的，不太常用。等有需要再学习吧...
 
-## 并发
-
-### ListenableFuture
-
-JUC 的 Future 接口提供了一种异步获取任务执行结果的机制，表示一个异步计算的结果。
-
-```java
-ExecutorService executor = Executors.newFixedThreadPool(1);
-Future<String> future = executor.submit(() -> {
-    // 执行异步任务，返回一个结果
-    return "Task completed";
-});
-// Blocked
-String result = future.get();
-```
-
-Executor 实际返回的是实现类 FutureTask，它同时实现了 Runnable 接口，因此可以手动创建异步任务。
-
-```java
-FutureTask<String> futureTask = new FutureTask<>(new Callable<String>() {
-    @Override
-    public String call() throws Exception {
-        return "Hello";
-    }
-});
-        
-new Thread(futureTask).start();
-System.out.println(futureTask.get());
-```
-
-而 Guava 提供的 ListenableFuture 更进一步，允许注册回调，在任务完成后自动执行，实际也是使用它的实现类 ListenableFutureTask。
-
-```java
-// 装饰原始的线程池
-ListeningExecutorService listeningExecutorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
-ListenableFuture<String> future = listeningExecutorService.submit(() -> {
-    // int i = 1 / 0;
-    return "Hello";
-});
-
-// 添加回调 1
-Futures.addCallback(future, new FutureCallback<String>() {
-    // 任务成功时的回调
-    @Override
-    public void onSuccess(String result) {
-        System.out.println(result);
-    }
-
-    // 任务失败时的回调
-    @Override
-    public void onFailure(Throwable t) {
-        System.out.println("Error: " + t.getMessage());
-    }
-}, listeningExecutorService);
-
-// 添加回调 2
-future.addListener(new Runnable() {
-    @Override
-    public void run() {
-        System.out.println("Done");
-    }
-}, listeningExecutorService);
-```
-
-### Service
-
-Guava 的 Service 框架是一个用于管理服务生命周期的轻量级框架。它提供了一个抽象类 AbstractService 和一个接口 Service，可以通过继承 AbstractService 或者直接实现 Service 接口来创建自定义的服务，并使用 ServiceManager 来管理这些服务的生命周期。
-
-```java
-public class MyService extends AbstractService {
-    @Override
-    protected void doStart() {
-        // 在这里执行启动服务的逻辑
-        System.out.println("MyService is starting...");
-        notifyStarted();
-    }
-    
-    @Override
-    protected void doStop() {
-        // 在这里执行停止服务的逻辑
-        System.out.println("MyService is stopping...");
-        notifyStopped();
-    }
-}
-
-
-@Test
-public void testService() {
-    Service service = new MyService();
-    ServiceManager serviceManager = new ServiceManager(List.of(service));
-    
-    serviceManager.startAsync().awaitHealthy();
-    
-    // 主线程逻辑
-    
-    serviceManager.stopAsync().awaitStopped();
-}
-```
-
 
 
 ## 基本类型工具
@@ -223,12 +125,6 @@ Range.range(a, BoundType.CLOSED, b, BoundType.OPEN);
 ```
 
 
-
-## IO
-
-Guava 使用术语 **流 **来表示可关闭的，并且在底层资源中有位置状态的 I/O 数据流。字节流对应的工具类为 ByteSterams，字符流对应的工具类为 CharStreams。
-Guava 中为了避免和流直接打交道，抽象出可读的 **源 source** 和可写的 **汇 sink** 两个概念，指可以从中打开流的资源，比如 File、URL，同样也分别有字节和字符对应的源和汇，定义了一系列读写的方法。
-除此之外，Files 工具类提供了对文件的操作。（PS：个人觉得，JDK 的 IO 流已经够麻烦的了，又来一套 API 太乱了，而且也没有更好用吧。还是先统一用 JDK 标准库里的好一点。）
 
 
 

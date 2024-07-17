@@ -1403,7 +1403,7 @@ ordinal是为基于枚举的通用数据结构（EnumSet 和 EnumMap）设计的
 
 
 
-### 36、用 EnumSet 替代位字段
+### 36、用 [EnumSet](https://www.seven97.top/java/collection/03-map4-enumset-map.html) 替代位字段
 
 如果枚举类型的元素主要在 Set 中使用，传统上使用 int 枚举模式，通过不同的 2 的平方数为每个常量赋值：
 
@@ -1452,7 +1452,7 @@ text.applyStyles(EnumSet.of(Style.BOLD, Style.ITALIC));
 
 
 
-### 37、使用 EnumMap 替换序数索引
+### 37、使用 [EnumMap](https://www.seven97.top/java/collection/03-map4-enumset-map.html) 替换序数索引
 
 **用序数索引数组不如使用 EnumMap ，应尽量少使用 `ordinal()` 。**
 
