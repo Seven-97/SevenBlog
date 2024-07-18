@@ -11,7 +11,7 @@ tag:
 
 ## 介绍
 
-![stickPicture.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250727540.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250727540.gif)
 
 ### Throwable
 
@@ -178,7 +178,7 @@ public class MyException extends RuntimeException {
 
 执行流程图如下：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250727564.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250727564.jpg)
 
 也可以直接用try-finally，不使用catch，可用在不需要捕获异常的代码，可以保证资源在使用后被关闭。例如IO流中执行完相应操作后，关闭相应资源；使用Lock对象保证线程同步，通过finally可以保证锁会被释放；数据库连接代码时，关闭连接操作等等。
 
@@ -569,7 +569,7 @@ public static void simpleTryCatchFinally();
 
 try-with-resources语句其实是一种语法糖，通过编译之后又回到了开始说的嵌套的那种模式：
 
-![stickPicture.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250727568.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250727568.jpg)
 
 可以发现try-with-resources被编译之后，又采取了嵌套的模式，但是和之前的嵌套有点不同，他close的时候都利用了catch去捕获了异常，然后添加到真正的异常中，整体逻辑比之前我们自己的嵌套要复杂一些。
 

@@ -397,11 +397,11 @@ private void rotateRight(Entry<K,V> p) {
 
  
 
-![stickPicture.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908345.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908345.gif)
 
  
 
-![stickPicture.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908361.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908361.gif)
 
 把PP结点设为红色了，如果PP的父结点是黑色，那么无需再做任何处理；但如果PP的父结点是红色，根据性质4(每个红色结点的两个子结点一定都是黑色。)，此时红黑树已不平衡了，所以还需要把PP当作新的插入结点，继续做插入操作自平衡处理，直到平衡为止。
 
@@ -431,7 +431,7 @@ private void rotateRight(Entry<K,V> p) {
 
  
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908355.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908355.jpg)
 
 左边两个红结点，右边不存在，那么一边一个刚刚好，并且因为为红色，肯定不会破坏树的平衡。
 
@@ -453,7 +453,7 @@ private void rotateRight(Entry<K,V> p) {
 
  
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908370.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908370.jpg)
 
 
 
@@ -475,7 +475,7 @@ private void rotateRight(Entry<K,V> p) {
 
  
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908358.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908358.jpg)
 
 
 
@@ -491,7 +491,7 @@ private void rotateRight(Entry<K,V> p) {
 
  
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908373.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250908373.jpg)
 
  
 

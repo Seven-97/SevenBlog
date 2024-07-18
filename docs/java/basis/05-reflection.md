@@ -121,7 +121,7 @@ public class HelloReflect {
 
 
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250737239.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250737239.jpg)
 
 ### 反射获取类实例
 

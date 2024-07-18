@@ -35,7 +35,7 @@ volatile通过内存屏障来维护可见性和有序性，硬件层的内存屏
 
 当对volatile变量进行写操作的时候，JVM会向处理器发送一条Lock#前缀的指令
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029175.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029175.gif)
 
 而这个LOCK前缀的指令主要实现了两个步骤：
 
@@ -85,7 +85,7 @@ class VolatileExample {
 
 - 根据 happens-before 的传递性规则：1 happens-before 4。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029184.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029184.jpg)
 
 因为以上规则，当线程 A 将 volatile 变量 flag 更改为 true 后，线程 B 能够迅速感知。
 
@@ -99,7 +99,7 @@ Java 编译器会在生成指令系列时在适当的位置会插入内存屏障
 
 JMM 会针对编译器制定 volatile 重排序规则表。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029181.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029181.jpg)
 
  
 
@@ -119,9 +119,9 @@ JMM 会针对编译器制定 volatile 重排序规则表。
 
 volatile 写是在前面和后面分别插入内存屏障，而 volatile 读操作是在后面插入两个内存屏障。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029182.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029182.jpg)
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029178.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251029178.jpg)
 
  
 

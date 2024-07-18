@@ -68,7 +68,7 @@ public @interface SuppressWarnings {
 
 它能够修饰的程序元素包括类型、属性、方法、参数、构造器、局部变量，只能存活在源码时，取值为String[]。它的作用是告诉编译器忽略指定的警告信息，它可以取的值如下所示：
 
-![image-20240425072401174](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250724252.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250724252.png)
 
  
 
@@ -90,7 +90,7 @@ public @interface SuppressWarnings {
 
 用来限制注解的使用范围，即指定被修饰的注解能用于哪些程序单元
 
-![image-20240425072412704](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250724756.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250724756.png)
 
 取值范围定义在ElementType 枚举中
 
@@ -126,7 +126,7 @@ public enum ElementType {
 
 用于指定被修饰的注解可以保留多长时间，即指定JVM策略在哪个时间点上删除当前注解。保留策略值有以下三个：
 
-![image-20240425072437109](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250724156.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250724156.png)
 
 定义在RetentionPolicy枚举中。
 

@@ -138,7 +138,7 @@ static final int hash(Object key) {
 
 put流程如下：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250901133.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250901133.jpg)
 
  ```java
  // 第四个参数 onlyIfAbsent 如果是 true，那么只有在不存在该 key 时才会进行 put 操作

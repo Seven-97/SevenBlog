@@ -17,9 +17,9 @@ AQS ( Abstract Queued Synchronizer ）是一个抽象的队列同步器，通过
 
 AQS整体框架如下：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047981.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047981.gif)
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047987.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047987.gif)
 
 当有自定义同步器接入时，只需重写第一层所需要的部分方法即可，不需要关注底层具体的实现流程。当自定义同步器进行加锁或者解锁操作时，先经过第一层的API进入AQS内部方法，然后经过第二层进行锁的获取，接着对于获取锁失败的流程，进入第三层和第四层的等待队列处理，而这些处理方式均依赖于第五层的基础数据提供层
 
@@ -27,7 +27,7 @@ AQS整体框架如下：
 
 AQS 为每个共享资源都设置一个共享资源锁，线程在需要访问共享资源时首先需要获取共享资源锁，如果获取到了共享资源锁，便可以在当前线程中使用该共享资源，如果获取不到，则将该线程放入线程等待队列，等待下一次资源调度，流程图如下所示：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047983.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047983.gif)
 
 Java中的大部分同步类（Lock、Semaphore、ReentrantLock等）都是基于AbstractQueuedSynchronizer（简称为AQS）实现的。
 
@@ -61,17 +61,17 @@ protected final boolean compareAndSetState(int expect, int update) {
 
  
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047977.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047977.gif)
 
  
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047997.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047997.gif)
 
 ### CLH队列
 
 Craig、Landin and Hagersten队列，是单向链表，AQS中的队列是CLH变体的虚拟双向队列（FIFO），AQS是通过将每条请求共享资源的线程封装成一个节点来实现锁的分配。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047000.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047000.gif)
 
 AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过内置的FIFO队列来完成资源获取的排队工作，通过CAS完成对State值的修改。
 
@@ -83,7 +83,7 @@ AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过
 
 AQS只是一个框架 ，只定义了一个接口，具体资源的获取、释放都由自定义同步器去实现。不同的自定义同步器争用共享资源的方式也不同，自定义同步器在实现时只需实现共享资源state的获取与释放方式即可，至于具体线程等待队列的维护，如获取资源失败入队、唤醒出队等， AQS 已经在顶层实现好（就是模板方法模式），不需要具体的同步器再做处理。自定义同步器实现时主要实现以下几种方法：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047629.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047629.gif)
 
  
 
@@ -99,7 +99,7 @@ AQS只是一个框架 ，只定义了一个接口，具体资源的获取、释�
 
 Node即为上面CLH变体队列中的节点。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047676.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047676.gif)
 
 Node结点是每一个等待获取资源的线程的封装，其包含了需要同步的线程本身及其等待状态waitStatus
 
@@ -137,7 +137,7 @@ waitStatus有下面几个枚举值：如是否被阻塞、是否等待唤醒、�
 
 以ReentrantLock的非公平锁为例，将加锁和解锁的交互流程单独拎出来强调一下
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047699.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047699.gif)
 
 加锁：
 
@@ -172,7 +172,7 @@ public final void acquire(int arg) {
 3. acquireQueued()使线程阻塞在等待队列中获取资源，一直获取到资源后才返回。如果在整个等待过程中被中断过，则返回true，否则返回false。
 4. 如果线程在等待过程中被中断过，它是不响应的。只是获取资源后才再进行自我中断selfInterrupt()，将中断补上。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047722.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047722.gif)
 
 关于整个函数流程详解，可以往下看
 
@@ -350,7 +350,7 @@ private Node enq(final Node node) {
 
 如果没有被初始化，需要进行初始化一个头结点出来。但请注意，初始化的头结点并不是当前线程节点，而是调用了无参构造函数的节点。如果经历了初始化或者并发导致队列中有元素，则与之前的方法相同。其实，addWaiter就是一个在双端链表添加尾节点的操作，需要注意的是，双端链表的头结点是一个无参构造函数的头结点。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047743.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047743.gif)
 
 #### acquireQueued(Node, int)
 
@@ -403,7 +403,7 @@ private void setHead(Node node) {
 
 acquireQueued函数的具体流程：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047762.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047762.gif)
 
 从上图可以看出，跳出当前循环的条件是当“前置节点是头结点，且当前线程获取锁成功”。为了防止因死循环导致CPU资源被浪费，我们会判断前置节点的状态来决定是否要将当前线程挂起，shouldParkAfterFailedAcquire代码：
 
@@ -447,7 +447,7 @@ private final boolean parkAndCheckInterrupt() {
 
 具体挂起流程用流程图表示如下（shouldParkAfterFailedAcquire流程）：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047278.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047278.gif)
 
 整个流程中，如果前驱结点的状态不是SIGNAL，那么自己就不能安心去休息，需要去找个安心的休息点，同时可以再尝试下看有没有机会轮到自己拿号。
 
@@ -542,15 +542,15 @@ cancelAcquire方法的流程：
 
 当前节点是尾节点：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047311.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047311.gif)
 
 当前节点是Head的后继节点：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047378.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047378.gif)
 
 当前节点不是Head的后继节点，也不是尾节点：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047405.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047405.gif)
 
 通过上面的流程，我们对于CANCELLED节点状态的产生和变化已经有了大致的了解，但是为什么所有的变化都是对Next指针进行了操作，而没有对Prev指针进行操作呢？什么情况下会对Prev指针进行操作？
 
@@ -656,11 +656,11 @@ private void unparkSuccessor(Node node) {
 
 1. s==null，在新结点入队时可能会出现
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047450.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047450.gif)
 
 2. s.waitStatus > 0，中间有节点取消时会出现（如超时）
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047479.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251047479.gif)
 
 关于并发问题，addWaiter()入队操作和cancelAcquire()取消排队操作都会造成next链的不一致，而prev链是强一致的，所以这时从后往前找是最安全的。
 

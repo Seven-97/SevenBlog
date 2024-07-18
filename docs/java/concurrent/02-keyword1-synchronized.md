@@ -53,11 +53,11 @@ public class Test1 {
 
 将.java文件使用javac命令编译为.class文件，然后将class文件反编译出来。反编译的字节码文件截取：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023096.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023096.jpg)
 
  
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023120.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023120.gif)
 
 通过反编译后的内容查看可以发现，synchronized编译后，同步块的前后有monitorenter/monitorexit两个 字节码指令。在Java虚拟机规范中有描述两条指令的作用：翻译一下如下：
 
@@ -95,7 +95,7 @@ public class Test1 {
 
 编译之后反编译截图：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023111.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023111.gif)
 
 从反编译的结果来看，同步方法表面上不是通过monitorenter/monitorexit指令来完成，但是与普通方法相比，常量池中多出来了ACC_SYNCHRONIZED标识符。java虚拟机就是根据ACC_SYNCHRONIZED标识符来实现方法的同步，当调用方法时，调用指令先检查方法是否有 ACC_SYNCHRONIZED访问标志，如果存在，执行线程将先获取monitor，获取成功之后才执行方法体，执行完后再释放monitor。在方法执行期间，其他线程都无法再获取到同一个monitor对象。 虽然编译后的结果看起来不一样，但实际上没有本质的区别，只是方法的同步是通过隐式的方式来实现，无需通过字节码来完成。
 
@@ -196,7 +196,7 @@ public class MonitorDemo {
 
 该代码的happens-before关系如图所示：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023090.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023090.jpg)
 
 在图中每一个箭头连接的两个节点就代表之间的happens-before关系，黑色的是通过程序顺序规则推导出来，红色的为监视器锁规则推导而出：线程A释放锁happens-before线程B加锁，蓝色的则是通过程序顺序规则和监视器锁规则推测出来happens-befor关系，通过传递性规则进一步推导的happens-before关系。
 
@@ -206,7 +206,7 @@ public class MonitorDemo {
 
 HotSpot虚拟机中，对象在内存中存储的布局可以分为三块区域：对象头（Header）、实例数据（Instance Data）和对齐填充（Padding）。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023099.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023099.jpg)
 
 ### Java对象头
 
@@ -220,11 +220,11 @@ Klass Point：对象指向它的类元数据的指针，虚拟机通过这个指
 
 比如 hash码，对象所属的年代，对象锁，锁状态标志，偏向锁（线程）ID，偏向时间，数组长度（数组对象）等。Java对象头一般占有2个机器码（64位虚拟机中，1个机器码是8个字节，也就是64bit），但是 如果对象是数组类型，则需要3个机器码，因为JVM虚拟机可以通过Java对象的元数据信息确定Java对象的大小，但是无法从数组的元数据来确认数组的大小，所以用一块来记录数组长度。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023087.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023087.jpg)
 
 现在我们虚拟机基本是64位的，而64位的对象头有点浪费空间，JVM默认会开启指针压缩，所以基本上也是按32位的形式记录对象头的。手动设置jvm启动参数为：-XX:+UseCompressedOops
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023210.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023210.jpg)
 
 **哪些信息会被压缩？**
 
@@ -281,7 +281,7 @@ Monitor的基本结构是什么？
 
 - Candidate字段：用来避免不必要的阻塞或等待线程唤醒，因为每一次只有一个线程能够成功拥有锁，如果每次前一个释放锁的线程唤醒所有正在阻塞或等待的线程，会引起不必要的上下文切换（从阻塞到就绪然后因为竞争锁失败又被阻塞）从而导致性能严重下降；Candidate只有两种可能的值0表示没有需要唤醒的线程1表示要唤醒一个继任线程来竞争锁
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023238.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023238.gif)
 
 1. 刚开始Monitor中Owner为null
 2. 当Thread-2执行Synchronized(obj)就会将Monitor的所有者owner置为Thread-2。Monitor中只能有一个Owner。
@@ -303,7 +303,7 @@ synchronized是悲观锁，在操作同步资源之前需要给同步资源先�
 
 **四种锁状态对应的的Mark Word内容：**
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023264.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023264.gif)
 
 ### 锁粗化
 
@@ -340,7 +340,7 @@ public static String test03(String s1, String s2, String s3) {
 
 上述代码使用javap 编译结果
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023288.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023288.jpg)
 
 众所周知，StringBuilder不是安全同步的，但是在上述代码中，JVM判断该段代码并不会逃逸，则将该代码带默认为线程独有的资源，并不需要同步，所以执行了锁消除操作。(还有Vector中的各种操作也可实现锁消除。在没有逃逸出数据安全防卫内)
 
@@ -396,7 +396,7 @@ public static String test03(String s1, String s2, String s3) {
 
 ## Synchronized与ReentrantLock
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023310.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251023310.jpg)
 
 ### synchronized的缺陷
 

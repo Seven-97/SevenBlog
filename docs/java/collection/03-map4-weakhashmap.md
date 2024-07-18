@@ -27,7 +27,7 @@ tag:
 
 WeakHashMap 特别适用于需要缓存的场景。在缓存场景下，由于内存是有限的，不能缓存所有对象；对象缓存命中可以提高系统效率，但缓存MISS也不会造成错误，因为可以通过计算重新得到。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250921308.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250921308.jpg)
 
 从上图可以看出：
 
@@ -69,7 +69,7 @@ WeakHashMap(Map<? extends K, ? extends V> map)
 
 从WeakHashMap的继承关系上来看，可知其继承AbstractMap，实现了Map接口。其底层数据结构是Entry数组，Entry的数据结构如下：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250921304.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250921304.jpg)
 
 从源码上可知，Entry的内部并没有存储key的值，而是通过调用父类的构造方法，传入key和ReferenceQueue，最终key和queue会关联到Reference中，这里是GC时，清清除key的关键，这里大致看下Reference的源码：
 

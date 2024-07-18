@@ -146,7 +146,7 @@ public class ConditionObject implements Condition, java.io.Serializable
 
 事实上，节点的定义复用了 AQS 中 Node 节点的定义，也就是说，同步队列和等待队列中节点类型都是 AQS 的静态内部类 AbstractQueuedSynchronized.Node。一个 Condition 包含一个等待队列，Condition 拥有首节点（firstWaiter）和尾节点（lastWaiter）。当前线程调用 Condition.await() 方法之后，将会以当前线程构造节点，并将节点从尾部加入等待队列，等待队列的基本结构如下所示。
 
-![image-20240425160357916](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251603965.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251603965.png)
 
 - 等待队列分为首节点和尾节点。当一个线程调用Condition.await()方法，将会以当前线程构造节点，并将节点从尾部加入等待队列。
 
@@ -168,7 +168,7 @@ public class ConditionObject implements Condition, java.io.Serializable
 
 当前线程加入到等待队列中如图所示：
 
-![image-20240425160416950](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251604016.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251604016.png)
 
  
 
@@ -233,7 +233,7 @@ private Node addConditionWaiter() {
 
 如果从队列的角度看，当前线程加入到 Condition 的等待队列，如下图所示：
 
-![stickPicture.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251602459.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251602459.gif)
 
  
 
@@ -310,7 +310,7 @@ private void unlinkCancelledWaiters() {
 
 在调用signal()方法之前必须先判断是否获取到了锁。接着获取等待队列的首节点，将其移动到同步队列并且利用LockSupport唤醒节点中的线程。节点从等待队列移动到同步队列如下图所示：
 
-![image-20240425160528445](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251605505.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251605505.png)
 
 被唤醒的线程将从await方法中的while循环中退出。随后加入到同步状态的竞争当中去。成功获取到竞争的线程则会返回到await方法之前的状态。
 
@@ -372,7 +372,7 @@ final boolean transferForSignal(Node node) {
 
 节点从等待队列移动到同步队列的过程如下图所示：
 
-![stickPicture.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251602461.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251602461.gif)
 
 被唤醒后的线程，将从 await() 方法中的 while 循环中退出（因为此时 isOnSyncQueue(Node) 方法返回 true），进而调用 acquireQueued() 方法加入到获取同步状态的竞争中。
 

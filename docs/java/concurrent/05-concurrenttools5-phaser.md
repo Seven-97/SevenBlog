@@ -11,7 +11,7 @@ tag:
 
 ## Phaser运行机制
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251558361.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251558361.jpg)
 
 - Registration(注册)
 

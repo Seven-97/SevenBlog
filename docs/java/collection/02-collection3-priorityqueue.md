@@ -15,7 +15,7 @@ tag:
 
 Java中**PriorityQueue**实现了**Queue**接口，不允许放入null元素；其通过堆实现，具体说是通过完全二叉树(**complete binary tree**)实现的**小顶堆**(任意一个非叶子节点的权值，都不大于其左右子节点的权值)，也就意味着可以通过数组来作为**PriorityQueue**的底层实现。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853729.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853729.jpg)
 
 ## 方法剖析
 
@@ -23,7 +23,7 @@ Java中**PriorityQueue**实现了**Queue**接口，不允许放入null元素；�
 
 add(E e)和offer(E e)的语义相同，都是向优先队列中插入元素，只是Queue接口规定二者对插入失败时的处理不同，前者在插入失败时抛出异常，后则则会返回false。对于**PriorityQueue**这两个方法其实没什么差别。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853736.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853736.jpg)
 
 新加入的元素可能会破坏小顶堆的性质，因此需要进行必要的调整。
 
@@ -70,7 +70,7 @@ private void siftUp(int k, E x) {
 
 element()和peek()的语义完全相同，都是获取但不删除队首元素，也就是队列中权值最小的那个元素，二者唯一的区别是当方法失败时前者抛出异常，后者返回null。根据小顶堆的性质，堆顶那个元素就是全局最小的那个；由于堆用数组表示，根据下标关系，0下标处的那个元素既是堆顶元素。所以**直接返回数组0下标处的那个元素即可**。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853738.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853738.jpg)
 
  ```java
  //peek()
@@ -87,7 +87,7 @@ element()和peek()的语义完全相同，都是获取但不删除队首元素�
 
 remove()和poll()方法的语义也完全相同，都是获取并删除队首元素，区别是当方法失败时前者抛出异常，后者返回null。由于删除操作会改变队列的结构，为维护小顶堆的性质，需要进行必要的调整。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853733.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853733.jpg)
 
 ```java
 public E poll() {
@@ -138,7 +138,7 @@ remove(Object o)方法用于删除队列中跟o相等的某一个元素(如果�
 1. 删除的是最后一个元素。直接删除即可，不需要调整。
 2. 删除的不是最后一个元素，从删除点开始以最后一个元素为参照调用一次siftDown()即
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853745.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250853745.jpg)
 
  
 

@@ -21,7 +21,7 @@ ScheduledThreadPoolExecutor继承自 ThreadPoolExecutor，为任务提供延迟�
 
 ## 数据结构
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251124087.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251124087.jpg)
 
  
 

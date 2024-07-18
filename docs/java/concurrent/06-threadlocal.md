@@ -15,7 +15,7 @@ tag:
 
 每个线程都有一个 ThreadLocalMap （ ThreadLocal 内部类），Map中元素的**键为 ThreadLocal** ，而值对应线程的变量副本。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251607824.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251607824.gif)
 
 ## ThreadLocal原理
 
@@ -192,7 +192,7 @@ static class Entry extends WeakReference<ThreadLocal<?>> {
 
 这里的key指向的ThreadLocal是弱引用，是为了防止ThreadLocal对象永远不会被回收。因为，若key为强引用，当ThreadLocal不想用了，那么就令 tl = null，但是此时key中还有一个强引用指向ThreadLocal，因此也就永远无法进行回收(除非ThreadLocalMap不用了)，所以会有内存泄露；但如果key使用的是弱引用，只要GC，就会回收
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251607832.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251607832.gif)
 
 但是还会有内存泄漏存在，ThreadLocal被回收，就导致key=null,此时map中也就无法访问到value，无法访问到的value也就无用了，也就是说，这个k-v对无用了，那么value也应该被回收，但实际上value可能没有被回收，因此依然存在内存泄露
 

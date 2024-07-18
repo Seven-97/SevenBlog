@@ -21,15 +21,11 @@ Tomcat 的线程池，就是先使用核心线程数配置，再使用最大线�
 
 进入 runWorker 之后，这部分代码看起来很眼熟：
 
-> org.apache.Tomcat.util.threads.ThreadPoolExecutor.Worker#run
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527858.gif)
+![org.apache.Tomcat.util.threads.ThreadPoolExecutor.Worker#run](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527858.gif)
 
 在 getTask 方法里面，可以看到关于线程池的几个关键参数：
 
-> org.apache.Tomcat.util.threads.ThreadPoolExecutor#getTask
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527919.gif)
+![org.apache.Tomcat.util.threads.ThreadPoolExecutor#getTask](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527919.gif)
 
 - corePoolSize，核心线程数，值为 10。
 
@@ -37,11 +33,11 @@ Tomcat 的线程池，就是先使用核心线程数配置，再使用最大线�
 
 而且基于 maximumPoolSize 这个参数，往前翻代码，会发现这个默认值就是 200：
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527873.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527873.gif)
 
 Tomcat线程池默认队列长度：
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527879.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527879.gif)
 
  
 
@@ -57,15 +53,11 @@ Tomcat线程池：
 
 往线程池里面提交任务的时候，会执行 execute 这个方法：
 
-> org.apache.Tomcat.util.threads.ThreadPoolExecutor#execute(java.lang.Runnable)
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527886.gif)
+![org.apache.Tomcat.util.threads.ThreadPoolExecutor#execute(java.lang.Runnable)](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527886.gif)
 
 对于 Tomcat 它会调用到 executeInternal 这个方法：
 
-> org.apache.Tomcat.util.threads.ThreadPoolExecutor#executeInternal
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527901.gif)
+![org.apache.Tomcat.util.threads.ThreadPoolExecutor#executeInternal](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527901.gif)
 
 这个方法里面，标号为 
 
@@ -83,19 +75,17 @@ Tomcat线程池：
 
 这个 workQueue 是 TaskQueue，是 Tomcat 自己基于 LinkedBlockingQueue 搞的一个队列。
 
-> org.apache.Tomcat.util.threads.TaskQueue#offer
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527735.gif)
+![org.apache.Tomcat.util.threads.TaskQueue#offer](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527735.gif)
 
 标号为 ① 的地方，判断了 parent 是否为 null，如果是则直接调用父类的 offer 方法。说明要启用这个逻辑，我们的 parent 不能为 null。
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527934.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527934.gif)
 
 parent 就是 Tomcat 线程池，通过其 set 方法可以知道，是在线程池完成初始化之后，进行了赋值。也就是说，在 Tomcat 的场景下，parent 不会为空。
 
 标号为 ② 的地方，调用了 getPoolSizeNoLock 方法：这个方法是获取当前线程池中有多个线程。所以如果这个表达式为 true：
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527146.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527146.gif)
 
  
 
@@ -111,7 +101,7 @@ parent 就是 Tomcat 线程池，通过其 set 方法可以知道，是在线程
 
 标号为 ④ 的地方。如果当前线程池的线程数比线程池配置的最大线程数还少，则返回 false。offer 方法返回 false，会出现什么情况？
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527320.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251527320.gif)
 
 offer返回false 则开始到上图中标号为 ③ 的地方，去尝试添加非核心线程了，也就是启用最大线程数这个配置了。
 

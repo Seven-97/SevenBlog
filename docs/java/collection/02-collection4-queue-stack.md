@@ -17,25 +17,25 @@ Java里有一个叫做Stack的类，却没有叫做Queue的类(它是个接口�
 
 Queue接口继承自Collection接口，除了最基本的Collection的方法之外，它还支持额外的insertion, extraction和inspection操作。这里有两组格式，共6个方法，一组是抛出异常的实现；另外一组是返回值的实现(没有则返回null)。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856302.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856302.gif)
 
 ### Deque
 
 Deque 是"double ended queue", 表示双向的队列，英文读作"deck". Deque 继承自 Queue接口，除了支持Queue的方法之外，还支持 insert , remove 和 examine操作，由于Deque是双向的，所以可以对队列的头和尾都进行操作，它同时也支持两组格式，一组是抛出异常的实现；另外一组是返回值的实现(没有则返回null)。共12个方法如下:
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856307.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856307.gif)
 
 当把 Deque 当做FIFO的 queue 来使用时，元素是从 deque 的尾部添加，从头部进行删除的； 所以 deque 的部分方法是和 queue 是等同的。具体如下:
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856311.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856311.gif)
 
 Deque的含义是“double ended queue”，即双端队列，它既可以当作栈使用，也可以当作队列使用。下表列出了Deque与Queue相对应的接口:
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856322.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856322.gif)
 
 下表列出了Deque与Stack对应的接口:
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856314.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856314.gif)
 
 上面两个表共定义了Deque的12个接口。添加，删除，取值都有两套接口，它们功能相同，区别是对失败情况的处理不同。一套接口遇到失败就会抛出异常，另一套遇到失败会返回特殊值( false 或 null )。除非某种实现对容量有限制，大多数情况下，添加操作是不会失败的。虽然Deque的接口有12个之多，但无非就是对容器的两端进行操作，或添加，或删除，或查看。
 
@@ -43,7 +43,7 @@ ArrayDeque和LinkedList是Deque的两个通用实现，由于官方更推荐使�
 
 从名字可以看出ArrayDeque底层通过数组实现，为了满足可以同时在数组两端插入或删除元素的需求，该数组还必须是循环的，即循环数组(circular array)，也就是说数组的任何一点都可能被看作起点或者终点。ArrayDeque是非线程安全的(not thread-safe)，当多个线程同时使用的时候，需要程序员手动同步；另外，该容器不允许放入 null 元素。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856328.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856328.jpg)
 
 上图中我们看到， head 指向首端第一个有效元素， tail 指向尾端第一个可以插入元素的空位。因为是循环数组，所以 head 不一定总等于0， tail 也不一定总是比 head 大。
 
@@ -53,7 +53,7 @@ ArrayDeque和LinkedList是Deque的两个通用实现，由于官方更推荐使�
 
 addFirst(E e)的作用是在Deque的首端插入元素，也就是在head的前面插入元素，在空间足够且下标没有越界的情况下，只需要将elements[--head] = e即可。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856996.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856996.jpg)
 
 实际需要考虑: 
 
@@ -83,7 +83,7 @@ public void addFirst(E e) {
 
  扩容函数doubleCapacity()，其逻辑是申请一个更大的数组(原数组的两倍)，然后将原数组复制过去。过程如下图所示:
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856017.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856017.jpg)
 
 图中可以看到，复制分两次进行，第一次复制head右边的元素，第二次复制head左边的元素。
 
@@ -112,7 +112,7 @@ private void doubleCapacity() {
 
 addLast(E e)的作用是在**Deque**的尾端插入元素，也就是在tail的位置插入元素，由于tail总是指向下一个可以插入的空位，因此只需要elements[tail] = e;即可。插入完成后再检查空间，如果空间已经用光，则调用doubleCapacity()进行扩容。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856038.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856038.jpg)
 
  
 
@@ -212,7 +212,7 @@ Java已不推荐使用Stack，而是推荐使用更高效的ArrayDeque
 
 如果 JDK 不推荐使用 Stack，那应该使用什么集合类来替换栈，一起看看官方的文档。
 
-![stickPicture.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856058.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856058.jpg)
 
 正如图中标注部分所示，栈的相关操作应该由 Deque 接口来提供，推荐使用 Deque 这种数据结构， 以及它的子类，例如 ArrayDeque。
 
@@ -226,7 +226,7 @@ val stack: Deque<Int> = ArrayDeque()
 
 - 速度比 Stack 快
 
-![stickPicture.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856079.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856079.jpg)
 
 这个类作为栈使用时可能比 Stack 快，作为队列使用时可能比 LinkedList 快。因为原来的 Java 的 Stack 继承自 Vector，而 Vector 在每个方法中都加了锁，而 Deque 的子类 ArrayDeque 并没有锁的开销。
 

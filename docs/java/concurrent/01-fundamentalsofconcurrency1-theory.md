@@ -37,7 +37,7 @@ java内存模型（即 java Memory Model，简称JMM），不存在的东西，�
 
 ### 主内存与工作内存交互
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956491.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956491.gif)
 
 一个变量如何从主内存拷贝到工作内存、如何从工作内存同步回主内存的呢？
 
@@ -191,7 +191,7 @@ flag = true;          //语句2
 
 从 java 源代码到最终实际执行的指令序列，会分别经历下面三种重排序：
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956489.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956489.jpg)
 
 1. 编译器优化的重排序。编译器在不改变单线程程序语义的前提下，可以重新安排语句的执行顺序。
 2. 指令级并行的重排序。现代处理器采用了指令级并行技术（Instruction-Level Parallelism， ILP）来将多条指令重叠执行。如果不存在数据依赖性，处理器可以改变语句对应机器指令的执行顺序。
@@ -217,7 +217,7 @@ flag = true;          //语句2
 
 Happens-Before是一种可见性规则，它表达的含义是前面一个操作的结果对后续操作是可见的。解释为 “先行发生于...”
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956500.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956500.gif)
 
 A happens-before B，也就意味着A的执行结果对B是可见的
 
@@ -227,39 +227,39 @@ Single Thread rule：在一个线程内，在程序前面的操作先行发生�
 
 as-id-serio 语义
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956510.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956510.gif)
 
 ### 管程锁定（监视器锁）规则
 
 Monitor Lock Rule ：对一个锁的解锁 Happens-Before 于后续对这个锁 的加锁
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956503.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956503.gif)
 
 ### volatile 变量规则
 
 Volatile Variable Rule：对一个volatile域的写，happens-before于任意后续对这个volatile域的读
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956515.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956515.gif)
 
 ### 线程启动start规则
 
 Thread Start Rule：Thread 对象的 start() 方法调用先行发生于此线程的每一个动作。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956128.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956128.gif)
 
 如果线程A执行操作ThreadB.start()(启动线程B)，那么A线程的ThreadB.start()操作happens-before于线程B中的任意操作
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956152.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956152.gif)
 
 ### 线程加入join规则
 
 Thread Join Rule：Thread 对象的结束先行发生于 join() 方法返回。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956176.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956176.gif)
 
 如果线程A执行操作ThreadB.join()并成功返回，那么线程B中的任意操作happens-before于线程A从ThreadB.join()操作成功返回
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956197.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956197.gif)
 
 ### 线程中断规则
 
@@ -336,7 +336,7 @@ public cass FinalReferenceEscapeExample {
 
 逃逸带来的问题
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956236.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250956236.gif)
 
  
 

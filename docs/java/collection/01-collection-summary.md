@@ -9,7 +9,7 @@ tag:
 
 ##  类关系图
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250834667.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250834667.jpg)
 
  
 

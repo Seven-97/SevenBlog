@@ -15,7 +15,7 @@ tag:
 
 **LinkedHashMap**实现了**Map**接口，即允许放入key为null的元素，也允许插入value为null的元素。从名字上可以看出该容器是**linked list**和**HashMap**的混合体，也就是说它同时满足**HashMap**和**linked list**的某些特性。**可将LinkedHashMap看作采用linked list增强的HashMap。**
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250918723.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250918723.jpg)
 
 事实上**LinkedHashMap**是**HashMap**的直接子类，**二者唯一的区别是LinkedHashMap在HashMap的基础上，采用双向链表(doubly-linked list)的形式将所有entry连接起来，这样的好处：**
 
@@ -37,11 +37,10 @@ put(K key, V value)方法是将指定的key, value对添加到map里。该方法
 
 注意，这里的**插入有两重含义**:
 
-l 从table的角度看，新的entry需要插入到对应的bucket里，当有哈希冲突时，采用头插法将新的entry插入到冲突链表的头部。
+- 从table的角度看，新的entry需要插入到对应的bucket里，当有哈希冲突时，采用头插法将新的entry插入到冲突链表的头部。
+- 从header的角度看，新的entry需要插入到双向链表的尾部。
 
-l 从header的角度看，新的entry需要插入到双向链表的尾部。
-
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250918720.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250918720.jpg)
 
 addEntry()代码如下:
 
@@ -87,7 +86,7 @@ remove(Object key)的作用是删除key值对应的entry，该方法的具体逻
 
 - 从header的角度来看，需要将该entry从双向链表中删除，同时修改链表中前面以及后面元素的相应引用。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250918717.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250918717.jpg)
 
 removeEntryForKey()对应的代码如下:
 
