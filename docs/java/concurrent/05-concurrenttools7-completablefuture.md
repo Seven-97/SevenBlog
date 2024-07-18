@@ -322,6 +322,38 @@ thenApply executed, exception occurred...
 
 
 
+#### 串联示例
+
+```java
+CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+    Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+    System.out.println("supplyAsync first");
+    return "first";
+}, fixedThreadPool).thenApply(s -> {
+    Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+    System.out.println("supplyAsync second");
+    return "second" + s;
+}).whenComplete((s, t) -> {
+    if (t == null) {
+        System.out.println("whenComplete succeed:" + s);
+    } else {
+        System.out.println("whenComplete error");
+    }
+});
+        
+System.out.println(future.get());
+
+//结果：
+supplyAsync first
+supplyAsync second
+whenComplete succeed:secondfirst
+secondfirst
+```
+
+
+
+
+
 ### 多个**CompletableFuture组合操作**
 
 前面一直在介绍流水线式的处理场景，但是很多时候，流水线处理场景也不会是一个链路顺序往下走的情况，很多时候为了提升并行效率，一些没有依赖的环节我们会让他们同时去执行，然后在某些环节需要依赖的时候，进行结果的依赖合并处理，类似如下图的效果。
@@ -340,6 +372,40 @@ thenApply executed, exception occurred...
 | runAfterEither | 等待两个`CompletableFuture`中任意一个执行完成后再执行某个Runnable对象，可以理解为`thenRun`的升级版，注意与`runAfterBoth`对比理解。 |
 | allOf          | 静态方法，**阻塞**等待所有给定的`CompletableFuture`执行结束后，返回一个`CompletableFuture<Void>`结果。 |
 | anyOf          | 静态方法，阻塞等待任意一个给定的`CompletableFuture`对象执行结束后，返回一个`CompletableFuture<Void>`结果。 |
+
+
+
+#### 并联示例
+
+```java
+ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
+CompletableFuture<String> firstfuture = CompletableFuture.supplyAsync(() -> {
+    Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+    System.out.println("supplyAsync first");
+    return "first";
+}, fixedThreadPool);
+CompletableFuture<String> secondfuture = CompletableFuture.supplyAsync(() -> {
+    Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+    System.out.println("supplyAsync second");
+    return "second";
+}, fixedThreadPool);
+CompletableFuture<String> thirdfuture = CompletableFuture.supplyAsync(() -> {
+    Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+    System.out.println("supplyAsync third");
+    return "third";
+}, fixedThreadPool);
+
+CompletableFuture.allOf(firstfuture, secondfuture, thirdfuture)
+       .whenComplete((aVoid, t) -> {
+             try {
+                  System.out.println("whenComplete succeed:" + firstfuture.get() + secondfuture.get() + thirdfuture.get());
+              } catch (Exception e) {
+                  System.out.println("error");
+              }
+        });
+```
+
+
 
 
 
@@ -374,6 +440,12 @@ public void testGetAndJoin(String product) {
     }
 }
 ```
+
+
+
+
+
+
 
 
 

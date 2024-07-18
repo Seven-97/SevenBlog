@@ -14,13 +14,13 @@ tag:
 
 ```java
 ExecutorService executor = Executors.newSingleThreadExecutor();
-SettableFuture<Integer> future0 = SettableFuture.create();
+SettableFuture<Integer> future = SettableFuture.create();
 // 使用其他线程去 set 对应的结果。
 executor.submit(() -> {
-    future0.set(1);
+    future.set(1);
 });
 
-Futures.addCallback(future0, new FutureCallback<>() {
+Futures.addCallback(future, new FutureCallback<>() {
     @Override
     public void onSuccess(Integer result) {
         // main线程执行的
@@ -35,9 +35,15 @@ Futures.addCallback(future0, new FutureCallback<>() {
 
 执行 callback 的线程池这里指定为 `MoreExecutors#directExecutor` ，那么这里执行打印 result 的线程是**主线程**
 
-于 `MoreExecutors#directExecutor` ，可以看到定义是这样的：
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407181438115.png)
 
-```
+
+
+
+
+在 `MoreExecutors#directExecutor` 中，可以看到定义是这样的：
+
+```java
 public final class MoreExecutors {
     // 省略了类内其他成员
     public static Executor directExecutor() {
@@ -48,7 +54,7 @@ public final class MoreExecutors {
 
 以及
 
-```
+```java
 @GwtCompatible
 @ElementTypesAreNonnullByDefault
 enum DirectExecutor implements Executor {
@@ -74,7 +80,7 @@ enum DirectExecutor implements Executor {
 
 ```java
 ExecutorService executor = Executors.newSingleThreadExecutor();
-SettableFuture<Integer> future0 = SettableFuture.create();
+SettableFuture<Integer> future = SettableFuture.create();
 // 使用其他线程去 set 对应的结果。
 executor.submit(() -> {
     // 增加线程 sleep 的逻辑。
@@ -83,10 +89,10 @@ executor.submit(() -> {
     } catch (InterruptedException e) {
         e.printStackTrace();
     }
-    future0.set(1);
+    future.set(1);
 });
 
-Futures.addCallback(future0, new FutureCallback<>() {
+Futures.addCallback(future, new FutureCallback<>() {
     @Override
     public void onSuccess(Integer result) {
         // 此时就会被 executor 的线程执行
@@ -99,12 +105,16 @@ Futures.addCallback(future0, new FutureCallback<>() {
 }, MoreExecutors.directExecutor());
 ```
 
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407181438160.png)
+
+
+
 那么这里清晰了：
 
 - 如果 future 已经完成，那么 `MoreExecutor#directExecutor` 表示当前线程；
 - 如果 future 未完成，那么 `MoreExecutor#directExecutor` 就是未来完成 future 的线程。
 
-因此其实具体执行回调的线程某种程度上是不确定的。
+因此其实具体执行回调的线程某种程度上是不确定的
 
 
 
@@ -114,7 +124,7 @@ Futures.addCallback(future0, new FutureCallback<>() {
 
 ### 引言
 
-jdk原生的future已经提供了异步操作，但是不能直接回调。guava对future进行了增强，核心接口就是ListenableFuture。jdk8从guava中吸收了精华新增的类[CompletableFuture](https://www.seven97.top/java/concurrent/05-concurrenttools7-completablefuture.html)，也可以直接看这个类的学习。
+jdk原生的future已经提供了异步操作，但是不能直接回调。guava对future进行了增强，核心接口就是ListenableFuture。JDK8从guava中吸收了精华新增的类[CompletableFuture](https://www.seven97.top/java/concurrent/05-concurrenttools7-completablefuture.html)，也可以直接看这个类的学习。
 
 
 

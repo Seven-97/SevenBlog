@@ -386,6 +386,15 @@ export default sidebar({
       collapsible: true,
       children: [
         {
+          text: "JDK工具类",
+          icon: "java",
+          prefix: "jdk/",
+          collapsible: true,
+          children: [
+            
+          ],
+        },
+        {
           text: "Guava工具类",
           icon: "tool",
           prefix: "guava/",
@@ -394,6 +403,7 @@ export default sidebar({
             "guava-string-ints",
             "guava-collections",
             "guava-newcollections",
+            "guava-collection-tool",
             "guava-io",
             "guava-cocurrent",
             "guava-cache",

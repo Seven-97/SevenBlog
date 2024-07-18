@@ -18,6 +18,8 @@ tag:
 
 Guava 提供的 Cache 按照 **有则取值，无则计算 **的逻辑，支持自动装载，自动移除等扩展功能，比传统的`ConcurrentHashMap`功能更加强大。
 
+说在前面，Guava 提供的 Cache参考的是JDK 7的 `ConcurrentHashMap`，而Caffeine Cache参考的是JDK 8的 `ConcurrentHashMap`。
+
 ### 初识
 
 **Guava**是Google提供的一套JAVA的工具包，而`Guava Cache`则是该工具包中提供的一套完善的**JVM级别**的高并发缓存框架。其实现机制类似*ConcurrentHashMap*，但是进行了众多的封装与能力扩展。作为JVM级别的本地缓存框架，`Guava Cache`具备缓存框架该有的众多基础特性。当然，Guava Cache能从众多本地缓存类产品中脱颖而出，除了具备上述基础缓存特性外，还有众多贴心的*能力增强*，绝对算得上是工具包届的**超级暖男**！为什么这么说呢？我们一起看下*Guava Cache*的能力介绍，应该可以有所体会。
