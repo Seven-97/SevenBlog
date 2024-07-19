@@ -396,7 +396,7 @@ export default sidebar({
         },
         {
           text: "Guava工具类",
-          icon: "tool",
+          icon: "guide",
           prefix: "guava/",
           collapsible: true,
           children: [
@@ -407,6 +407,15 @@ export default sidebar({
             "guava-io",
             "guava-cocurrent",
             "guava-cache",
+          ],
+        },
+        {
+          text: "正则表达式",
+          icon: "help",
+          prefix: "regular/",
+          collapsible: true,
+          children: [
+            "regular-performance-issue",
           ],
         }
       ]

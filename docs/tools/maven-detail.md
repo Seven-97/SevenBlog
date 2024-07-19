@@ -22,41 +22,82 @@ tag:
 
 
 
-标签详解
+常用标签详解
 
 ```xml
 <!-- project 是根标签-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <!-- 父类继承用-->
-    <parent>
-        <!--
-         groupId 饭写公司网址+项目名
-         artifactId 项目+模块名
-         version   第个1 表示大版本号
-         第二个0 表示分支版本号
-         还可以有 第三个数字 表示小版本号
-         snapshot  快照   alpha 内部测试 beta 公测 release稳定 GA正式发布
-        package  打包的方式 不指定 默认是jar   war zip pom
-        -->
-        <artifactId>TrainingWork</artifactId>
-        <groupId>com.qunar.fresh</groupId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
-    <!-- 集合多个子模块-->
+    
+    <!--指定父项目的坐标。如果项目中没有规定某个元素的值，那么父项目中的对应值即为项目的默认值。 坐标包括group ID，artifact ID和 version。--> 
+    <parent> 
+         <!--继承的父项目的构件标识符--> 
+         <artifactId>maventest</artifactId>
+         <!--继承的父项目的全球唯一标识符--> 
+         <groupId>com.seven</groupId>
+         <!--继承的父项目的版本:大版本.次版本.小版本 ;snapshot快照 alpha内部测试 beta公测 release稳定 GA正式发布--> 
+         <version>1.0.0-SNAPSHOT</version>
+         <!-- 父项目的pom.xml文件的相对路径。相对路径允许你选择一个不同的路径。默认值是../pom.xml。Maven首先在构建当前项目的地方寻找父项 目的pom，其次在文件系统的这个位置（relativePath位置），然后在本地仓库，最后在远程仓库寻找父项目的pom。--> 
+         <relativePath/> 
+ 	</parent> 
+    
+    <!-- 当前项目的标识 -->
+     <!--项目的全球唯一标识符，通常使用全限定的包名区分该项目和其他项目。并且构建时生成的路径也是由此生成， 如com.mycompany.app生成的相对路径为：/com/mycompany/app-->  
+    <groupId>com.seven.ch</groupId>  
+    <!-- 构件的标识符，它和group ID一起唯一标识一个构件。换句话说，你不能有两个不同的项目拥有同样的artifact ID和groupID；在某个特定的group ID下，artifact ID也必须是唯一的-->  
+    <artifactId>Question8_1</artifactId>
+    <!--项目产生的构件类型，例如jar、war、ear、pom。插件也可以创建自己的构件类型，所以前面列的不是全部构件类型-->  
+    <packaging>jar</packaging>  
+    <!--项目当前版本，格式为:主版本.次版本.增量版本-限定版本号-->  
+    <version>1.0-SNAPSHOT</version>  
+    <!-- 项目 描述名-->
+    <name></name>
+    <!--项目主页的URL, Maven产生的文档用-->  
+    <url></url>
+    <!-- 项目的详细描述, Maven 产生的文档用。-->
+    <description></description>
+    
+    <!-- 集合多个子模块，在父中设置-->
     <modules></modules>
     <!--指定了当前的pom的版本-->
     <modelVersion>4.0.0</modelVersion>
-    <!-- 项目的坐标-->
-    <artifactId>Question8_1</artifactId>
-    <!-- 项目 描述名-->
-    <name></name>
-    <!-- 项目地址-->
-    <url></url>
-    <!-- 项目描述 -->
-    <description></description>
-    <!-- 依赖列表-->
+    
+    <!--在列的项目构建profile，如果被激活，会修改构建处理；一般在子pom中设置--> 
+    <profiles>
+        <!--根据环境参数或命令行参数激活某个构建处理--> 
+        <profile>
+            <id>betanoah</id>
+            <properties>
+                <deploy.type>betanoah</deploy.type>
+            </properties>
+        </profile>
+    </profiles>
+    
+    <!--定义标签，一般在父pom中设置--> 
+    <properties>
+        <!-- 自定义便签，设置依赖版本 -->
+        <java_target_version>11</java_target_version>
+        <java_source_version>11</java_source_version>
+		<junit.junit>4.12</junit.junit>
+        <spring-boot.version>2.6.6</spring-boot.version>
+    </properties>
+  
+    <!-- 继承自该项目的所有子项目的默认依赖信息。这部分的依赖信息不会被立即解析,而是当子项目声明一个依赖（必须描述group ID和 artifact ID信息），如果group ID和artifact ID以外的一些信息没有描述，则通过group ID和artifact ID 匹配到这里的依赖，并使用这里的依赖信息。--> 
+    <!-- 一般在父pom文件里配置 -->
+     <dependencyManagement> 
+          <dependencies> 
+               <!--参见dependencies/dependency元素--> 
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+               //...
+          </dependencies> 
+     </dependencyManagement>    
+    
+    <!-- 依赖列表，一般只在子pom文件里配置，父pom文件只做依赖的版本管理 -->
     <dependencies>
         <dependency>
             <!-- 指定坐标从而知道依赖的是哪个项目-->
@@ -72,8 +113,7 @@ tag:
             </exclusions>
         </dependency>
     </dependencies>
-    <!-- 依赖管理  不会被实际的依赖进来 还需要在用dependencys 依赖 一般用在父类-->
-    <dependencyManagement></dependencyManagement>
+   
     <!-- 插件列表-->
     <build>
         <plugins></plugins>
@@ -186,9 +226,10 @@ Maven 的传递性依赖机制可以很好地解决这一问题。
 | -------- | -------- | -------- | ---------- | -------- | ----------------------- |
 | Complie  | √        | √        | √          | √        | spring-core             |
 | test     | ×        | √        | ×          | ×        | Junit                   |
-| provided | √        | √        | ×          | ×        | servlet-api             |
+| provided | √        | √        | ×          | ×        | servlet-api,lombok      |
 | runtime  | ×        | √        | √          | √        | JDBC驱动                |
 | system   | √        | √        | ×          | ×        | 本地maven仓库之外的类库 |
+| import   | N/A      | N/A      | N/A        | N/A      | BOM文件                 |
 
 ##### optional
 

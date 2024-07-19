@@ -9,9 +9,9 @@ tag:
 
 
 
-## 一、Lambda
+## Lambda
 
-### 1、为什么使用 用Lambda 表达式
+### 为什么使用 用Lambda 表达式
 
 Lambda 是一个 匿名函数，我们可以把Lambda表达式理解为是 一段可以传递的代码（将代码像数据一样进行传递）。可以写出更简洁、更灵活的代码。作为一种更紧凑的代码风格，使Java的语言表达能力得到了提升
 
@@ -19,17 +19,17 @@ Lambda 是一个 匿名函数，我们可以把Lambda表达式理解为是 一�
 
 
 
-### 2、Lambda 表达式
+### Lambda 表达式
 
 从匿名类到 Lambda 的转换
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947913.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947913.gif)
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947923.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947923.gif)
 
 
 
-### 3、Lambda 表达式语法
+### Lambda 表达式语法
 
 Lambda 表达式在Java 语言中引入了一个新的语法元素和操作符。这个操作符为 “- >” ， 该操作符被称为 Lambda 操作符或箭头操作符。它将 Lambda 分为两个部分：
 
@@ -39,51 +39,51 @@ Lambda 表达式在Java 语言中引入了一个新的语法元素和操作符�
 
 
 
-#### 3.1 语法一：无参，无返回值，Lambda体只需一条语句
+#### 语法一：无参，无返回值，Lambda体只需一条语句
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947927.gif)
-
-
-
-#### 3.2 语法二：Lambda需要一个参数
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947926.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947927.gif)
 
 
 
-#### 3.3 语法三：Lambda只需要一个参数时，参数的小括号可以省略
+#### 语法二：Lambda需要一个参数
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947922.gif)
-
-
-
-#### 3.4 语法四：Lambda需要两个参数，并且有返回值
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947932.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947926.gif)
 
 
 
-#### 3.5 语法五：当 Lambda体只有一条语句时，return与大括号可以省略
+#### 语法三：Lambda只需要一个参数时，参数的小括号可以省略
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947636.gif)
-
-
-
-#### 3.6 数据类型可以省略，因为可由编译器推断得出，称为“类型推断”
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947661.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947922.gif)
 
 
 
-### 4、 类型推断
+#### 语法四：Lambda需要两个参数，并且有返回值
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947932.gif)
+
+
+
+#### 语法五：当 Lambda体只有一条语句时，return与大括号可以省略
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947636.gif)
+
+
+
+#### 数据类型可以省略，因为可由编译器推断得出，称为“类型推断”
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947661.gif)
+
+
+
+###  类型推断
 
 上述 Lambda 表达式中的参数类型都是由编译器推断得出的。Lambda 表达式中无需指定类型，程序依然可以编译，这是因为 javac 根据程序的上下文，在后台推断出了参数的类型。Lambda 表达式的类型依赖于上下文环境，是由编译器推断出来的。这就是所谓的 “类型推断”
 
  
 
-## 二、函数式接口
+## 函数式接口
 
-### 1、什么是函数式接口
+### 什么是函数式接口
 
 - 只包含一个抽象方法的接口，称为函数式接口。
 
@@ -93,35 +93,35 @@ Lambda 表达式在Java 语言中引入了一个新的语法元素和操作符�
 
 
 
-### 2、自定义函数式接口
+### 自定义函数式接口
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947685.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947685.gif)
 
 
 
-### 3、作为参数传递 递Lambda 表达式
+### 作为参数传递 递Lambda 表达式
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947709.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947709.gif)
 
 作为参数传递Lambda 表达式 ： 为了将Lambda 表达式作为参数传递，接收a Lambda 表达式的参数类型必须是与该Lambda 表达式兼容的函数式接口的类型 。
 
 
 
-### 4、Java 内置四大核心函数式接口
+### Java 内置四大核心函数式接口
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947736.gif)
-
-
-
-### 5、其他接口
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947768.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947736.gif)
 
 
 
-## 三、方法引用与构造器引用
+### 其他接口
 
-### 1、方法引用
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947768.gif)
+
+
+
+## 方法引用与构造器引用
+
+### 方法引用
 
 当要传递给Lambda体的操作，已经有实现的方法了，可以使用方法引用！（实现抽象方法的参数列表，必须与方法引用方法的参数列表保持一致！）方法引用：使用操作符 “ ::” 将方法名和对象或类的名字分隔开来。
 
@@ -133,45 +133,45 @@ Lambda 表达式在Java 语言中引入了一个新的语法元素和操作符�
 
 - 对象 :: 实例方法
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947251.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947251.gif)
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947292.gif)
-
- 
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947325.gif)
-
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947357.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947292.gif)
 
  
 
-### 2、构造器引用
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947325.gif)
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947357.gif)
+
+ 
+
+### 构造器引用
 
 格式 ： ClassName::new
 
 与函数式接口相结合，自动与函数式接口中方法兼容。可以把构造器引用赋值给定义的方法，与构造器参数列表要与接口中抽象方法的参数列表一致！
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947487.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947487.gif)
 
 
 
-### 3、数组引用
+### 数组引用
 
 格式 ： type[] :: new
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947564.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947564.gif)
 
 
 
-## 四、强大的stream
+## 强大的stream
 
-### 1、了解Stream
+### 了解Stream
 
 Java8中有两大最为重要的改变。第一个是 Lambda 表达式；另外一个则是Stream API(java.util.stream.*) 。Stream 是 Java8 中处理集合的关键抽象概念，它可以指定你希望对集合进行的操作，可以执行非常复杂的查找、过滤和映射数据等操作。使用Stream API 对集合数据进行操作，就类似于使用 SQL 执行的数据库查询。也可以使用 Stream API 来并行执行操作。简而言之，Stream API 提供了一种高效且易于使用的处理数据的方式。
 
+但需要**注意**的是，Stream的中间操作（比如map、filter等）是惰性的，这意味着它们在终端操作（比如collect、 forEach等）被调用之前不会实际执行。
 
-
-### 2、什么是Stream
+### 什么是Stream
 
 流) (Stream) 到底是什么呢？是数据渠道，用于操作数据源（集合、数组等）所生成的元素序列。“ 集合讲的是数据 ， 流讲的是 计 算 ！ ”
 
@@ -185,7 +185,7 @@ Java8中有两大最为重要的改变。第一个是 Lambda 表达式；另外�
 
 
 
-### 3、Stream 的操作三个步骤
+### Stream 的操作三个步骤
 
 - 创建 Stream
 
@@ -199,13 +199,13 @@ Java8中有两大最为重要的改变。第一个是 Lambda 表达式；另外�
 
 一个终止操作，执行中间操作链，并产生结果
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947750.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947750.gif)
 
 
 
-### 4、创建Stream
+### 创建Stream
 
-#### 4.1 由集合接口创建
+#### 由集合接口创建
 
 Java8 中的 Collection 接口被扩展，提供了两个获取流的方法 ：
 
@@ -215,7 +215,7 @@ Java8 中的 Collection 接口被扩展，提供了两个获取流的方法 ：
 
 
 
-#### 4.2、由数组创建流
+#### 由数组创建流
 
 Java8 中的 Arrays 的静态方法 stream() 可以获取数组流：
 
@@ -231,7 +231,7 @@ Java8 中的 Arrays 的静态方法 stream() 可以获取数组流：
 
 
 
-#### 4.3、由值创建流
+#### 由值创建流
 
 可以使用静态方法 Stream.of(), 通过显示值
 
@@ -241,7 +241,7 @@ Java8 中的 Arrays 的静态方法 stream() 可以获取数组流：
 
 
 
-#### 4.4、由函数创建流 ： 创建无限流
+#### 由函数创建流 ： 创建无限流
 
 可以使用静态方法 Stream.iterate() 和Stream.generate(), 创建无限流。
 
@@ -251,65 +251,65 @@ Java8 中的 Arrays 的静态方法 stream() 可以获取数组流：
 
 
 
-### 5、Stream 的中间操作
+### Stream 的中间操作
 
 多个 中间操作可以连接起来形成一个 流 水 线，除非流水线上触发终止操作，否则 中 间操作 不 会执行 任 何 的 处 理！而在终止操作时一次性全部处理 ， 称为 “ 惰 性 求 值“
 
 
 
-#### 5.1 筛选与切片
+#### 筛选与切片
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947852.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947852.gif)
 
 
 
-#### 5.2 映射
+#### 映射
 
 ![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947037.gif)
 
 
 
-#### 5.3 排序
+#### 排序
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947084.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947084.gif)
 
 
 
-### 6、Stream 的终止操作
+### Stream 的终止操作
 
 终端操作会从流的流水线生成结果。其结果可以是任何不是流的值，例如：List、Integer，甚至是 void 。
 
-#### 6.1 查找与匹配
+#### 查找与匹配
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947139.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947139.gif)
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947176.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947176.gif)
 
 
 
-#### 6.2 归约
+#### 归约
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947406.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947406.gif)
 
 备注：map 和 reduce 的连接通常称为map-reduce 模式，因 Google 用它来进行网络搜索而出名。
 
 
 
-#### 6.3 收集
+#### 收集
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947678.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947678.gif)
 
 Collector 接口中方法的实现决定了如何对流执行收集操作(如收集到 List、Set、Map)。但是 Collectors 实用类提供了很多静态方法，可以方便地创建常见收集器实例，具体方法与实例如下表：
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947820.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947820.gif)
 
  
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947872.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947872.gif)
 
 
 
-### 7、并行流 与 串行 流
+### 并行流 与 串行 流
 
 并行流 就是把一个内容分成多个数据块，并用不同的线程分别处理每个数据块的流。
 
@@ -317,11 +317,11 @@ Java 8 中将并行进行了优化，我们可以很容易的对数据进行并�
 
 
 
-### 8、 了解Fork/Join 框架
+### 了解Fork/Join 框架
 
 Fork/Join 框架 ：就是在必要的情况下，将一个大任务，进行拆分(fork)成若干个小任务（拆到不可再拆时），再将一个个的小任务运算的结果进行 join 汇总.
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947005.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947005.gif)
 
  
 
@@ -331,23 +331,23 @@ Fork/Join 框架与传统线程池的区别
 
 
 
-## 五、新时间日期API
+## 新时间日期API
 
-### 1、使用LocalDate 、LocalTime 、LocalDateTime
+### 使用LocalDate 、LocalTime 、LocalDateTime
 
 LocalDate、LocalTime、LocalDateTime 类的实例是不可变的对象，分别表示使用 ISO-8601日历系统的日期、时间、日期和时间。它们提供了简单的日期或时间，并不包含当前的时间信息。也不包含与时区相关的信息。
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947060.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947060.gif)
 
 
 
-### 2、Instant 时间戳
+### Instant 时间戳
 
 用于“时间戳”的运算。它是以Unix元年(传统的设定为UTC时区1970年1月1日午夜时分)开始所经历的描述进行运算
 
 
 
-### 3、Duration 和 Period
+### Duration 和 Period
 
 Duration:用于计算两个“时间”间隔
 
@@ -355,17 +355,17 @@ Period:用于计算两个“日期”间隔
 
 
 
-### 4、日期的操纵
+### 日期的操纵
 
 TemporalAdjuster : 时间校正器。有时我们可能需要获取例如：将日期调整到“下个周日”等操作。
 
 TemporalAdjusters: 该类通过静态方法提供了大量的常用 TemporalAdjuster 的实现。
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947150.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947150.gif)
 
 
 
-### 5、解析与格式化
+### 解析与格式化
 
 java.time.format.DateTimeFormatter类：该类提供了三种格式化方法：
 
@@ -377,7 +377,7 @@ java.time.format.DateTimeFormatter类：该类提供了三种格式化方法：
 
 
 
-### 6、时区 的处理
+### 时区 的处理
 
 Java8 中加入了对时区的支持，带时区的时间为分别为：
 
@@ -395,19 +395,19 @@ of(id) : 用指定的时区信息获取ZoneId对象
 
 
 
-### 7、与传统日期处理的转换
+### 与传统日期处理的转换
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947266.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947266.gif)
 
 
 
-## 六、接口中的默认方法与静态方法
+## 接口中的默认方法与静态方法
 
-### 1、接口中的默认方法
+### 接口中的默认方法
 
 Java 8中允许接口中包含具有具体实现的方法，该方法称为“默认方法”，默认方法使用 default 关键字修饰。
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947667.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947667.gif)
 
 为什么要有默认方法：
 
@@ -418,15 +418,15 @@ Java 8中允许接口中包含具有具体实现的方法，该方法称为“�
 
 
 
-### 2、接口中的静态方法
+### 接口中的静态方法
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947737.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947737.gif)
 
 
 
-## 七、其他新特性
+## 其他新特性
 
-### 1、Optional 类
+### Optional 类
 
 Optional&lt;T> 类(java.util.Optional) 是一个容器类，代表一个值存在或不存在，原来用 null 表示一个值不存在，现在 Optional 可以更好的表达这个概念。并且可以避免空指针异常。
 
@@ -450,11 +450,11 @@ flatMap(Function mapper):与 map 类似，要求返回值必须是Optional
 
 
 
-### 2、重复注解与类型注解
+### 重复注解与类型注解
 
 Java 8对注解处理提供了两点改进：可重复的注解及可用于类型的注解。
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947915.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251947915.gif)
 
  
 

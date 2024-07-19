@@ -1,9 +1,9 @@
 ---
-title: Guava - 并发编程
-category: 开发工具
+title: 并发编程
+category: 工具类库
 tag:
- - 工具类库
  - Guava
+ - 并发编程
 ---
 
 

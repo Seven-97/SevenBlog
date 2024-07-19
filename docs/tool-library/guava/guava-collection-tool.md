@@ -1,9 +1,9 @@
 ---
-title: Guava - 集合工具
-category: 开发工具
+title: 集合工具
+category: 工具类库
 tag:
- - 工具类库
  - Guava
+ - 集合
 ---
 
 

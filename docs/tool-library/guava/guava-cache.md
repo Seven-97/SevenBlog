@@ -1,6 +1,6 @@
 ---
-title: GuavaCache
-category: 系统设计
+title: Cache
+category: 工具类库
 tag:
  - 缓存
  - GuavaCache
