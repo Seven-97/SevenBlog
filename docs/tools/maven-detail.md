@@ -10,17 +10,62 @@ tag:
 
 
 
-## 常用命令与标签解释
+## Maven 项⽬⽣命周期
 
-到Maven目录下
+Maven从项⽬的三个不同的⻆度，定义了三套⽣命周期，三套⽣命周期是相互独⽴的，它们之间不会相互影响。
 
-- mvn -compile ：编译maven项目
-- mvn -test ：执行测试代码
-- mvn -package ：将当前maven目录打包
-- mvn -clean ：将当前maven的target中的class文件清空
-- mvn -install  ：将当前项目jar包安装到本地仓库
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407192157695.png)
+
+- 清理⽣命周期(Clean Lifecycle)：该⽣命周期负责清理项⽬中的多余信息，保持项⽬资源和代码的整洁性。⼀般拿来清空directory(即⼀般的target)⽬录下的⽂件。
+- 默认构建⽣命周期(Default Lifeclyle)：该⽣命周期表示这项⽬的构建过程，定义了⼀个项⽬的构建要经过的不同的阶段。
+- 站点管理⽣命周期(Site Lifecycle)：向我们创建⼀个项⽬时，我们有时候需要提供⼀个站点，来介绍这个项⽬的信息，如项⽬介绍，项⽬进度状态、项⽬组成成员，版本控制信息，项⽬javadoc索引信息等等。站点管理⽣命周期定义了站点管理过程的各个阶段
 
 
+
+## 常用命令
+
+### 常用打包命令
+
+```css
+mvn clean package -Dmaven.test.skip=true		-- 跳过单测打包
+mvn clean install -Dmaven.test.skip=true		-- 跳过单测打包，并把打好的包上传到本地仓库
+mvn clean deploy -Dmaven.test.skip=true			-- 跳过单测打包，并把打好的包上传到远程仓库
+```
+
+
+
+### 其他命令
+
+```css
+mvn -v //查看版本 
+mvn archetype:create //创建 Maven 项目 
+mvn compile //编译源代码 
+mvn test-compile //编译测试代码 
+mvn test //运行应用程序中的单元测试 
+mvn site //生成项目相关信息的网站 
+mvn package //依据项目生成 jar 文件 
+mvn package -P profileName //指定profile进行打包,依据项目生成 jar 文件 
+mvn install //在本地 Repository 中安装 jar 
+mvn -Dmaven.test.skip=true //忽略测试文档编译 
+mvn clean //清除目标目录中的生成结果 
+mvn clean compile //将.java类编译为.class文件 
+mvn clean package //进行打包 
+mvn clean test //执行单元测试 
+mvn clean deploy //部署到版本仓库 
+mvn clean install //使其他项目使用这个jar,会安装到maven本地仓库中 
+mvn archetype:generate //创建项目架构 
+mvn dependency:list //查看已解析依赖 
+mvn dependency:tree com.xx.xxx //看到依赖树 
+mvn dependency:analyze //查看依赖的工具 
+mvn help:system //从中央仓库下载文件至本地仓库 
+mvn help:active-profiles //查看当前激活的profiles 
+mvn help:all-profiles //查看所有profiles 
+mvn help:effective -pom //查看完整的pom信息
+```
+
+
+
+## 标签解释
 
 常用标签详解
 
@@ -123,15 +168,7 @@ tag:
 
 
 
-## Maven 项⽬⽣命周期
 
-Maven从项⽬的三个不同的⻆度，定义了单套⽣命周期，三套⽣命周期是相互独⽴的，它们之间不会相互影响。
-
-默认构建⽣命周期(Default Lifeclyle): 该⽣命周期表示这项⽬的构建过程，定义了⼀个项⽬的构建要经过的不同的阶段。
-
-清理⽣命周期(Clean Lifecycle): 该⽣命周期负责清理项⽬中的多余信息，保持项⽬资源和代码的整洁性。⼀般拿来清空directory(即⼀般的target)⽬录下的⽂件。
-
-站点管理⽣命周期(Site Lifecycle) :向我们创建⼀个项⽬时，我们有时候需要提供⼀个站点，来介绍这个项⽬的信息，如项⽬介绍，项⽬进度状态、项⽬组成成员，版本控制信息，项⽬javadoc索引信息等等。站点管理⽣命周期定义了站点管理过程的各个阶段
 
  
 

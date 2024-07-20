@@ -220,6 +220,7 @@ export default sidebar({
           prefix: "spring/",
           collapsible: true,
           children: [
+            "spring-summary",
             "ioc1-summary",
             "ioc2-initializationprocess",
             "ioc3-Instantiationofbeans",
