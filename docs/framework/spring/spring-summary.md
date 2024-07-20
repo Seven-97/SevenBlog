@@ -131,68 +131,517 @@ Spring 框架的核心模块，也可以说是基础模块，主要提供 IoC �
 
 
 
+## Spring、SpringMVC、SpringBoot之间的关系
 
+Spring 包含了多个功能模块（上面刚刚提到过），其中最重要的是 Spring-Core（主要提供 IoC 依赖注入功能的支持） 模块， Spring 中的其他模块（比如 Spring MVC）的功能实现基本都需要依赖于该模块。
 
+Spring MVC 是 Spring 中的一个很重要的模块，主要赋予 Spring 快速构建 MVC 架构的 Web 程序的能力。MVC 是模型(Model)、视图(View)、控制器(Controller)的简写，其核心思想是通过将业务逻辑、数据、显示分离来组织代码。
 
+使用 Spring 进行开发各种配置过于麻烦比如开启某些 Spring 特性时，需要用 XML 或 Java 进行显式配置。于是，Spring Boot 诞生了！
 
+Spring 旨在简化 J2EE 企业应用程序开发。Spring Boot 旨在简化 Spring 开发（减少配置文件，开箱即用！）。
 
+Spring Boot 只是简化了配置，如果你需要构建 MVC 架构的 Web 程序，你还是需要使用 Spring MVC 作为 MVC 框架，只是说 Spring Boot 帮你简化了 Spring MVC 的很多配置，真正做到开箱即用！
 
 
 
 ## Spring 用到的设计模式
 
-1、**简单工厂模式**：`BeanFactory`就是简单工厂模式的体现，根据传入一个唯一标识来获得 Bean 对象。
+1. **简单工厂模式**：`BeanFactory`就是简单工厂模式的体现，根据传入一个唯一标识来获得 Bean 对象。
+
+   ```java
+   @Override
+   public Object getBean(String name) throws BeansException {
+       assertBeanFactoryActive();
+       return getBeanFactory().getBean(name);
+   }
+   ```
+
+2. **工厂方法模式**：`FactoryBean`就是典型的工厂方法模式。spring在使用`getBean()`调用获得该bean时，会自动调用该bean的`getObject()`方法。每个 Bean 都会对应一个 `FactoryBean`，如 `SqlSessionFactory` 对应 `SqlSessionFactoryBean`。
+
+3. **单例模式**：一个类仅有一个实例，提供一个访问它的全局访问点。Spring 创建 Bean 实例默认是单例的。
+
+4. **适配器模式**：SpringMVC中的适配器`HandlerAdatper`。由于应用会有多个Controller实现，如果需要直接调用Controller方法，那么需要先判断是由哪一个Controller处理请求，然后调用相应的方法。当增加新的 Controller，需要修改原来的逻辑，违反了开闭原则（对修改关闭，对扩展开放）。
+   为此，Spring提供了一个适配器接口，每一种 Controller 对应一种 `HandlerAdapter` 实现类，当请求过来，SpringMVC会调用`getHandler()`获取相应的Controller，然后获取该Controller对应的 `HandlerAdapter`，最后调用`HandlerAdapter`的`handle()`方法处理请求，实际上调用的是Controller的`handleRequest()`。每次添加新的 Controller 时，只需要增加一个适配器类就可以，无需修改原有的逻辑。
+   常用的处理器适配器：`SimpleControllerHandlerAdapter`，`HttpRequestHandlerAdapter`，`AnnotationMethodHandlerAdapter`。
+
+   ```java
+   // Determine handler for the current request.
+   mappedHandler = getHandler(processedRequest);
+   
+   HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+   
+   // Actually invoke the handler.
+   mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+   
+   public class HttpRequestHandlerAdapter implements HandlerAdapter {
+   
+       @Override
+       public boolean supports(Object handler) {//handler是被适配的对象，这里使用的是对象的适配器模式
+           return (handler instanceof HttpRequestHandler);
+       }
+   
+       @Override
+       @Nullable
+       public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
+           throws Exception {
+   
+           ((HttpRequestHandler) handler).handleRequest(request, response);
+           return null;
+       }
+   }
+   ```
+
+5. **代理模式**：spring 的 aop 使用了动态代理，有两种方式`JdkDynamicAopProxy`和`Cglib2AopProxy`。
+
+6. **观察者模式**：spring 中 observer 模式常用的地方是 listener 的实现，如`ApplicationListener`。
+
+7. **模板模式**： Spring 中 `jdbcTemplate`、`hibernateTemplate` 等，就使用到了模板模式。
+
+
+
+## HelloWorld-xml
+
+> 这里只是表示这是Spring第一个项目，以HelloWorld作为标注。实际需求是获取 用户列表信息，并打印执行日志
+
+### 案例
+
+案例源码点击[这里](https://github.com/Seven-97/Spring-Demo/tree/master/01-spring-framework-helloworld-xml)
+
+- 引入依赖
+
+```xml
+<properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <spring.version>5.3.37</spring.version>
+        <aspectjweaver.version>1.9.6</aspectjweaver.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectjweaver.version}</version>
+        </dependency>
+    </dependencies>
+```
+
+- POJO - User
 
 ```java
-@Override
-public Object getBean(String name) throws BeansException {
-    assertBeanFactoryActive();
-    return getBeanFactory().getBean(name);
+public class User {
+
+    private String name;
+
+    private int age;
+
+    public User(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
 }
 ```
 
-2、**工厂方法模式**：`FactoryBean`就是典型的工厂方法模式。spring在使用`getBean()`调用获得该bean时，会自动调用该bean的`getObject()`方法。每个 Bean 都会对应一个 `FactoryBean`，如 `SqlSessionFactory` 对应 `SqlSessionFactoryBean`。
-
-3、**单例模式**：一个类仅有一个实例，提供一个访问它的全局访问点。Spring 创建 Bean 实例默认是单例的。
-
-4、**适配器模式**：SpringMVC中的适配器`HandlerAdatper`。由于应用会有多个Controller实现，如果需要直接调用Controller方法，那么需要先判断是由哪一个Controller处理请求，然后调用相应的方法。当增加新的 Controller，需要修改原来的逻辑，违反了开闭原则（对修改关闭，对扩展开放）。
-
-为此，Spring提供了一个适配器接口，每一种 Controller 对应一种 `HandlerAdapter` 实现类，当请求过来，SpringMVC会调用`getHandler()`获取相应的Controller，然后获取该Controller对应的 `HandlerAdapter`，最后调用`HandlerAdapter`的`handle()`方法处理请求，实际上调用的是Controller的`handleRequest()`。每次添加新的 Controller 时，只需要增加一个适配器类就可以，无需修改原有的逻辑。
-
-常用的处理器适配器：`SimpleControllerHandlerAdapter`，`HttpRequestHandlerAdapter`，`AnnotationMethodHandlerAdapter`。
+- DAO 获取 POJO， UserDaoServiceImpl (mock 数据)
 
 ```java
-// Determine handler for the current request.
-mappedHandler = getHandler(processedRequest);
+public class UserDaoImpl{
 
-HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
-
-// Actually invoke the handler.
-mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
-
-public class HttpRequestHandlerAdapter implements HandlerAdapter {
-
-    @Override
-    public boolean supports(Object handler) {//handler是被适配的对象，这里使用的是对象的适配器模式
-        return (handler instanceof HttpRequestHandler);
-    }
-
-    @Override
-    @Nullable
-    public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
-        throws Exception {
-
-        ((HttpRequestHandler) handler).handleRequest(request, response);
-        return null;
+    public List<User> findUserList() {
+        return Collections.singletonList(new User("seven", 18));
     }
 }
 ```
 
-5、**代理模式**：spring 的 aop 使用了动态代理，有两种方式`JdkDynamicAopProxy`和`Cglib2AopProxy`。
+- 业务层 UserServiceImpl（调用DAO层）
 
-6、**观察者模式**：spring 中 observer 模式常用的地方是 listener 的实现，如`ApplicationListener`。
+```java
+public class UserServiceImpl {
+    private UserDaoImpl userDao;
 
-7、**模板模式**： Spring 中 `jdbcTemplate`、`hibernateTemplate` 等，就使用到了模板模式。
+    public void setUserDao(UserDaoImpl userDao) {
+        this.userDao = userDao;
+    }
+
+    public List<User> findUserList() {
+        return userDao.findUserList();
+    }
+}
+```
+
+- 拦截所有service中的方法，并输出记录
+
+```java
+@Aspect
+public class LogAspect {
+
+    @Around("execution(* com.seven.springhelloworldxml.service.*.*(..))")
+    public Object businessService(ProceedingJoinPoint pjp) throws Throwable {
+        // get attribute through annotation
+        Method method = ((MethodSignature) pjp.getSignature()).getMethod();
+        System.out.println("execute method: " + method.getName());
+
+        // continue to process
+        return pjp.proceed();
+    }
+}
+```
+
+- 添加并增加spring.xml和aspects.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="userDao" class="com.seven.springhelloworldxml.dao.UserDaoImpl">
+        <!-- additional collaborators and configuration for this bean go here -->
+    </bean>
+
+    <bean id="userService" class="com.seven.springhelloworldxml.service.UserServiceImpl">
+        <property name="userDao" ref="userDao"/>
+        <!-- additional collaborators and configuration for this bean go here -->
+    </bean>
+    
+</beans>
+```
+
+```java
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+ http://www.springframework.org/schema/beans/spring-beans.xsd
+ http://www.springframework.org/schema/aop
+ http://www.springframework.org/schema/aop/spring-aop.xsd
+ http://www.springframework.org/schema/context
+ http://www.springframework.org/schema/context/spring-context.xsd
+">
+
+    <context:component-scan base-package="com.seven.springhelloworldxml" />
+
+    <aop:aspectj-autoproxy/>
+
+    <bean id="logAspect" class="com.seven.springhelloworldxml.aspects.LogAspect">
+        <!-- configure properties of aspect here as normal -->
+    </bean>
+    <!-- more bean definitions for data access objects go here -->
+</beans>
+```
+
+- APP中设置xml文件
+
+```java
+public class APP {
+
+    public static void main(String[] args) {
+        // create and configure beans
+        ApplicationContext context = new ClassPathXmlApplicationContext("aspects.xml", "spring.xml");
+
+        // retrieve configured instance
+        UserServiceImpl service = context.getBean("userService", UserServiceImpl.class);
+
+        // use configured instance
+        List<User> userList = service.findUserList();
+
+        // print info from beans
+        userList.forEach(a -> System.out.println(a.getName() + "," + a.getAge()));
+    }
+}
+```
+
+运行结果：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407201420026.png)
+
+### 如何体现的Spring优势
+
+#### 控制反转 - IOC
+
+**查询用户**（service通过调用dao查询pojo)，本质上就是如何创建User/Dao/Service？
+
+- **如果没有Spring框架，需要自己创建User/Dao/Service等**，比如：
+
+```java
+UserDaoImpl userDao = new UserDaoImpl();
+UserSericeImpl userService = new UserServiceImpl();
+userService.setUserDao(userDao);
+List<User> userList = userService.findUserList();
+```
+
+- **有了Spring框架，可以将原有Bean的创建工作转给框架, 需要用时从Bean的容器中获取即可，这样便简化了开发工作**
+
+Bean的创建和使用分离了。
+
+```java
+// create and configure beans
+ApplicationContext context = new ClassPathXmlApplicationContext("aspects.xml", "spring.xml");
+
+// retrieve configured instance
+UserServiceImpl service = context.getBean("userService", UserServiceImpl.class);
+
+// use configured instance
+List<User> userList = service.findUserList();
+```
+
+
+
+更进一步，**便能理解为何会有如下的知识点了**：
+
+1. Spring框架管理这些Bean的创建工作，即由用户管理Bean转变为框架管理Bean，这个就叫**控制反转 - Inversion of Control (IoC)**
+2. Spring 框架托管创建的Bean放在哪里呢？ 这便是**IoC Container**;
+3. Spring 框架为了更好让用户配置Bean，必然会引入**不同方式来配置Bean？ 这便是xml配置，Java配置，注解配置**等支持
+4. Spring 框架既然接管了Bean的生成，必然需要**管理整个Bean的生命周期**等；
+5. 应用程序代码从Ioc Container中获取依赖的Bean，注入到应用程序中，这个过程叫 **依赖注入(Dependency Injection，DI)** ； 所以说控制反转是通过依赖注入实现的，其实它们是同一个概念的不同角度描述。通俗来说就是**IoC是设计思想，DI是实现方式**
+6. 在依赖注入时，有哪些方式呢？这就是构造器方式，@Autowired, @Resource, @Qualifier... 同时Bean之间存在依赖（可能存在先后顺序问题，以及**循环依赖问题**等）
+
+
+
+####  面向切面 - AOP
+
+第二个需求：**给Service所有方法调用添加日志**（调用方法时)，本质上是解耦问题；
+
+- **如果没有Spring框架，需要在每个service的方法中都添加记录日志的方法**，比如：
+
+```java
+public List<User> findUserList() {
+    System.out.println("execute method findUserList");
+    return this.userDao.findUserList();
+}
+```
+
+- 有了Spring框架，通过@Aspect注解 定义了切面，这个切面中定义了拦截所有service中的方法，并记录日志； 可以明显看到，框架将日志记录和业务需求的代码解耦了，不再是侵入式的了
+
+```java
+/**
+* aspect for every methods under service package.
+*/
+@Around("execution(* com.seven.springhelloworldxml.service.*.*(..))")
+public Object businessService(ProceedingJoinPoint pjp) throws Throwable {
+    // get attribute through annotation
+    Method method = ((MethodSignature) pjp.getSignature()).getMethod();
+    System.out.println("execute method: " + method.getName());
+
+    // continue to process
+    return pjp.proceed();
+}
+```
+
+更进一步，**便能理解为何会有如下的知识点了**：
+
+1. Spring 框架通过定义切面, 通过拦截切点实现了不同业务模块的解耦，这个就叫**面向切面编程 - Aspect Oriented Programming (AOP)**
+2. 为什么@Aspect注解使用的是aspectj的jar包呢？这就引出了**Aspect4J和Spring AOP的历史渊源**，只有理解了Aspect4J和Spring的渊源才能理解有些注解上的兼容设计
+3. 如何支持**更多拦截方式**来实现解耦， 以满足更多场景需求呢？ 这就是@Around, @Pointcut... 等的设计
+4. 那么Spring框架又是如何实现AOP的呢？ 这就引入**代理技术，分静态代理和动态代理**，动态代理又包含JDK代理和CGLIB代理
+
+
+
+## Spring框架逐步简化开发
+
+### Java 配置方式改造
+
+案例源码点击[这里](https://github.com/Seven-97/Spring-Demo/tree/master/02-spring-framework-helloworld-config)
+
+在前文的例子中， 通过xml配置方式实现的，这种方式实际上比较麻烦； 我通过Java配置进行改造：
+
+- User，UserDaoImpl, UserServiceImpl，LogAspect不用改
+- 将原通过.xml配置转换为Java配置
+
+```java
+@EnableAspectJAutoProxy
+@Configuration
+public class BeansConfig {
+
+    /**
+     * @return user dao
+     */
+    @Bean("userDao")
+    public UserDaoImpl userDao() {
+        return new UserDaoImpl();
+    }
+
+    /**
+     * @return user service
+     */
+    @Bean("userService")
+    public UserServiceImpl userService() {
+        UserServiceImpl userService = new UserServiceImpl();
+        userService.setUserDao(userDao());
+        return userService;
+    }
+
+    /**
+     * @return log aspect
+     */
+    @Bean("logAspect")
+    public LogAspect logAspect() {
+        return new LogAspect();
+    }
+}
+```
+
+- 在App中加载BeansConfig的配置
+
+```java
+public class APP {
+
+    public static void main(String[] args) {
+        // create and configure beans
+        ApplicationContext context = new AnnotationConfigApplicationContext(BeansConfig.class);
+
+        // retrieve configured instance
+        UserServiceImpl service = context.getBean("userService", UserServiceImpl.class);
+
+        // use configured instance
+        List<User> userList = service.findUserList();
+
+        // print info from beans
+        userList.forEach(a -> System.out.println(a.getName() + "," + a.getAge()));
+    }
+
+}
+```
+
+
+
+### 注解配置方式改造
+
+案例源码点击[这里](https://github.com/Seven-97/Spring-Demo/tree/master/03-spring-framework-helloworld-anno)
+
+更进一步，Java 5开始提供注解支持，Spring 2.5 开始完全支持基于注解的配置并且也支持JSR250 注解。在Spring后续的版本发展倾向于通过注解和Java配置结合使用.
+
+- BeanConfig 不再需要Java配置
+
+```java
+@EnableAspectJAutoProxy
+@Configuration
+public class BeansConfig {
+
+}
+```
+
+
+
+- UserDaoImpl 增加了 @Repository注解
+
+```java
+@Repository
+public class UserDaoImpl{
+
+    public List<User> findUserList() {
+        return Collections.singletonList(new User("seven", 18));
+    }
+}
+```
+
+
+
+- UserServiceImpl 增加了@Service 注解，并通过@Autowired注入userDao
+
+```java
+@Service
+public class UserServiceImpl {
+    @Autowired
+    private UserDaoImpl userDao;
+
+    public List<User> findUserList() {
+        return userDao.findUserList();
+    }
+}
+```
+
+
+
+- 日志类添加@Component注解
+
+```java
+@Component
+@Aspect
+public class LogAspect {
+
+    @Around("execution(* com.seven.springhelloworldanno.service.*.*(..))")
+    public Object businessService(ProceedingJoinPoint pjp) throws Throwable {
+        // get attribute through annotation
+        Method method = ((MethodSignature) pjp.getSignature()).getMethod();
+        System.out.println("execute method: " + method.getName());
+
+        // continue to process
+        return pjp.proceed();
+    }
+
+}
+```
+
+
+
+- 在App中扫描com.seven.springhelloworldanno包
+
+```java
+public static void main(String[] args) {
+        // create and configure beans
+        ApplicationContext context = new AnnotationConfigApplicationContext("com.seven.springhelloworldanno");
+
+        // retrieve configured instance
+        UserServiceImpl service = context.getBean(UserServiceImpl.class);
+
+        // use configured instance
+        List<User> userList = service.findUserList();
+
+        // print info from beans
+        userList.forEach(a -> System.out.println(a.getName() + "," + a.getAge()));
+    }
+```
+
+
+
+
+
+### SpringBoot托管配置
+
+Springboot实际上通过约定大于配置的方式，使用xx-starter统一的对Bean进行默认初始化，用户只需要很少的配置就可以进行开发了。
+
+
+
+
+
+
+
+
 
 
 
