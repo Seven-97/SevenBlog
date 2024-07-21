@@ -29,6 +29,7 @@ tag:
 
 - 开发客户端工具下载
   - [IDEA - Java开发](https://www.jetbrains.com.cn/idea/)
+  - [Tomcat](https://downloads.apache.org/tomcat/)
   - Zookeeper图形化管理客户端：
     - [ZooInspector](https://issues.apache.org/jira/secure/attachment/12436620/ZooInspector.zip)
     - [PrettyZoo](https://github.com/vran-dev/PrettyZoo)：一个基于 Apache Curator 和 JavaFX 实现的 ZooKeeper 图形化管理客户端，颜值非常高，支持 Mac / Windows / Linux 。你可以使用 PrettyZoo 来实现对 ZooKeeper 的可视化增删改查

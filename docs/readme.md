@@ -10,7 +10,7 @@ actions:
     link: /home.md
     type: primary
   # - text: 知识星球
-  #   link: /about-the-author/zhishixingqiu-two-years.md
+  #   link: /about-the-author/zhishixingqiu.md
   #   type: default
 footer: |-
   <a href="https://beian.miit.gov.cn/" target="_blank">闽ICP备2022017393号</a> | 主题: <a href="https://vuepress-theme-hope.github.io/v2/" target="_blank">VuePress Theme Hope</a>
@@ -28,7 +28,7 @@ footer: |-
 ## 关于本站
 建设此站是为在这日新月异的互联网上，留下一点点的足迹，记录自己成长的过程。
 
-本站文章皆为作者站在巨人的肩膀上而创，若有不足，欢迎讨论；若有侵权，即删。
+本站文章皆为作者站在巨人的肩膀上而创，持续学习中，若有不足，欢迎指出；若有侵权，即删。
 
 版权声明：转载请注明文章出处
 

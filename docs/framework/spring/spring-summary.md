@@ -7,7 +7,7 @@ tag:
 
 
 
-
+> Spring框架系列文章建议阅读顺序：Spring - 概述 -》IOC - 概述 -》 AOP - 概述 -》 MVC - 概述；而后再阅读其它文章详细内容
 
 ## 为什么用Spring
 
@@ -628,6 +628,10 @@ public static void main(String[] args) {
 ```
 
 
+
+> 这里要提一嘴的是，现在大多数的Spring项目，基本都是这种方式。主要步骤就是：
+> 1、对类添加@Component相关的注解，比如@Controller，@Service，@Repository
+> 2、设置ComponentScan的basePackage, 比如在xml文件里设置`<context:component-scan base-package='com.seven.springframework'>`, 或者在配置类中设置`@ComponentScan("com.seven.springframework")`注解，或者 直接在APP类中 `new AnnotationConfigApplicationContext("com.seven.springframework")`指定扫描的basePackage.
 
 
 

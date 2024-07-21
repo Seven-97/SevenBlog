@@ -13,11 +13,16 @@ IoC（Inversion of Control:控制反转） 是一种设计思想，而不是一�
 
 通过反射实现对其他对象的控制，包括初始化、创建、销毁等，解放手动创建对象的过程，同时降低类之间的耦合度。
 
-在 Spring 中， IoC 容器是 Spring 用来实现 IoC 的载体， **IoC 容器实际上就是个 Map（key，value），Map 中存放的是各种对象，根据BeanName或者Type获取对象**。
+在 Spring 中， **IoC container** 是 Spring 用来实现 IoC 的载体， **IoC 容器实际上就是个 Map（key，value），Map 中存放的是各种对象，根据BeanName或者Type获取对象**。
+
+> 为何是反转，哪些方面反转了? 
+> 有反转就有正转，传统应用程序是由我们自己在对象中主动控制去直接获取依赖对象，也就是正转；而反转则是由容器来帮忙创建及注入依赖对象；
+> **控制**：指的是对象创建（实例化、管理）的权力
+> **反转**：控制权交给外部环境（Spring 框架、IoC 容器）
 
 
 
-## IOC的好处
+### IOC的好处
 
 ioc的思想最核心的地方在于，资源不由使用资源者管理，而由不使用资源的第三方管理，这可以带来很多好处。
 
@@ -28,7 +33,100 @@ ioc的思想最核心的地方在于，资源不由使用资源者管理，而�
 
 
 
-## 依赖注入DI
+### IOC配置的四种方式
+
+在 [Spring - 概述](https://www.seven97.top/framework/spring/spring-summary.html) 一文中已经给出了三种配置方式，这里再总结下；总体上目前的主流方式是 **注解 + Java 配置**。
+
+#### xml 配置
+
+顾名思义，就是将bean的信息配置.xml文件里，通过Spring加载文件来创建bean。这种方式出现很多早前的SSM项目中，将第三方类库或者一些配置工具类都以这种方式进行配置，主要原因是由于第三方类不支持Spring注解。
+
+- **优点**： 可以使用于任何场景，结构清晰，通俗易懂
+- **缺点**： 配置繁琐，不易维护，枯燥无味，扩展性差
+
+**举例**：
+
+1. 配置xx.xml文件
+2. 声明命名空间和配置bean
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+ http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!-- services -->
+    <bean id="userService" class="com.seven.springframework.service.UserServiceImpl">
+        <property name="userDao" ref="userDao"/>
+        <!-- additional collaborators and configuration for this bean go here -->
+    </bean>
+    <!-- more bean definitions for services go here -->
+</beans>
+```
+
+
+
+#### Java 配置
+
+将类的创建交给我们配置的JavcConfig类来完成，Spring只负责维护和管理，采用纯Java创建方式。其本质上就是把在XML上的配置声明转移到Java配置类中
+
+- **优点**：适用于任何场景，配置方便，因为是纯Java代码，扩展性高，十分灵活
+- **缺点**：由于是采用Java类的方式，声明不明显，如果大量配置，可读性比较差
+
+**举例**：
+
+1. 创建一个配置类， 添加@Configuration注解声明为配置类
+2. 创建方法，方法上加上@bean，该方法用于创建实例并返回，该实例创建后会交给spring管理，方法名建议与实例名相同（首字母小写）。注：实例类不需要加任何注解
+
+```java
+@Configuration
+public class BeansConfig {
+
+    @Bean("userDao")
+    public UserDaoImpl userDao() {
+        return new UserDaoImpl();
+    }
+
+    @Bean("userService")
+    public UserServiceImpl userService() {
+        UserServiceImpl userService = new UserServiceImpl();
+        userService.setUserDao(userDao());
+        return userService;
+    }
+}
+```
+
+
+
+#### 注解配置
+
+通过在类上加注解的方式，来声明一个类交给Spring管理，Spring会自动扫描带有@Component，@Controller，@Service，@Repository这四个注解的类，然后帮我们创建并管理，前提是需要先配置Spring的注解扫描器。
+
+- **优点**：开发便捷，通俗易懂，方便维护。
+- **缺点**：具有局限性，对于一些第三方资源，无法添加注解。只能采用XML或JavaConfig的方式配置
+
+**举例**：
+
+1. 对类添加@Component相关的注解，比如@Controller，@Service，@Repository
+2. 设置ComponentScan的basePackage, 比如在xml文件里设置`<context:component-scan base-package='com.seven.springframework'>`, 或者在配置类中设置`@ComponentScan("com.seven.springframework")`注解，或者 直接在APP类中 `new AnnotationConfigApplicationContext("com.seven.springframework")`指定扫描的basePackage.
+
+```java
+@Service
+public class UserServiceImpl {
+
+    @Autowired
+    private UserDaoImpl userDao;
+
+    public List<User> findUserList() {
+        return userDao.findUserList();
+    }
+
+}
+```
+
+
+
+## 依赖注入DI的方式
 
 其原理是将对象的依赖关系由外部容器来管理和注入。这样，对象只需要关注自身的核心功能，而不需要关心如何获取依赖对象。它的目的是解耦组件之间的依赖关系，提高代码的灵活性、可维护性和可测试性。
 
@@ -38,30 +136,64 @@ ioc的思想最核心的地方在于，资源不由使用资源者管理，而�
 
 其中基于字段的依赖注入被广泛使用，但是 idea 或者其他静态代码分析工具会给出提示信息，不推荐使用。
 
+
+
 ### Setter方式注入
 
 在基于 setter 的依赖注入中，setter 方法被标注为 @Autowired。一旦使用无参数构造函数或无参数静态工厂方法实例化 Bean，为了注入 Bean 的依赖项，Spring 容器将调用这些 setter 方法。
 
+- **在XML配置方式中**，property都是setter方式注入，比如下面的xml:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+ http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!-- services -->
+    <bean id="userService" class="com.seven.springframework.service.UserServiceImpl">
+        <property name="userDao" ref="userDao"/>
+        <!-- additional collaborators and configuration for this bean go here -->
+    </bean>
+    <!-- more bean definitions for services go here -->
+</beans>
+```
+
+本质上包含两步：
+
+1. 第一步，需要new UserServiceImpl()创建对象, 所以需要默认构造函数
+2. 第二步，调用setUserDao()函数注入userDao的值, 所以需要setUserDao()函数
+
+
+
+- 在注解和Java配置下
+
 ```java
 @Component
-public class SetterBasedInjection {
+public class UserServiceImpl {
 
-    private InjectedBean injectedBean;
+    private UserDao userDao;
 
     @Autowired //这个 @Autowired可以省略
-    public void setInjectedBean(InjectedBean injectedBean) {
-        this.injectedBean = injectedBean;
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 }
 ```
+
+> 将@Autowired写在被注入的成员变量上，setter或者构造器上，就不用再xml文件中配置了。
 
 
 
 ### 基于属性的依赖注入
 
-在基于属性的依赖注入中，字段/属性被标注为 @Autowired。一旦类被实例化，Spring 容器将设置这些字段。
+在基于属性的依赖注入中，以@Autowired（自动注入）注解注入为例，修饰符有三个属性：Constructor，byType，byName。默认按照byType注入。一旦类被实例化，Spring 容器将设置这些字段。
 
-```
+- **constructor**：通过构造方法进行自动注入，spring会匹配与构造方法参数类型一致的bean进行注入，如果有一个多参数的构造方法，一个只有一个参数的构造方法，在容器中查找到多个匹配多参数构造方法的bean，那么spring会优先将bean注入到多参数的构造方法中。
+- **byName**：被注入bean的id名必须与set方法后半截匹配，并且id名称的第一个单词首字母必须小写，这一点与手动set注入有点不同。
+- **byType**：查找所有的set方法，将符合符合参数类型的bean注入。
+
+```java
 @Component
 public class FieldBasedInjection {
     @Autowired
@@ -69,21 +201,147 @@ public class FieldBasedInjection {
 }
 ```
 
+
+
+#### 可能存在的缺点
+
 正如所看到的，这是依赖注入最干净的方法，因为它避免了添加样板代码，并且不需要声明类的构造函数。代码看起来很干净简洁，但是正如代码检查器已经向我们暗示的那样，这种方法有一些缺点：
 
-1. 不允许声明不可变域：基于字段的依赖注入在声明为 final/immutable 的字段上不起作用，因为这些字段必须在类实例化时实例化。声明不可变依赖项的唯一方法是使用基于构造器的依赖注入。
-2. 容易违反单一职责设计原则：使用基于字段的依赖注入，高频使用的类随着时间的推移，会在类中逐渐添加越来越多的依赖项，用着很爽，但很容易忽略类中的依赖已经太多了。但是如果使用基于构造函数的依赖注入，随着越来越多的依赖项被添加到类中，构造函数会变得越来越大，一眼就可以察觉到哪里不对劲。
+1. **不允许声明不可变域**：基于字段的依赖注入在声明为 final/immutable 的字段上不起作用，因为这些字段必须在类实例化时实例化。声明不可变依赖项的唯一方法是使用基于构造器的依赖注入。
+2. **容易违反单一职责设计原则**：使用基于字段的依赖注入，高频使用的类随着时间的推移，会在类中逐渐添加越来越多的依赖项，用着很爽，但很容易忽略类中的依赖已经太多了。但是如果使用基于构造函数的依赖注入，随着越来越多的依赖项被添加到类中，构造函数会变得越来越大，一眼就可以察觉到哪里不对劲。
    有一个有超过10个参数的构造函数是一个明显的信号，表明类已经转变一个大而全的功能合集，需要将类分割成更小、更容易维护的块。
    因此，尽管属性注入并不是破坏单一责任原则的直接原因，但它隐藏了信号，使我们很容易忽略这些信号。
-3. 与依赖注入容器紧密耦合：
+3. **与依赖注入容器紧密耦合**：
    使用基于字段的依赖注入的主要原因是为了避免 getter 和 setter 的样板代码或为类创建构造函数。最后，这意味着设置这些字段的唯一方法是通过Spring容器实例化类并使用反射注入它们，否则字段将保持 null。
    依赖注入设计模式将类依赖项的创建与类本身分离开来，并将此责任转移到类注入容器，从而允许程序设计解耦，并遵循单一职责和依赖项倒置原则(同样可靠)。因此，通过自动装配（autowiring）字段来实现的类的解耦，最终会因为再次与类注入容器(在本例中是 Spring)耦合而丢失，从而使类在Spring容器之外变得无用。
    这意味着，如果想在应用程序容器之外使用您的类，例如用于单元测试，将被迫使用 Spring 容器来实例化您的类，因为没有其他可能的方法(除了反射)来设置自动装配字段。
-4. 隐藏依赖关系：在使用依赖注入时，受影响的类应该使用公共接口清楚地公开这些依赖项，方法是在构造函数中公开所需的依赖项，或者使用方法(setter)公开可选的依赖项。当使用基于字段的依赖注入时，实质上是将这些依赖对外隐藏了。
+4. **隐藏依赖关系**：在使用依赖注入时，受影响的类应该使用公共接口清楚地公开这些依赖项，方法是在构造函数中公开所需的依赖项，或者使用方法(setter)公开可选的依赖项。当使用基于字段的依赖注入时，实质上是将这些依赖对外隐藏了。
+
+
+
+#### @Autowired和@Resource以及@Inject等注解注的区别
+
+#####  @Autowired 
+
+在Spring 2.5 引入了 @Autowired 注解
+
+```java
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Autowired {
+  boolean required() default true;//默认是true
+}
+```
+
+从Autowired注解源码上看，可以使用在下面这些地方：
+
+```java
+@Target(ElementType.CONSTRUCTOR) #构造函数
+@Target(ElementType.METHOD) #方法
+@Target(ElementType.PARAMETER) #方法参数
+@Target(ElementType.FIELD) #字段、枚举的常量
+@Target(ElementType.ANNOTATION_TYPE) #注解
+```
+
+- **简单总结**：
+
+1. @Autowired是Spring自带的注解，通过AutowiredAnnotationBeanPostProcessor 类实现的依赖注入
+2. @Autowired可以作用在CONSTRUCTOR、METHOD、PARAMETER、FIELD、ANNOTATION_TYPE
+3. @Autowired默认是根据类型（byType ）进行自动装配的
+4. 如果有多个类型一样的Bean候选者，需要指定按照名称（byName ）进行装配，则需要配合 @Qualifier。
+   指定名称后，如果Spring IOC容器中没有对应的组件bean抛出NoSuchBeanDefinitionException。也可以将@Autowired中required配置为false，如果配置为false之后，当没有找到相应bean的时候，系统不会抛异常
+
+
+
+在SpringBoot中也可以使用@Bean + @Autowired进行组件注入，将@Autowired加到参数上，其实也可以省略。
+
+```java
+@Bean
+public Person getPerson(@Autowired Car car){
+ return new Person();
+}
+// @Autowired 其实也可以省略
+```
+
+
+
+##### @Resource
+
+Resource注解源码：
+
+```java
+@Target({TYPE, FIELD, METHOD})
+@Retention(RUNTIME)
+public @interface Resource {
+    String name() default "";//指定注入指定名称的组件,name 的作用类似 @Qualifier
+    // 其他省略
+}
+```
+
+从Resource注解源码上看，可以使用在下面这些地方：
+
+```java
+@Target(ElementType.TYPE) #接口、类、枚举、注解
+@Target(ElementType.FIELD) #字段、枚举的常量
+@Target(ElementType.METHOD) #方法
+```
+
+- **简单总结**：
+
+1. @Resource是JSR250规范的实现，在javax.annotation包下
+2. @Resource可以作用TYPE、FIELD、METHOD上
+3. @Resource是默认根据属性名称进行自动装配的，如果有多个类型一样的Bean候选者，则可以通过name进行指定进行注入
+
+
+
+##### @Inject
+
+- **Inject注解源码**
+
+```java
+@Target({ METHOD, CONSTRUCTOR, FIELD })
+@Retention(RUNTIME)
+@Documented
+public @interface Inject {}
+```
+
+从Inject注解源码上看，可以使用在下面这些地方：
+
+```java
+@Target(ElementType.CONSTRUCTOR) #构造函数
+@Target(ElementType.METHOD) #方法
+@Target(ElementType.FIELD) #字段、枚举的常量
+```
+
+- **简单总结**：
+
+1. @Inject是JSR330 (Dependency Injection for Java)中的规范，需要导入javax.inject.Inject jar包 ，才能实现注入
+2. @Inject可以作用CONSTRUCTOR、METHOD、FIELD上
+3. @Inject是根据类型进行自动装配的，如果需要按名称进行装配，则需要配合@Named；@Named 的作用类似 @Qualifier！
 
 
 
 ### 构造器注入
+
+- **在XML配置方式中**，`<constructor-arg>`是通过构造函数参数注入，比如下面的xml:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+ http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!-- services -->
+    <bean id="userService" class="com.seven.springframework.service.UserServiceImpl">
+        <constructor-arg name="userDao" ref="userDao"/>
+        <!-- additional collaborators and configuration for this bean go here -->
+    </bean>
+    <!-- more bean definitions for services go here -->
+</beans>
+```
+
+- **在注解和Java配置方式下**
 
 在基于构造函数的依赖注入中，类构造函数被标注为 @Autowired，并包含了许多与要注入的对象相关的参数。
 
@@ -99,6 +357,8 @@ public class ConstructorBasedInjection {
     }
 }
 ```
+
+> 将@Autowired写在被注入的成员变量上，setter或者构造器上，就不用再xml文件中配置了。
 
 
 
@@ -132,7 +392,7 @@ userService.findUserList();// -> NullPointerException, 潜在的隐患
 
 2. 使用@CompontScan注解来扫描声明了@Controller、@Service、@Repository、@Component注解的类
 
-3. 使用@Configuration注解声明配置类，并使用@Bean注解实现Bean的定义，这种方式其实是xml配置方式的一种演 变，是Spring迈入到无配置化时代的里程碑
+3. 使用@Configuration注解声明配置类，并使用@Bean注解实现Bean的定义，这种方式其实是xml配置方式的一种演变，是Spring迈入到无xml 时代的里程碑
 
 4. 使用@Import注解，导入配置类或者普通的Bean
 
@@ -143,6 +403,56 @@ userService.findUserList();// -> NullPointerException, 潜在的隐患
 7. 实现ImportSelector接口，动态批量注入配置类或者Bean对象，这个在Spring Boot里面的自动装配机制里面有用到
 
    
+
+## Bean的作用域
+
+1. **singleton**：单例，Spring中的bean默认都是单例的。
+2. **prototype**：每次请求都会创建一个新的bean实例。
+3. **request**：每一次HTTP请求都会产生一个新的bean，该bean仅在当前HTTP request内有效。
+4. **session**：每一次HTTP请求都会产生一个新的bean，该bean仅在当前HTTP session内有效。
+5. **global-session**：全局session作用域。
+6. **websocket** （仅 Web 应用可用）：每一次 WebSocket 会话产生一个新的 bean。
+
+
+
+### 如何配置 bean 的作用域呢？
+
+xml 方式：
+
+```xml
+<bean id="..." class="..." scope="singleton"></bean>
+```
+
+注解方式：
+
+```java
+@Bean
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+public Person personPrototype() {
+    return new Person();
+}
+```
+
+
+
+### Bean 是线程安全的吗
+
+Spring 框架中的 Bean 是否线程安全，取决于其作用域和状态。
+
+这里以最常用的两种作用域 prototype 和 singleton 为例介绍。几乎所有场景的 Bean 作用域都是使用默认的 singleton ，重点关注 singleton 作用域即可。
+
+**prototype 作用域**下，每次获取都会创建一个新的 bean 实例，不存在资源竞争问题，所以不存在线程安全问题。**singleton 作用域**下，IoC 容器中只有唯一的 bean 实例，可能会存在资源竞争问题（取决于 Bean 是否有状态）。如果这个 bean 是有状态的话，那就存在线程安全问题（有状态 Bean 是指包含可变的成员变量的对象）。
+
+不过，大部分 Bean 实际都是无状态（没有定义可变的成员变量）的（比如 Dao、Service），这种情况下， Bean 是线程安全的。
+
+对于有状态单例 Bean 的线程安全问题，常见的有两种解决办法：
+
+1. 在 Bean 中尽量避免定义可变的成员变量。
+2. 在类中定义一个 `ThreadLocal` 成员变量，将需要的可变成员变量保存在 `ThreadLocal` 中（推荐的一种方式）。
+
+
+
+
 
 ## IOC的结构设计
 
