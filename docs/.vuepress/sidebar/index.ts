@@ -96,6 +96,7 @@ export default sidebar({
             "04-networkprogramming2-nio", 
             "04-networkprogramming2-niozerocopy",
             "05-networkprogramming3-aio", 
+            "netty-basic",
           ],
         },
         {
@@ -259,15 +260,6 @@ export default sidebar({
           collapsible: true,
           children: [
             "principleofautomaticassembly",
-          ],
-        },
-        {
-          text: "Netty",
-          icon: "network",
-          prefix: "netty/",
-          collapsible: true,
-          children: [
-            "netty-basic",
           ],
         },
         {
