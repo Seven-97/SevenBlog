@@ -539,6 +539,21 @@ public class APP {
 
 
 
+这里简单提一下实现原理：
+
+1. 当应用启动时，Spring框架会使用Java的反射API来检查所有带有`@Configuration`  注解的类（这里不懂的可以看下[注解实现的原理](https://www.seven97.top/java/basis/03-annotations.html#注解实现的原理)）。Spring框架内置了一个注解处理器`ConfigurationClassPostProcessor`，它是`BeanFactoryPostProcessor`  的一个实现。
+
+2. 接着`ConfigurationClassPostProcessor`  会在容器初始化时被调用，它会查找所有带有`@Configuration`  注解的类，并解析这些类中定义的`@Bean`  方法。
+
+   - **BeanDefinition**：对于每个`@Configuration` 类，Spring会为其中的每个`@Bean` 方法生成一个`BeanDefinition` 对象。这些`BeanDefinition` 对象会包含创建和配置Bean所需的所有信息。
+
+   - **处理嵌套配置**：如果一个`@Configuration` 类中包含了另一个`@Configuration` 类的引用，`ConfigurationClassPostProcessor` 会递归地处理这些嵌套的配置类。
+
+3. **注册BeanDefinition**： 一旦所有的`BeanDefinition`  被创建，它们会被注册到Spring容器的`BeanFactory`  中。这样，Spring容器就可以在需要时创建和注入这些Bean。
+4. **代理配置类**： 为了支持嵌套配置类和循环依赖等特性，Spring会为每个`@Configuration`  类创建一个代理，这个代理会在运行时处理相关的逻辑。
+
+
+
 ### 注解配置方式改造
 
 案例源码点击[这里](https://github.com/Seven-97/Spring-Demo/tree/master/03-spring-framework-helloworld-anno)
@@ -632,6 +647,8 @@ public static void main(String[] args) {
 > 这里要提一嘴的是，现在大多数的Spring项目，基本都是这种方式。主要步骤就是：
 > 1、对类添加@Component相关的注解，比如@Controller，@Service，@Repository
 > 2、设置ComponentScan的basePackage, 比如在xml文件里设置`<context:component-scan base-package='com.seven.springframework'>`, 或者在配置类中设置`@ComponentScan("com.seven.springframework")`注解，或者 直接在APP类中 `new AnnotationConfigApplicationContext("com.seven.springframework")`指定扫描的basePackage.
+
+
 
 
 
