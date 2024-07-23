@@ -9,7 +9,7 @@ tag:
 
 
 
-关于同步/异步，阻塞/非阻塞，Unix IO模型，可以先看这篇文章[网络系统 - Unix IO模型 | Seven的菜鸟成长之路 (seven97.top)](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html)
+关于同步/异步，阻塞/非阻塞，Unix IO模型，可以先看这篇文章[网络系统 - Unix IO模型](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html)
 
 ## BIO概述
 
@@ -58,8 +58,6 @@ BIO的问题关键不在于是否使用了多线程(包括线程池)处理这次
 客户端代码(SocketClientDaemon)
 
 ```java
-import java.util.concurrent.CountDownLatch;
-
 public class SocketClientDaemon {
     public static void main(String[] args) throws Exception {
         Integer clientNumber = 20;
@@ -81,19 +79,9 @@ public class SocketClientDaemon {
 
 
 
-客户端代码(SocketClientRequestThread模拟请求)
+客户端代码(SocketClientRequestThread模拟20个请求)
 
 ```java
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.util.concurrent.CountDownLatch;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.BasicConfigurator;
-
 /**
  * 一个SocketClientRequestThread线程模拟一个客户端请求。
  */
@@ -178,15 +166,6 @@ public class SocketClientRequestThread implements Runnable {
 服务器端(SocketServer1)单个线程
 
 ```java
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.BasicConfigurator;
-
 public class SocketServer1 {
 
     static {
@@ -245,16 +224,6 @@ public class SocketServer1 {
 客户端代码和上文一样，最主要是更改服务器端的代码:
 
 ```java
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.BasicConfigurator;
-
 public class SocketServer2 {
 
     static {
