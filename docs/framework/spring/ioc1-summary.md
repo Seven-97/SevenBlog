@@ -359,6 +359,7 @@ public class ConstructorBasedInjection {
 ```
 
 > 将@Autowired写在被注入的成员变量上，setter或者构造器上，就不用再xml文件中配置了。
+> **注意**：不能提供无参构造方法，否则Springboot默认会加载无参的构造方法，Bean实例对象会为null。并且构造器的权限需要为public
 
 
 

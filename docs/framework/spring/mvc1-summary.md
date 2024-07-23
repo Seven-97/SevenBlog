@@ -84,7 +84,9 @@ Spring MVC 下一般把后端项目分为 Service 层（处理业务）、Dao �
 
 @RequestParam一般就是在ajax里面没有声明contentType的时候，为默认的x-www-form-urlencoded格式时。
 
- 
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407231127701.png)
+
+
 
 ### 异常处理
 
@@ -190,9 +192,11 @@ Spring MVC 拦截器对应HandlerInterctor接口，该接口位于org.springfram
 
 ## MVC案例 
 
+### 基于webxml
+
  [示例源码点击这里](https://github.com/Seven-97/Spring-Demo/tree/master/07-spring-mvc-helloworld)
 
-### maven引入
+#### maven引入
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -244,7 +248,7 @@ Spring MVC 拦截器对应HandlerInterctor接口，该接口位于org.springfram
 </project>
 ```
 
-### 业务代码编写
+#### 业务代码编写
 
 - entity的User类
 
@@ -320,7 +324,7 @@ public class UserController {
 
 
 
-### webapp下的web.xml
+#### webapp下的web.xml
 
 ```xml
 <!DOCTYPE web-app PUBLIC
@@ -372,7 +376,7 @@ public class UserController {
 
 
 
-### springmvc.xml
+#### springmvc.xml
 
 web.xml中配置初始化参数contextConfigLocation，路径是classpath:springmvc.xml，因此文件直接创建在resources目录下
 
@@ -405,7 +409,7 @@ web.xml中配置初始化参数contextConfigLocation，路径是classpath:spring
 </beans>
 ```
 
-### JSP视图
+#### JSP视图
 
 创建userList.jsp
 
@@ -447,6 +451,20 @@ web.xml中配置初始化参数contextConfigLocation，路径是classpath:spring
 ```
 
 之后就是使用tomcat部署测试了，这块就不说了
+
+
+
+### 基于注解
+
+需要注意满足sevlet3.0规范
+
+
+
+
+
+
+
+
 
 
 
