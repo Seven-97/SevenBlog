@@ -29,17 +29,18 @@ NIO 常常被叫做非阻塞 IO，主要是因为 NIO 在网络通信中的非�
 
 Java NIO 中的 `Selector` 类是基于操作系统提供的 I/O 多路复用机制实现的，而在 Linux 上，这个机制就是 `epoll`。
 
-关于触发模式，Java NIO 的 `Selector` 默认使用的是水平触发模式（Level-Triggered, LT）。这意味着当一个文件描述符（在 Java 中通常是 `SocketChannel` 或 `ServerSocketChannel`）变得可读或可写时，`Selector` 会持续通知，直到该文件描述符上的事件被处理。这与 `epoll` 的水平触发模式是一致的。
+关于触发模式
 
-虽然 `epoll` 也支持边缘触发模式（Edge-Triggered, ET），但 Java NIO 的 `Selector` 并没有直接提供对边缘触发模式的支持。如果需要使用边缘触发模式，通常需要直接使用底层的系统调用（如通过 JNI 调用 `epoll` 的边缘触发模式），但这超出了标准 Java NIO 库的范围。
+1. Java NIO 的 `Selector` 默认使用的是水平触发模式（Level-Triggered, LT）。这意味着当一个文件描述符（在 Java 中通常是 `SocketChannel` 或 `ServerSocketChannel`）变得可读或可写时，`Selector` 会持续通知，直到该文件描述符上的事件被处理。这与 `epoll` 的水平触发模式是一致的。
+2. 虽然 `epoll` 也支持边缘触发模式（Edge-Triggered, ET），但 Java NIO 的 `Selector` 并没有直接提供对边缘触发模式的支持。如果需要使用边缘触发模式，通常需要直接使用底层的系统调用（如通过 JNI 调用 `epoll` 的边缘触发模式），但这超出了标准 Java NIO 库的范围。
 
-总结一下：
+关于[水平触发和边缘触发的区别可以看这篇文章](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html#epoll)，总结一下：
 
 - Java NIO 在 Linux 上使用 `epoll` 作为底层的 I/O 多路复用机制。
 - Java NIO 的 `Selector` 默认使用 `epoll` 的水平触发模式。
 - Java NIO 不直接支持 `epoll` 的边缘触发模式，需要通过其他方式实现。
 
-因此，如果你在 Linux 上使用 Java NIO 的 `Selector`，你可以预期它使用的是 [`epoll` 的水平触发模式](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html#水平触发)。
+因此，如果在 Linux 上使用 Java NIO 的 `Selector`，它使用的是 [`epoll` 的水平触发模式](https://www.seven97.top/cs-basics/operating-system/selectpollepoll.html#水平触发)。
 
 
 
@@ -173,38 +174,38 @@ public Buffer flip() {
 ```java
 public static void fastCopy(String src, String dist) throws IOException {
 
-    /* 获得源文件的输入字节流 */
+    // 获得源文件的输入字节流
     FileInputStream fin = new FileInputStream(src);
 
-    /* 获取输入字节流的文件通道 */
+    // 获取输入字节流的文件通道
     FileChannel fcin = fin.getChannel();
 
-    /* 获取目标文件的输出字节流 */
+    // 获取目标文件的输出字节流 
     FileOutputStream fout = new FileOutputStream(dist);
 
-    /* 获取输出字节流的通道 */
+    // 获取输出字节流的通道
     FileChannel fcout = fout.getChannel();
 
-    /* 为缓冲区分配 1024 个字节 */
+    // 为缓冲区分配 1024 个字节
     ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
 
     while (true) {
 
-        /* 从输入通道中读取数据到缓冲区中 */
+        // 从输入通道中读取数据到缓冲区中
         int r = fcin.read(buffer);//对于buffer来说，这是写入的过程
 
-        /* read() 返回 -1 表示 EOF */
+        // read() 返回 -1 表示 EOF
         if (r == -1) {
             break;
         }
 
-        /* 切换读写 */
+        // 切换读写
         buffer.flip();
 
-        /* 把缓冲区的内容写入输出文件中 */
+        // 把缓冲区的内容写入输出文件中
         fcout.write(buffer);//对于buffer来说，这是读取的过程
         
-        /* 清空缓冲区 */
+        // 清空缓冲区
         buffer.clear();
     }
 }

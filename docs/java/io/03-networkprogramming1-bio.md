@@ -53,9 +53,11 @@ BIO 其实就是 [Reactor的 单reactor 单进程/线程模型](https://www.seve
 
 BIO的问题关键不在于是否使用了多线程(包括线程池)处理这次请求，而在于accept()、read()的操作点都是被阻塞。要测试这个问题，也很简单。这里模拟了20个客户端(用20根线程模拟)，利用JAVA的同步计数器CountDownLatch，保证这20个客户都初始化完成后然后同时向服务器发送请求，然后观察一下Server这边接受信息的情况。
 
-### 模拟20个客户端并发请求，服务器端使用单线程:
+以下案例[源码点击这里](https://github.com/Seven-97/IODemo/tree/master/01-bio-demo)
 
-客户端代码(SocketClientDaemon)
+### 服务器端使用单线程
+
+- 客户端代码(SocketClientDaemon)，模拟20个客户端连接
 
 ```java
 public class SocketClientDaemon {
@@ -64,9 +66,10 @@ public class SocketClientDaemon {
         CountDownLatch countDownLatch = new CountDownLatch(clientNumber);
 
         //分别开始启动这20个客户端
-        for(int index = 0 ; index < clientNumber ; index++ , countDownLatch.countDown()) {
+        for (int index = 0; index < clientNumber; index++) {
             SocketClientRequestThread client = new SocketClientRequestThread(countDownLatch, index);
             new Thread(client).start();
+            countDownLatch.countDown();
         }
 
         //这个wait不涉及到具体的实验逻辑，只是为了保证守护线程在启动所有线程后，进入等待状态
@@ -79,37 +82,24 @@ public class SocketClientDaemon {
 
 
 
-客户端代码(SocketClientRequestThread模拟20个请求)
+- 客户端代码(SocketClientRequestThread模拟20个请求)
 
 ```java
-/**
- * 一个SocketClientRequestThread线程模拟一个客户端请求。
- */
+@Slf4j
 public class SocketClientRequestThread implements Runnable {
-
-    static {
-        BasicConfigurator.configure();
-    }
-
-    /**
-     * 日志
-     */
-    private static final Log LOGGER = LogFactory.getLog(SocketClientRequestThread.class);
 
     private CountDownLatch countDownLatch;
 
-    /**
-     * 这个线层的编号
-     * @param countDownLatch
-     */
+    //线程编号
     private Integer clientIndex;
 
     /**
      * countDownLatch是java提供的同步计数器。
      * 当计数器数值减为0时，所有受其影响而等待的线程将会被激活。这样保证模拟并发请求的真实性
+     *
      * @param countDownLatch
      */
-    public SocketClientRequestThread(CountDownLatch countDownLatch , Integer clientIndex) {
+    public SocketClientRequestThread(CountDownLatch countDownLatch, Integer clientIndex) {
         this.countDownLatch = countDownLatch;
         this.clientIndex = clientIndex;
     }
@@ -121,7 +111,7 @@ public class SocketClientRequestThread implements Runnable {
         InputStream clientResponse = null;
 
         try {
-            socket = new Socket("localhost",83);
+            socket = new Socket("localhost", 83);
             clientRequest = socket.getOutputStream();
             clientResponse = socket.getInputStream();
 
@@ -133,28 +123,29 @@ public class SocketClientRequestThread implements Runnable {
             clientRequest.flush();
 
             //在这里等待，直到服务器返回信息
-            SocketClientRequestThread.LOGGER.info("第" + this.clientIndex + "个客户端的请求发送完成，等待服务器返回信息");
+            log.info("第{}个客户端的请求发送完成，等待服务器返回信息", this.clientIndex);
             int maxLen = 1024;
             byte[] contextBytes = new byte[maxLen];
             int realLen;
             String message = "";
+
             //程序执行到这里，会一直等待服务器返回信息(注意，前提是in和out都不能close，如果close了就收不到服务器的反馈了)
-            while((realLen = clientResponse.read(contextBytes, 0, maxLen)) != -1) {
-                message += new String(contextBytes , 0 , realLen);
+            while ((realLen = clientResponse.read(contextBytes, 0, maxLen)) != -1) {
+                message += new String(contextBytes, 0, realLen);
             }
-            SocketClientRequestThread.LOGGER.info("接收到来自服务器的信息:" + message);
+            log.info("接收到来自服务器的信息:{}", message);
         } catch (Exception e) {
-            SocketClientRequestThread.LOGGER.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
         } finally {
             try {
-                if(clientRequest != null) {
+                if (clientRequest != null) {
                     clientRequest.close();
                 }
-                if(clientResponse != null) {
+                if (clientResponse != null) {
                     clientResponse.close();
                 }
             } catch (IOException e) {
-                SocketClientRequestThread.LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
         }
     }
@@ -163,42 +154,39 @@ public class SocketClientRequestThread implements Runnable {
 
 
 
-服务器端(SocketServer1)单个线程
+- 服务器端(SocketServer) 单个线程
 
 ```java
-public class SocketServer1 {
+@Slf4j
+public class SocketServer {
 
-    static {
-        BasicConfigurator.configure();
-    }
-
-    /**
-     * 日志
-     */
-    private static final Log LOGGER = LogFactory.getLog(SocketServer1.class);
-
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         ServerSocket serverSocket = new ServerSocket(83);
 
         try {
-            while(true) {
+            while (true) {
+                //这里会被阻塞，直到能获取到连接
                 Socket socket = serverSocket.accept();
 
-                //下面我们收取信息
+                //下面开始收取信息
                 InputStream in = socket.getInputStream();
                 OutputStream out = socket.getOutputStream();
+
+                //获取端口
                 Integer sourcePort = socket.getPort();
                 int maxLen = 2048;
                 byte[] contextBytes = new byte[maxLen];
-                //这里也会被阻塞，直到有数据准备好
+
+                //这里会被阻塞，直到有数据准备好
                 int realLen = in.read(contextBytes, 0, maxLen);
                 //读取信息
-                String message = new String(contextBytes , 0 , realLen);
+                String message = new String(contextBytes, 0, realLen);
 
-                //下面打印信息
-                SocketServer1.LOGGER.info("服务器收到来自于端口: " + sourcePort + "的信息: " + message);
+                //打印信息
+                log.info("服务器收到来自于端口: {}的信息: {}", sourcePort, message);
 
-                //下面开始发送信息
+                Thread.sleep(10000);//模拟执行业务逻辑
+                //开始发送信息
                 out.write("回发响应信息！".getBytes());
 
                 //关闭
@@ -206,10 +194,10 @@ public class SocketServer1 {
                 in.close();
                 socket.close();
             }
-        } catch(Exception e) {
-            SocketServer1.LOGGER.error(e.getMessage(), e);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         } finally {
-            if(serverSocket != null) {
+            if (serverSocket != null) {
                 serverSocket.close();
             }
         }
@@ -217,56 +205,49 @@ public class SocketServer1 {
 }
 ```
 
+经过执行就会发现，服务器一次只能处理一个客户端请求，当处理完成并返回后(或者异常时)，才能进行第二次请求的处理。这就是上面提到的BIO存在的问题
 
 
-### 多线程来优化服务器端
+
+### 优化服务器端为多线程
 
 客户端代码和上文一样，最主要是更改服务器端的代码:
 
 ```java
-public class SocketServer2 {
+@Slf4j
+public class SocketServer {
 
     static {
         BasicConfigurator.configure();
     }
 
-    private static final Log LOGGER = LogFactory.getLog(SocketServer2.class);
-
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         ServerSocket serverSocket = new ServerSocket(83);
 
         try {
-            while(true) {
+            while (true) {
                 Socket socket = serverSocket.accept();
-                //当然业务处理过程可以交给一个线程(这里可以使用线程池),并且线程的创建是很耗资源的。
-                //最终改变不了.accept()只能一个一个接受socket的情况,并且被阻塞的情况
+                //业务处理过程可以交给一个线程(这里可以使用线程池),并且线程的创建是很耗资源的。
+                //但最终还是改变不了.accept()只能一个一个接受socket的情况,并且被阻塞的情况
                 SocketServerThread socketServerThread = new SocketServerThread(socket);
                 new Thread(socketServerThread).start();
             }
-        } catch(Exception e) {
-            SocketServer2.LOGGER.error(e.getMessage(), e);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         } finally {
-            if(serverSocket != null) {
+            if (serverSocket != null) {
                 serverSocket.close();
             }
         }
     }
 }
 
-/**
- * 当然，接收到客户端的socket后，业务的处理过程可以交给一个线程来做。
- * 但还是改变不了socket被一个一个的做accept()的情况。
- */
+@Slf4j
 class SocketServerThread implements Runnable {
-
-    /**
-     * 日志
-     */
-    private static final Log LOGGER = LogFactory.getLog(SocketServerThread.class);
 
     private Socket socket;
 
-    public SocketServerThread (Socket socket) {
+    public SocketServerThread(Socket socket) {
         this.socket = socket;
     }
 
@@ -275,7 +256,7 @@ class SocketServerThread implements Runnable {
         InputStream in = null;
         OutputStream out = null;
         try {
-            //下面我们收取信息
+            //下面收取信息
             in = socket.getInputStream();
             out = socket.getOutputStream();
             Integer sourcePort = socket.getPort();
@@ -285,64 +266,167 @@ class SocketServerThread implements Runnable {
             //也就是说read方法处同样会被阻塞，直到操作系统有数据准备好
             int realLen = in.read(contextBytes, 0, maxLen);
             //读取信息
-            String message = new String(contextBytes , 0 , realLen);
+            String message = new String(contextBytes, 0, realLen);
 
-            //下面打印信息
-            SocketServerThread.LOGGER.info("服务器收到来自于端口: " + sourcePort + "的信息: " + message);
+            log.info("服务器收到来自于端口: " + sourcePort + "的信息: " + message);
 
+            Thread.sleep(10000);//模拟执行业务逻辑
             //下面开始发送信息
             out.write("回发响应信息！".getBytes());
-        } catch(Exception e) {
-            SocketServerThread.LOGGER.error(e.getMessage(), e);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         } finally {
-            //试图关闭
+            //关闭资源
             try {
-                if(in != null) {
+                if (in != null) {
                     in.close();
                 }
-                if(out != null) {
+                if (out != null) {
                     out.close();
                 }
-                if(this.socket != null) {
+                if (this.socket != null) {
                     this.socket.close();
                 }
             } catch (IOException e) {
-                SocketServerThread.LOGGER.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
         }
     }
 }
 ```
 
+这里与单线程相比，使用了多线程来处理具体的业务。但还是改变不了.accept()只能一个一个阻塞处理 socket的情况
 
 
-### 服务器端的执行效果
-
-主要看一看服务器使用多线程处理时的情况:
-
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250756385.jpg)
 
 ### 问题根源
 
 那么重点的问题并不是“是否使用了多线程”，而是为什么accept()、read()方法会被阻塞。
 
-API文档中对于 serverSocket.accept() 方法的使用描述:
+API文档中对于 serverSocket.accept() 方法的使用描述：
 
 > Listens for a connection to be made to this socket and accepts it. The method blocks until a connection is made.
+> 翻译一下：监听与此套接字的连接并接受它。该方法会一直阻塞，直到建立连接为止。
 
-serverSocket.accept()会被阻塞? 这里涉及到阻塞式同步IO的工作原理:
+这主要就涉及到阻塞式同步IO的工作原理:
 
-- 服务器线程发起一个accept动作，询问操作系统 是否有新的socket套接字信息从端口X发送过来。
+1. 服务器线程发起一个accept动作，询问操作系统 是否有新的socket套接字信息从端口X发送过来。accept源码如下：
+   ```java
+   // java.net.ServerSocket#accept
+   public Socket accept() throws IOException {
+       if (isClosed())
+           throw new SocketException("Socket is closed");
+       if (!isBound())
+           throw new SocketException("Socket is not bound yet");
+       Socket s = new Socket((SocketImpl) null);
+       implAccept(s);//显然会走到这个逻辑
+       return s;
+   }
+   
+   //java.net.ServerSocket#implAccept(java.net.Socket)
+   protected final void implAccept(Socket s) throws IOException {
+       SocketImpl si = s.impl;
+       
+       // Socket has no SocketImpl
+       if (si == null) {//上面传进来的null
+           si = implAccept();
+           s.setImpl(si);
+           s.postAccept();
+           return;
+       }
+   
+       //...省略
+       s.postAccept();
+   }
+   
+   //java.net.ServerSocket#implAccept()
+   private SocketImpl implAccept() throws IOException {
+       if (impl instanceof PlatformSocketImpl) {
+           return platformImplAccept();
+       } else {
+           //...省略
+       }
+   }
+   
+   //java.net.ServerSocket#platformImplAccept
+   private SocketImpl platformImplAccept() throws IOException {
+       assert impl instanceof PlatformSocketImpl;
+   
+       // create a new platform SocketImpl and accept the connection
+       SocketImpl psi = SocketImpl.createPlatformSocketImpl(false);
+       implAccept(psi);
+       return psi;
+   }
+   
+   //java.net.ServerSocket#platformImplAccept
+   private void implAccept(SocketImpl si) throws IOException {
+      assert !(si instanceof DelegatingSocketImpl);
+   
+      // accept a connection
+     impl.accept(si);
+   
+     //...省略
+   }
+   
+   
+   //java.net.AbstractPlainSocketImpl#accept
+   protected void accept(SocketImpl si) throws IOException {
+       si.fd = new FileDescriptor();
+       acquireFD();
+       try {
+           socketAccept(si);
+       } finally {
+           releaseFD();
+       }
+       SocketCleanable.register(si.fd, true);
+   }
+   ```
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250756374.jpg)
+   
 
-- 注意，是询问操作系统。也就是说socket套接字的IO模式支持是基于操作系统的，那么自然同步IO/异步IO的支持就是需要操作系统级别的了。如下图:
+2. 注意，是询问操作系统。也就是说socket套接字的IO模式支持是基于操作系统的，那么自然同步IO/异步IO的支持就是需要操作系统级别的了。如下：
+   ```java
+   // java.net.PlainSocketImpl#socketAccept
+   void socketAccept(SocketImpl s) throws IOException {
+           int nativefd = checkAndReturnNativeFD();
+   
+           if (s == null)
+               throw new NullPointerException("socket is null");
+   
+           int newfd = -1;
+           InetSocketAddress[] isaa = new InetSocketAddress[1];
+           if (timeout <= 0) { //如果没有设置timeout，那么在调用JNI时会一直等待，直到有数据返回
+               newfd = accept0(nativefd, isaa);//这是个JNI方法
+           } else {
+               configureBlocking(nativefd, false);
+               try {
+                   waitForNewConnection(nativefd, timeout);
+                   newfd = accept0(nativefd, isaa);
+                   if (newfd != -1) {
+                       configureBlocking(newfd, true);
+                   }
+               } finally {
+                   configureBlocking(nativefd, true);
+               }
+           }
+           /* Update (SocketImpl)s' fd */
+           fdAccess.set(s.fd, newfd);
+           /* Update socketImpls remote port, address and localport */
+           InetSocketAddress isa = isaa[0];
+           s.port = isa.getPort();
+           s.address = isa.getAddress();
+           s.localport = localport;
+           if (preferIPv4Stack && !(s.address instanceof Inet4Address))
+               throw new SocketException("Protocol family not supported");
+   }
+   
+   // java.net.PlainSocketImpl#accept0
+   static native int accept0(int fd, InetSocketAddress[] isaa) throws IOException;
+   ```
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250756377.jpg)
+   
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250756379.jpg)
-
-如果操作系统没有发现有套接字从指定的端口X来，那么操作系统就会等待。这样serverSocket.accept()方法就会一直等待。这就是为什么accept()方法为什么会阻塞: 它内部的实现是使用的操作系统级别的同步IO
+最后调用的accept0十个native方法，就是调用的操作系统级别的accept。因此如果操作系统没有发现有套接字从指定的端口X来，那么操作系统就会等待。这样serverSocket.accept()方法就会一直等待。这就是为什么accept()方法为什么会阻塞: 它**内部的实现是使用的操作系统级别的同步IO**
 
  
 

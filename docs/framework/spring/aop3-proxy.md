@@ -897,9 +897,151 @@ private Callback[] getCallbacks(Class<?> rootClass) throws Exception {
 
 
 
+## AOP在嵌套方法调用时不生效
+
+在一个实现类中，有2个方法，方法A，方法B，其中方法B上面有个注解切面，当方法B被外部调用的时候，会进入切面方法。
+但当方法B是被方法A调用时，并不能从方法B的注解上，进入到切面方法，即我们经常碰到的方法嵌套时，AOP注解不生效的问题。
+
+### 案例
+
+#### 外部调用AOP方法正常进入
+
+通过外部，调用方法B，可以正常进入切面方法，这个场景的代码如下：
+
+- 注解类：
+
+```java
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface DemoAnno {
+
+}
+```
+
+- 切面类
+
+```java
+@Aspect
+@Order(-1)
+@Component
+public class DemoAspect {
+
+    @Before("@annotation(da)")
+    public void beforDoSomething(JoinPoint point, DemoAnno da) throws Exception {
+        System.out.println("before method B, print 'hello,world' " );
+    }
+}
+```
+
+- 接口类
+
+```java
+public interface DemoService {
+    void methodDemoA();
+
+    void methodDemoB();
+}
+```
+
+- 服务实现类
+
+```java
+@Service
+public class DemoServiceImpl implements DemoService {
+    @Override
+    public void methodDemoA(){
+        System.out.println("this is method A");
+    }
+
+    @Override
+    @DemoAnno
+    public void methodDemoB() {
+        System.out.println("this is method B");
+    }
+}
+```
+
+- 测试方法
+
+```java
+@Autowired
+DemoService demoService;
+@Test
+public void testMethod(){
+    demoService.methodDemoA();
+    demoService.methodDemoB();
+}
+```
+
+输出结果：
+
+```java
+this is method A
+before method B, print 'hello,world' 
+this is method B
+```
 
 
 
+#### 方法嵌套调用，AOP不生效
+
+上面的代码，做下修改。在DemoServiceImpl实现类中，通过方法A去调用方法B，然后再单元测试类中，调用方法A。代码修改后如下：
+
+- 服务实现类：
+
+```java
+@Service
+public class DemoServiceImpl implements DemoService {
+    @Override
+    public void methodDemoA(){
+        System.out.println("this is method A");
+        methodDemoB();
+    }
+
+    @Override
+    @DemoAnno
+    public void methodDemoB() {
+        System.out.println("this is method B");
+    }
+}
+```
+
+- 输出结果：
+
+```java
+this is method A
+this is method B
+```
+
+### 原因分析
+
+场景1中，通过外部调用方法B，是由于spring在启动时，根据切面类及注解，生成了DemoService的代理类，在调用方法B时，实际上是代理类先对目标方法进行了业务增强处理（执行切面类中的业务逻辑），然后再调用方法B本身。所以场景1可以正常进入切面方法；
+
+场景2中，通过外部调用的是方法A，虽然spring也会创建一个cglib的代理类去调用方法A，但当方法A调用方法B的时候，属于类里面的内部调用，使用的是实例对象本身去去调用方法B，非aop的cglib代理对象调用，方法B自然就不会进入到切面方法了。
+
+### 解决方案
+
+但实际上我们期望的是，方法A在调用方法B的时候，仍然能够进入切面方法，即需要AOP切面生效。这种情况下，在调用方法B的时候，需要使用`AopContext.currentProxy()`获取当前的代理对象，然后使用代理对象调用方法B。
+
+> 注：需要开启 `exposeProxy=true` 的配置，springboot项目中，可以在启动类上面，添加 @EnableAspectJAutoProxy(exposeProxy = true)注解。
+
+```java
+@Service
+public class DemoServiceImpl implements DemoService {
+    @Override
+    public void methodDemoA(){
+        System.out.println("this is method A");
+        DemoService service = (DemoService) AopContext.currentProxy();
+        service.methodDemoB();
+    }
+
+    @Override
+    @DemoAnno
+    public void methodDemoB() {
+        System.out.println("this is method B");
+    }
+}
+```
 
 
 
