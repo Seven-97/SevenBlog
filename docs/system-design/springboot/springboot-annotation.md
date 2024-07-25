@@ -169,9 +169,11 @@ public class Person {
 
 ### @RestController
 
-@RestController注解是@Controller和@ResponseBody的合集,表示这是个控制器 bean,并且是将函数的返回值直接填入 HTTP 响应体中,是 REST 风格的控制器。
+@RestController注解**是@Controller和@ResponseBody的合集**，表示这是个控制器 bean,并且是将函数的返回值直接填入 HTTP 响应体中，是 REST 风格的控制器，更加适合目前前后端分离的架构下，返回 JSON 数据格式。
 
 单独使用 @Controller 不加 @ResponseBody的话一般是用在要返回一个视图的情况，这种情况属于比较传统的 Spring MVC 的应用，对应于前后端不分离的情况。@Controller +@ResponseBody 返回 JSON 或 XML 形式数据
+
+
 
 ### @Scope
 
@@ -197,21 +199,31 @@ public class Person {
 
 - GET：请求从服务器获取特定资源。举个例子：GET /users（获取所有学生）
 
-- @GetMapping("users") 等价于@RequestMapping(value="/users",method=RequestMethod.GET)
+  @GetMapping("users") 等价于@RequestMapping(value="/users",method=RequestMethod.GET)
 
 - POST：在服务器上创建一个新的资源。举个例子：POST /users（创建学生）
 
-- @PostMapping("users") 等价于@RequestMapping(value="/users",method=RequestMethod.POST)
+  @PostMapping("users") 等价于@RequestMapping(value="/users",method=RequestMethod.POST)
 
 - PUT：更新服务器上的资源（客户端提供更新后的整个资源）。举个例子：PUT /users/12（更新编号为 12 的学生）
 
-- @PutMapping("/users/{userId}") 等价于@RequestMapping(value="/users/{userId}",method=RequestMethod.PUT)
+  @PutMapping("/users/{userId}") 等价于@RequestMapping(value="/users/{userId}",method=RequestMethod.PUT)
 
 - DELETE：从服务器删除特定的资源。举个例子：DELETE /users/12（删除编号为 12 的学生）
 
-- @DeleteMapping("/users/{userId}")等价于@RequestMapping(value="/users/{userId}",method=RequestMethod.DELETE)
+  @DeleteMapping("/users/{userId}")等价于@RequestMapping(value="/users/{userId}",method=RequestMethod.DELETE)
 
 - PATCH：更新服务器上的资源（客户端提供更改的属性，可以看做作是部分更新），使用的比较少
+
+
+
+### @RequestMapping 和 @GetMapping 注解的区别
+
+@RequestMapping：可注解在类和方法上；@GetMapping 仅可注册在方法上
+
+@RequestMapping：可进行 GET、POST、PUT、DELETE 等请求方法；@GetMapping 是@RequestMapping 的GET请求方法的特例
+
+
 
 ## 前后端传值
 
@@ -241,6 +253,10 @@ public ResponseEntity signUp(@RequestBody @Valid UserRegisterRequest userRegiste
   return ResponseEntity.ok().build();
 }
 ```
+
+
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407251044267.png)
 
 
 
@@ -335,24 +351,61 @@ public class PersonController {
 
 ## 全局处理 Controller 层异常
 
-- @ControllerAdvice :注解定义全局异常处理类
+- 使用系统定义好的异常处理器 SimpleMappingExceptionResolver
 
-- @ExceptionHandler :注解声明异常处理方法
+- 使用自定义异常处理器
+
+- 使用异常处理注解
+
+一般推荐使用注解的方式统一异常处理，具体会使用到 `@ControllerAdvice` + `@ExceptionHandler` 这两个注解 。
 
 ```java
 @ControllerAdvice
 @ResponseBody
 public class GlobalExceptionHandler {
 
-    /**
-     * 请求参数异常处理
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request) {
-       ......
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<?> handleAppException(BaseException ex, HttpServletRequest request) {
+      //......
+    }
+
+    @ExceptionHandler(value = ResourceNotFoundException.class)
+    public ResponseEntity<ErrorReponse> handleResourceNotFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
+      //......
     }
 }
 ```
+
+这种异常处理方式下，会给所有或者指定的 `Controller` 织入异常处理的逻辑（AOP），当 `Controller` 中的方法抛出异常的时候，由被`@ExceptionHandler` 注解修饰的方法进行处理。
+
+`ExceptionHandlerMethodResolver` 中 `getMappedMethod` 方法决定了异常具体被哪个被 `@ExceptionHandler` 注解修饰的方法处理异常。
+
+```java
+@Nullable
+  private Method getMappedMethod(Class<? extends Throwable> exceptionType) {
+    List<Class<? extends Throwable>> matches = new ArrayList<>();
+    //找到可以处理的所有异常信息。mappedMethods 中存放了异常和处理异常的方法的对应关系
+    for (Class<? extends Throwable> mappedException : this.mappedMethods.keySet()) {
+      if (mappedException.isAssignableFrom(exceptionType)) {
+        matches.add(mappedException);
+      }
+    }
+    // 不为空说明有方法处理异常
+    if (!matches.isEmpty()) {
+      // 按照匹配程度从小到大排序
+      matches.sort(new ExceptionDepthComparator(exceptionType));
+      // 返回处理异常的方法
+      return this.mappedMethods.get(matches.get(0));
+    }
+    else {
+      return null;
+    }
+}
+```
+
+从源代码看出：**`getMappedMethod()`会首先找到可以匹配处理异常的所有方法信息，然后对其进行从小到大的排序，最后取最小的那一个匹配的方法(即匹配度最高的那个)。**
+
+
 
 
 
