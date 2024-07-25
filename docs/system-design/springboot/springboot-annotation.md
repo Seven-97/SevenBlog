@@ -19,137 +19,71 @@ tag:
 
 [自动配置机制](https://www.seven97.top/framework/springboot/principleofautomaticassembly.html)？在启动过程中，Spring Boot会扫描应用程序的类路径，根据定义条件匹配的各种AutoConfiguration类进行自动配置。通过条件化配置和默认属性值，根据应用程序的类路径和其他条件来自动配置Spring应用程序的各种组件。自动配置的目标是让开发人员能够以最小的配置和干预自动获得功能完整的应用程序。
 
+
+
 ## Spring Bean 相关
 
-### @Autowired
+### @Resource和@Autowired
 
-自动导入对象到类中，被注入进的类同样要被 Spring 容器管理比如：Service 类注入到 Controller 类中。
+- @Autowired：用于构造器、方法、参数或字段上，表明需要自动注入一个Bean。Spring会自动装配匹配的Bean，**默认是按类型装配**。
+  - @Qualifier：与@Autowired一起使用时，指定要注入的Bean的名称，以避免与其他Bean的混淆。
+  - @Primary: 当一个类型有多个Bean时，在不使用@Qualifier的情况下，Spring会优先选择标注了@Primary的Bean。
 
-
-
-### @Qualifier
-
-当注入的依赖存在多个候选者，可以使用一些方法来筛选出唯一候选者
-
-
-
-例：
-
-创建接口Car，以及两个实现其接口的bean
-
-```java
-public interface Car {
-}
- 
-@Component
-public class RedCar implements Car {
-}
- 
-@Component
-public class WhiteCar implements Car {
-}
-```
-
-创建类型为Person的bean
-
-```java
-@Component
-public class Person {
- 
-    @Autowired
-    private Car car;
-}
-```
+- @Resource：来自JDK，类似于@Autowired，但**默认是按名称装配**，也可以混合使用。
+- @Inject：来自javax.inject包，类似于@Autowired，属于JSR-330标准的一部分。
 
 
 
-@Qualifier注解源码
+#### 两者的区别
 
-![image-20240515001758389](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405150018597.png)
+@Autowired 是Spring框架提供的注解，主要用于根据类型自动装配依赖项。行为和特性：
 
-从源码中我们知道这个注解可以作用于属性、方法、参数、类、注解上面
-
-
-
-作用于属性上
-
-```java
-@Component
-public class Person {
- 
-    @Autowired
-    @Qualifier("redCar")
-    private Car car;
- 
-}
-```
+1. 按类型装配：默认情况下，@Autowired**按类型自动装配**Bean。
+2. 可选依赖：如果你的依赖是可选的，可以使用 required=false 设置：
+3. 构造器、方法或字段：可以用在构造器，属性字段或Setter方法上。
+4. **结合@Qualifier**：可以和@Qualifier结合使用以实现按名称装配。
+5. 作为Spring特有的注解，它更深度地集成在Spring的生态系统中，更适合与其他Spring注解一起使用。
 
 
 
-作用于方法上
+@Resource 是JDK提供的注解，属于Java依赖注入规范（JSR-250）的一部分。行为和特性：
 
-```java
-@Component
-public class Person {
- 
-    @Autowired
-    @Qualifier("redCar")
-    private Car car;
- 
-    @Autowired
-    @Qualifier("mimi")
-    private Animal animal;
- 
-}
-```
+1. 按名称装配：默认情况下，@Resource**按名称装配**。如果没有匹配到名称，再按类型装配。
+2. 不支持required属性：与@Autowired不同，@Resource不支持required属性。
+3. 可以用于字段和Setter方法：虽然也可以用于构造器，但不常见。通常用在字段或Setter方法上。
+4. 由于是Java EE规范的一部分，它可以与其他Java EE注解（如@PostConstruct和@PreDestroy）更好地配合使用。
 
 
 
-作用于类上
+#### 依赖注入的优先级(重要)
 
-```java
-@Component
-@Qualifier("car666")
-public class RedCar implements Car {
-}
- 
-@Component
-public class Person {
- 
-    @Autowired
-    @Qualifier("car666")
-    private Car car;
- 
-    @Autowired
-    @Qualifier("mimi")
-    private Animal animal;
- 
-}
-```
+在使用 @Resource 注解进行依赖注入时，优先级规则如下：
+
+1. 明确指定名称：
+   1. 如果通过 @Resource(name="beanName") 明确指定了 Bean 的名称，那么 Spring 会首先按照名称匹配进行注入。
+   2. 在这种情况下，@Primary 注解不会影响注入结果。
+2. 按字段或属性名称匹配：
+   1. 如果没有通过 name 属性指定 Bean 的名称，Spring 会尝试按照字段或属性的名称进行匹配。
+   2. 在这种情况下，@Primary 注解也不会影响注入结果。
+3. 按类型匹配：
+   1. 如果按名称匹配失败（包括明确指定名称和按字段名称匹配都没有找到合适的 Bean），Spring 会按类型匹配。
+   2. 在这种情况下，如果存在多个同类型的 Bean，则 @Primary 注解会起作用，标记为 @Primary 的 Bean 将被优先注入。
 
 
 
-作用于参数上
+在使用 @Autowired 注解进行依赖注入时，优先级规则如下：
 
-```java
-@Component
-public class Person {
- 
-    @Autowired
-    @Qualifier("car666")
-    private Car car;
- 
-    private Animal animal;
- 
-    public Person(@Qualifier("wangcai") Animal animal) {
-        this.animal = animal;
-    }
-}
-```
+1. 按类型匹配：Spring 首先通过类型匹配找到所有符合要求的候选 Bean。如果只有一个候选 Bean，那么该 Bean 会被注入。
+2. 按名称匹配结合 @Qualifier：
+   1. 如果有多个同类型的 Bean，可以使用 @Qualifier 注解来指定具体的 Bean。
+   2. @Qualifier 的值必须与一个候选 Bean 的名称匹配，匹配成功的 Bean 会被注入。
+   3. 使用 @Primary：如果仍存在多个符合要求的 Bean，并且其中一个 Bean 标记了 @Primary，Spring 会优先选择标记了 @Primary 的 Bean 进行注入。
+3. 按名称匹配字段或属性名称：在没有使用 @Qualifier 时，如果存在多个候选 Bean，Spring 会尝试通过字段或属性名称进行匹配。如果找到名称匹配的 Bean，则该 Bean 会被注入。
+4. NoUniqueBeanDefinitionException：如果存在多个候选Bean，但没有使用@Qualifier指定名称，且没有标记@Primary，会抛出NoUniqueBeanDefinitionException，表明有多个Bean类型匹配但无法确定注入哪个。
 
 
 
-
+> 在使用 @Bean 方法中的参数 进行依赖注入时，默认的行为与 @Autowired 注解的工作方式是一致的。
 
 
 
@@ -166,6 +100,8 @@ public class Person {
 - @Service : 对应服务层，主要涉及一些复杂的逻辑，需要用到 Dao 层。
 
 - @Controller : 对应 Spring MVC 控制层，主要用于接受用户请求并调用 Service 层返回数据给前端页面。
+
+
 
 ### @RestController
 
@@ -189,9 +125,13 @@ public class Person {
 
 - session : 每一个 HTTP Session 会产生一个新的 bean，该 bean 仅在当前 HTTP session 内有效
 
+
+
 ### @Configuration
 
 用来声明配置类，可以使用 @Component注解替代，不过使用@Configuration注解声明配置类更加语义化。
+
+
 
 ## 常见的 HTTP 请求类型
 
@@ -273,6 +213,8 @@ public ResponseEntity signUp(@RequestBody @Valid UserRegisterRequest userRegiste
 ### @PropertySource（不常用）
 
 @PropertySource读取指定 properties 文件
+
+
 
 ## 参数校验
 
@@ -438,7 +380,7 @@ Exception 分为运行时异常 RuntimeException 和非运行时异常。在@Tra
 
 ### 格式化 json 数据
 
-@JsonFormat一般用来格式化 json 数据。
+@JsonFormat 一般用来格式化 json 数据。
 
 ### 扁平化对象
 

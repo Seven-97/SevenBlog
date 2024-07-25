@@ -259,6 +259,7 @@ export default sidebar({
           prefix: "springboot/",
           collapsible: true,
           children: [
+            "springbootstart-twoway",
             "principleofautomaticassembly",
           ],
         },
