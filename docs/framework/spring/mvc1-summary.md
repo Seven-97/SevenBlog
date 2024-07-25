@@ -348,13 +348,13 @@ web.xml中配置初始化参数contextConfigLocation，路径是classpath:spring
 
 
 
-### 基于注解
+### 纯注解版
 
-需要注意满足sevlet3.0规范
+无需配置xml文件，依靠注解和配置类完成配置，注意需要注意满足sevlet3.0规范
 
+具体源码[点击这里](https://github.com/Seven-97/Spring-Demo/tree/master/08-spring-mvc-helloworld-anno)
 
-
-
+这个不做过多讲解，真实项目的用得较少。因为若是老项目，就是基于webxml的，若是新项目，则直接上springboot了。
 
 
 
