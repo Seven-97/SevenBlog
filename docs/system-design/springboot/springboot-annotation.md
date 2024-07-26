@@ -246,7 +246,7 @@ public ResponseEntity signUp(@RequestBody @Valid UserRegisterRequest userRegiste
 
 - @Size(max=, min=)被注释的元素的大小必须在指定的范围内
 
-- @Digits(integer, fraction)被注释的元素必须是一个数字，其值必须在可接受的范围内
+- @Digits(integer, fraction) 验证字符串是否是符合指定格式的数字，interger指定整数精度，fraction指定小数精度
 
 - @Past被注释的元素必须是一个过去的日期@Future 被注释的元素必须是一个将来的日期
 

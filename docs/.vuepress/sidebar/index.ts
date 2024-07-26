@@ -237,9 +237,9 @@ export default sidebar({
           ],
         },
         {
-          text: "Mybatis",
+          text: "ORM框架",
           icon: "database",
-          prefix: "mybatis/",
+          prefix: "orm/",
           collapsible: true,
           children: [
             "basement-jdbc",
