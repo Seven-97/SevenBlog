@@ -218,6 +218,8 @@ public ResponseEntity signUp(@RequestBody @Valid UserRegisterRequest userRegiste
 
 ## 参数校验
 
+详情可以看 [优雅的参数校验](https://www.seven97.top/system-design/springboot/parameterverification.html)
+
 ### 字段验证的注解
 
 - @NotEmpty 被注释的字符串的不能为 null 也不能为空
