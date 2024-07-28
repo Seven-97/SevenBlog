@@ -125,26 +125,23 @@ category: 计算机书籍
 
 19. 【参考】各层命名规约:
 
-    1. ```
-       Service/DAO 层方法命名规约 	
-       ```
-
+    1. Service/DAO 层方法命名规约 
        1. 获取单个对象的方法用 `get` 做前缀。
        2. 获取多个对象的方法用 `list` 做前缀。
-       3. 获取统计值的方法用 `count` 做前缀。
+   3. 获取统计值的方法用 `count` 做前缀。
        4. 插入的方法用 `save`(推荐)或 `insert` 做前缀。
        5. 删除的方法用 `remove`(推荐)或 `delete` 做前缀。
        6. 修改的方法用 `update` 做前缀。
-
+       
     2. 领域模型命名规约 
-
-       1. 数据对象: `xxxDO`，`xxx` 即为数据表名。
-
-       2. 数据传输对象: `xxxDTO`，`xxx` 为业务领域相关的名称。
-
-       3. 展示对象: `xxxVO`，`xxx` 一般为网页名称。
-
-       4. `POJO` 是 `DO/DTO/BO/VO` 的统称，禁止命名成 `xxxPOJO`。
+    
+   1. 数据对象: `xxxDO`，`xxx` 即为数据表名。
+    
+   2. 数据传输对象: `xxxDTO`，`xxx` 为业务领域相关的名称。
+    
+   3. 展示对象: `xxxVO`，`xxx` 一般为网页名称。
+    
+   4. `POJO` 是 `DO/DTO/BO/VO` 的统称，禁止命名成 `xxxPOJO`。
 
 ### 常量定义
 
@@ -179,9 +176,9 @@ category: 计算机书籍
       **反例** : 易懂变量也要统一定义成应用内共享常量，两位攻城师在两个类中分别定义了表示“是”的变量:
 
       ```java
-       类 A 中: public static final String YES = "yes";  
-       类 B 中: public static final String YES = "y";  
-       A.YES.equals(B.YES)，预期是 true，但实际返回为 false，导致线上问题。  
+      类 A 中: public static final String YES = "yes";  
+      类 B 中: public static final String YES = "y";  
+      YES.equals(B.YES)，预期是 true，但实际返回为 false，导致线上问题。  
       ```
 
    3. 子工程内部共享常量: 即在当前子工程的 `constant` 目录下。

@@ -73,7 +73,7 @@ public static Integer valueOf(int i) {
 
 从源码可以看到，默认Integer cache 的下限是-128，上限默认127。当赋值100给Integer时，刚好在这个范围内，所以从cache中取对应的Integer并返回，所以a和b返回的是同一个对象，所以  比较是相等的，当赋值200给Integer时，不在cache 的范围内，所以会new Integer并返回，当然  比较的结果是不相等的。
 
-> 扩展：Byte,Short,Integer,Long 这 4 种包装类默认创建了数值 [-128，127] 的相应类型的缓存数据，Character 创建了数值在 [0,127] 范围的缓存数据，Boolean 直接返回 True or False
+> 扩展：Byte，Short，Integer，Long 这 4 种包装类默认创建了数值 [-128，127] 的相应类型的缓存数据，Character 创建了数值在 [0,127] 范围的缓存数据，Boolean 直接返回 True or False
 
 ```java
 System.out.println(Integer.valueOf(-128) == Integer.valueOf(-128));//1.true
@@ -82,7 +82,7 @@ System.out.println(Integer.valueOf(128) == Integer.valueOf(128));//3.false
 System.out.println(Integer.parseInt("128") == Integer.valueOf(128));//4.true
 ```
 
-1、2、3都好理解，缓存范围是 [-128，127]，1、2都在范围内，返回的是缓存中的对象，因此输出true，3不在范围内，返回的时新 new 的Integer，因此输出false。
+1、2、3都好理解，缓存范围是 [-128，127]，1、2都在范围内，返回的是缓存中的对象，因此输出true，3不在范围内，返回的是新 new 的Integer，因此输出false。
 
 那为什么4输出的是true呢？ 128 在缓存范围外，按道理会 new 出一个Integer对象，为什么输出true呢？
 
@@ -127,7 +127,7 @@ Integer result = (flag ? a * b : c);
 
 ## BigDecimal
 
-[《阿里巴巴 Java 开发手册》](https://www.seven97.top/books/software-quality/alibaba-developmentmanual.html#oop-规约)中提到：“为了避免精度丢失，可以使用 `BigDecimal` 来进行浮点数的运算”。
+[《阿里巴巴 Java 开发手册》](https://www.seven97.top/books/software-quality/alibaba-developmentmanual.html#oop-规约)中提到：“浮点数之间的等值判断，基本数据类型不能用 == 来比较，包装数据类型不能用 equals 来判断”。“为了避免精度丢失，可以使用 `BigDecimal` 来进行浮点数的运算”。
 
 浮点数的运算竟然还会有精度丢失的风险吗？确实会！
 
@@ -166,12 +166,6 @@ System.out.println(a == b);// false
 
 通常情况下，大部分需要浮点数精确运算结果的业务场景（比如涉及到钱的场景）都是通过 `BigDecimal` 来做的。
 
-《阿里巴巴 Java 开发手册》中提到：**浮点数之间的等值判断，基本数据类型不能用 == 来比较，包装数据类型不能用 equals 来判断。**
-
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406202139080.png)
-
-具体原因我们在上面已经详细介绍了，这里就不多提了。
-
 想要解决浮点数运算精度丢失这个问题，可以直接使用 `BigDecimal` 来定义浮点数的值，然后再进行浮点数的运算操作即可。
 
 ```java
@@ -189,7 +183,7 @@ System.out.println(x.compareTo(y));// 0
 
 #### 创建
 
-我们在使用 `BigDecimal` 时，为了防止精度丢失，推荐使用它的`BigDecimal(String val)`构造方法或者 `BigDecimal.valueOf(double val)` 静态方法来创建对象。
+在使用 `BigDecimal` 时，为了防止精度丢失，推荐使用它的`BigDecimal(String val)`构造方法或者 `BigDecimal.valueOf(double val)` 静态方法来创建对象。
 
 《阿里巴巴 Java 开发手册》对这部分内容也有提到，如下图所示。
 

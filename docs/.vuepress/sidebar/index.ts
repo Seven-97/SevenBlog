@@ -96,7 +96,6 @@ export default sidebar({
             "04-networkprogramming2-nio", 
             "04-networkprogramming2-niozerocopy",
             "05-networkprogramming3-aio", 
-            "netty-basic",
           ],
         },
         {
@@ -261,6 +260,18 @@ export default sidebar({
           children: [
             "springbootstart-twoway",
             "principleofautomaticassembly",
+            "netty-basic",
+            "netty-advancedusage"
+          ],
+        },
+        {
+          text: "网络IO",
+          icon: "network",
+          prefix: "networkio/",
+          collapsible: true,
+          children: [
+            "netty-basic",
+            "netty-advancedusage"
           ],
         },
         {
@@ -382,10 +393,12 @@ export default sidebar({
         {
           text: "JDK工具类",
           icon: "java",
-          prefix: "jdk/",
+          prefix: "jdk-tools/",
           collapsible: true,
           children: [
-            
+            "Objects",
+            "arrays",
+            "collections",
           ],
         },
         {

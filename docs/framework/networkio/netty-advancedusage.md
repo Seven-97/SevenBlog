@@ -1089,7 +1089,7 @@ public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message
 
 
 
-## 
+
 
 ## 扩展序列化算法
 
@@ -1511,15 +1511,30 @@ selectionKey.interestOps(SelectionKey.OP_ACCEPT);
 
 
 
-
-
 入口 `io.netty.bootstrap.ServerBootstrap#bind`
 
 关键代码 `io.netty.bootstrap.AbstractBootstrap#doBind`
 
+这个函数是由哪些线程处理的呢？可以先有个概念，再往下看：
+
+1. init & register regFuture 处理
+   1. init：由main处理
+      1. 创建NioServerSocketChannel：由main处理
+      2. 添加 NioServerSocketChannel 初始化 handler ：由main处理
+         1. 初始化 handler 等待调用
+2. register
+   1. 启动 nio boss 线程 ：由main处理
+   2. 原生 ssc 注册至 selector 未关注事件：由nio-thread处理
+   3. 执行 NioServerSocketChannel 初始化 handler：由nio-thread处理
+3. regFuture 等待回调 doBind0：由nio-thread处理
+   1. 原生 ServerSocketChannel 绑定：由nio-thread处理
+   2. 触发NioServerSocketChannel active 事件：由nio-thread处理
+
 ```java
 private ChannelFuture doBind(final SocketAddress localAddress) {
 	// 1. 执行初始化和注册 regFuture 会由 initAndRegister 设置其是否完成，从而回调 3.2 处代码
+    // init就相当于 ServerSocketChannel ssc= ServerSocketChannel.open();
+    // Register就相当于 SelectionKey selectionKey=ssc.register(selector, 0, nettySsc);
     final ChannelFuture regFuture = initAndRegister();
     final Channel channel = regFuture.channel();
     if (regFuture.cause() != null) {

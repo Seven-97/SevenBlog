@@ -71,7 +71,7 @@ Java在早在2009年就提出了 Bean Validation（JSR）规范，其中定义�
 
 ### Controller方法参数校验
 
-相关Demo 可以[点击这里](https://github.com/Seven-97/SpringBoot-Demo/tree/master/03-controller-validation)
+相关Demo 可以 [点击这里](https://github.com/Seven-97/SpringBoot-Demo/tree/master/03-controller-validation)
 
 #### 效果示例
 
@@ -79,7 +79,27 @@ Spring 提供了相应的 Bean Validation 实现：Java Bean Validation，并在
 
 举个栗子：
 
-第一步，在方法在入参对应元素上配置校验注解：
+引入依赖：
+
+```xml
+<dependency>
+       <groupId>javax.validation</groupId>
+       <artifactId>validation-api</artifactId>
+       <version>2.0.1.Final</version>
+</dependency>
+<dependency>
+       <groupId>org.hibernate</groupId>
+       <artifactId>hibernate-validator</artifactId>
+       <version>6.1.3.Final</version>
+</dependency>
+```
+
+> validation-api是一套标准（JSR-303），叫做Bean Validation，Hibernate Validator是Bean Validation的参考实现，提供了JSR-303 规范中所有内置constraint的实现，除此之外Hibernate Validator还附加了一些constraint。
+>
+
+
+
+- 在方法在入参对应元素上配置校验注解：
 
 ```java
 
@@ -107,7 +127,7 @@ public class UserRequest {
 
 
 
-第二步，在 Controller 相应方法中，使用 @Valid/@Validated 注解开启数据校验功能：
+- 在 Controller 相应方法中，使用 @Valid/@Validated 注解开启数据校验功能：
 
 ```java
 @RestController
@@ -183,8 +203,6 @@ public class GlobalExceptionHandler {
 }
 ```
 
-
-
 设置了如上捕获器后，如果数据校验不通过，返回的结果为：
 
 ```json
@@ -199,7 +217,7 @@ public class GlobalExceptionHandler {
 
 借助Spring和约束注解，就非常简单明了、优雅地完成了方法参数校验。
 
-而且，假如以后入参对象里新增了参数，只需要顺便添加一个注解，而不用去改业务代码，稳！﻿
+而且，假如以后入参对象里新增了参数，只需要顺便添加一个注解，而不用去改业务代码了！﻿
 
 
 
