@@ -149,6 +149,9 @@ export default sidebar({
           icon: "mysql",
           collapsible: true,
           children: [
+            "mysql-use",
+            "03-execute1-statementexecutionprocess",
+            "03-execute2-executionplan-explain",
             "01-basement1-innodbstoragestructure",
             "01-basement2-indexclassification ",
             "01-basement3-linkedlists",
@@ -157,8 +160,6 @@ export default sidebar({
             "02-lock1-lockofmysql",
             "02-lock2-howtoaddrowlocks",
             "02-lock3-deadlock-mysql",
-            "03-execute1-statementexecutionprocess",
-            "03-execute2-executionplan-explain",
             "04-tuning-databaseconnectionpoolconfiguration",
             "04-tuning-overviewoftuning",
           ],
