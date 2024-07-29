@@ -505,7 +505,7 @@ mysqldump -u root -p用户密码 --databases dbname > mysql.dbname
 mysqlimport -u root -p用户密码 < mysql.dbname。
 ```
 
-#### 将文本数据导入数据库:
+#### 将文本数据导入数据库
 
 文本数据的字段数据之间用tab键隔开。
 ```sql
