@@ -4,7 +4,7 @@ import { books } from "./books.js";
 
 
 export default sidebar({
-  // 应该把更精确的路径放置在前边
+  // 把更精确的路径放置在前边
   "/books/": books,
   // 必须放在最后面
   "/": [
@@ -27,6 +27,7 @@ export default sidebar({
             "04-exceptions",
             "05-reflection",
             "06-SPI",
+            "stream"
           ],
         },
         {
