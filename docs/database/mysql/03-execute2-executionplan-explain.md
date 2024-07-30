@@ -85,6 +85,8 @@ where blog_id = (
 
 查询使用了何种类型，它在 SQL优化中是一个非常重要的指标
 
+访问效率：const > eq_ref > ref > range > index > ALL
+
 ### system
 当表仅有一行记录时（系统表），数据量很少，往往不需要进行磁盘IO，速度非常快。比如，Mysql系统表proxies_priv在Mysql服务启动时候已经加载在内存中，对这个表进行查询不需要进行磁盘 IO。
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404261827081.png)
@@ -194,7 +196,7 @@ CREATE TABLE `t_orderdetail` (
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404261827731.png)
 
 ### using index
-查询的列被索引覆盖，并且where筛选条件符合最左前缀原则，通过索引查找就能直接找到符合条件的数据，不需要回表查询数据。
+查询的列被索引覆盖，并且where筛选条件符合最左前缀原则，通过索引查找就能直接找到符合条件的数据，**不需要回表**查询数据。
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404261827749.png)
 
 ### Using where&Using index

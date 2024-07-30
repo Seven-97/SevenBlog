@@ -102,7 +102,7 @@ Redis提供了去中心化的**集群部署**模式，集群内所有Redis节点
 
 保存节点的当前状态，比如节点的创建时间，节点的名字，节点当前的配置纪元，节点的IP和地址，等等。
 
-```c++
+```c
 typedef struct clusterNode {
     //创建节点的时间
     mstime_t ctime;
@@ -166,7 +166,7 @@ typedef struct clusterNode {
 
 记录当前节点所认为的集群目前所处的状态。
 
-```c++
+```c
 typedef struct clusterState {
     //指向当前节点的指针
     clusterNode *myself;  

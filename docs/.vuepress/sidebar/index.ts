@@ -153,7 +153,7 @@ export default sidebar({
             "03-execute1-statementexecutionprocess",
             "03-execute2-executionplan-explain",
             "01-basement1-innodbstoragestructure",
-            "01-basement2-indexclassification ",
+            "01-basement2-indexclassification",
             "01-basement3-linkedlists",
             "01-basement4-logs",
             "01-basement5-transactions-isolationlevel",
