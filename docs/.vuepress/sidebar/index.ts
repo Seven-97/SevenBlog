@@ -571,8 +571,8 @@ export default sidebar({
             "springboot-annotation",
             "parameterverification",
             "elegantlyclosetheprogram",
-            "kafka-springboot",
             "minio-springboot",
+            "springboot-all"
           ],
         },
         {

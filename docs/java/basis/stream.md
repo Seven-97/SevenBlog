@@ -295,6 +295,7 @@ public final < R, A > R collect(Collector <? super P_OUT, A, R > collector) {
 同样的，collect终结操作也在ReferencePipline中被实现。由于不是并行操作，只要关注evaluate()方法即可。
 
 ```java
+// java.util.stream.ReduceOps#makeRef(java.util.stream.Collector<? super T,I,?>)
 public static < T, I > TerminalOp < T, I > makeRef(Collector <? super T, I, ?> collector) {
     Supplier < I > supplier = Objects.requireNonNull(collector).supplier();
     BiConsumer < I, ? super T > accumulator = collector.accumulator();
@@ -377,11 +378,21 @@ final < P_IN, S extends Sink < E_OUT >> S wrapAndCopyInto(S sink, Spliterator < 
 
 先来看wrapSink方法，在这个方法里，中间节点的opWrapSink方法将发挥大作用，它利用previousStage反向索引，后一个节点的sink送入前序节点的opWrapSink方法中做入参，也就是downstream，生成当前sink，再索引向前，生成套娃Sink。
 
-﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407302309223.webp)﻿
+```java
+// java.util.stream.AbstractPipeline#wrapSink
+final < P_IN > Sink < P_IN > wrapSink(Sink < E_OUT > sink) {
+    Objects.requireNonNull(sink);
 
-最后索引到depth=1的Map节点，生成的结果Sink包含了depth2节点Filter与终结节点Collect的Sink。
+    for (@SuppressWarnings("rawtypes") AbstractPipeline p = AbstractPipeline.this; p.depth > 0; p = p.previousStage) {
+        sink = p.opWrapSink(p.previousStage.combinedFlags, sink);
+    }
+    return (Sink < P_IN > ) sink;
+}
+```
 
-﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407302309227.webp)﻿
+﻿最后索引到depth=1的Map节点，生成的结果Sink包含了depth2节点Filter与终结节点Collect的Sink。
+
+﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407312105124.png)﻿
 
 红色框图表示Map节点的Sink，包含当前Stream与downstream（Filter节点Sink），黄色代表Filter节点Sink，downstream指向Collect节点。
 
@@ -393,11 +404,29 @@ Sink被反向套娃实例化，一步步索引到Map节点，可以对图2进行
 
 一切准备就绪，就差把数据源冲入流水线。卷起来！在wrapSink方法套娃生成Sink之后，copyInto方法将数据源送入了流水线。
 
-﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407302310300.webp)﻿
+```java
+// java.util.stream.AbstractPipeline#wrapAndCopyInto
+@Override
+ final < P_IN, S extends Sink < E_OUT >> S wrapAndCopyInto(S sink, Spliterator < P_IN > spliterator) {
+     copyInto(wrapSink(Objects.requireNonNull(sink)), spliterator);
+     return sink;
+ }
 
-﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407302310288.webp)﻿
+@Override
+final < P_IN > void copyInto(Sink < P_IN > wrappedSink, Spliterator < P_IN > spliterator) {
+    Objects.requireNonNull(wrappedSink);
 
-先是调用Sink中已定义好的begin方法，做些前序处理，Sink中的begin方法会不断调用下一个Sink的begin方法。
+    if (!StreamOpFlag.SHORT_CIRCUIT.isKnown(getStreamAndOpFlags())) {
+        wrappedSink.begin(spliterator.getExactSizeIfKnown());
+        spliterator.forEachRemaining(wrappedSink);
+        wrappedSink.end();
+    } else {
+        copyIntoWithCancel(wrappedSink, spliterator);
+    }
+}
+```
+
+﻿﻿先是调用Sink中已定义好的begin方法，做些前序处理，Sink中的begin方法会不断调用下一个Sink的begin方法。
 
 随后对数据源中各个元素进行遍历，调用Sink中定义好的accept方法处理数据元素。accept执行的就是咱在每一节点定义的lambda代码块。
 

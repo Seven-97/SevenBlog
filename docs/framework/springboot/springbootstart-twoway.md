@@ -15,13 +15,15 @@ tag:
 
 1. IDEA中main函数启动，[Main函数启动SpringBoot源码点击这里](https://github.com/Seven-97/SpringBoot-Demo/tree/master/01-helloworld-main)
 
-2. mvn springboot-run 命令
+2. mvn springboot-run
 
-3. java -jar XXX.jar：使用这种方式时，为保证服务在后台运行，会使用nohup 
+3. java -jar XXX.jar 
+   使用这种方式时，为保证服务在后台运行，会使用nohup 
+   
    ```java
    nohup java -jar -Xms128m -Xmx128m -Xss256k -XX:+PrintGCDetails -XX:+PrintHeapAtGC -Xloggc:/data/log/web-gc.log web.jar >/data/log/web.log &
    ```
-
+   
    使用java -jar默认情况下，不会启动任何嵌入式Application Server，该命令只是启动一个执行jar main的JVM进程，当spring-boot-starter-web包含嵌入式tomcat服务器依赖项时，执行java -jar则会启动Application Server
    
    
@@ -61,9 +63,9 @@ public static ConfigurableApplicationContext run(Class<?> primarySource, String.
     return run(new Class[]{primarySource}, args);
 }
  
---这里run方法返回的是ConfigurableApplicationContext
+// 这里run方法返回的是ConfigurableApplicationContext
 public static ConfigurableApplicationContext run(Class<?>[] primarySources, String[] args) {
- return (new SpringApplication(primarySources)).run(args);
+ 	return (new SpringApplication(primarySources)).run(args);
 }
 ```
 
@@ -81,7 +83,7 @@ public static ConfigurableApplicationContext run(Class<?>[] primarySources, Stri
    ConfigurableEnvironment environment = this.prepareEnvironment(listeners, applicationArguments);
    this.configureIgnoreBeanInfo(environment);
    
-   //打印banner，这里你可以自己涂鸦一下，换成自己项目的logo
+   //打印banner，这里可以自己涂鸦一下，换成自己项目的logo
    Banner printedBanner = this.printBanner(environment);
    
    //创建应用上下文
