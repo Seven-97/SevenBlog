@@ -249,7 +249,7 @@ key 可以是用户id，value 则是已关注的公众号的id。
 ### 抽奖活动
 存储某活动中中奖的用户名 ，Set 类型因为有去重功能，可以**保证同一个用户不会中奖两次**。
 
-```
+```shell
 # key为抽奖活动名，value为员工名称，把所有员工名称放入抽奖箱 ：
 >SADD lucky Tom Jerry John Sean Marry Lindy Sary Mark
 (integer) 5

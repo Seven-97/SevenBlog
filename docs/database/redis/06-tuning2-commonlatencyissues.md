@@ -11,7 +11,7 @@ tag:
 Redis提供了慢日志命令的统计功能
 
 首先设置Redis的慢日志阈值，只有超过阈值的命令才会被记录，这里的单位是微妙，例如设置慢日志的阈值为5毫秒，同时设置只保留最近1000条慢日志记录：
-```
+```shell
 # 命令执行超过5毫秒记录慢日志
 CONFIG SET slowlog-log-slower-than 5000
 # 只保留最近1000条慢日志
@@ -19,7 +19,7 @@ CONFIG SET slowlog-max-len 1000
 ```
 
 执行SLOWLOG get 5查询最近5条慢日志
-```
+```shell
 127.0.0.1:6379> SLOWLOG get 5
 1) 1) (integer) 32693       # 慢日志ID
    2) (integer) 1593763337  # 执行时间
@@ -34,12 +34,11 @@ CONFIG SET slowlog-max-len 1000
    4) 1) "GET"
       2) "book_price_1000"
 ...
-
 ```
 
 通过查看慢日志记录，就可以知道在什么时间执行哪些命令比较耗时，如果服务请求量并不大，但Redis实例的CPU使用率很高，很有可能就是使用了复杂度高的命令导致的。
 
-比如经常使用O(n)以上复杂度的命令，这些情况下Redis处理数据时就会很耗时。例如
+比如经常使用O(n)以上复杂度的命令，由于Redis是单线程执行命令，因此这种情况Redis处理数据时就会很耗时。例如
 
 - sort：对列表（list）、集合（set）、有序集合（sorted set）中的元素进行排序。在最简单的情况下（没有权重、没有模式、没有 `LIMIT`），`SORT` 命令的时间复杂度近似于 `O(n*log(n))`
 
@@ -71,7 +70,7 @@ CONFIG SET slowlog-max-len 1000
 - 客户端超时阻塞：由于 Redis 执行命令是单线程处理，然后在操作大 key 时会比较耗时，那么就会阻塞 Redis，从客户端这一视角看，就是很久很久都没有响应。
 - 网络阻塞：每次获取大 key 产生的网络流量较大，如果一个 key 的大小是 1 MB，每秒访问量为 1000，那么每秒会产生 1000MB 的流量，这对于普通千兆网卡的服务器来说是灾难性的。
 - 工作线程阻塞：如果使用 del 删除大 key 时，会阻塞工作线程，这样就没办法处理后续的命令。
-- 持久化阻塞：对[AOF 日志](https://www.seven97.top/database/redis/03-strategy1-persistence.html#aof%E6%8C%81%E4%B9%85%E5%8C%96)的影响
+- 持久化阻塞（磁盘IO）：对[AOF 日志](https://www.seven97.top/database/redis/03-strategy1-persistence.html#aof%E6%8C%81%E4%B9%85%E5%8C%96)的影响
 	- 使用Always 策略的时候，`主线程`在执行完命令后，会把数据写入到 AOF 日志文件，然后会调用 fsync() 函数，将内核缓冲区的数据直接写入到硬盘，等到硬盘写操作完成后，该函数才会返回。因此当使用 Always 策略的时候，如果写入是一个大 Key，`主线程`在执行 fsync() 函数的时候，阻塞的时间会比较久，因为当写入的数据量很大的时候，数据同步到硬盘这个过程是很耗时的。
 	- 另外两种策略都不影响主线程
 
@@ -116,7 +115,7 @@ Redis的定期删除策略是在Redis`主线程`中执行的，也就是说如�
 为了尽量避免这个问题，在设置过期时间时，可以给过期时间设置一个随机范围，避免同一时刻过期。
 
 伪代码可以这么写：
-```
+```shell
 # 在过期时间点之后的5分钟内随机过期掉
 redis.expireat(key, expire_time + random(300))
 ```
@@ -143,7 +142,7 @@ redis.expireat(key, expire_time + random(300))
 
 当 Redis 直接记录 AOF 日志时，如果有大量的写操作，并且配置为[同步持久化](https://www.seven97.top/database/redis/03-strategy1-persistence.html#aof%E6%8C%81%E4%B9%85%E5%8C%96)
 
-```
+```shell
 appendfsync always
 ```
 
