@@ -16,8 +16,31 @@ Java 8的新特性之一就是流stream，配合同版本出现的 `Lambda` ，�
 流有三大特点：
 
 1. 流并**不存储元素**。这些元素可能**存储在底层的集合中**，或者是按需生成。
-2. 流的操作不会修改其数据元素，而是生成一个新的流。
+2. 流的操作不会修改源数据元素，而是生成一个新的流。
 3. 流的操作是尽可能**惰性执行**的。这意味着直至需要其结果时，操作才会执行。
+
+
+
+## 操作分类
+
+官方将 Stream 中的操作分为两大类：
+
+- `中间操作（Intermediate operations）`，只对操作进行了记录，即只会返回一个流，不会进行计算操作。
+- `终结操作（Terminal operations）`，实现了计算操作。
+
+中间操作又可以分为：
+
+- `无状态（Stateless）操作`，元素的处理不受之前元素的影响。
+- `有状态（Stateful）操作`，指该操作只有拿到所有元素之后才能继续下去。
+
+终结操作又可以分为：
+
+- `短路（Short-circuiting）`操作，指遇到某些符合条件的元素就可以得到最终结果
+- `非短路（Unshort-circuiting）`操作，指必须处理完所有元素才能得到最终结果。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408011606864.jpeg)
+
+
 
 
 
@@ -42,15 +65,35 @@ List<String> endList = startlist.stream().map(r -> r + "b").filter(r -> r.starts
 
 ### 类图介绍
 
-![Stream类图](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407302204530.webp)
+![Stream类图](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408011614687.jpeg)
 
-Stream是一个接口，它**定义了对Stream的操作**，主要可分为中间操作与终结操作，中间操作对流进行转化，比如对数据元素进行映射/过滤/排序等行为。终结操作启动流水线，获取结果数据。
+Stream是一个接口，它**定义了对Stream的操作**，它继承自BaseStream，BaseStream是最顶端的接口类，定义了流的基本接口方法，最主要的方法为 spliterator、isParallel。
 
-AbstractPipline是一个抽象类，定**义了流水线节点的常用属性**，sourceStage指向流水线首节点，previousStage 指向本节点上层节点，nextStage 指向本节点下层节点，depth代表本节点处于流水线第几层（从0开始计数），sourceSpliterator 指向数据源。
+Stream主要可分为中间操作与终结操作，中间操作对流进行转化，定义了 `映射(map)`、`过滤(filter)`、`排序(sorted)`等行为。终结操作启动流水线，获取结果数据(collect)。
 
-ReferencePipline实现Stream接口，继承AbstractPipline类，它主要对Stream中的各个操作进行实现，此外，它还定义了三个内部类Head/StatelessOp/StatefulOp。Head为流水线首节点，在集合转为流后，生成Head节点。StatelessOp为无状态操作，StatefulOp为有状态操作。无状态操作只对当前元素进行作用，比如filter操作只需判断“a”元素符不符合“startWith("a")”这个要求，无需在对“a”进行判断时关注数据源其他元素（“b”，“c”）的状态。有状态操作需要关注数据源中其他元素的状态，比如sorted操作要保留数据源其他元素，然后进行排序，生成新流。
 
-![Stream操作分类](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407302204950.webp)
+
+AbstractPipline是一个抽象类，定义了**流水线节点的常用属性**：
+
+- sourceStage：指向流水线首节点
+- previousStage ：指向本节点上层节点
+- nextStage ：指向本节点下层节点
+- depth：代表本节点处于流水线第几层（从0开始计数）
+- sourceSpliterator：指向数据源
+
+
+
+ReferencePipline 实现Stream接口，继承AbstractPipline类，它**主要对Stream中的各个操作进行实现**。此外，它还定义了`Head`、`StatelessOp`、`StatefulOp`三个内部类。
+
+- Head为流水线首节点，在集合转为流后，生成Head节点。
+- StatelessOp为无状态操作：无状态操作只对当前元素进行作用，比如filter操作只需判断“v”元素符不符合“startWith("v")”这个要求，无需在对“v”进行判断时关注数据源其他元素（“s”，“e”，“n”）的状态
+- StatefulOp为有状态操作：有状态操作需要关注数据源中其他元素的状态，比如sorted操作要保留数据源其他元素，然后进行排序，生成新流。
+
+
+
+Sink 接口定义了 Stream 之间的操作行为，包含 `begin()`、`end()`、`cancellationRequested()`、`accpt()`四个方法。ReferencePipeline最终会将整个 Stream 流操作组装成一个调用链，而这条调用链上的各个 Stream 操作的上下关系就是通过 Sink 接口协议来定义实现的。
+
+
 
 ### 搭建流水线
 
@@ -70,7 +113,7 @@ ReferencePipline实现Stream接口，继承AbstractPipline类，它主要对Stre
 
 #### stream()运行结果
 
-示例代码中使用stream()方法生成流，让我们看看生成的流中有哪些内容：
+示例代码中使用stream()方法生成流，看看生成的流中有哪些内容：
 
 ```java
 Stream<String> headStream = startlist.stream();
@@ -150,7 +193,7 @@ Stream<String> mapStream =startlist.stream().map(r->r+"b");
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407302240793.png)
 
-此时：（由于是多次dubug，因此对象的地址值与上面不一致，不影响与案例分析，下同）
+此时：（由于是多次dubug，因此对象的地址值与上面不一致，但不影响案例分析，下同）
 
 - sourceStage与previousStage 皆指向Head节点
 - depth变为1，表示为流水线第二节点
@@ -200,7 +243,7 @@ filter对元素进行过滤，只留存以“v”开头的数据元素。
 
 Filter阶段：
 
-- depth再次+1
+- depth再次+1，变为2
 - sourceStage指向Head
 - predict指向lamda表达式的代码块：“r->r.startsWith("a")”
 - previousStage指向前序Map节点
@@ -236,9 +279,11 @@ public final Stream<P_OUT> filter(Predicate<? super P_OUT> predicate) {
 }
 ```
 
-filter()也是在ReferencePipline中被实现，返回一个无状态操作StatelessOp，实现opWrapSink方法，也是返回一个Sink，其中accept方法中的predicate.test="r->r.startsWith("v")"，用以过滤符合要求的元素。downstream等于opWrapSink入参Sink。
+filter()也是在ReferencePipline中被实现，返回一个无状态操作StatelessOp，实现opWrapSink方法，也是返回一个Sink，其中accept方法中的`predicate.test="r->r.startsWith("v")"`，用以过滤符合要求的元素。downstream等于opWrapSink入参Sink。
 
-StatelessOp的基类AbstractPipline中有个构造方法帮助构造了双向链表。
+
+
+new StatelessOp 最终会调用父类 AbstractPipeline 的构造函数，这个构造函数将前后的 Stage 联系起来，生成一个 Stage 双向链表：
 
 ```java
 // java.util.stream.AbstractPipeline#AbstractPipeline(java.util.stream.AbstractPipeline<?,E_IN,?>, int)
@@ -342,7 +387,7 @@ makeRef()方法中也有个类似opWrapSink一样返回Sink的方法，不过没
 
 ### 反向回溯生成操作实例
 
-还记得前面说的“惰性执行”么，在一层一层搭建中间节点时，并未有任何结果产生，而在终结操作collect之后，生成最终结果endList，让我们探究一下collect()方法中的evaluate方法。
+Stream是“惰性执行”的，在一层一层搭建中间节点时，并未有任何结果产生，而在终结操作collect之后，生成最终结果endList，让我们探究一下collect()方法中的evaluate方法。
 
 ```java
 // java.util.stream.AbstractPipeline#evaluate(java.util.stream.TerminalOp<E_OUT,R>)
@@ -402,7 +447,7 @@ Sink被反向套娃实例化，一步步索引到Map节点，可以对图2进行
 
 #### 启动流水线
 
-一切准备就绪，就差把数据源冲入流水线。卷起来！在wrapSink方法套娃生成Sink之后，copyInto方法将数据源送入了流水线。
+一切准备就绪后，就是把数据源冲入流水线，在wrapSink方法套娃生成Sink之后，copyInto方法将数据源送入了流水线。
 
 ```java
 // java.util.stream.AbstractPipeline#wrapAndCopyInto
