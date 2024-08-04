@@ -280,7 +280,9 @@ public static void main(String[] args) {
 }
 ```
 
-### 基于AspectJ注解
+
+
+### 基于AspectJ注解(直接写表达式)
 
 基于XML的声明式AspectJ存在一些不足，需要在Spring配置文件配置大量的代码信息，为了解决这个问题，Spring 使用了@AspectJ框架为AOP的实现提供了一套注解。
 
@@ -493,9 +495,113 @@ public class App {
 
 
 
+#### 使用注解装配AOP
+
+上面使用AspectJ的注解，并配合一个复杂的`execution(* com.seven.springframeworkaopannojdk.service.*.*(..))` 语法来定义应该如何装配AOP。还有另一种方式，则是使用注解来装配AOP，这两者一般存在与不同的应用场景中：
+
+- 对于业务开发来说，一般使用  注解的方式来装配AOP，因为如果要使用AOP进行增强，业务开发就需要配置注解，业务能够很好的感知到这个方法(这个类)进行了增强。如果使用 表达式来装配AOP，当后续新增Bean，如果不清楚现有的AOP装配规则，容易被强迫装配，而在开发时未感知到，导致出现线上故障。例如，Spring提供的`@Transactional`就是一个非常好的例子。如果自己写的Bean希望在一个数据库事务中被调用，就标注上`@Transactional`。
+- 对于基础架构开发来说，无需业务感知到增强了什么方法，则可以使用表达式的方式来装配AOP
 
 
 
+- 定义注解
+
+```java
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface LogAspectAnno {
+
+}
+```
+
+- 修改切面类，使用注解的方式定义
+
+```java
+@EnableAspectJAutoProxy
+@Component
+@Aspect
+public class LogAspect {
+
+    @Around("@annotation(logaspectanno)") //注意,括号里为logaspectanno,而不是LogAspectAnno
+    public Object doAround(ProceedingJoinPoint pjp, LogAspectAnno logaspectanno) throws Throwable {
+        System.out.println("-----------------------");
+        System.out.println("环绕通知: 进入方法");
+        Object o = pjp.proceed();
+        System.out.println("环绕通知: 退出方法");
+        return o;
+    }
+    
+}
+```
+
+- 修改实现类，这里只对 doMethod1 方法装配AOP
+
+```java
+@Service
+public class CglibProxyDemoServiceImpl {
+
+    @LogAspectAnno()
+    public void doMethod1() {
+        System.out.println("CglibProxyDemoServiceImpl.doMethod1()");
+    }
+
+    public String doMethod2() {
+        System.out.println("CglibProxyDemoServiceImpl.doMethod2()");
+        return "hello world";
+    }
+}
+
+@Service
+public class JdkProxyDemoServiceImpl implements IJdkProxyService {
+
+    @LogAspectAnno
+    @Override
+    public void doMethod1() {
+        System.out.println("JdkProxyServiceImpl.doMethod1()");
+    }
+
+    @Override
+    public String doMethod2() {
+        System.out.println("JdkProxyServiceImpl.doMethod2()");
+        return "hello world";
+    }
+}
+```
+
+- APP类
+
+```java
+// create and configure beans
+ApplicationContext context = new AnnotationConfigApplicationContext("com.seven.springframeworkaopannotation");
+
+// cglib proxy demo
+CglibProxyDemoServiceImpl service1 = context.getBean(CglibProxyDemoServiceImpl.class);
+service1.doMethod1();
+service1.doMethod2();
+
+IJdkProxyService service2 = context.getBean(IJdkProxyService.class);
+service2.doMethod1();
+service2.doMethod2();
+```
+
+
+
+- 输出：
+
+```java
+-----------------------
+环绕通知: 进入方法
+CglibProxyDemoServiceImpl.doMethod1()
+环绕通知: 退出方法
+CglibProxyDemoServiceImpl.doMethod2()
+-----------------------
+环绕通知: 进入方法
+JdkProxyServiceImpl.doMethod1()
+环绕通知: 退出方法
+JdkProxyServiceImpl.doMethod2()
+```
+
+可以看到，只有doMethod1方法被增强了，doMethod2没有被增强，就是因为@LogAspectAnno 只注解了 doMethod1() 方法，从而实现更精细化的控制，是业务感知到这个方法是被增强了。
 
 
 
