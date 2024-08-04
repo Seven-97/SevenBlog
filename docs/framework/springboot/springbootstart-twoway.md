@@ -1,6 +1,6 @@
 ---
 title: Springboot启动的两种方式
-category: 框架
+category: 常用框架
 tag:
   - SpringBoot
 ---
