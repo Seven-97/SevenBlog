@@ -1138,6 +1138,79 @@ public class Test {
 
    - 调用方法不在java.lang包中：此时由于双亲委派模型的存在，并不会加载到自定义的String类
 
+
+
+## 数组是不是对象
+
+什么是对象？
+对象是类的一个实例，有状态和行为  
+
+Java对象： 
+
+- 软件的对象也有行为和状态 
+- 软件对象的状态称之为属性 
+- 方法操作对象内部状态的改变，对象的相互调用也是通过方法来完成  
+
+而java中的数组具有java中其他对象的一些基本特点。比如封装了一些数据，可以访问属性，也可以调用方法。  因此，数组是对象
+
+
+
+### 证明
+
+可以通过代码验证数组是对象的事实
+```java
+Class clz = int[].class;
+System.out.println(clz.getSuperclass().getName());//java.lang.Object
+```
+
+显然，数组继承与Object，是对象
+
+
+同理，二维数组也是对象
+```java
+int[][] arr = new int[2][];
+System.out.println(arr.getClass().getSuperclass().getName());//java.lang.Object
+```
+
+
+
+### 问题
+
+Arrays.sort()默认是升序排序，如果要降序排序，需要自定义比较器
+```java
+int[] arr = new int[]{1, 2, 3, 4};
+Arrays.sort(arr, (a, b) -> Integer.compare(b,a));//报错
+```
+报错显示：需要的是int类型，但提供的是T类型的
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408031537390.png)
+
+但是按道理传入的这个数就是int类型的，不明所以？？？
+原因也是在于一维数组在Java中被视为对象，这是因为基本类型数组在Java中并没有实现Comparable接口，也不接受Comparator。
+
+但为什么二维数组可以自定义比较器？
+```java
+int[][] arr2 = new int[][]{{1, 2}, {1, 2}};
+Arrays.sort(arr2, (a, b) -> Integer.compare(b[0],a[0]));
+```
+
+因为二维数组实际上是一个数组的数组，每一行都是一个一维数组。因此，可以使用自定义比较器来比较这些一维数组，并根据需要对它们进行排序。
+
+
+
+一维数组自定义排序可以用如下方法：
+
+```java
+arr = Arrays.stream(arr)
+                .boxed()
+                .sorted((a,b) -> b-a)
+                .mapToInt(Integer::intValue)
+                .toArray();
+```
+
+
+
+
+
 ## Object通用方法
 
 ```java

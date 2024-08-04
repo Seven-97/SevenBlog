@@ -399,8 +399,8 @@ export default sidebar({
           collapsible: true,
           children: [
             "Objects",
-            "arrays",
-            "collections",
+            "Arrays",
+            "Collections",
           ],
         },
         {

@@ -1,5 +1,5 @@
 ---
-title: 对象工具类 - Objects
+title: 对象工具类 - Objects&Optional
 category: 工具类库
 tag:
   - Java
@@ -11,189 +11,465 @@ tag:
 
 Java 的 Objects 类是一个实用工具类，包含了一系列静态方法，用于处理对象。它位于 java.util 包中，自 Java 7 引入。Objects 类的主要目的是降低代码中的空指针异常(NullPointerException) 风险，同时提供一些非常实用的方法供我们使用。
 
-## 对象判空
+## Objects - 对null的判断
+
+### 对象判空
 
 在 Java 中，万物皆对象，对象的判空可以说无处不在。Objects 的 `isNull` 方法用于判断对象是否为空，而 `nonNull` 方法判断对象是否不为空。例如：
 
 ```java
-Integer integer = new Integer(1);
+String str = "null";
 
-if (Objects.isNull(integer)) {
+if (Objects.isNull(str)) {
     System.out.println("对象为空");
 }
 
-if (Objects.nonNull(integer)) {
+if (Objects.nonNull(str)) {
     System.out.println("对象不为空");
 }
 ```
 
-## 对象为空时抛异常
-
-如果我们想在对象为空时，抛出空指针异常，可以使用 Objects 的 `requireNonNull` 方法。例如：
+源码很简单，就是直接判断是否为 null：
 
 ```java
-Integer integer1 = new Integer(128);
-
-Objects.requireNonNull(integer1);
-Objects.requireNonNull(integer1, "参数不能为空");
-Objects.requireNonNull(integer1, () -> "参数不能为空");
-```
-
-## 判断两个对象是否相等
-
-我们经常需要判断两个对象是否相等，Objects 给我们提供了 `equals` 方法，能非常方便的实现：
-
-```java
-Integer integer1 = new Integer(1);
-Integer integer2 = new Integer(1);
-
-System.out.println(Objects.equals(integer1, integer2));
-```
-
-执行结果：
-
-```java
-true
-```
-
-但使用这个方法有坑，比如例子改成：
-
-```java
-Integer integer1 = new Integer(1);
-Long integer2 = new Long(1);
-
-System.out.println(Objects.equals(integer1, integer2));
-```
-
-执行结果：
-
-```java
-false
-```
-
-不过，需要注意的是，虽然 `Objects.equals()` 方法本身是用来避免坑的，因为它可以处理 null 值的比较，而不会抛出空指针异常。然而，这并不意味着它没有任何潜在问题。实际上，`Objects.equals()` 方法的一个潜在问题是依赖于被比较对象的 `equals()` 方法实现。
-
-当两个对象的类没有正确实现 `equals()` 方法时，`Objects.equals()` 方法可能会产生不符合预期的结果。举个例子：
-
-```java
-public class ObjectsDemo1 {
-    public static void main(String[] args) {
-        Person person1 = new Person("Seven", 18);
-        Person person2 = new Person("Seven", 18);
-
-        System.out.println(Objects.equals(person1, person2)); // 输出：false
-    }
+public static boolean isNull(Object obj) {
+    return obj == null;
 }
-class Person {
-    String name;
-    int age;
 
-    Person(String name, int age) {
-        this.name = name;
-        this.age = age;
-    }
+public static boolean nonNull(Object obj) {
+    return obj != null;
 }
 ```
 
-在上面的例子中，我们创建了一个名为 Person 的类，但是没有重写 `equals()` 方法。然后我们创建了两个具有相同属性的 Person 对象，并使用 `Objects.equals()` 方法比较它们。尽管这两个对象的属性是相同的，但输出结果却是 false。这是因为 `Objects.equals()` 方法依赖于对象的 `equals()` 方法，而在这个例子中，Person 类没有正确地实现 `equals()` 方法，所以默认情况下会使用 Object 类的 `equals()` 方法，它只比较对象引用是否相同。
 
-为了解决这个问题，需要在 Person 类中重写 `equals()` 方法：
+
+
+
+### 对象为空时抛异常requireNonNull
+
+如果想在对象为空时，抛出空指针异常，可以使用 Objects 的 `requireNonNull` 方法。例如：
 
 ```java
-@Override
-public boolean equals(Object obj) {
-    if (this == obj) {
+String str = "null";
+
+Objects.requireNonNull(str);
+Objects.requireNonNull(str, "参数不能为空");
+Objects.requireNonNull(str, () - > "参数不能为空");
+```
+
+
+
+源码如下：
+
+```java
+// 判断是否为空，空则返回异常，反之返回传入的参数 
+public static < T > T requireNonNull(T obj) {
+     if (obj == null)
+         throw new NullPointerException();
+     return obj;
+ }
+
+// 与第一种一样，区别是可以传入一个自定义的提示
+ public static < T > T requireNonNull(T obj, String message) {
+     if (obj == null)
+         throw new NullPointerException(message);
+     return obj;
+ }
+
+// 与第二种一样，区别是对自定义的提示做了一个判断，如果自定义的信息为null 则报错时就是默认的格式（和第一种一样，有点鸡肋了）
+ public static < T > T requireNonNull(T obj, Supplier < String > messageSupplier) {
+     if (obj == null)
+         throw new NullPointerException(messageSupplier == null ?
+             null : messageSupplier.get());
+     return obj;
+ }
+```
+
+
+
+### requireNonNullElse
+
+源码
+
+```java
+// 对传进来的数据进行判断，返回第一个非空值（obj）否则返回第二个非空值（defaultObj）
+// 可以看到里面调用了requireNoNull，若第二个也为空则报错，在错误后面提示defualtObj；
+public static < T > T requireNonNullElse(T obj, T defaultObj) {
+    return (obj != null) ? obj : requireNonNull(defaultObj, "defaultObj");
+}
+```
+
+
+
+用法与requireNonNull相似
+
+```java
+String str = null;
+System.out.println(Objects.requireNonNullElse(str, "我不是null")); // 我不是null
+```
+
+
+
+### requireNonNullElseGet
+
+源码：
+
+```java
+public static < T > T requireNonNullElseGet(T obj, Supplier <? extends T > supplier) {
+    return (obj != null) ? obj : requireNonNull(requireNonNull(supplier, "supplier").get(), "supplier.get()");
+}
+```
+
+
+
+在调用时传入一个对象，和一个Supplier的实现类；如果传入的对象是null则调用Supplier的get方法，非空则调用其toString方法
+尖括号里的类型要与传入对象一样
+
+```java
+String s = null;
+String tips = "这是空的";
+
+System.out.println(Objects.requireNonNullElseGet(s, new Supplier <String> () {
+    @Override
+    public String get() {
+        // TODO Auto-generated method stub
+        return tips;
+    }
+}));
+```
+
+
+
+
+
+## Objects - 判断两个对象是否相等
+
+有两个equals方法，一个是equals，另一个是deepEquals，这两个都可以比较传入的任意类型的数据是否相等，返回值均为boolean类型
+
+Objects中的两个equals方法有一个特别的地方，就是它可以比较值为null的两个对象其他的equals方法在调用者的值为null时就直接报错了
+
+### equals
+
+首先Objects中的equals源码为：
+Objects中的equals首先就判断传进来的参数是否同一个对象；不是同一个对象判断第一个参数是否为null，若不为空则调用该参数的equals方法去比较。
+
+```java
+public static boolean equals(Object a, Object b) {
+    return (a == b) || (a != null && a.equals(b));
+}
+```
+
+举例：
+
+```java
+String s1 = null;
+String s2 = null;
+boolean result = Objects.equals(s1, s2);
+System.out.println(result);
+System.out.println(s1.equals(s2));
+        
+结果为：true
+Exception in thread "main" java.lang.NullPointerException
+	at test.ObjectsTest.main(ObjectsTest.java:12)
+```
+
+再看一个例子：
+
+```java
+String[] s1 = {"q", "w", "e"};
+String[] s2 = {"q", "w", "e"};
+String[] s3 = {"a", "s", "d"};
+System.out.println(Objects.equals(s1, s2));//false
+System.out.println(Objects.equals(s1, s3));//false
+```
+
+因为数组是属于引用类型的变量，在进行比较时比较的是其内存地址，s1和s2虽然值一样，但是
+内存地址不一样，所以为false
+
+
+
+### deepEquals
+
+deepEquals字面意思就是比equlas进行更深度的比较，还是上面的例子，只是将equals换成了deepEquals
+
+```java
+String[] s1 = {"q", "w", "e"};
+String[] s2 = {"q", "w", "e"};
+String[] s3 = {"a", "s", "d"};
+System.out.println(Objects.deepEquals(s1, s2));//true
+System.out.println(Objects.deepEquals(s1, s3));//false
+```
+
+源码：
+
+```java
+public static boolean deepEquals(Object a, Object b) {
+    if (a == b)
         return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
+    else if (a == null || b == null)
         return false;
-    }
-    Person person = (Person) obj;
-    return age == person.age && Objects.equals(name, person.name);
+    else
+        //根据传入的类型进行比较，如果是数组则会一个个进行比较
+        return Arrays.deepEquals0(a, b);
 }
 ```
 
-现在，当使用 `Objects.equals()` 方法比较两个具有相同属性的 Person 对象时，输出将是 true，符合我们的预期。
 
-## 获取对象的hashCode
 
-如果你想获取某个对象的 hashCode，可以使用 Objects 的 `hashCode` 方法。例如：
+1. 这两种方法的区别就在于deepEquals是比较传入对象的值完全一致才会返回ture
+2. 所以在比较类类型，数组等引用类型时用deepEquals比较好，当然也可以选择
+3. 但其实重写equalse方法会更符合要求
+
+> Arrays的相关源码可看下一篇文章
+
+
+
+## Optional 
+
+`Optional<T>` 类(java.util.Optional) 是一个容器类，代表一个值存在或不存在，原来用 null 表示一个值不存在，现在 Optional 可以更好的表达这个概念，并且可以避免空指针异常。主要思想其实是为了告知调用者，这个方法可能会返回一个空值，需要进行判断。
+
+在 Java 8 之前，任何访问对象方法或属性的调用都可能导致 NullPointerException,如下面这段代码
 
 ```java
-String str = new String("Seven");
-System.out.println(Objects.hashCode(str));
+String isocode = user.getAddress().getCountry().getIsocode().toUpperCase();
 ```
 
-执行结果：
+如果要确保上面的代码不触发异常，就得在访问每一个值之前对其进行明确地检查：
 
 ```java
-867758096
-```
-
-## 比较两个对象
-
-`compare()` 方法用于比较两个对象，通常用于自定义排序。它需要一个[比较器 (Comparator) ](https://javabetter.cn/basic-extra-meal/comparable-omparator.html)作为参数。如果比较器为 null，则使用自然顺序。以下是一个 `compare()` 方法的示例：
-
-```java
-class ObjectsCompareDemo {
-    public static void main(String[] args) {
-        PersonCompare person1 = new PersonCompare("itwanger", 30);
-        PersonCompare person2 = new PersonCompare("chenqingyang", 25);
-
-        Comparator<PersonCompare> ageComparator = Comparator.comparingInt(p -> p.age);
-        int ageComparisonResult = Objects.compare(person1, person2, ageComparator);
-        System.out.println("年龄排序: " + ageComparisonResult); // 输出：1（表示 person1 的 age 在 person2 之后）
-    }
-}
-
-class PersonCompare {
-    String name;
-    int age;
-
-    PersonCompare(String name, int age) {
-        this.name = name;
-        this.age = age;
+if (user != null) {
+    Address address = user.getAddress();
+    if (address != null) {
+        Country country = address.getCountry();
+        if (country != null) {
+            String isocode = country.getIsocode();
+            if (isocode != null) {
+                isocode = isocode.toUpperCase();
+            }
+        }
     }
 }
 ```
 
-## 比较两个数组
+上面这段代码显得很冗长，难以维护。为了简化这个过程，我们来看看用 Optional 类是怎么做的
 
-`deepEquals()` 用于比较两个 数组类型 的对象，当对象是非数组的话，行为和 `equals()` 一致。
+### 创建 Optional 实例
 
-```java
-int[] array1 = {1, 2, 3};
-int[] array2 = {1, 2, 3};
-int[] array3 = {1, 2, 4};
-
-System.out.println(Objects.deepEquals(array1, array2)); // 输出：true（因为 array1 和 array2 的内容相同）
-System.out.println(Objects.deepEquals(array1, array3)); // 输出：false（因为 array1 和 array3 的内容不同）
-
-// 对于非数组对象，deepEquals() 的行为与 equals() 相同
-String string1 = "hello";
-String string2 = "hello";
-String string3 = "world";
-
-System.out.println(Objects.deepEquals(string1, string2)); // 输出：true（因为 string1 和 string2 相同）
-System.out.println(Objects.deepEquals(string1, string3)); // 输出：false（因为 string1 和 string3 不同）
-```
-
-再来个[二维数组](https://javabetter.cn/array/double-array.html)的：
+重申一下，这个类型的对象可能包含值，也可能为空。可以使用同名方法创建一个空的 Optional。
 
 ```java
-String[][] nestedArray1 = {{"A", "B"}, {"C", "D"}};
-String[][] nestedArray2 = {{"A", "B"}, {"C", "D"}};
-String[][] nestedArray3 = {{"A", "B"}, {"C", "E"}};
-
-System.out.println(Objects.deepEquals(nestedArray1, nestedArray2)); // 输出：true (因为嵌套数组元素相同)
-System.out.println(Objects.deepEquals(nestedArray1, nestedArray3)); // 输出：false (因为嵌套数组元素不同)
+public void test1() {
+    //Optional.empty()返回的是一个Optional类的常量Optional<?> EMPTY = new Optional<>();
+    Optional<User> emptyOpt = Optional.empty();
+    emptyOpt.get();
+}
 ```
 
-## 小结
+毫不奇怪，emptyOpt不会为null，但是如果尝试访问 emptyOpt 变量的值会导致 NoSuchElementException。
 
-除了上面提到的这些方法，Objects 还提供了一些其他的方法，比如说 toString，感兴趣的话可以试一下。
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407282252773.jpeg)
 
-总之，Objects 类提供的这些方法在许多情况下还是非常有用得，可以简化代码并减少出错的可能性
+可以使用 of() 创建包含值的 Optional
+
+```java
+public void test2() {
+    Optional<User> opt = Optional.of(user);
+}
+```
+
+源码如下：可以看到如果传入了null，则of() 方法会抛出 NullPointerException：
+
+```java
+public static < T > Optional < T > of(T value) {
+    return new Optional < > (value);
+}
+
+private Optional(T value) {
+    //调用了Objects.requireNonNull方法，
+    this.value = Objects.requireNonNull(value);
+}
+```
+
+看到这里，好像并没有完全摆脱 NullPointerException？也就是说，在明确对象不为 null 的时候才能使用 of()。
+
+
+
+也就是说，如果对象即可能是 null 也可能是非 null，就应该使用 ofNullable() 方法：
+
+```java
+Optional<User> opt = Optional.ofNullable(user);
+```
+
+源码：
+
+```java
+public static < T > Optional < T > ofNullable(T value) {
+    //不为null才调用 of 方法，否则返回Optional类的常量Optional<?> EMPTY = new Optional<>();
+    return value == null ? empty() : of(value);
+}
+```
+
+
+
+### 访问 Optional 对象的值
+
+#### get() 方法
+
+从 Optional 实例中取回实际值对象的方法之一是使用 get() 方法：
+
+```java
+public void test3(){
+    String name = "seven";
+    Optional<String> opt = Optional.ofNullable(name);
+
+    assertEquals("seven", opt.get());
+}
+```
+
+但是这个方法会在值为 null 的时候抛出 NoSuchElementException 异常。要避免异常，可以选择首先验证是否有值：
+
+```java
+public void test4() {
+    User user = new User("seven97@qq.com", "1234");
+    Optional<User> opt = Optional.ofNullable(user);
+    assertTrue(opt.isPresent());
+    assertEquals(user.getEmail(), opt.get().getEmail());
+}
+```
+
+isPresent()方法很简单，就是检查下 opt.value 是否为 null
+
+
+
+检查是否有值的另一个选择是 ifPresent() 方法。
+
+```java
+opt.ifPresent( u -> assertEquals(user.getEmail(), u.getEmail()));
+```
+
+该方法除了执行检查，还接受一个Consumer 参数，如果对象不是空的，就执行传入的 Lambda 表达式
+
+```java
+public void ifPresent(Consumer <? super T > action) {
+    if (value != null) {
+        action.accept(value);
+    }
+}
+```
+
+这个例子中，只有 user 用户不为 null 的时候才会执行断言。
+
+
+
+#### orElse()
+
+见名知意，这个方法表示  如果有值则返回该值，否则返回传递给它的参数值：
+
+```java
+public void test5() {
+    User user = null;
+    User user2 = new User("seven97@qq.com", "1234");
+    User result = Optional.ofNullable(user).orElse(user2);
+
+    assertEquals(user2.getEmail(), result.getEmail());
+}
+```
+
+这里 user 对象是空的，所以返回了作为默认值的 user2。如果对象的初始值不是 null，那么默认值会被忽略
+
+源码：
+
+```java
+public T orElse(T other) {
+    return value != null ? value : other;
+}
+```
+
+
+
+####  orElseGet()
+
+这个方法会在有值的时候返回值，如果没有值，它会执行作为参数传入的 Supplier函数式接口，并返回其执行结果：
+
+```
+User result = Optional.ofNullable(user).orElseGet( () -> user2);
+```
+
+源码：
+
+```java
+public T orElseGet(Supplier <? extends T > supplier) {
+    return value != null ? value : supplier.get();
+}
+```
+
+
+
+
+
+#### orElse() 和 orElseGet() 的区别
+
+乍一看，这两种方法似乎起着同样的作用。然而事实并非如此。创建一些示例来突出二者行为上的异同。
+
+先来看看对象为空时他们的行为：
+
+```java
+public void test6() {
+    User user = null
+    logger.debug("Using orElse");
+    User result = Optional.ofNullable(user).orElse(createNewUser());
+    logger.debug("Using orElseGet");
+    User result2 = Optional.ofNullable(user).orElseGet(() -> createNewUser());
+}
+
+private User createNewUser() {
+    logger.debug("Creating New User");
+    return new User("seven97@qq.com", "1234");
+}
+```
+
+上面的代码中，两种方法都调用了 createNewUser() 方法，会记录一个消息并返回 User 对象。代码输出如下：
+
+```java
+Using orElse
+Creating New User
+Using orElseGet
+Creating New User
+```
+
+由此可见，当对象为空而返回默认对象时，行为并无差异。
+
+接下来看一个类似的示例，但这里 Optional 不为空：
+
+```java
+public void test7() {
+    User user = new User("seven97@qq.com", "1234");
+    logger.info("Using orElse");
+    User result = Optional.ofNullable(user).orElse(createNewUser());
+    logger.info("Using orElseGet");
+    User result2 = Optional.ofNullable(user).orElseGet(() -> createNewUser());
+}
+```
+
+这个示例中，两个 Optional 对象都包含非空值，两个方法都会返回对应的非空值。不过，orElse() 方法仍然创建了 User 对象。与之相反，orElseGet() 方法不创建 User 对象。
+
+这是因为使用Supplier能够做到 惰性计算，即 使用orElseGet时，只有在需要的时候才会计算结果。具体到我们的场景，使用orElse的时候，每次它都会执行计算结果的过程，而对于orElseGet，只有Optional中的值为空时，它才会计算备选结果。这样做的好处是可以避免提前计算结果的风险。
+
+显然，在执行较密集的调用时，比如调用 Web 服务或数据查询，这个差异会对性能产生重大影响。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

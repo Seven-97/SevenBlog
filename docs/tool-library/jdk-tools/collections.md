@@ -11,11 +11,11 @@ tag:
 
 Collections 是 JDK 提供的一个工具类，位于 java.util 包下，提供了一系列的静态方法，方便我们对集合进行各种操作，算是集合框架的一个大管家。
 
-Collections 的用法很简单，在 Intellij IDEA 中敲完 `Collections.` 之后就可以看到它提供的方法了，大致看一下方法名和参数就能知道这个方法是干嘛的。
+大致看一下方法名和参数就能知道这个方法是干嘛的:
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407282314408.png)
 
-为了节省大家的学习时间，我将这些方法做了一些分类，并列举了一些简单的例子。
+
 
 ## 排序操作
 
@@ -25,15 +25,17 @@ Collections 的用法很简单，在 Intellij IDEA 中敲完 `Collections.` 之�
 - `sort(List list, Comparator c)`：按照自定义的比较器排序
 - `swap(List list, int i, int j)`：将 i 和 j 位置的元素交换位置
 
+
+
 来看例子：
 
 ```java
 List<String> list = new ArrayList<>();
-list.add("沉默王二");
-list.add("沉默王三");
-list.add("沉默王四");
-list.add("沉默王五");
-list.add("沉默王六");
+list.add("seven1");
+list.add("seven2");
+list.add("seven3");
+list.add("seven4");
+list.add("seven5");
 
 System.out.println("原始顺序：" + list);
 
@@ -57,12 +59,14 @@ System.out.println("交换后：" + list);
 输出后：
 
 ```
-原始顺序：[沉默王二, 沉默王三, 沉默王四, 沉默王五, 沉默王六]
-反转后：[沉默王六, 沉默王五, 沉默王四, 沉默王三, 沉默王二]
-洗牌后：[沉默王五, 沉默王二, 沉默王六, 沉默王三, 沉默王四]
-自然升序后：[沉默王三, 沉默王二, 沉默王五, 沉默王六, 沉默王四]
-交换后：[沉默王三, 沉默王二, 沉默王四, 沉默王六, 沉默王五]
+原始顺序：[seven1, seven2, seven3, seven4, seven5]
+反转后：[seven5, seven4, seven3, seven2, seven1]
+洗牌后：[seven5, seven4, seven1, seven3, seven2]
+自然升序后：[seven1, seven2, seven3, seven4, seven5]
+交换后：[seven1, seven2, seven5, seven4, seven3]
 ```
+
+
 
 ## 查找操作
 
@@ -71,7 +75,6 @@ System.out.println("交换后：" + list);
 - `max(Collection coll, Comparator comp)`：根据自定义比较器，返回最大元素
 - `min(Collection coll)`：返回最小元素
 - `min(Collection coll, Comparator comp)`：根据自定义比较器，返回最小元素
-- `fill(List list, Object obj)`：使用指定对象填充
 - `frequency(Collection c, Object o)`：返回指定对象出现的次数
 
 来看例子：
@@ -79,33 +82,49 @@ System.out.println("交换后：" + list);
 ```java
 System.out.println("最大元素：" + Collections.max(list));
 System.out.println("最小元素：" + Collections.min(list));
-System.out.println("出现的次数：" + Collections.frequency(list, "沉默王二"));
+System.out.println("出现的次数：" + Collections.frequency(list, "seven1"));
 
 // 没有排序直接调用二分查找，结果是不确定的
-System.out.println("排序前的二分查找结果：" + Collections.binarySearch(list, "沉默王二"));
+System.out.println("排序前的二分查找结果：" + Collections.binarySearch(list, "seven2"));
 Collections.sort(list);
 // 排序后，查找结果和预期一致
-System.out.println("排序后的二分查找结果：" + Collections.binarySearch(list, "沉默王二"));
-
-Collections.fill(list, "沉默王八");
-System.out.println("填充后的结果：" + list);
+System.out.println("排序后的二分查找结果：" + Collections.binarySearch(list, "seven2"));
 ```
 
 输出后：
 
 ```
-原始顺序：[沉默王二, 沉默王三, 沉默王四, 沉默王五, 沉默王六]
-最大元素：沉默王四
-最小元素：沉默王三
-出现的次数：1
-排序前的二分查找结果：0
-排序后的二分查找结果：1
-填充后的结果：[沉默王八, 沉默王八, 沉默王八, 沉默王八, 沉默王八]
+最大元素：seven6
+最小元素：seven2
+出现的次数：0
+排序前的二分查找结果：-1
+排序后的二分查找结果：0
+填充后的结果：[seven6, seven6, seven6, seven6, seven6]
 ```
 
 
 
-## 同步控制
+## 填充集合
+
+- `fill(List list, Object obj)`：使用指定对象填充
+- `addAll(Collection<? super T> c, T... elements)`，往集合中添加元素
+
+```java
+List<String> allList = new ArrayList<>();
+Collections.addAll(allList, "seven","seven2","seven3");
+System.out.println("addAll 后：" + allList);//addAll 后：[seven, seven2, seven3]
+
+Collections.fill(allList, "seven666");
+System.out.println("填充后的结果：" + allList);//填充后的结果：[seven666, seven666, seven666]
+```
+
+
+
+
+
+
+
+## 同步控制(不常用)
 
 ArrayList 是线程不安全的，没法在多线程环境下使用，那 Collections 工具类中提供了多个 synchronizedXxx 方法，这些方法会返回一个同步的对象，从而解决多线程中访问集合时的安全问题。
 
@@ -117,7 +136,7 @@ ArrayList 是线程不安全的，没法在多线程环境下使用，那 Collec
 SynchronizedList synchronizedList = Collections.synchronizedList(list);
 ```
 
-看一眼 SynchronizedList 的源码就明白了，不过是在方法里面使用 synchronized 关键字 加了一层锁而已。
+看一眼 SynchronizedList 的源码就明白了，不过是在方法里面使用了 synchronized 关键字，加了一层锁而已。
 
 ```java
 static class SynchronizedList<E>
@@ -149,11 +168,11 @@ static class SynchronizedList<E>
 }
 ```
 
-那这样的话，其实效率和那些直接在方法上加 synchronized 关键字的 Vector、Hashtable 差不多（JDK 1.0 时期就有了），而这些集合类基本上已经废弃了，几乎不怎么用。正确的做法是使用并发包下的 CopyOnWriteArrayList、ConcurrentHashMap。
+那这样的话，其实效率和那些直接在方法上加 synchronized 关键字的 Vector、Hashtable 差不多（JDK 1.0 时期就有了），而这些集合类基本上已经废弃了，几乎不怎么用。正确的做法是使用并发包下的 [CopyOnWriteArrayList](https://www.seven97.top/java/collection/04-juc1-copyonwritearrayList.html)、[ConcurrentHashMap](https://www.seven97.top/java/collection/04-juc2-concurrenthashmap.html)。
 
 
 
-## 不可变集合
+## 不可变集合(不常用)
 
 - `emptyXxx()`：制造一个空的不可变集合
 - `singletonXxx()`：制造一个只有一个元素的不可变集合
@@ -188,34 +207,5 @@ public static final <T> List<T> emptyList() {
 public static final List EMPTY_LIST = new EmptyList<>();
 ```
 
-
-
-## 其他
-
-还有两个方法比较常用：
-
-- `addAll(Collection<? super T> c, T... elements)`，往集合中添加元素
-- `disjoint(Collection<?> c1, Collection<?> c2)`，判断两个集合是否没有交集
-
-举个例子：
-
-```java
-List<String> allList = new ArrayList<>();
-Collections.addAll(allList, "沉默王九","沉默王十","沉默王二");
-System.out.println("addAll 后：" + allList);
-
-System.out.println("是否没有交集：" + (Collections.disjoint(list, allList) ? "是" : "否"));
-```
-
-输出后：
-
-```
-原始顺序：[沉默王二, 沉默王三, 沉默王四, 沉默王五, 沉默王六]
-addAll 后：[沉默王九, 沉默王十, 沉默王二]
-是否没有交集：否
-```
-
-
-
-
+Collections的不可变集合并不是真的不可变的，建议使用Guava的不可变集合[Immutable](https://www.seven97.top/tool-library/guava/guava-collections.html#immutable)
 
