@@ -1,5 +1,5 @@
 ---
-title: 缓存时间机制
+title: Mybatis - 缓存时间机制
 category: 常用框架
 tag:
   - Mybatis 

@@ -1,5 +1,5 @@
 ---
-title: 动态SQL原理
+title: Mybatis - 动态SQL原理
 category: 常用框架
 tag:
   - Mybatis

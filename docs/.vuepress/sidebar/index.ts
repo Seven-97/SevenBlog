@@ -262,8 +262,6 @@ export default sidebar({
           children: [
             "springbootstart-twoway",
             "principleofautomaticassembly",
-            "netty-basic",
-            "netty-advancedusage"
           ],
         },
         {

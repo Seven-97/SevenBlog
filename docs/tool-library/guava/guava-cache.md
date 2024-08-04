@@ -1,5 +1,5 @@
 ---
-title: Cache
+title: GuavaCache
 category: 工具类库
 tag:
  - 缓存

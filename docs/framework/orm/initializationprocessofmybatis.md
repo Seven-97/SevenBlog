@@ -1,5 +1,5 @@
 ---
-title: 初始化过程
+title: Mybatis - 初始化过程
 category: 常用框架
 tag:
   - Mybatis

@@ -1,6 +1,5 @@
 ---
 title: 集合工具类 - Collections
-shortTitle: Collections工具类
 category: 工具类库
 tag:
   - Java

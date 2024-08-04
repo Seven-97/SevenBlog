@@ -1,5 +1,5 @@
 ---
-title: 集合工具
+title: 集合工具 - Collections2
 category: 工具类库
 tag:
  - Guava

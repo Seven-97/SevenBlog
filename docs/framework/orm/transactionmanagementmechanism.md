@@ -1,5 +1,5 @@
 ---
-title: 事务管理机制
+title: Mybatis - 事务管理机制
 category: 常用框架
 tag:
   - Mybatis

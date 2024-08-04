@@ -1,5 +1,5 @@
 ---
-title: 配置解析过程
+title: Mybatis - 配置解析过程
 category: 常用框架
 tag:
   - Mybatis

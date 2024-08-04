@@ -1,5 +1,5 @@
 ---
-title: 新集合
+title: 新集合 - BiMap&Multimap&Multiset
 category: 工具类库
 tag:
  - Guava
@@ -616,7 +616,6 @@ private class MapBasedMultisetIterator implements Iterator<E> {
 ```
 
 这个迭代器的好处是，存储多个相同的值，不会占用多个地方，只会占用1个位置。
-
 
 
 
