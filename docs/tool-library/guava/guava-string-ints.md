@@ -935,8 +935,6 @@ maps =Splitter.on("&").withKeyValueSeparator("=").split(ss);
 
 提供静态方法来检查方法或构造函数。如果方法失败则抛出 NullPointerException。
 
-对于Preconditions类的静态方法可以分为三大类：
-
 JDK 7 开始提供的 Objects 类也提供了一些类似的功能，具体可以参考 [JDK Doc](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Objects.html)。
 
 #### 对null的处理

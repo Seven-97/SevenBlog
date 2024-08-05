@@ -21,7 +21,7 @@ Java **TreeMap**实现了**SortedMap**接口，也就是说会按照key的大小
 
    - 正常情况下TreeMap是不能存入值为null的键的。
 
-   - 通过自定义比较器能让TreeMap存入一个值为null的键。
+   - 但通过自定义比较器能让TreeMap存入一个值为null的键。
 
    - 存入的值为null键对应的值不能通过通过它来获取，只能通过直接遍历Values。
 

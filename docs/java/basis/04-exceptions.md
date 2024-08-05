@@ -41,13 +41,13 @@ Error 类及其子类：程序中无法处理的错误，表示运行应用程�
 
 程序本身可以捕获并且可以处理的异常。Exception 这种异常又分为两类：运行时异常和编译时异常。
 
-1. 运行时异常**（也是checked exceptions）**
+1. 运行时异常**（unchecked exceptions）**
 
    - 都是RuntimeException类及其子类异常，如NullPointerException(空指针异常)、IndexOutOfBoundsException(下标越界异常)等，这些异常是不检查异常，程序中可以选择捕获处理，也可以不处理。这些异常一般是由程序逻辑错误引起的，程序应该从逻辑角度尽可能避免这类异常的发生。
 
    - 运行时异常的特点是Java编译器不会检查它，也就是说，当程序中可能出现这类异常，即使没有用try-catch语句捕获它，也没有用throws子句声明抛出它，也会编译通过。
 
-2. 非运行时异常**（也是unchecked exceptions）**
+2. 非运行时异常**（checked exceptions，编译时异常）**
    - 是RuntimeException以外的异常，类型上都属于Exception类及其子类。从程序语法角度讲是必须进行处理的异常，如果不处理，程序就不能编译通过。如IOException、SQLException等以及用户自定义的Exception异常，一般情况下不自定义检查异常。
 
 
