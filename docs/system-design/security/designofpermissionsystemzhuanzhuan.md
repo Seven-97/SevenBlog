@@ -34,15 +34,15 @@ tag:
 
 ### 2.1、统一登录
 
-先从接入权限的域名都是*.zhuanspirit.com说起，统一登录利用浏览器携带Cookie特点：不同二级域名可以携带一级域名的Cookie。统一登录系统为接入系统种植一级域名Cookie，例如OA系统oa.zhuanspirit.com，权限系统自身id.zhuanspirit.com统一种植域名为*.zhuanspirit.com的Cookie，这样OA、权限系统等接入统一登录系统的系统就可以做到一处登录处处访问。现在抛出两个问题：
+先从接入权限的域名都是`*.zhuanspirit.com`说起，统一登录利用浏览器携带Cookie特点：不同二级域名可以携带一级域名的Cookie。统一登录系统为接入系统种植一级域名Cookie，例如OA系统`oa.zhuanspirit.com`，权限系统自身`id.zhuanspirit.com`统一种植域名为`*.zhuanspirit.com`的Cookie，这样OA、权限系统等接入统一登录系统的系统就可以做到一处登录处处访问。现在抛出两个问题：
 
 1. 接入系统并未引入统一登录系统的任何代码，未登录用户是怎样跳转到统一登录页的？
 2. 如何校验Cookie是否合法的？
 
 从以OA系统为例的图中可以看出问题答案：
 
-1. ngix会对*.zhuanspirit.com域名的请求做Cookie合法校验，校验不通过跳转到登录页，同时携带原url信息。
-2. 校验合法性是通过Cookie<sso_uid,sso_code>的值是否和Redis中一致，不一致就需要重新登录。
+1. ngix会对`*.zhuanspirit.com`域名的请求做Cookie合法校验，校验不通过跳转到登录页，同时携带原url信息。
+2. 校验合法性是通过`Cookie<sso_uid,sso_code>`的值是否和Redis中一致，不一致就需要重新登录。
 
 ## 三、权限管理
 

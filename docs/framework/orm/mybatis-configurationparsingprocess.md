@@ -2,6 +2,7 @@
 title: Mybatis - 配置解析过程
 category: 常用框架
 tag:
+  - ORM框架
   - Mybatis
 ---
 

@@ -363,6 +363,8 @@ public class ConstructorBasedInjection {
 
 
 
+#### 为什么建议使用构造器注入
+
 一般推荐构造器注入，为什么？Spring文档里的解释如下：
 
 > The Spring team generally advocates constructor injection as it enables one to implement application components as immutable objects and to ensure that required dependencies are not null. Furthermore constructor-injected components are always returned to client (calling) code in a fully initialized state.
@@ -384,6 +386,30 @@ userService.findUserList();// -> NullPointerException, 潜在的隐患
 ```
 
 **总结**：对于必需的依赖，建议使用基于构造函数的注入，设置它们为不可变的，并防止它们为 null。对于可选的依赖项，建议使用基于 setter 的注入。
+
+
+
+#### 借助lombok简化
+
+然而，手动编写构造函数可能会使代码**显得冗长不美观**。Lombok 是一个非常好的工具，它能够通过注解自动生成构造函数，从而使代码更加简洁和优雅。
+
+Lombok提供的`@AllArgsConstructor`注解可以帮助我们自动生成包含所有字段的构造函数。此外，`@RequiredArgsConstructor`注解可以生成包含所有`final`字段和带有`@NonNull`注解字段的构造函数，这通常是我们在依赖注入中需要的。
+
+```java
+@Component
+@RequiredArgsConstructor // 自动生成包含final字段的构造函数
+public class ConstructorBasedInjection {
+    
+    private final InjectedBean injectedBean;
+    
+    @Autowired //当然，这个@Autowired可以省略
+    public ConstructorBasedInjection(InjectedBean injectedBean) {        
+        this.injectedBean = injectedBean;    
+    }
+}
+```
+
+
 
 
 

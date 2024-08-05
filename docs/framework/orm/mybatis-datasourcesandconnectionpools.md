@@ -2,6 +2,7 @@
 title: Mybatis - 数据源与连接池详解
 category: 常用框架
 tag:
+  - ORM框架
   - Mybatis
 ---
 

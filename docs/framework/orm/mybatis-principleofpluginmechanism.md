@@ -2,6 +2,7 @@
 title: Mybatis - 插件机制&分页机制原理
 category: 常用框架
 tag:
+  - ORM框架
   - Mybatis
 ---
 
