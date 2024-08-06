@@ -402,10 +402,6 @@ public class ConstructorBasedInjection {
     
     private final InjectedBean injectedBean;
     
-    @Autowired //当然，这个@Autowired可以省略
-    public ConstructorBasedInjection(InjectedBean injectedBean) {        
-        this.injectedBean = injectedBean;    
-    }
 }
 ```
 
