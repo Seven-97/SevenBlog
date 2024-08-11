@@ -1,7 +1,8 @@
 ---
-title: 整合Minio实现文件切片极速上传技术
+title: 整合Minio - 实现文件切片极速上传
 category: 系统设计
 tag:
+  - SpringBoot
   - Minio
 ---
 

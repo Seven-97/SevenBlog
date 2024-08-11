@@ -1,5 +1,5 @@
 ---
-title: 优雅关闭程序
+title: 优雅地关闭程序
 category: 系统设计
 tag:
   - SpringBoot

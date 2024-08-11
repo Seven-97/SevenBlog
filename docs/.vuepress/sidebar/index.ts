@@ -570,6 +570,7 @@ export default sidebar({
             "parameterverification",
             "elegantlyclosetheprogram",
             "minio-springboot",
+            "easyexcle-springboot",
             "springboot-all"
           ],
         },

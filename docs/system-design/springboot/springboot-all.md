@@ -1,5 +1,5 @@
 ---
-title: SpringBoot整合系列索引
+title: SpringBoot 整合系列索引
 category: 系统设计
 tag:
   - SpringBoot
@@ -24,6 +24,8 @@ mybatis自定义 typehandler，实现Java枚举类型与 mysql TINYINT类型的�
 [gitee传送门](https://gitee.com/Seven-97/springboot-demo/tree/master/05-mybatis-mysql-druid)
 
 [github传送门](https://github.com/Seven-97/SpringBoot-Demo/tree/master/05-mybatis-mysql-druid)
+
+
 
 
 
