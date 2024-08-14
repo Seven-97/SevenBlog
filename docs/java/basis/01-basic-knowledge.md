@@ -5,6 +5,7 @@ tag:
   - Java基础
 ---
 
+本文源码[点击这里](https://github.com/Seven-97/Java-Basis-Demo/tree/master/01-java-basis/src/main/java/com/seven/javabasis/basicknowledge)
 
 ## Integer缓存池
 
@@ -87,27 +88,21 @@ System.out.println(Integer.parseInt("128") == Integer.valueOf(128));//4.true
 那为什么4输出的是true呢？ 128 在缓存范围外，按道理会 new 出一个Integer对象，为什么输出true呢？
 
 - 首先Integer.parseInt方法返回的是int 基本数据类型，不是对象，也就是说 Integer.parseInt("128") = 128
+  ```java
+  public static int parseInt(String s) throws NumberFormatException {
+      return parseInt(s,10);
+  }
+  ```
 
-```java
-public static int parseInt(String s) throws NumberFormatException {
-    return parseInt(s,10);
-}
-```
-
-- 当进行比较("==")运算时，会进行自动拆箱，也就是说 Integer.valueOf(128) 生成的 Integer 会自动拆箱成128
-- 那么比较两个相等的额数值自然是true的
+- 当进行比较("==")运算时，会进行自动拆箱，也就是说 Integer.valueOf(128) 生成的 Integer 会自动拆箱成128，那么比较两个相等的额数值自然是true的
 
 > 当基础类型与它们的包装类有如下几种情况时，编译器会自动进行装箱或拆箱：
 >
-> 赋值操作（装箱或拆箱）
->
-> 进行加减乘除混合运算 （拆箱）
->
-> 进行>,<,==比较运算（拆箱）
->
-> 调用equals进行比较（装箱）
->
-> ArrayList、HashMap等集合类添加基础类型数据时（装箱）
+> - 赋值操作（装箱或拆箱）
+>- 进行加减乘除混合运算 （拆箱）
+> - 进行>,<,==比较运算（拆箱）
+>- 调用equals进行比较（装箱）
+> - ArrayList、HashMap等集合类添加基础类型数据时（装箱）
 
 注意：三目运算符 condition ? 表达式 1：表达式 2 中，高度注意表达式 1 和 2 在类型对齐时，可能抛出因自动拆箱导致的 NPE 异常
 
@@ -171,7 +166,7 @@ System.out.println(a == b);// false
 ```java
 BigDecimal a = new BigDecimal("1.0");
 BigDecimal b = new BigDecimal("0.9");
-BigDecimal c = new BigDecimal("0.8");
+BigDecimal c = BigDecimal.valueOf(0.8);
 
 BigDecimal x = a.subtract(b);
 BigDecimal y = b.subtract(c);
@@ -189,9 +184,20 @@ System.out.println(x.compareTo(y));// 0
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406202139919.png)
 
+```java
+public static BigDecimal valueOf(double val) {
+    return new BigDecimal(Double.toString(val));
+}
+```
+
+
+
 #### 加减乘除
 
-`add` 方法用于将两个 `BigDecimal` 对象相加，`subtract` 方法用于将两个 `BigDecimal` 对象相减。`multiply` 方法用于将两个 `BigDecimal` 对象相乘，`divide` 方法用于将两个 `BigDecimal` 对象相除。
+- `add` 方法：两个 `BigDecimal` 对象相加
+- `subtract` 方法：两个 `BigDecimal` 对象相减
+- `multiply` 方法：两个 `BigDecimal` 对象相乘
+- `divide` 方法：两个 `BigDecimal` 对象相除。
 
 ```java
 BigDecimal a = new BigDecimal("1.0");
@@ -203,12 +209,24 @@ System.out.println(a.divide(b));// 无法除尽，抛出 ArithmeticException 异
 System.out.println(a.divide(b, 2, RoundingMode.HALF_UP));// 1.11
 ```
 
-这里需要注意的是，在我们使用 `divide` 方法的时候尽量使用 3 个参数版本，并且`RoundingMode` 不要选择 `UNNECESSARY`，否则很可能会遇到 `ArithmeticException`（无法除尽出现无限循环小数的时候），其中 `scale` 表示要保留几位小数，`roundingMode` 代表保留规则。
+这里需要注意的是，在使用 `divide` 方法的时候尽量使用 3 个参数版本，并且`RoundingMode` 不要选择 `UNNECESSARY`，否则很可能会遇到 `ArithmeticException`（无法除尽出现无限循环小数的时候），其中 `scale` 表示要保留几位小数，`roundingMode` 代表保留规则。
 
 ```java
 public BigDecimal divide(BigDecimal divisor, int scale, RoundingMode roundingMode) {
     return divide(divisor, scale, roundingMode.oldMode);
 }
+```
+
+
+
+#### 保留几位小数 setScale
+
+通过 `setScale`方法设置保留几位小数以及保留规则。保留规则如上，不需要记，IDEA 会提示。
+
+```java
+BigDecimal m = new BigDecimal("1.255433");
+BigDecimal n = m.setScale(3, RoundingMode.HALF_DOWN);
+System.out.println(n);// 1.255
 ```
 
 保留规则非常多，这里列举几种:
@@ -217,46 +235,26 @@ public BigDecimal divide(BigDecimal divisor, int scale, RoundingMode roundingMod
 public enum RoundingMode {
    // 2.5 -> 3 , 1.6 -> 2
    // -1.6 -> -2 , -2.5 -> -3
-   UP(BigDecimal.ROUND_UP),
+   UP(BigDecimal.ROUND_UP),//远离零方向舍入，无论正负
    // 2.5 -> 2 , 1.6 -> 1
    // -1.6 -> -1 , -2.5 -> -2
-   DOWN(BigDecimal.ROUND_DOWN),
+   DOWN(BigDecimal.ROUND_DOWN),//向零方向舍入，直接去掉小数部分。
    // 2.5 -> 3 , 1.6 -> 2
    // -1.6 -> -1 , -2.5 -> -2
-   CEILING(BigDecimal.ROUND_CEILING),
+   CEILING(BigDecimal.ROUND_CEILING),//向正无穷方向舍入。
    // 2.5 -> 2 , 1.6 -> 1
    // -1.6 -> -2 , -2.5 -> -3
-   FLOOR(BigDecimal.ROUND_FLOOR),
+   FLOOR(BigDecimal.ROUND_FLOOR),//向负无穷方向舍入。
    // 2.5 -> 3 , 1.6 -> 2
    // -1.6 -> -2 , -2.5 -> -3
-   HALF_UP(BigDecimal.ROUND_HALF_UP),
+   HALF_UP(BigDecimal.ROUND_HALF_UP),//四舍五入，小数部分 >= 0.5 向上，否则向下。
    //......
 }
 ```
 
-#### 大小比较
-
-`a.compareTo(b)` : 返回 -1 表示 `a` 小于 `b`，0 表示 `a` 等于 `b` ， 1 表示 `a` 大于 `b`。
-
-```java
-BigDecimal a = new BigDecimal("1.0");
-BigDecimal b = new BigDecimal("0.9");
-System.out.println(a.compareTo(b));// 1
-```
-
-#### 保留几位小数 setScale
-
-通过 `setScale`方法设置保留几位小数以及保留规则。保留规则有挺多种，不需要记，IDEA 会提示。
-
-```java
-BigDecimal m = new BigDecimal("1.255433");
-BigDecimal n = m.setScale(3,RoundingMode.HALF_DOWN);
-System.out.println(n);// 1.255
-```
 
 
-
-### BigDecimal 等值比较问题
+#### 等值比较问题
 
 《阿里巴巴 Java 开发手册》中提到：
 
@@ -270,19 +268,22 @@ BigDecimal b = new BigDecimal("1.0");
 System.out.println(a.equals(b));//false
 ```
 
-这是因为 `equals()` 方法不仅仅会比较值的大小（value）还会比较精度（scale），而 `compareTo()` 方法比较的时候会忽略精度。
+这是因为BigDecimal的 `equals()` 方法不仅仅会比较值的大小（value）还会比较精度（scale），而 `compareTo()` 方法比较的时候会忽略精度。
 
 1.0 的 scale 是 1，1 的 scale 是 0，因此 `a.equals(b)` 的结果是 false。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406202139936.png)
 
-`compareTo()` 方法可以比较两个 `BigDecimal` 的值，如果相等就返回 0，如果第 1 个数比第 2 个数大则返回 1，反之返回-1。
+`compareTo()` 方法可以比较两个 `BigDecimal` 的值：
+`a.compareTo(b)` : 返回 -1 表示 `a` 小于 `b`，0 表示 `a` 等于 `b` ， 1 表示 `a` 大于 `b`。
 
 ```java
 BigDecimal a = new BigDecimal("1");
 BigDecimal b = new BigDecimal("1.0");
 System.out.println(a.compareTo(b));//0
 ```
+
+
 
 ### BigDecimal 存在的性能问题
 
@@ -299,9 +300,6 @@ System.out.println(a.compareTo(b));//0
 性能问题验证：
 
 ```java
-import lombok.extern.slf4j.Slf4j;
-import java.math.BigDecimal;
- 
 @Slf4j
 public class BigDecimalEfficiency {
  
@@ -347,7 +345,7 @@ public class BigDecimalEfficiency {
 
 运行结果：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407111043096.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408142322787.png)
 
 
 
@@ -370,12 +368,6 @@ public class BigDecimalEfficiency {
 网上有一个使用人数比较多的 `BigDecimal` 工具类，提供了多个静态方法来简化 `BigDecimal` 的操作。源码：
 
 ```java
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
-/**
- * 简化BigDecimal计算的小工具类
- */
 public class BigDecimalUtil {
 
     /**
@@ -426,8 +418,7 @@ public class BigDecimalUtil {
     }
 
     /**
-     * 提供（相对）精确的除法运算，当发生除不尽的情况时，精确到
-     * 小数点以后10位，以后的数字四舍五入。
+     * 提供（相对）精确的除法运算，当发生除不尽的情况时，精确到小数点以后10位，以后的数字四舍五入。
      *
      * @param v1 被除数
      * @param v2 除数
@@ -438,8 +429,7 @@ public class BigDecimalUtil {
     }
 
     /**
-     * 提供（相对）精确的除法运算。当发生除不尽的情况时，由scale参数指
-     * 定精度，以后的数字四舍五入。
+     * 提供（相对）精确的除法运算。当发生除不尽的情况时，由scale参数指定精度，以后的数字四舍五入。
      *
      * @param v1    被除数
      * @param v2    除数
@@ -558,7 +548,7 @@ public class BigDecimalUtil {
 
 Java中的String是不可变对象
 
-在面向对象及函数编程语言中，不可变对象（英语：Immutable object）是一种对象，在被创造之后，它的状态就不可以被改变。至于状态可以被改变的对象，则被称为可变对象（英语：mutable object）。--来自百度百科
+在面向对象及函数编程语言中，不可变对象（英语：Immutable object）是一种对象，在被创造之后，它的状态就不可以被改变。至于状态可以被改变的对象，则被称为可变对象（英语：mutable object）。-- 来自百度百科
 
 ### Java8 String源码
 
@@ -608,9 +598,9 @@ System.out.println("修改后的地址值：" + str + ",hash值"+ str.hashCode()
 修改后的地址值：seven,hash值-1424385949
 ```
 
+查看源码可以看到，计算hashcode后hash值是由一个常量缓存下来的，所以通过反射修改后hashCode并不会变，除非进行重新计算。
 
-
-查看源码可以看到，计算hashcode后hash值是由一个常量缓存下来的，所以通过反射修改后hashCode并不会变，除非进行重新计算。但是用反射修改String的值破坏了String的immutable特征，可能会带来一些奇怪的副作用，最好不要这么做。
+注意：用反射修改String的值破坏了String的immutable特征，可能会带来各种问题，以上只是提供一个思路，不建议这么做。
 
 > 不可变类都建议参考String类一样，写个变量缓存hashcode，从而防止高并发下的计算
 
@@ -636,21 +626,40 @@ public int hashCode() {
 
 ### String能存储多少字符
 
+能存储多少字符，通过以下步骤来看：
+
 1. 首先String的length方法返回是int。所以理论上长度一定不会超过int的最大值。
-2. 编译器源码如下，限制了字符串长度大于等于65535就会编译不通过：
-
-```java
-private void checkStringConstant(DiagnosticPosition var1, Object var2) {
-    if (this.nerrs == 0 && var2 != null && var2 instanceof String &&   ((String)var2).length() >= 65535) {
-        this.log.error(var1, "limit.string", new Object[0]);
-        ++this.nerrs;
-    }
-}
-```
-
-> `javac`代码在`jdk8/langtools/src/share/classes/com/sun/tools/javac`之中
-
-
+2. 编译器对字符串字面量长度的限制源自Java编译器（如`javac`）在处理常量池时的实现。编译器源码如下，限制了字符串长度大于等于65535就会编译不通过：
+   ```java
+   // src/jdk.compiler/share/classes/com/sun/tools/javac/jvm/Pool.java
+   public class Pool {
+       // ...
+   
+       /**
+        * Add a new Utf8 string to the constant pool, checking for duplicates
+        * and sharing the entry if one already exists.
+        */
+       public int putUtf8(String x) {
+           Assert.checkNonNull(x);
+           byte[] bytes;
+           try {
+               ByteArrayOutputStream bytearrayoutputstream = new ByteArrayOutputStream();
+               DataOutputStream dataoutputstream = new DataOutputStream(bytearrayoutputstream);
+               dataoutputstream.writeUTF(x);
+               dataoutputstream.close();
+               bytes = bytearrayoutputstream.toByteArray();
+           } catch (IOException e) {
+               throw new AssertionError(e);
+           }
+           if (bytes.length > 65535)
+               throw new UTFDataFormatException("encoded string too long: " + bytes.length + " bytes");
+           return put(new Pool.Utf8Entry(bytes));
+       }
+   
+       // ...
+   }
+   
+   ```
 
 Java中的字符常量都是使用UTF 8编码的，UTF 8编码使用1~4个字节来表示具体的Unicode字符。所以有的字符占用一个字节，而平时所用的大部分中文都需要3个字节来存储。
 
@@ -665,7 +674,7 @@ String s2 = "自自...自";
 String s3 = "d自自...自";
 ```
 
-- 对于s1，一个字母d的UTF8编码占用一个字节，65534字母占用65534个字节，长度是65534，长度和存储都没超过限制，所以可以编译通过。
+- 对于s1，一个字母d的UTF8编码占用一个字节，65534个字母占用65534个字节，长度是65534，长度和存储都没超过限制，所以可以编译通过。
 
 - 对于s2，一个中文占用3个字节，21845个正好占用65535个字节，而且字符串长度是21845，长度和存储也都没超过限制，所以可以编译通过。
 
@@ -679,7 +688,7 @@ String s3 = "d自自...自";
 
 量池中的每一种数据项都有自己的类型。Java中的UTF-8编码的Unicode字符串在常量池中以`CONSTANTUtf8`类型表示。`CONSTANTUtf8`的数据结构如下：
 
-```c++
+```c
 CONSTANT_Utf8_info {
     u1 tag;
     u2 length;
@@ -705,7 +714,7 @@ public String(char value[], int offset, int count) {
 
 上面的count值就是字符串的最大长度。在Java中，int的最大长度是2^31-1。所以在运行时，String 的最大长度是2^31-1。
 
-但是这个也是理论上的长度，实际的长度还要看JVM的内存。来看下，最大的字符串会占用多大的内存。
+但是这个也是理论上的长度，实际的长度还要**看JVM的内存**。来看下，最大的字符串会占用多大的内存。
 
 ```
 (2^31-1)*16/8/1024/1024/1024 = 2GB
@@ -715,7 +724,7 @@ public String(char value[], int offset, int count) {
 
 
 
-**总结**：因此，主要的还是JVM规范对常量池的限制，使得byte数组的最大长度不能超过65535
+**总结**：因此，主要的还是看编译器对常量池的限制，使得byte数组的最大长度不能超过65535；以及JVM的内存限制
 
 **补充**：JDK9以后对String的存储进行了优化。底层不再使用char数组存储字符串，而是使用byte数组。对于LATIN1字符的字符串可以节省一倍的内存空间。详情请看 [Java9 - string字符串的变化](https://www.seven97.top/java/new-features/java9.html#string%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%9A%84%E5%8F%98%E5%8C%96)
 
