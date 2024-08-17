@@ -7,13 +7,61 @@ tag:
 
 
 
-Java 8的新特性之一就是流stream，配合同版本出现的 `Lambda` ，使得操作集合（Collection）提供了极大的便利。关于流的具体使用可以看[这篇文章](https://www.seven97.top/java/new-features/java8.html#强大的stream)
+Java 8的新特性之一就是流stream，配合同版本出现的 `Lambda` ，使得操作集合（Collection）提供了极大的便利。
 
 
 
-## 流的三大特点
+## 案例引入
 
-流有三大特点：
+在JAVA中，涉及到对数组、Collection等集合类中的元素进行操作的时候，通常会通过循环的方式进行逐个处理，或者使用Stream的方式进行处理。
+
+假设遇到了这么一个需求：从给定句子中返回单词长度大于5的单词列表，按长度倒序输出，最多返回3个。
+
+在未接触Stream流的时候，可能会这样写函数：
+
+```java
+public List<String> sortGetTop3LongWords(@NotNull String sentence) {
+    // 先切割句子，获取具体的单词信息
+    String[] words = sentence.split(" ");
+    List<String> wordList = new ArrayList<>();
+    // 循环判断单词的长度，先过滤出符合长度要求的单词
+    for (String word : words) {
+        if (word.length() > 5) {
+            wordList.add(word);
+        }
+    }
+    // 对符合条件的列表按照长度进行排序
+    wordList.sort((o1, o2) -> o2.length() - o1.length());
+    // 判断list结果长度，如果大于3则截取前三个数据的子list返回
+    if (wordList.size() > 3) {
+        wordList = wordList.subList(0, 3);
+    }
+    return wordList;
+}
+```
+
+然而，如果用上了Stream流：
+
+```java
+
+public List<String> sortGetTop3LongWordsByStream(@NotNull String sentence) {
+    return Arrays.stream(sentence.split(" "))
+            .filter(word -> word.length() > 5)
+            .sorted((o1, o2) -> o2.length() - o1.length())
+            .limit(3)
+            .collect(Collectors.toList());
+}
+```
+
+就是两个字：优雅
+
+
+
+
+
+### 流的三大特点
+
+流) (Stream) 到底是什么呢？是数据渠道，用于操作数据源（集合、数组等）所生成的元素序列。“ 集合讲的是数据 ， 流讲的是 计 算 ！ ”
 
 1. 流并**不存储元素**。这些元素**存储在底层的集合中**，或者是按需生成。
 2. 流的操作不会修改源数据元素，而是生成一个新的流。
@@ -21,7 +69,7 @@ Java 8的新特性之一就是流stream，配合同版本出现的 `Lambda` ，�
 
 
 
-## 操作分类
+### 操作分类
 
 官方将 Stream 中的操作分为两大类：
 
@@ -42,6 +90,297 @@ Java 8的新特性之一就是流stream，配合同版本出现的 `Lambda` ，�
 
 
 
+## 如何使用
+
+概括讲，可以将Stream流操作分为3种类型：
+
+- 创建Stream
+- Stream中间处理
+- 终止Steam
+
+﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172140064.webp)﻿
+
+每个Stream管道操作都包含若干方法，先列举一下各个API的方法：
+
+
+
+### 开始管道
+
+主要负责新建一个Stream流，或者基于现有的数组、List、Set、Map等集合类型对象创建出新的Stream流。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172141732.webp)
+
+#### 由数组创建流
+
+Java8 中的 Arrays 的静态方法 stream() 可以获取数组流：
+
+- static &lt;T> Stream&lt;T> stream(T[] array): 返回一个流
+
+重载形式 ， 能够处理对应基本类型的数组 ：
+
+- public static IntStream stream(int[] array)
+
+- public static LongStream stream(long[] array)
+
+- public static DoubleStream stream(double[] array)
+
+
+
+#### 由值创建流
+
+可以使用静态方法 Stream.of()，通过显示的值创建一个流。它可以接收任意数量的参数。
+
+- public static&lt;T> Stream&lt;T> of(T... values) : 返回一个流
+
+
+
+#### 由函数创建流 ： 创建无限流
+
+可以使用静态方法 Stream.iterate() 和Stream.generate()，创建无限流。
+
+- 迭代：public static&lt;T> Stream&lt;T> iterate(final T seed, final UnaryOperator&lt;T> f)
+
+- 生成：public static&lt;T> Stream&lt;T> generate(Supplier&lt;T> s) :
+
+
+
+
+
+### 中间管道
+
+负责对Stream进行处理操作，并返回一个新的Stream对象，中间管道操作可以进行叠加。
+
+| API        | 功能说明                                                     |
+| ---------- | ------------------------------------------------------------ |
+| filter()   | 按照条件过滤符合要求的元素， 返回新的stream流。              |
+| map()      | 将已有元素转换为另一个对象类型，一对一逻辑，返回新的stream流。 |
+| flatMap()  | 将已有元素转换为另一个对象类型，一对多逻辑，即原来一个元素对象可能会转换为1个或者多个新类型的元素，返回新的stream流。 |
+| limit()    | 仅保留集合前面指定个数的元素，返回新的stream流。             |
+| skip()     | 跳过集合前面指定个数的元素，返回新的stream流。               |
+| concat()   | 将两个流的数据合并起来为1个新的流，返回新的stream流。        |
+| distinct() | 对Stream中所有元素进行去重，返回新的stream流。               |
+| sorted()   | 对stream中所有的元素按照指定规则进行排序，返回新的stream流。 |
+| peek()     | 对stream流中的每个元素进行逐个遍历处理，返回处理后的stream流。 |
+
+
+
+#### map与flatMap
+
+在项目中，经常看到也经常使用到map与flatMap，比如代码：
+
+﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172146514.webp)﻿
+
+map与flatMap都是用于转换已有的元素为其它元素，区别点在于：
+
+- map 必须是一对一的，即每个元素都只能转换为1个新的元素；
+- flatMap 可以是一对多的，即每个元素都可以转换为1个或者多个新的元素；
+
+下面两张图形象地说明了两者之间的区别：
+
+map图：
+
+﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172146520.webp)﻿
+
+﻿
+
+flatMap图：
+
+﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172146496.webp)﻿
+
+##### map用例
+
+有一个字符串ID列表，现在需要将其转为别的对象列表。
+
+```java
+/**
+ * map的用途：一换一
+ */
+List<String> ids = Arrays.asList("205", "105", "308", "469", "627", "193", "111");
+        // 使用流操作
+List<NormalOfferModel> results = ids.stream()
+        .map(id -> {
+            NormalOfferModel model = new NormalOfferModel();
+            model.setCate1LevelId(id);
+            return model;
+        })
+        .collect(Collectors.toList());
+System.out.println(results);
+```
+
+
+
+##### flatMap用例
+
+现有一个句子列表，需要将句子中每个单词都提取出来得到一个所有单词列表：
+
+```java
+List<String> sentences = Arrays.asList("hello world","Hello Price Info The First Version");
+// 使用流操作
+List<String> results2 = sentences.stream()
+        .flatMap(sentence -> Arrays.stream(sentence.split(" ")))
+        .collect(Collectors.toList());
+System.out.println(results2);//[hello, world, Hello, Price, Info, The, First, Version]
+```
+
+这里需要补充一句，flatMap操作的时候其实是先每个元素处理并返回一个新的Stream，然后将多个Stream展开合并为了一个完整的新的Stream，如下：
+
+﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172147908.webp)
+
+
+
+#### peek方法
+
+peek可以用于对元素进行遍历然后逐个处理。
+
+peek属于中间方法，这也就意味着peek只能作为管道中途的一个处理步骤，而没法直接执行得到结果，其后面必须还要有其它终止操作的时候才会被执行
+
+
+
+#### filter、sorted、distinct、limit
+
+这几个都是常用的Stream的中间操作方法，具体的方法的含义在上面的表格里面有说明。具体使用的时候，可以根据需要选择一个或者多个进行组合使用，或者同时使用多个相同方法的组合：
+
+```java
+public void testGetTargetUsers() {
+    List<String> ids = Arrays.asList("205","10","308","49","627","193","111", "193");
+    // 使用流操作
+    List<OfferModel> results = ids.stream()
+            .filter(s -> s.length() > 2)//使用filter过滤掉不符合条件的数据
+            .distinct()//通过distinct对存量元素进行去重操作
+            .map(Integer::valueOf)//通过map操作将字符串转成整数类型
+            .sorted(Comparator.comparingInt(o -> o))//借助sorted指定按照数字大小正序排列
+            .limit(3)//使用limit截取排在前3位的元素
+            .map(id -> new OfferModel(id))//又一次使用map将id转为OfferModel对象类型
+            .collect(Collectors.toList());//使用collect终止操作将最终处理后的数据收集到list中
+    System.out.println(results);//[OfferModel{id=111},  OfferModel{id=193},  OfferModel{id=205}]
+}
+```
+
+
+
+
+
+### 终止管道
+
+顾名思义，通过终止管道操作之后，Stream流将会结束，最后可能会执行某些逻辑处理，或者是按照要求返回某些执行后的结果数据。
+
+| API         | 功能说明                                                     |
+| ----------- | ------------------------------------------------------------ |
+| count()     | 返回stream处理后最终的元素个数。                             |
+| max()       | 返回stream处理后的元素最大值。                               |
+| min()       | 返回stream处理后的元素最小值。                               |
+| findFirst() | 找到第一个符合条件的元素时则终止流处理。                     |
+| findAny()   | 找到任何一个符合条件的元素时则退出流处理，这个对于串行流时与findFirst相同，对于并行流时比较高效，任何分片中找到都会终止后续计算逻辑。 |
+| anyMatch()  | 返回一个boolean值，类似于isContains(),用于判断是否有符合条件的元素。 |
+| allMatch()  | 返回一个boolean值，用于判断是否所有元素都符合条件。          |
+| noneMatch() | 返回一个boolean值， 用于判断是否所有元素都不符合条件。       |
+| collect()   | 将流转换为指定的类型，通过Collectors进行指定。               |
+| toArray()   | 将流转换为数组。                                             |
+| iterator()  | 将流转换为Iterator对象。                                     |
+| foreach()   | 无返回值，对元素进行逐个遍历，然后执行给定的处理逻辑。       |
+
+
+
+#### foreach
+
+foreach和peek一样，都可以用于对元素进行遍历然后逐个处理。但foreach属于终止方法，也就是说foreach可以直接执行相关操作。
+
+
+
+#### collect
+
+可以支持生成如下类型的结果数据：
+
+1. 一个集合类，比如List、Set或者HashMap等；
+   ```java
+   List<NormalOfferModel> normalOfferModelList = Arrays.asList(new NormalOfferModel("11"),
+                   new NormalOfferModel("22"),
+                   new NormalOfferModel("33"));
+   
+   // collect成list
+   List<NormalOfferModel> collectList = normalOfferModelList
+           .stream()
+           .filter(offer -> offer.getCate1LevelId().equals("11"))
+           .collect(Collectors.toList());
+   System.out.println("collectList:" + collectList);
+   
+   // collect成Set
+   Set<NormalOfferModel> collectSet = normalOfferModelList
+           .stream()
+           .filter(offer -> offer.getCate1LevelId().equals("22"))
+           .collect(Collectors.toSet());
+   System.out.println("collectSet:" + collectSet);
+   
+   // collect成HashMap，key为id，value为Dept对象
+   Map<String, NormalOfferModel> collectMap = normalOfferModelList
+           .stream()
+           .filter(offer -> offer.getCate1LevelId().equals("33"))
+           .collect(Collectors.toMap(NormalOfferModel::getCate1LevelId, Function.identity(), (k1, k2) -> k2));
+   System.out.println("collectMap:" + collectMap);
+   ```
+
+2. StringBuilder对象，支持将多个字符串进行拼接处理并输出拼接后结果；
+   ```java
+   public void testCollectJoinStrings() {
+       List<String> ids = Arrays.asList("205", "10", "308", "49", "627", "193", "111", "193");
+       String joinResult = ids.stream().collect(Collectors.joining(","));
+       System.out.println("拼接后：" + joinResult);
+   }
+   ```
+
+3. 一个可以记录个数或者计算总和的对象（数据批量运算统计）；
+   ```java
+   public void testNumberCalculate() {
+       List<Integer> ids = Arrays.asList(10, 20, 30, 40, 50);
+       // 计算平均值
+       Double average = ids.stream().collect(Collectors.averagingInt(value -> value));
+       System.out.println("平均值：" + average);
+       // 数据统计信息
+       IntSummaryStatistics summary = ids.stream().collect(Collectors.summarizingInt(value -> value));
+       System.out.println("数据统计信息：" + summary);
+   }
+   ```
+
+
+
+## 并行Stream
+
+### parallelStream的机制说明
+
+使用并行流，可以有效利用计算机的多CPU硬件，提升逻辑的执行速度。并行流通过将一整个stream划分为多个片段，然后对各个分片流并行执行处理逻辑，最后将各个分片流的执行结果汇总为一个整体流。
+
+﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172159067.gif)﻿
+
+可以通过parallelStream的源码发现parallel Stream底层是将任务进行了切分，最终将任务传递给了jdk8自带的“全局”ForkJoinPool线程池。 在Fork-Join中，比如一个拥有4个线程的ForkJoinPool线程池，有一个任务队列，一个大的任务切分出的子任务会提交到线程池的任务队列中，4个线程从任务队列中获取任务执行，哪个线程执行的任务快，哪个线程执行的任务就多，只有队列中没有任务线程才是空闲的，这就是工作窃取。
+
+可以通过下图更好的理解这种“分而治之”的思想：
+
+﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172156003.webp)﻿
+
+
+
+### 约束与限制
+
+1. parallelStream()中foreach()操作必须保证是线程安全的；
+   很多人在用惯了流式处理之后，很多for循环都会直接使用流式foreach(),实际上这样不一定是合理的，如果只是简单的for循环，确实没有必要使用流式处理，因为流式底层封装了很多流式处理的复杂逻辑，从性能上来讲不占优。
+
+2. parallelStream()中foreach()不要直接使用默认的线程池；
+   ```java
+   ForkJoinPool customerPool = new ForkJoinPool(n);
+   customerPool.submit(
+        () -> customerList.parallelStream().具体操作
+   ```
+
+3. parallelStream()使用的时候尽量避免耗时操作；
+
+
+
+### 注意
+
+**parallelStream和整个java进程共用ForkJoinPool**：如果直接使用parallelStream().foreach会默认使用全局的ForkJoinPool，而这样就会导致当前程序很多地方共用同一个线程池，包括gc相关操作在内，所以一旦任务队列中满了之后，就会出现阻塞的情况，导致整个程序的只要当前使用ForkJoinPool的地方都会出现问题。
+
+**parallelStream使用后ThreadLocal数据为空**：parallelStream创建的并行流在真正执行时是由ForkJoin框架创建多个线程并行执行，由于ThreadLocal本身不具有可继承性，新生成的线程自然无法获取父线程中的ThreadLocal数据。
+
 
 
 ## 流的运行流程
@@ -57,7 +396,7 @@ List<String> endList = startlist.stream().map(r -> r + "b").filter(r -> r.starts
 
 一段Stream代码的运行包括以下三部分：
 
-1. 搭建流水线，定义各阶段功能。
+1. 搭建流水线，定义各阶段功能。即创建stream
 2. 从终结点反向索引，生成操作实例Sink。
 3. 数据源送入流水线，经过各阶段处理后，生成结果。
 
