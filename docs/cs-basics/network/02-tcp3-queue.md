@@ -369,3 +369,6 @@ syncookies 参数主要有以下三个值：
 那么针对 SYN 攻击的场景，我们可以减少 SYN+ACK 的重传次数，以加快处于 SYN_RECV 状态的 TCP 连接断开。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406222012942.png)
+
+
+<!-- @include: @article-footer.snippet.md -->     

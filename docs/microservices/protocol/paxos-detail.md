@@ -84,7 +84,7 @@ Basic Paxos 算法的仅能就单个值达成共识，为了能够对一系列�
  
 
  
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
  

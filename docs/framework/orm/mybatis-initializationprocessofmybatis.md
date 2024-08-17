@@ -269,7 +269,7 @@ List list = sqlSession.selectList("com.foo.bean.BlogMapper.queryAllBlogInfo");
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

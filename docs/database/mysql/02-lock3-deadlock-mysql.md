@@ -136,3 +136,6 @@ select id from t_order where order_no = 1008 for update;
 
 - 设置事务等待锁的超时时间，**破坏持有并等待条件**。当一个事务的等待时间超过该值后，就对这个事务进行回滚，于是锁就释放了，另一个事务就可以继续执行了。在 InnoDB 中，参数 innodb_lock_wait_timeout 是用来设置超时时间的，默认值时 50 秒。
 - 开启主动死锁检测。主动死锁检测在发现死锁后，主动回滚死锁链条中的某一个事务，让其他事务得以继续执行。将参数 innodb_deadlock_detect 设置为 on，表示开启这个逻辑，默认就开启。
+
+
+<!-- @include: @article-footer.snippet.md -->     

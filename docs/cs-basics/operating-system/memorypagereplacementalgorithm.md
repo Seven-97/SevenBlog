@@ -79,3 +79,6 @@ FIFO的第二次机会算法需要在链表中移动页面，降低了效率。�
 - R 位为 1 就清除 R 位并把表指针向前去移动一个位置，重复这个过程直到找到一个 R 位为 0 的页面为止
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404271130516.png)
+
+
+<!-- @include: @article-footer.snippet.md -->     

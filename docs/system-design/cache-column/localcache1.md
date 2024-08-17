@@ -553,3 +553,6 @@ class DemoCache<K, V> {
 ```
 
 考虑到并发环境，可以使用`ConcurrentHashMap`来替代HashMap作为缓存，或使用`ConcurrentLinkedHashMap`，这样就可以支持LRU的策略。
+
+
+<!-- @include: @article-footer.snippet.md -->     

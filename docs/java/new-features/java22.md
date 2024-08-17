@@ -291,3 +291,4 @@ void vectorComputation(float[] a, float[] b, float[] c) {
 }
 ```
 
+<!-- @include: @article-footer.snippet.md -->     

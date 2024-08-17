@@ -2307,12 +2307,12 @@ protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
 
 | 接口              | 方法签名            | 例子                |
 | ----------------- | ------------------- | ------------------- |
-| UnaryOperator<T>  | T apply(T t)        | String::toLowerCase |
-| BinaryOperator<T> | T apply(T t1, T t2) | BigInteger::add     |
-| Predicate<T>      | boolean test(T t)   | Collection::isEmpty |
-| Function<T,R>     | R apply(T t)        | Arrays::asList      |
-| Supplier<T>       | T get()             | Instant::now        |
-| Consumer<T>       | void accept(T t)    | System.out::println |
+| UnaryOperator&lt;T>  | T apply(T t)        | String::toLowerCase |
+| BinaryOperator&lt;T> | T apply(T t1, T t2) | BigInteger::add     |
+| Predicate&lt;T>      | boolean test(T t)   | Collection::isEmpty |
+| Function&lt;T,R>     | R apply(T t)        | Arrays::asList      |
+| Supplier&lt;T>       | T get()             | Instant::now        |
+| Consumer&lt;T>       | void accept(T t)    | System.out::println |
 
 大多数标准函数式接口的存在只是为了提供对基本类型的支持。例如，一个接受 int 的 Predicate 就是一个 IntPredicate，一个接受两个 long 值并返回一个 long 的二元操作符就是一个 LongBinaryOperator。不要尝试用带有包装类的基本函数式接口替代它们，因为这会带来糟糕的性能。
 
@@ -5146,5 +5146,5 @@ private Object readResolve() {
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->
 

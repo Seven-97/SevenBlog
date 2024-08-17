@@ -1675,3 +1675,4 @@ public static <E> Set<E> filter(Set<E> unfiltered, Predicate<? super E> predicat
 
 
 
+<!-- @include: @article-footer.snippet.md -->     

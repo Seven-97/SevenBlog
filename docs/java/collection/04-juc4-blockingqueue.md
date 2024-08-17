@@ -282,3 +282,4 @@ String two = deque.takeLast();
 String one = deque.takeFirst();
 ```
 
+<!-- @include: @article-footer.snippet.md -->     

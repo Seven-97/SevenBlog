@@ -389,8 +389,9 @@ JVM运行过程中产生的一些比较重要的线程罗列如下：
 | Reference  Handler               | JVM在创建main线程后就创建Reference Handler线程，其优先级最高，为10，它主要用于处理引用对象本身（软引用、弱引用、虚引用）的垃圾回收问题 。 |
 | VM Thread                        | 这个线程就比较牛b了，是JVM里面的线程母体，根据hotspot源码（vmThread.hpp）里面的注释，它是一个单个的对象（最原始的线程）会产生或触发所有其他的线程，这个单个的VM线程是会被其他线程所使用来做一些VM操作（如：清扫垃圾等）。 |
 
-##  
 
+
+<!-- @include: @article-footer.snippet.md -->     
  
 
  

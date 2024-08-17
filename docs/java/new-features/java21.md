@@ -479,3 +479,5 @@ record Food(String yaoZi, String drink) {
 }
 ```
 
+
+<!-- @include: @article-footer.snippet.md -->     

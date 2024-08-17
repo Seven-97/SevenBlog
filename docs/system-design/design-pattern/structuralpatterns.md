@@ -1578,3 +1578,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 
 
 可以看到 Integer 默认先创建并缓存 -128 ~ 127 之间数的 Integer 对象，当调用 valueOf 时如果参数在 -128 ~ 127 之间则计算下标并从缓存中返回，否则创建一个新的 Integer 对象。
+
+
+
+<!-- @include: @article-footer.snippet.md -->     

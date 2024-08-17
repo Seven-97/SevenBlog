@@ -344,7 +344,7 @@ kafka-console-consumer.sh --bootstrap-server 47.106.86.64:9092 --from-beginning 
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

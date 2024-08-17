@@ -992,3 +992,4 @@ public void listenSimpleQueueMessage(Map<String, Object> msg) throws Interrupted
 }
 ```
 
+<!-- @include: @article-footer.snippet.md -->     

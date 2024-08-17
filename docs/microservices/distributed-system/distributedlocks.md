@@ -51,7 +51,7 @@ tag:
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

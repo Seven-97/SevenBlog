@@ -721,3 +721,6 @@ class Person //模板在方法区
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251633035.gif)
 
 这里虽然描述的常量池在方法区中，只作为理解。也可以理解为在堆中，或者元空间
+
+
+<!-- @include: @article-footer.snippet.md -->     

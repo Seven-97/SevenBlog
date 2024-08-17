@@ -189,3 +189,6 @@ if (fread(sig,1,5,fp) != 5 || memcmp(sig,"REDIS",5) != 0) {
 缺点：
 - AOF 文件中添加了 RDB 格式的内容，使得 AOF 文件的可读性变得很差；
 - 兼容性差，如果开启混合持久化，那么此混合持久化 AOF 文件，就不能用在 Redis 4.0 之前版本了。
+
+
+<!-- @include: @article-footer.snippet.md -->     

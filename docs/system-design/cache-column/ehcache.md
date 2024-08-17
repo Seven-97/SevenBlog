@@ -882,5 +882,5 @@ JGroups的**可靠性**体现在下面几个方面：
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 

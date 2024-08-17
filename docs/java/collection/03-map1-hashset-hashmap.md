@@ -629,3 +629,4 @@ public class HashSet<E>
 }
 ```
 
+<!-- @include: @article-footer.snippet.md -->     

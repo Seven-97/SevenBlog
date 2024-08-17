@@ -86,3 +86,7 @@ WATCH通过监视指定Redis Key，如果没有改变，就执行成功，如果
 - 事务执行之后，不管是否执行成功还好是失败，都会取消对应的监视；
 - 当监视的客户端断开连接时，也会取消监视；
 - 可以手动UNWATCH取消所有Key的监视；
+
+
+
+<!-- @include: @article-footer.snippet.md -->     

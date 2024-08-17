@@ -972,3 +972,4 @@ public class MinioFileUploadController {
 }
 ```
 
+<!-- @include: @article-footer.snippet.md -->     

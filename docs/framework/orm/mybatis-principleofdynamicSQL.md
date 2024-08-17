@@ -310,3 +310,5 @@ private void applyPrefix(StringBuilder sql, String trimmedUppercaseSql) {
 
 TrimSqlNode的apply方法也是调用属性contents(一般都是MixedSqlNode)的apply方法，按照实例也就是7个SqlNode，都是StaticTextSqlNode和IfSqlNode。 最后会使用FilteredDynamicContext过滤掉prefix和suffix。
 
+
+<!-- @include: @article-footer.snippet.md -->     

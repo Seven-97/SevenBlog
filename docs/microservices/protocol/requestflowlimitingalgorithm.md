@@ -309,5 +309,5 @@ Guava的RateLimiter限流组件，就是基于令牌桶算法实现的。
 
 总体来说，令牌桶算法具有较高的稳定性和精度，但实现相对复杂，适用于对稳定性和精度要求较高的场景。
 
-
+<!-- @include: @article-footer.snippet.md -->     
 

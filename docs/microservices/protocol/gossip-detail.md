@@ -178,4 +178,4 @@ Gossip 设计了两种可能的消息传播模式：**反熵（Anti-Entropy）**
  
 
  
-
+<!-- @include: @article-footer.snippet.md -->     

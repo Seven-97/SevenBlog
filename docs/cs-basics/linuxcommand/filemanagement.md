@@ -779,7 +779,7 @@ chmod 771 file
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

@@ -363,3 +363,6 @@ jdk7中的[ConcurrentHashMap](https://www.seven97.top/java/collection/04-juc2-co
 [Redis实现分布式锁 | Seven的菜鸟成长之路 (seven97.top)](https://www.seven97.top/database/redis/05-implementdistributedlocks.html)
 
 [ZooKeeper - 分布式锁 | Seven的菜鸟成长之路 (seven97.top)](https://www.seven97.top/microservices/service-registration-and-discovery/zookeeper-distributedlocks.html)
+
+
+<!-- @include: @article-footer.snippet.md -->     

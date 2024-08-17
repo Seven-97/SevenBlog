@@ -231,3 +231,7 @@ ECDHE 密钥交换算法的过程：
 		- Client Params ^ 服务器椭圆曲线私钥 % P = pre-master
 		- client random + server random + pre-master = master secret
 		Encrypted Handshake Message：使用生成的主密钥 Master Secret 对之前的握手数据进行对称加密，然后通过 Encrypted Handshake Message 消息发送给客户端进行验证。
+
+
+
+<!-- @include: @article-footer.snippet.md -->     

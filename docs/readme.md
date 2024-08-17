@@ -36,5 +36,7 @@ footer: |-
 
 ## 联系我
 我的邮箱：415849169@qq.com
-或可直接加我QQ详聊：415849169
 
+或微信搜索：seven97，联系我
+
+<img src="https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172044971.png#pic_center" alt="seven97官方微信公众号" style="zoom:50%;" />

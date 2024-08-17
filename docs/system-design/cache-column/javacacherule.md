@@ -261,7 +261,7 @@ JSR 107（JCache API）规范的诞生可谓是一路坎坷，拖拖拉拉直到
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

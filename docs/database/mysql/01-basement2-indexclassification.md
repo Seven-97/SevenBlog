@@ -272,4 +272,4 @@ ON table_name(column_name(length));
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     

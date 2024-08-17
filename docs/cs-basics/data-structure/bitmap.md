@@ -72,4 +72,4 @@ Roaring 提供O(logn)的查找性能：
 - [《Consistently faster and smaller compressed bitmaps with Roaring》](https://arxiv.org/pdf/1603.06549.pdf "《Consistently faster and smaller compressed bitmaps with Roaring》")
 
 
-
+<!-- @include: @article-footer.snippet.md -->     

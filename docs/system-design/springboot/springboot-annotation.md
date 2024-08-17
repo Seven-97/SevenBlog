@@ -411,3 +411,4 @@ public class Account {
 }
 ```
 
+<!-- @include: @article-footer.snippet.md -->     

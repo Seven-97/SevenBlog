@@ -772,3 +772,4 @@ Set<ConstraintViolation<T>> violationSet = FastValidatorUtils.validate(bean);
  }
  ```
 
+<!-- @include: @article-footer.snippet.md -->     

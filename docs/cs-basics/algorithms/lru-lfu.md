@@ -255,3 +255,4 @@ class LFUCache {
 
 实际上没办法快速计算`minFreq`，只能线性遍历`FK`表或者`KF`表来计算，这样肯定不能保证 O(1) 的时间复杂度。**但是，其实这里没必要更新`minFreq`变量**，因为`removeMinFreqKey`这个函数是在`put`方法中插入新`key`时可能调用。而回头看`put`的代码，插入新`key`时一定会把`minFreq`更新成 1，所以说即便这里`minFreq`变了，也不需要管它。
 
+<!-- @include: @article-footer.snippet.md -->     

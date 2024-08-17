@@ -682,5 +682,5 @@ public void serviceManagerTest() {
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 

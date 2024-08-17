@@ -622,3 +622,5 @@ private boolean yieldContinuation() {
 
 mount()和unmount()会在Java堆和本地线程栈之间做栈帧的拷贝，这是Project Loom中为数不多的在JVM层面实现的本地方法，感兴趣的可以去Loom的github库里搜一下continuationFreezeThaw.cpp。其余的大部分代码在JDK中实现， 参见java.base模块下的jdk.internal.vm包。
 
+
+<!-- @include: @article-footer.snippet.md -->     

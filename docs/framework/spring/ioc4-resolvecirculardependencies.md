@@ -117,3 +117,6 @@ addSingletonFactory(beanName, new ObjectFactory<Object>() {
   - 使用@DependsOn产生的循环依赖：这类循环依赖问题要找到@DependsOn注解循环依赖的地方，迫使它不循环依赖就可以解决问题。
 - 修改文件名称，改变循环依赖类的加载顺序
 - 多例循环依赖这类循环依赖问题可以通过把bean改成单例的解决。
+
+
+<!-- @include: @article-footer.snippet.md -->     

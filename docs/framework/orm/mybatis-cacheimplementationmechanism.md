@@ -403,3 +403,5 @@ MyBatis定义了大量的Cache的装饰器来增强Cache缓存的功能，如下
 
 **对于某些表执行了更新(update、delete、insert)操作后，去清空跟这些指定的表有关联的查询语句所造成的缓存**; 这样，就是以很细的粒度管理MyBatis内部的缓存，使得缓存的使用率和准确率都能大大地提升。
 
+
+<!-- @include: @article-footer.snippet.md -->     

@@ -500,3 +500,11 @@ GEORADIUS cars:locations 116.054579 39.030452 5 km ASC COUNT 10
 
 消息队列，解决了基于 List 类型实现的消息队列中存在的两个问题。
 可以自动生成全局唯一消息ID，并支持以消费组形式消费数据。
+
+
+
+
+
+
+<!-- @include: @article-footer.snippet.md -->     
+

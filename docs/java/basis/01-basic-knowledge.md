@@ -2008,7 +2008,7 @@ Instant类是为了方便计算机理解的而设计的，它表示一个持续�
  Duration是用于比较两个LocalTime对象或者两个Instant之间的时间差值。
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

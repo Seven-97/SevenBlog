@@ -679,6 +679,6 @@ public class Agent {
 
  
 
- 
+ <!-- @include: @article-footer.snippet.md -->     
 
  

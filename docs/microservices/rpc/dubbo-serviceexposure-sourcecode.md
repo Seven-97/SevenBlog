@@ -1791,3 +1791,5 @@ Dubbo其实也基本上按照这种思路来实现的，只是支持了多种协
 
 一般本地的连接信息存储在/Users/XXX/.dubbo中，如果出现了无法注册无法调用的情况，可以考虑删除该文件重启服务
 
+
+<!-- @include: @article-footer.snippet.md -->     

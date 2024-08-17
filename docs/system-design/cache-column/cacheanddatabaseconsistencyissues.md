@@ -280,3 +280,4 @@ Canal 模拟 MySQL 主从复制的交互协议，把自己伪装成一个 MySQL 
 
 
 
+<!-- @include: @article-footer.snippet.md -->     

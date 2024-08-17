@@ -73,11 +73,10 @@ tag:
 
 使用双向链表来维护元素的顺序，顺序为插入顺序或者最近最少使用(LRU)顺序。
 
-##  
 
  
 
- 
+ <!-- @include: @article-footer.snippet.md -->     
 
  
 

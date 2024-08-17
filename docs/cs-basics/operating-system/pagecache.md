@@ -243,3 +243,6 @@ Direct I/O 模式如下图所示：
 
 - Write 操作：由于其不使用 page cache，所以其进行写文件，如果返回成功，数据就真的落盘了（不考虑磁盘自带的缓存）；
 - Read 操作：由于其不使用 page cache，每次读操作是真的从磁盘中读取，不会从文件系统的缓存中读取。
+
+
+<!-- @include: @article-footer.snippet.md -->     

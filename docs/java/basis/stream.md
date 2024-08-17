@@ -483,3 +483,4 @@ final < P_IN > void copyInto(Sink < P_IN > wrappedSink, Spliterator < P_IN > spl
 
 一个简单Stream整体关联图如上所示，最后调用get()方法生成结果。
 
+<!-- @include: @article-footer.snippet.md -->     

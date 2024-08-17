@@ -457,3 +457,6 @@ public class Runtime {
 }
 ```
 可以看出Runtime类使用的是饿汉式（静态属性）方式来实现单例模式的。
+
+
+<!-- @include: @article-footer.snippet.md -->     

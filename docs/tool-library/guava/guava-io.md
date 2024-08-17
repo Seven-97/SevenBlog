@@ -360,6 +360,6 @@ ReadableByteChannel channel = Channels.newChannel(inputStream);
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 

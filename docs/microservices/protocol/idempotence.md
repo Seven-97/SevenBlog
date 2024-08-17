@@ -125,3 +125,6 @@ update user set account = account + 10,version = version + 1 where id = 1412 and
 - 对于下单等存在唯一主键的，可以使用“唯一主键方案”的方式实现。
 - 对于更新订单状态等相关的更新场景操作，使用“乐观锁方案”实现更为简单。
 - 类似于前端重复提交、重复下单、没有唯一ID号的场景，可以通过 Token 与 Redis 配合的“防重 Token 方案”实现更为快捷。
+
+
+<!-- @include: @article-footer.snippet.md -->     

@@ -168,5 +168,5 @@ public class Counter {
 
  
 
- 
+ <!-- @include: @article-footer.snippet.md -->     
 

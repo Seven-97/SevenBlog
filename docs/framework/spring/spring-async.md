@@ -112,6 +112,6 @@ Async注解默认线程池有下面两个方法实现：
 - Spring创建**SimpleAsyncTaskExecutor实例**来处理Async注解的异步任务，**SimpleAsyncTaskExecutor不是一个好的线程池实现类，SimpleAsyncTaskExecutor根据需要在当前线程或者新线程中执行异步任务。如果当前线程已经有空闲线程可用，任务将在当前线程中执行，否则将创建一个新线程来执行任务。由于这个线程池没有线程管理的能力，每次提交任务都实时创建新线程，所以如果任务量大，会导致性能下降**。
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 

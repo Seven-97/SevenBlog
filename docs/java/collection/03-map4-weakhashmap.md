@@ -333,7 +333,7 @@ void resize(int newCapacity) {
 
  
 
- 
+ <!-- @include: @article-footer.snippet.md -->     
 
  
 

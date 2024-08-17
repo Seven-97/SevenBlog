@@ -145,3 +145,6 @@ tag:
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270810415.png)
 
 当出现以上问题时（不只是Redis故障宕机时），一般都需要实行服务**限流、降级**等措施，保护DB，选择让一部分用户还是可用的，防止DB崩溃导数据库压力骤增，甚至宕机，从而形成一系列连锁反应，造成整个系统崩溃。
+
+
+<!-- @include: @article-footer.snippet.md -->     

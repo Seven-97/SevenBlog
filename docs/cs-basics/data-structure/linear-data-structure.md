@@ -506,3 +506,6 @@ class MyStack {
 
 - 时间复杂度: pop为O(n)，其他为O(1)
 - 空间复杂度: O(n)
+
+
+<!-- @include: @article-footer.snippet.md -->     

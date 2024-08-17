@@ -727,7 +727,7 @@ Spring 容器可以管理 singleton 作用域 Bean 的生命周期，在此作�
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

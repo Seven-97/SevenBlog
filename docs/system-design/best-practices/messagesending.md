@@ -155,5 +155,5 @@ try {
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 

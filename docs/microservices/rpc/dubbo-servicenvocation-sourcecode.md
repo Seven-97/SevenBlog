@@ -1220,3 +1220,4 @@ InvokerInvocationHandler⾥封装了RpcInvocation，RpcInvocation⾥封装的是
 
 源码中的invoker.invoke()中的invoker，如果是dubbo协议，那么就是DubboInvoker。
 
+<!-- @include: @article-footer.snippet.md -->     

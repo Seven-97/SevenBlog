@@ -777,5 +777,5 @@ public Object plugin(Object target) {
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 

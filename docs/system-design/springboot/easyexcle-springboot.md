@@ -499,3 +499,4 @@ public void exportExcel4(HttpServletResponse response) throws IOException, Inter
 
 以上问题可以通过 [分布式锁](https://www.seven97.top/database/redis/05-implementdistributedlocks.html)来实现
 
+<!-- @include: @article-footer.snippet.md -->     

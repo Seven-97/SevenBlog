@@ -144,3 +144,7 @@ update user set name = 'seven' where id = 1;
 	- 预处理阶段：检查表或字段是否存在；将 select * 中的 * 符号扩展为表上的所有列。
 	- 优化阶段：基于查询成本的考虑， 选择查询成本最小的执行计划（选择使用哪个索引）；
 	- 执行阶段：根据执行计划执行 SQL 查询语句，从存储引擎读取记录，返回给客户端；
+
+
+
+<!-- @include: @article-footer.snippet.md -->     

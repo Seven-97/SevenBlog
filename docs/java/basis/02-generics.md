@@ -251,7 +251,7 @@ public class GenericType<T> {
 
  
 
- 
+ <!-- @include: @article-footer.snippet.md -->     
 
  
 

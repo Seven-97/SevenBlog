@@ -155,3 +155,4 @@ BASE 理论起源于 2008 年， 由 eBay 的架构师 Dan Pritchett 在 ACM 上
 
  
 
+<!-- @include: @article-footer.snippet.md -->     

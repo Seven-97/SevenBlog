@@ -419,3 +419,4 @@ consumer.subscribe("ons_test", "*", new MessageListener() {
 });
 ```
 
+<!-- @include: @article-footer.snippet.md -->     

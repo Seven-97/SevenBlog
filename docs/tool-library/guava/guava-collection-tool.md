@@ -199,7 +199,7 @@ private static final class OrderedPermutationCollection<E> extends AbstractColle
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

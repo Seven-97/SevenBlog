@@ -1112,3 +1112,5 @@ public class OrderStatusListener {
 ```
 注意，这里要在OrderServiceImpl中实现cancelOrder方法
 
+
+<!-- @include: @article-footer.snippet.md -->     

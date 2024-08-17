@@ -513,7 +513,7 @@ protected void render(ModelAndView mv, HttpServletRequest request, HttpServletRe
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

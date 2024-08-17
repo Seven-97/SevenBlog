@@ -187,3 +187,7 @@ MySQL提供一个 sync_binlog 参数来控制数据库的 binlog 刷到磁盘上
 5. 至此，一条记录更新完了。
 6. 记录binlog：在一条更新语句执行完成后，然后开始记录该语句对应的 binlog，此时记录的 binlog 会被保存到 binlog cache，并没有刷新到硬盘上的 binlog 文件，在事务提交时才会统一将该事务运行过程中的所有 binlog 刷新到硬盘。
 7. 事务提交，redo log和binlog刷盘。
+
+
+
+<!-- @include: @article-footer.snippet.md -->     

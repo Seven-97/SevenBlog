@@ -439,3 +439,4 @@ Vector无论是add方法还是get方法都加上了**synchronized**修饰，当�
 
 
 
+<!-- @include: @article-footer.snippet.md -->     

@@ -244,3 +244,7 @@ select * from user where age >= 22  for update;
 不只是锁定读查询语句不加索引才会导致这种情况，**update 和 delete 语句**如果查询条件不加索引，那么由于扫描的方式是全表扫描，于是就会对每一条记录的索引上都会加 next-key 锁，这样就相当于锁住的全表。
 
 因此，在线上在执行 update、delete、select ... for update 等具有加锁性质的语句，一定要检查语句是否走了索引，如果是全表扫描的话，会对每一个索引加 next-key 锁，相当于把整个表锁住了，这是挺严重的问题。当然，带了索引可能也是走的全表扫描，但是不带索引肯定是全表扫描。
+
+
+
+<!-- @include: @article-footer.snippet.md -->     

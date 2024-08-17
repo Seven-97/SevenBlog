@@ -67,4 +67,4 @@ Dubbo一开始是用Java语言实现的，那现在就需要一个go语言实现
 在使用Java语言开发一个Dubbo服务时，会把服务接口和相关类，单独抽象成为一个Maven项目，实际上就相当于一个单独的jar包，这个jar能被Java项目所使用，但不能被go项目所使用，所以go项目中该如何使用Java语言所定义的接口呢？直接用是不太可能的，只能通过间接的方式来解决这个问题，除开Java语言之外，那有没有其他技术也能定义接口呢？并且该技术也是Java和go都支持，这就是protobuf
 
 
-
+<!-- @include: @article-footer.snippet.md -->     

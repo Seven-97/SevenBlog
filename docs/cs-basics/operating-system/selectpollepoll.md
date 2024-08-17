@@ -238,3 +238,6 @@ epoll 是解决 C10K 问题的利器，通过两个方面解决了 select/poll �
 - epoll 使用事件驱动的机制，内核里维护了一个「链表」来记录就绪事件，只将有事件发生的 Socket 集合传递给应用程序，不需要像 select/poll 那样轮询扫描整个集合（包含有和无事件的 Socket ），大大提高了检测的效率。
 
 而且，epoll 支持边缘触发和水平触发的方式，而 select/poll 只支持水平触发，一般而言，边缘触发的方式会比水平触发的效率高。
+
+
+<!-- @include: @article-footer.snippet.md -->     

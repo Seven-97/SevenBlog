@@ -456,3 +456,4 @@ BufferedOutputStream的flush和close方法的区别：
   - 用来关闭流释放资源
   - 如果是带缓冲区的流对象的close()方法，不但会关闭流，close()方法还调用了flush()方法，也就是说，在关闭流之前会执行最后一次flush()
 
+<!-- @include: @article-footer.snippet.md -->     

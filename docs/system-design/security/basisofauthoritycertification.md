@@ -253,3 +253,4 @@ XSS 中攻击者会用各种方式将恶意代码注入到其他用户的页面�
 
 推荐阅读：[如何防止 CSRF 攻击？—美团技术团队](https://tech.meituan.com/2018/10/11/fe-security-csrf.html)
 
+<!-- @include: @article-footer.snippet.md -->     

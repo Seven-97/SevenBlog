@@ -178,7 +178,7 @@ Dubbo Spring Cloud的出现，使得Dubbo既能够完全整合到Spring Cloud的
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

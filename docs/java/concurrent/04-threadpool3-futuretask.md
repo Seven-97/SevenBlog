@@ -404,4 +404,6 @@ public boolean cancel(boolean mayInterruptIfRunning) {
 
 - 如果当前状态不为NEW，则根据参数mayInterruptIfRunning决定是否在任务运行中也可以中断。中断操作完成后，调用finishCompletion移除并唤醒所有等待线程
 
+
+<!-- @include: @article-footer.snippet.md -->     
   

@@ -107,4 +107,6 @@ Spring MVC 相比于 Servlet 的优势：
 4. 更好的测试性：Spring MVC 代码更容易进行单元测试，开发人员可以通过模拟请求来测试控制器的行为。而在 Servlet 中，由于代码比较混乱，测试方法也会比较复杂。
 5. 更好的错误处理机制：Spring MVC 提供了更好的异常处理机制，可以集中处理应用程序中出现的各种异常，而Servlet则需要手动捕捉和处理异常。
 
+
+<!-- @include: @article-footer.snippet.md -->     
  

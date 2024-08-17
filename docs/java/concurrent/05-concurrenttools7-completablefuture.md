@@ -642,7 +642,7 @@ public PriceResult comparePriceInOnePlat2(List<String> products) {
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

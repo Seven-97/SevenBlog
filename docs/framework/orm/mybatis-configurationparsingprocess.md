@@ -1170,3 +1170,4 @@ private void settingsElement(XNode context) throws Exception {
 }
 ```
 
+<!-- @include: @article-footer.snippet.md -->     

@@ -390,3 +390,5 @@ HTTP 协议是基于 TCP/IP，并且使用了「请求 - 应答」的通信模�
 	- 当顺序发送的请求序列中的一个请求因为某种原因被阻塞时，在后面排队的所有请求也一同被阻塞了，会招致客户端一直请求不到数据，这也就是「队头阻塞」。
 	![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404271114665.png)
 
+
+<!-- @include: @article-footer.snippet.md -->     

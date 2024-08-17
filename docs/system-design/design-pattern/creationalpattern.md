@@ -1018,5 +1018,5 @@ public class Client {
 如果将抽象工厂模式看成汽车配件生产工厂，生产一个产品族的产品，那么建造者模式就是一个汽车组装工厂，通过对部件的组装可以返回一辆完整的汽车。
 
  
-
+<!-- @include: @article-footer.snippet.md -->     
  

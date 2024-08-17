@@ -813,3 +813,4 @@ System.out.println(Arrays.toString(arr));
 - 第二次是 3 和 3 相加，结果是 6，也就是第一次的结果和下标为 2 的元素相加的结果
 - 第三次是 6 和 4 相加，结果是 10，也就是第二次的结果和下标为 3 的元素相加的结果
 
+<!-- @include: @article-footer.snippet.md -->     

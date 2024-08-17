@@ -490,4 +490,4 @@ count(\*) 其实等于 count(0)，也就是说，当你使用 count(\*) 时，My
 但是，也有一些大厂对delete这种的权限控制都较严格，普通场景下一般不允许delete操作，因此也就只能进行逻辑删除。
 
 
-
+<!-- @include: @article-footer.snippet.md -->     

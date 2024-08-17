@@ -208,3 +208,4 @@ public static final List EMPTY_LIST = new EmptyList<>();
 
 Collections的不可变集合并不是真的不可变的，建议使用Guava的不可变集合[Immutable](https://www.seven97.top/tool-library/guava/guava-collections.html#immutable)
 
+<!-- @include: @article-footer.snippet.md -->     

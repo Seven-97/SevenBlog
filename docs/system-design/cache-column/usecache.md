@@ -132,3 +132,4 @@ public void userSignIn(long userId) {
 
 从图中可以表直观的看到，Client将业务数据缓存到各自本地，这样业务逻辑进行处理的时候就可以直接从本地缓存中查询到相关的业务节点映射信息，而Server端只需要负责在数据有变更的事后推送到Client端更新到本地缓存中即可，避免了Server端去承载业务请求的流量压力。整体的可靠性也得到了保证，避免了Server端异常对业务正常处理造成影响。
 
+<!-- @include: @article-footer.snippet.md -->     

@@ -168,5 +168,5 @@ public final class com.victory.test.object_size.Subject extends java.lang.Enum<c
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 

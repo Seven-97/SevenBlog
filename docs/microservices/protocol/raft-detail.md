@@ -168,7 +168,6 @@ electionTimeout也要比MTBF小几个数量级，为的是使得系统稳定运�
 一般来说，broadcastTime 一般为 0.5～20ms，electionTimeout 可以设置为 10～500ms，MTBF 一般为一两个月。
 
 
-
- 
+<!-- @include: @article-footer.snippet.md -->      
 
  

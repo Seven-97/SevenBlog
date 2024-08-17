@@ -1194,7 +1194,6 @@ public class AtomicStampedReference<V> {
 - 其次，不重复使用节点(Pair)的引用，每次都新建一个新的Pair来作为CAS比较的对象，而不是复用旧的；
 - 最后，外部传入元素值及版本号，而不是节点(Pair)的引用。
 
-###  
 
  
-
+<!-- @include: @article-footer.snippet.md -->     

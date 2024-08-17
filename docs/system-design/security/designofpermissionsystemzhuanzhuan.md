@@ -114,3 +114,5 @@ public class ZZLockInterceptor implements HandlerInterceptor {
 本篇文章着重介绍转转权限系统的后端实现，从使用方的视角出发，也就是前端渲染和接口鉴权，引出转转权限系统如何识别用户（统一登录），如何存储权限数据（权限管理），如何实现后端鉴权。
 
 简而言之，权限系统的主要功能：权限系统UI编辑权限数据，用户登录后，获取配置好的菜单和数据，并且校验用户访问的后端接口。
+
+<!-- @include: @article-footer.snippet.md -->     

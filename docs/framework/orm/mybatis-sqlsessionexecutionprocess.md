@@ -610,5 +610,5 @@ protected boolean applyAutomaticMappings(ResultSet rs, List<String> unmappedColu
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
