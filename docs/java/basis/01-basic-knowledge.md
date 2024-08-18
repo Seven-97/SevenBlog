@@ -914,40 +914,32 @@ private int newCapacity(int minCapacity) {
 #### 例1：
 
 ```java
-public class Main {
-    public static void main(String[] args) {
-        //"a" "b" 被放入串池中，str则存在于堆内存之中
-        String str = new String("a") + new String("b");
-        //调用str的intern方法，这时串池中没有"ab"，则会将该字符串对象放入到串池中，此时堆内存与串池中的"ab"是同一个对象
-        String st2 = str.intern();
-        //给str3赋值，因为此时串池中已有"ab"，则直接将串池中的内容返回
-        String str3 = "ab";
-        //因为堆内存与串池中的"ab"是同一个对象，所以以下两条语句打印的都为true
-        System.out.println(str == st2);
-        System.out.println(str == str3);
-    }
-}
+//"a" "b" 被放入串池中，str则存在于堆内存之中
+String str = new String("a") + new String("b");
+//调用str的intern方法，这时串池中没有"ab"，则会将该字符串对象放入到串池中，此时堆内存与串池中的"ab"是同一个对象
+String st2 = str.intern();
+//给str3赋值，因为此时串池中已有"ab"，则直接将串池中的内容返回
+String str3 = "ab";
+//因为堆内存与串池中的"ab"是同一个对象，所以以下两条语句打印的都为true
+System.out.println(str == st2);
+System.out.println(str == str3);
 ```
 
 #### 例2：
 
 ```java
-public class Main {
-    public static void main(String[] args) {
-        //此处创建字符串对象"ab"，因为串池中还没有"ab"，所以将其放入串池中
-        String str3 = "ab";
-        //"a" "b" 被放入串池中，str则存在于堆内存之中
-        String str = new String("a") + new String("b");
-        //此时因为在创建str3时，"ab"已存在于串池中，所以放入失败，但是会返回串池中的"ab"
-        String str2 = str.intern();
-        //false，str在堆内存，str2在串池
-        System.out.println(str == str2);
-        //false，str在堆内存，str3在串池
-        System.out.println(str == str3);
-        //true，str2和str3是串池中的同一个对象
-        System.out.println(str2 == str3);
-    }
-}
+//此处创建字符串对象"ab"，因为串池中还没有"ab"，所以将其放入串池中
+String str3 = "ab";
+//"a" "b" 被放入串池中，str则存在于堆内存之中
+String str = new String("a") + new String("b");
+//此时因为在创建str3时，"ab"已存在于串池中，所以放入失败，但是会返回串池中的"ab"
+String str2 = str.intern();
+//false，str在堆内存，str2在串池
+System.out.println(str == str2);
+//false，str在堆内存，str3在串池
+System.out.println(str == str3);
+//true，str2和str3是串池中的同一个对象
+System.out.println(str2 == str3);
 ```
 
 
@@ -999,6 +991,8 @@ public final class String {
 
 }
 ```
+
+可以正常使用，但在使用时有有用到java.lang下的String，那就需要区别报名使用，即其中一个使用全类名表示，一般生产中不会去自定义一个与JDK类库中同名的类，这里只作为拓展了解即可~
 
 
 
@@ -1080,7 +1074,7 @@ public final class String {
 否则 JavaFX 应用程序类必须扩展javafx.application.Application
 ```
 
-原因在于双亲委派模型，先从父类加载器寻找能不能加载此类，如果没有则再到子类；因此在加载String类时，会最终委派给Bootstrap ClassLoader去加载，加载的是rt.jar包中的那个java.lang.String，而rt.jar包中的String类是没有main方法的，因此报错误
+原因在于[双亲委派模型](https://www.seven97.top/java/jvm/01-jvmbasic2-classloadingmechanism.html#双亲委派模型)，先从父类加载器寻找能不能加载此类，如果没有则再到子类；因此在加载String类时，会最终委派给Bootstrap ClassLoader去加载，加载的是rt.jar包中的那个java.lang.String，而rt.jar包中的String类是没有main方法的，因此报错误
 
 ##### 同包下新建一个类写main方法
 
@@ -1117,7 +1111,7 @@ Exception in thread "main"
 
 限制包名，不能自定义这个包名，与java类库冲突，安全管理器不通过，这里不管用不用到String都会有这个报错
 
-原因：java.lang 是java 自带类库包，是属于rt.jar 包下的文件，而rt.jar 是通过启动类加载器(Bootstrap ClassLoader)加载的，由于双亲委派，因此java.lang 包肯定早于自定义的java.lang 包的加载，就会冲突.
+原因：java.lang 是java 自带类库包，是属于rt.jar 包下的文件，而rt.jar 是通过启动类加载器(Bootstrap ClassLoader)加载的，由于双亲委派，因此java.lang 包肯定早于自定义的java.lang 包的加载，就会冲突。
 
 ##### 调用方法不在java.lang包中
 
@@ -1183,7 +1177,7 @@ System.out.println(arr.getClass().getSuperclass().getName());//java.lang.Object
 
 
 
-### 问题
+### 为什么使用Arrays.sort时不能自定义比较器
 
 Arrays.sort()默认是升序排序，如果要降序排序，需要自定义比较器
 ```java
@@ -1193,16 +1187,14 @@ Arrays.sort(arr, (a, b) -> Integer.compare(b,a));//报错
 报错显示：需要的是int类型，但提供的是T类型的
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408031537390.png)
 
-但是按道理传入的这个数就是int类型的，不明所以？？？
-原因也是在于一维数组在Java中被视为对象，这是因为基本类型数组在Java中并没有实现Comparable接口，也不接受Comparator。
+这是因为[`Arrays.sort`方法](https://www.seven97.top/tool-library/jdk-tools/Arrays.html#对基本数据类型数组的排序)有多个重载版本，其中针对基本类型数组（如`int[]`）的版本不接受自定义比较器。你尝试传入一个自定义比较器给`int[]`数组的`Arrays.sort`方法，因此会导致编译错误。
 
-但为什么二维数组可以自定义比较器？
-```java
-int[][] arr2 = new int[][]{{1, 2}, {1, 2}};
-Arrays.sort(arr2, (a, b) -> Integer.compare(b[0],a[0]));
-```
+具体来说，`Arrays.sort`有以下几种主要的重载方法：
 
-因为二维数组实际上是一个数组的数组，每一行都是一个一维数组。因此，可以使用自定义比较器来比较这些一维数组，并根据需要对它们进行排序。
+1. `Arrays.sort(int[] arr)`：用于排序`int`数组，按自然顺序排序，不接受比较器。
+2. `Arrays.sort(T[] arr, Comparator<? super T> c)`：用于排序泛型对象数组，按自定义比较器排序。
+
+因此如果试图将一个自定义比较器传入`int`数组的`Arrays.sort`方法，这是不被允许的，因为基本类型数组的排序方法不接受比较器。
 
 
 
@@ -1215,8 +1207,6 @@ arr = Arrays.stream(arr)
                 .mapToInt(Integer::intValue)
                 .toArray();
 ```
-
-
 
 
 
@@ -1259,17 +1249,12 @@ protected void finalize() throws Throwable {}
 2. 如果比较的是引用数据类型，则比较的是所指向对象的地址值是否相等（是否是同一个对象）。
 
 ```java
- public static void main(String[] args) {
-    Person p1 = new Person("123");
-    Person p2 = new Person("123");
-    int a = 10;
-    int b = 10;
-    System.out.println(a == b);
-    System.out.println(p1 == p2);//显然不是同一个对象
-}
-//输出
-true
-false
+Person p1 = new Person("123");
+Person p2 = new Person("123");
+int a = 10;
+int b = 10;
+System.out.println(a == b);//true
+System.out.println(p1 == p2); //显然不是同一个对象,false
 ```
 
 
@@ -1298,7 +1283,7 @@ equals 方法不能用于比较基本数据类型，如果没有对 equals 方�
 
 #### 只重写了equals方法，未重写hashCode方法
 
-在Java中equals方法用于判断两个对象是否相等，而HashCode方法在java中主要由于哈希算法中的寻域的功能（也就是寻找数据应该存储的区域的）。在类似于set和map集合的结构中，java为了提高在集合中查询匹配元素的效率问题，引入了哈希算法，通过某种算法及我们的HashCode方法得到对象的hash码，再通过hash码推算出数据应该存储的位置。然后再进行equals操作进行匹配，减少了比较次数，提高了效率。
+在Java中equals方法用于判断两个对象是否相等，而HashCode方法在Java中主要由于哈希算法中的寻域的功能（也就是寻找数据应该存储的区域的）。在类似于set和map集合的结构中，Java为了提高在集合中查询匹配元素的效率问题，引入了哈希算法，通过HashCode方法得到对象的hash码，再通过hash码推算出数据应该存储的位置。然后再进行equals操作进行匹配，减少了比较次数，提高了效率。
 
 ```java
 public class Person {
@@ -1320,14 +1305,14 @@ public class Person {
         Person p1 = new Person("123");
         Person p2 = new Person("123");
 
-        System.out.println(p1 == p2);//1、false
-        System.out.println(p1.hashCode() == p2.hashCode());//2、false
-        System.out.println(p1.equals(p2));//3、true
+        System.out.println(p1 == p2);//false
+        System.out.println(p1.hashCode() == p2.hashCode());//false
+        System.out.println(p1.equals(p2));//true
 
         Set<Person> set = new HashSet<>();
         set.add(p1);
         set.add(p2);
-        System.out.println(set.size());//4、2
+        System.out.println(set.size());//2
     }
 }
 ```
@@ -1373,7 +1358,9 @@ hashCode方法实际上是通过一种算法得到一个对象的hash码，这�
 
    * 因此重写equals方法时一定也要重写hashCode方法，重写hashCode方法时也应该重写equals方法。
 
-总结：**对于普通判断对象是否相等来说，只equals是可以完成需求的，但是如果使用set，map这种需要用到hash值的集合时，不重写hashCode方法，是无法满足需求的。**
+总结：**对于普通判断对象是否相等来说，只equals是可以完成需求的，但是如果使用set，map这种需要用到hash值的集合时，不重写hashCode方法，是无法满足需求的。**尽管如此，也一般建议两者都要重写，几乎没有见过只重写一个的情况
+
+
 
 #### 扩展：解决哈希冲突的三种方法
 
@@ -1451,7 +1438,7 @@ private void set(ThreadLocal<?> key, Object value) {
 
 ###### 平方探测
 
-在探测时不一个挨着一个地向后探测，我们可以跳跃着探测，这样就避免了一次聚集。
+在探测时不一个挨着一个地向后探测，可以跳跃着探测，这样就避免了一次聚集。
 
 di=12，-12，22，-22，…，k2，-k2；这种方法的特点是：冲突发生时，在表的左右进行跳跃式探测，比较灵活。虽然平方探测法解决了线性探测法的一次聚集，但是它也有一个小问题，就是关键字key散列到同一位置后探测时的路径是一样的。这样对于许多落在同一位置的关键字而言，越是后面插入的元素，探测的时间就越长。
 
@@ -1483,13 +1470,9 @@ clone方法是Java中拷贝对象的方法
 Animal a1 = new Animal();
 a1.category = "人类";
 Animal a2 = a1;
-System.out.println(a1==a2);
+System.out.println(a1==a2);//true
 a2.category = "猫科动物";
-System.out.println(a1.category);
-
-//输出：
-true
-猫科动物
+System.out.println(a1.category);//猫科动物
 ```
 
 显然，a1==a2返回为true，a1和a2指向的是同一个引用
@@ -1554,13 +1537,9 @@ public class Animal implements Cloneable {
         a2.category = "新人类";
         a2.person.name = "新对象";
 
-        System.out.println(a1.category + ":" + a1.person.name);
-
+        System.out.println(a1.category + ":" + a1.person.name);//人类：新对象
     }
 }
-//输出：
-人类：新对象
-
 ```
 
 如上，改变 a2中的引用类型 person.name = "新对象"后，a1的的引用类型 person.name 也发生了改变。
@@ -1597,12 +1576,9 @@ public class Animal implements Cloneable {
         Animal a2 = (Animal) a1.clone();
         a2.person.name = "新对象";
 
-        System.out.println(a1.person.name);
-
+        System.out.println(a1.person.name);//旧对象
     }
 }
-//输出：
-旧对象
 ```
 
 可以看到，新对象的引用类型 person 不会再受到旧对象的影响。
@@ -1948,43 +1924,24 @@ if (obj instanceof String) {
 
 ```java
 LocalDate now = LocalDate.now();
-System.out.println(now.getYear());
-System.out.println(now.getMonthValue());
-System.out.println(now.getDayOfMonth());
+System.out.println(now.getYear());//2024
+System.out.println(now.getMonthValue());//7
+System.out.println(now.getDayOfMonth());//12
 System.out.println("------------");
 
 LocalTime nowTime = LocalTime.now();
-System.out.println(nowTime.getHour());
-System.out.println(nowTime.getMinute());
-System.out.println(nowTime.getSecond());
+System.out.println(nowTime.getHour());//18
+System.out.println(nowTime.getMinute());//0
+System.out.println(nowTime.getSecond());//48
 System.out.println("------------");
         
 LocalDateTime localDateTime = LocalDateTime.now();
-System.out.println(localDateTime.getYear());
-System.out.println(localDateTime.getMonthValue());
-System.out.println(localDateTime.getDayOfMonth());
-System.out.println(localDateTime.getHour());
-System.out.println(localDateTime.getMinute());
-System.out.println(localDateTime.getSecond());
-```
-
-输出：
-
-```java
-2024
-7
-12
-------------
-18
-0
-48
-------------
-2024
-7
-12
-18
-0
-48
+System.out.println(localDateTime.getYear());//2024
+System.out.println(localDateTime.getMonthValue());//7
+System.out.println(localDateTime.getDayOfMonth());//12
+System.out.println(localDateTime.getHour());//18
+System.out.println(localDateTime.getMinute());//0
+System.out.println(localDateTime.getSecond());//48
 ```
 
 
@@ -2009,7 +1966,6 @@ Instant类是为了方便计算机理解的而设计的，它表示一个持续�
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 
 
 
