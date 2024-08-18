@@ -15,15 +15,11 @@ tag:
 Integer a = 100;
 
 Integer b = 100;
-System.out.println(a == b);
+System.out.println(a == b);//true
 
 Integer c = 200;
 Integer d = 200;
-System.out.println(c == d);
-
-//输出
-true
-false
+System.out.println(c == d);//false
 ```
 
 为什么第一个输出的是true，第二个输出的是false？
@@ -117,6 +113,8 @@ Boolean flag = false;
 // a*b 的结果是 int 类型，那么 c 会强制拆箱成 int 类型，抛出 NPE 异常
 Integer result = (flag ? a * b : c);
 ```
+
+缓存机制存在的原因：将频繁被使用的对象缓存起来，可以提升读取的效率，这是一个典型的用空间换时间的例子（其实缓存机制都是这个原理），而Java开发者认为[-128，127]是比较常使用的范围。
 
 
 
