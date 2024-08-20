@@ -605,6 +605,97 @@ JdkProxyServiceImpl.doMethod2()
 
 
 
+## 应用场景
+
+我们知道AO能够将那些与业务无关，却为业务模块所共同调用的逻辑或责任（例如事务处理、日志管理、权限控制等）封装起来，便于**减少系统的重复代码**，**降低模块间的耦合度**，**提高系统可拓展性和可维护性**。
+
+1. 基于 AOP 实现统一的日志管理。
+2. 基于 Redisson + AOP 实现了接口防刷，一个注解即可限制接口指定时间内单个用户可以请求的次数。
+3. 基于 Spring Security 提供的 `@PreAuthorize` 实现权限控制，其底层也是基于 AOP。
+
+
+
+### 日志记录
+
+利用 AOP 方式记录日志，只需要在 `Controller` 的方法上使用自定义 `@Log` 日志注解，就可以将用户操作记录到数据库。
+
+```java
+@Log(description = "新增用户")
+@PostMapping(value = "/users")
+public ResponseEntity create(@Validated @RequestBody User resources){
+    checkLevel(resources);
+    return new ResponseEntity(userService.create(resources),HttpStatus.CREATED);
+}
+```
+
+AOP 切面类 `LogAspect`用来拦截带有 `@Log` 注解的方法并处理：
+
+```java
+@Aspect
+@Component
+public class LogAspect {
+
+    private static final Logger logger = LoggerFactory.getLogger(LogAspect.class);
+
+    // 定义切点，拦截带有 @Log 注解的方法
+    @Pointcut("@annotation(com.example.annotation.Log)") // 这里需要根据你的实际包名修改
+    public void logPointcut() {
+    }
+
+    // 环绕通知，用于记录日志
+    @Around("logPointcut()")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+      //...
+    }
+}
+```
+
+
+
+### **限流**
+
+利用 AOP 方式对接口进行限流，只需要在 `Controller` 的方法上使用自定义的 `@RateLimit` 限流注解即可。
+
+```java
+/**
+ * 该接口 60 秒内最多只能访问 10 次，保存到 redis 的键名为 limit_test，
+ */
+@RateLimit(key = "test", period = 60, count = 10, name = "testLimit", prefix = "limit")
+public int test() {
+     return ATOMIC_INTEGER.incrementAndGet();
+}
+```
+
+AOP 切面类 `RateLimitAspect`用来拦截带有 `@RateLimit` 注解的方法并处理：
+
+```java
+@Slf4j
+@Aspect
+public class RateLimitAspect {
+      // 拦截所有带有 @RateLimit 注解的方法
+      @Around("@annotation(rateLimit)")
+    public Object around(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
+      //...
+    }
+}
+```
+
+关于限流实现这里多说一句，这里并没有自己写 Redis Lua 限流脚本，而是利用 Redisson 中的 `RRateLimiter` 来实现分布式限流，其底层实现就是基于 Lua 代码+令牌桶算法。
+
+### **权限控制**
+
+Spring Security 使用 AOP 进行方法拦截。在实际调用 update 方法之前，Spring 会检查当前用户的权限，只有用户权限满足对应的条件才能执行。
+
+```java
+@Log(description = "修改菜单")
+@PutMapping(value = "/menus")
+// 用户拥有 `admin`、`menu:edit` 权限中的任意一个就能能访问`update`方法
+@PreAuthorize("hasAnyRole('admin','menu:edit')")
+public ResponseEntity update(@Validated @RequestBody Menu resources){
+    //...
+}
+```
+
 
 
 
