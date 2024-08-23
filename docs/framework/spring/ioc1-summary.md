@@ -588,8 +588,8 @@ ApplicationContext整体结构：
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404281030642.png)
 
-- HierarchicalBeanFactory 和 ListableBeanFactory： ApplicationContext 继承了 HierarchicalBeanFactory 和 ListableBeanFactory 接口，在此基础上，还通过多个其他的接口扩展了
-- BeanFactory的功能：ApplicationEventPublisher：让容器拥有发布应用上下文事件的功能，包括容器启动事件、关闭事件等。实现了 ApplicationListener 事件监听接口的 Bean 可以接收到容器事件 ， 并对事件进行响应处理 。 在 ApplicationContext 抽象实现类AbstractApplicationContext 中，我们可以发现存在一个 ApplicationEventMulticaster，它负责保存所有监听器，以便在容器产生上下文事件时通知这些事件监听者。
+- HierarchicalBeanFactory 和 ListableBeanFactory： ApplicationContext 继承了 HierarchicalBeanFactory 和 ListableBeanFactory 接口，在此基础上，还通过多个其他的接口扩展了BeanFactory的功能
+- ApplicationEventPublisher：让容器拥有发布应用上下文事件的功能，包括容器启动事件、关闭事件等。实现了 ApplicationListener 事件监听接口的 Bean 可以接收到容器事件 ， 并对事件进行响应处理 。 在 ApplicationContext 抽象实现类AbstractApplicationContext 中，我们可以发现存在一个 ApplicationEventMulticaster，它负责保存所有监听器，以便在容器产生上下文事件时通知这些事件监听者。
 - MessageSource：为应用提供 i18n 国际化消息访问的功能；
 - ResourcePatternResolver ： 所 有 ApplicationContext 实现类都实现了类似于PathMatchingResourcePatternResolver 的功能，可以通过带前缀的 Ant 风格的资源文件路径装载 Spring 的配置文件。
 - LifeCycle：该接口是 Spring 2.0 加入的，该接口提供了 start()和 stop()两个方法，主要用于控制异步处理过程。在具体使用时，该接口同时被 ApplicationContext 实现及具体 Bean 实现， ApplicationContext 会将 start/stop 的信息传递给容器中所有实现了该接口的 Bean，以达到管理和控制 JMX、任务调度等目的
@@ -624,111 +624,10 @@ ApplicationContext接口的实现，关键的点在于，不同Bean的配置方�
 
  
 
-## 生命周期的整体流程
-
-Spring 容器可以管理 singleton 作用域 Bean 的生命周期，在此作用域下，Spring 能够精确地知道该 Bean 何时被创建，何时初始化完成，以及何时被销毁。
-
-而对于 prototype 作用域的 Bean，Spring 只负责创建，当容器创建了 Bean 的实例后，Bean 的实例就交给客户端代码管理，Spring 容器**将不再跟踪其生命周期**。每次客户端请求 prototype 作用域的 Bean 时，Spring 容器都会创建一个新的实例，并且不会管那些被配置成 prototype 作用域的 Bean 的生命周期。
-
-了解 Spring 生命周期的意义就在于，**可以利用 Bean 在其存活期间的指定时刻完成一些相关操作**。这种时刻可能有很多，但一般情况下，会在 Bean 被初始化后和被销毁前执行一些相关操作。
-
- 
-
-
-
-在执行初始化方法之前和之后，还需要对Bean的后置处理器BeanPostProcessors进行处理
-
-1. 在invokeInitMethods 的前后进行applyBeanPostProcessorsBeforeInitialization，applyBeanPostProcessorsAfterInitialization
-
-2. 在后置处理中处理了包括：AOP【AnnotationAwareAspectJAutoProxyCreator】，负责 构造后@PostConstruct 和 销毁前@PreDestroy 的 InitDestoryAnnotationBeanPostProcessor 等
-
-3. 以及通过实现BeanPostProcessor接口的自定义处理器
-
-
-
-整体流程如下：
-
-1. 加载Bean定义：通过 loadBeanDefinitions 扫描所有xml配置、注解将Bean记录在beanDefinitionMap中。即IOC容器的初始化过程
-
-2. Bean实例化：遍历 beanDefinitionMap 创建bean，最终会使用getBean中的doGetBean方法调用 createBean来创建Bean对象
-
-   1. 构建对象：容器通过 createBeanInstance 进行对象构造
-
-      1. 获取构造方法（大部分情况下只有一个构造方法）
-
-         1. 如果只有一个构造方法，无论这个构造方法有没有入参，都用这个构造方法
-
-         2. 有多个构造方法时
-
-            1.  先拿带有@Autowired的构造方法，但是如果多个构造方法都有@Autowired就会报错
-
-            2. 如果没有带有@Autowired的构造方法，那就找没有入参的；如果多个构造方法都是有入参的，那也会报错
-
-      2. 准备参数 
-
-         1. 先根据类进行查找
-
-         2. 如果这个类有多个实例，则再根据参数名匹配
-
-         3. 如果没有找到则报错
-
-      3. 构造对象：无参构造方法则直接实例化
-
-   2. 填充属性：通过populateBean方法为Bean内部所需的属性进行赋值，通常是 @Autowired 注解的变量；通过三级缓存机制进行填充，也就是依赖注入
-
-   3. 初始化Bean对象：通过initializeBean对填充后的实例进行初始化
-
-      1. 执行Aware：检查是否有实现着三个Aware，BeanNameAware，BeanClassLoaderAware, BeanFactoryAware；让实例化后的对象能够感知自己在Spring容器里的存在的位置信息，创建信息
-
-      2. 初始化前：BeanPostProcessor，也就是拿出所有的后置处理器对bean进行处理，当有一个处理器返回null，将不再调用后面的处理器处理。
-
-      3. 初始化：afterPropertiesSet，init- method；
-
-         1. 实现了InitializingBean接口的类执行其afterPropertiesSet()方法
-
-         2. 从BeanDefinition中获取initMethod方法
-
-      4. 初始化后：BeanPostProcessor,；获取所有的bean的后置处理器去执行。AOP也是在这里做的
-
-   4. 注册销毁：通过reigsterDisposableBean处理实现了DisposableBean接口的Bean的注册
-
-      1. Bean是否有注册为DisposableBean的资格：
-
-         1. 是否有destroyMethod。
-
-         2. 是否有执行销毁方法的后置处理器。
-
-      2. DisposableBeanAdapter： 推断destoryMethod
-
-      3. 完成注册
-
-3. 添加到单例池：通过 addSingleton 方法，将Bean 加入到单例池 singleObjects
-
-4. 销毁
-
-   1. 销毁前：如果有@PreDestory 注解的方法就执行
-
-   2. 如果有自定义的销毁后置处理器，通过 postProcessBeforeDestruction 方法调用destoryBean逐一销毁Bean
-
-   3. 销毁时：如果实现了destroyMethod就执行 destory方法
-
-   4. 执行客户自定义销毁：调用 invokeCustomDestoryMethod执行在Bean上自定义的destroyMethod方法
-
-      1. 有这个自定义销毁就会执行
-
-      2. 没有自定义destroyMethod方法就会去执行close方法
-
-      3. 没有close方法就会去执行shutdown方法
-
-      4. 都没有的话就都不执行，不影响
-
-
-
 
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 
 
 

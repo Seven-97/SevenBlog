@@ -9,7 +9,7 @@ tag:
 
 ## IOC容器的初始化整体过程
 
-那么Spring是如何实现将资源配置（以xml配置为例）通过加载，解析，生成BeanDefination并注册到IoC容器中？
+那么Spring是如何实现将资源配置（以xml配置为例）通过加载，解析，生成BeanDefination并注册到IoC容器中？主要会经过以下 4 步：
 
 1. 从XML中读取配置文件。
 2. 将bean标签解析成 BeanDefinition，如解析 property 元素， 并注入到 BeanDefinition 实例中。
@@ -118,7 +118,7 @@ protected String resolvePath(String path) {
 
 ## 启动的主体流程
 
-Spring IoC容器对Bean定义资源的载入是从refresh()函数开始的，refresh()是一个模板方法，refresh()方法的作用是：在创建IoC容器前，如果已经有容器存在，则需要把已有的容器销毁和关闭，以保证在refresh之后使用的是新建立起来的IoC容器。refresh的作用类似于对IoC容器的重启，在新建立好的容器中对容器进行初始化，对Bean定义资源进行载入。
+Spring IoC容器对Bean定义资源的载入是从refresh()函数开始的，refresh()是一个[模板方法](https://www.seven97.top/system-design/design-pattern/behavioralpattern.html)，refresh()方法的作用是：在创建IoC容器前，如果已经有容器存在，则需要把已有的容器销毁和关闭，以保证在refresh之后使用的是新建立起来的IoC容器。refresh的作用类似于对IoC容器的重启，在新建立好的容器中对容器进行初始化，对Bean定义资源进行载入。
 
 ```java
 @Override
@@ -873,5 +873,4 @@ protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory b
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 

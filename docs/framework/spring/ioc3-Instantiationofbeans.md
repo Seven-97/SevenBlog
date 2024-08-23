@@ -7,6 +7,106 @@ tag:
 
 
 
+## 生命周期的整体流程
+
+Spring 容器可以管理 singleton 作用域 Bean 的生命周期，在此作用域下，Spring 能够精确地知道该 Bean 何时被创建，何时初始化完成，以及何时被销毁。
+
+而对于 prototype 作用域的 Bean，Spring 只负责创建，当容器创建了 Bean 的实例后，Bean 的实例就交给客户端代码管理，Spring 容器**将不再跟踪其生命周期**。每次客户端请求 prototype 作用域的 Bean 时，Spring 容器都会创建一个新的实例，并且不会管那些被配置成 prototype 作用域的 Bean 的生命周期。
+
+了解 Spring 生命周期的意义就在于，**可以利用 Bean 在其存活期间的指定时刻完成一些相关操作**。这种时刻可能有很多，但一般情况下，会在 Bean 被初始化后和被销毁前执行一些相关操作。
+
+ 
+
+
+
+在执行初始化方法之前和之后，还需要对Bean的后置处理器BeanPostProcessors进行处理
+
+1. 在invokeInitMethods 的前后进行applyBeanPostProcessorsBeforeInitialization，applyBeanPostProcessorsAfterInitialization
+
+2. 在后置处理中处理了包括：AOP【AnnotationAwareAspectJAutoProxyCreator】，负责 构造后@PostConstruct 和 销毁前@PreDestroy 的 InitDestoryAnnotationBeanPostProcessor 等
+
+3. 以及通过实现BeanPostProcessor接口的自定义处理器
+
+
+
+整体流程如下：
+
+1. 加载Bean定义：通过 loadBeanDefinitions 扫描所有xml配置、注解将Bean记录在beanDefinitionMap中。即[IOC容器的初始化过程](https://www.seven97.top/framework/spring/ioc2-initializationprocess.html)
+
+2. Bean实例化：遍历 beanDefinitionMap 创建bean，最终会使用getBean中的doGetBean方法调用 createBean来创建Bean对象
+
+   1. 构建对象：容器通过 createBeanInstance 进行对象构造
+
+      1. 获取构造方法（大部分情况下只有一个构造方法）
+
+         1. 如果只有一个构造方法，无论这个构造方法有没有入参，都用这个构造方法
+
+         2. 有多个构造方法时
+
+            1.  先拿带有@Autowired的构造方法，但是如果多个构造方法都有@Autowired就会报错
+
+            2.  如果没有带有@Autowired的构造方法，那就找没有入参的；如果多个构造方法都是有入参的，那也会报错
+
+      2. 准备参数 
+
+         1. 先根据类进行查找
+
+         2. 如果这个类有多个实例，则再根据参数名匹配
+
+         3. 如果没有找到则报错
+
+      3. 构造对象：无参构造方法则直接实例化
+
+   2. 填充属性：通过populateBean方法为Bean内部所需的属性进行赋值，通常是 @Autowired 注解的变量；通过三级缓存机制进行填充，也就是依赖注入
+
+   3. 初始化Bean对象：通过initializeBean对填充后的实例进行初始化
+
+      1. 执行Aware：检查是否有实现着三个Aware，BeanNameAware，BeanClassLoaderAware, BeanFactoryAware；让实例化后的对象能够感知自己在Spring容器里的存在的位置信息，创建信息
+
+      2. 初始化前：BeanPostProcessor，也就是拿出所有的后置处理器对bean进行处理，当有一个处理器返回null，将不再调用后面的处理器处理。
+
+      3. 初始化：afterPropertiesSet，init- method；
+
+         1. 实现了InitializingBean接口的类执行其afterPropertiesSet()方法
+
+         2. 从BeanDefinition中获取initMethod方法
+
+      4. 初始化后：BeanPostProcessor,；获取所有的bean的后置处理器去执行。AOP也是在这里做的
+
+   4. 注册销毁：通过reigsterDisposableBean处理实现了DisposableBean接口的Bean的注册
+
+      1. Bean是否有注册为DisposableBean的资格：
+
+         1. 是否有destroyMethod。
+
+         2. 是否有执行销毁方法的后置处理器。
+
+      2. DisposableBeanAdapter： 推断destoryMethod
+
+      3. 完成注册
+
+3. 添加到单例池：通过 addSingleton 方法，将Bean 加入到单例池 singleObjects
+
+4. 销毁
+
+   1. 销毁前：如果有@PreDestory 注解的方法就执行
+
+   2. 如果有自定义的销毁后置处理器，通过 postProcessBeforeDestruction 方法调用destoryBean逐一销毁Bean
+
+   3. 销毁时：如果实现了destroyMethod就执行 destory方法
+
+   4. 执行客户自定义销毁：调用 invokeCustomDestoryMethod执行在Bean上自定义的destroyMethod方法
+
+      1. 有这个自定义销毁就会执行
+
+      2. 没有自定义destroyMethod方法就会去执行close方法
+
+      3. 没有close方法就会去执行shutdown方法
+
+      4. 都没有的话就都不执行，不影响
+
+
+
 
 
 ## Bean的实例化
