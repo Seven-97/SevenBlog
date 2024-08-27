@@ -42,14 +42,14 @@ Java反射机制是指在**运行时动态地获取一个类的信息并能够�
 
 ```java
 public void test2() {
-        long start = System.currentTimeMillis();
-        for (int i = 0; i < 10000000; i++) {
-            getAuthor();//运行时间15
-//            getAuthorByReflect();//运行时间4378
-        }
-        long end = System.currentTimeMillis();
-        System.out.println("运行时间：" + (end - start));
-    } 
+    long start = System.currentTimeMillis();
+    for (int i = 0; i < 10000000; i++) {
+        getAuthor(); //运行时间15
+//       getAuthorByReflect();//运行时间4378
+    }
+    long end = System.currentTimeMillis();
+    System.out.println("运行时间：" + (end - start));
+}
 ```
 
  
@@ -131,13 +131,12 @@ public class HelloReflect {
 
 ```java
 @CallerSensitive
-    public static Class<?> forName(String className)
-                throws ClassNotFoundException {
-        // 先通过反射，获取调用进来的类信息，从而获取当前的 classLoader
-        Class<?> caller = Reflection.getCallerClass();
-        // 调用native方法进行获取class信息
-        return forName0(className, true, ClassLoader.getClassLoader(caller), caller);
-    }
+public static Class <? > forName(String className) throws ClassNotFoundException {
+    // 先通过反射，获取调用进来的类信息，从而获取当前的 classLoader
+    Class <? > caller = Reflection.getCallerClass();
+    // 调用native方法进行获取class信息
+    return forName0(className, true, ClassLoader.getClassLoader(caller), caller);
+}
 ```
 
 forName()反射获取类信息，并没有将实现留给了java,而是交给了jvm去加载。
@@ -147,97 +146,96 @@ forName()反射获取类信息，并没有将实现留给了java,而是交给了
 最后，jvm又会回调 ClassLoader 进类加载。
 
 ```java
- // 
-    public Class<?> loadClass(String name) throws ClassNotFoundException {
-        return loadClass(name, false);
-    }
-    
-        // sun.misc.Launcher
-        public Class<?> loadClass(String var1, boolean var2) throws ClassNotFoundException {
-            int var3 = var1.lastIndexOf(46);
-            if(var3 != -1) {
-                SecurityManager var4 = System.getSecurityManager();
-                if(var4 != null) {
-                    var4.checkPackageAccess(var1.substring(0, var3));
-                }
-            }
+public Class <? > loadClass(String name) throws ClassNotFoundException {
+     return loadClass(name, false);
+ }
 
-            if(this.ucp.knownToNotExist(var1)) {
-                Class var5 = this.findLoadedClass(var1);
-                if(var5 != null) {
-                    if(var2) {
-                        this.resolveClass(var5);
-                    }
+ // sun.misc.Launcher
+ public Class <? > loadClass(String var1, boolean var2) throws ClassNotFoundException {
+         int var3 = var1.lastIndexOf(46);
+         if (var3 != -1) {
+             SecurityManager var4 = System.getSecurityManager();
+             if (var4 != null) {
+                 var4.checkPackageAccess(var1.substring(0, var3));
+             }
+         }
 
-                    return var5;
-                } else {
-                    throw new ClassNotFoundException(var1);
-                }
-            } else {
-                return super.loadClass(var1, var2);
-            }
-        }
-    // java.lang.ClassLoader
-    protected Class<?> loadClass(String name, boolean resolve)
-        throws ClassNotFoundException
-    {
-        // 先获取锁
-        synchronized (getClassLoadingLock(name)) {
-            // First, check if the class has already been loaded
-            // 如果已经加载了的话，就不用再加载了
-            Class<?> c = findLoadedClass(name);
-            if (c == null) {
-                long t0 = System.nanoTime();
-                try {
-                    // 双亲委托加载
-                    if (parent != null) {
-                        c = parent.loadClass(name, false);
-                    } else {
-                        c = findBootstrapClassOrNull(name);
-                    }
-                } catch (ClassNotFoundException e) {
-                    // ClassNotFoundException thrown if class not found
-                    // from the non-null parent class loader
-                }
+         if (this.ucp.knownToNotExist(var1)) {
+             Class var5 = this.findLoadedClass(var1);
+             if (var5 != null) {
+                 if (var2) {
+                     this.resolveClass(var5);
+                 }
 
-                // 父类没有加载到时，再自己加载
-                if (c == null) {
-                    // If still not found, then invoke findClass in order
-                    // to find the class.
-                    long t1 = System.nanoTime();
-                    c = findClass(name);
+                 return var5;
+             } else {
+                 throw new ClassNotFoundException(var1);
+             }
+         } else {
+             return super.loadClass(var1, var2);
+         }
+     }
 
-                    // this is the defining class loader; record the stats
-                    sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
-                    sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
-                    sun.misc.PerfCounter.getFindClasses().increment();
-                }
-            }
-            if (resolve) {
-                resolveClass(c);
-            }
-            return c;
-        }
-    }
-    
-    protected Object getClassLoadingLock(String className) {
-        Object lock = this;
-        if (parallelLockMap != null) {
-            // 使用 ConcurrentHashMap来保存锁
-            Object newLock = new Object();
-            lock = parallelLockMap.putIfAbsent(className, newLock);
-            if (lock == null) {
-                lock = newLock;
-            }
-        }
-        return lock;
-    }
-    
-    protected final Class<?> findLoadedClass(String name) {
-        if (!checkName(name))
-            return null;
-        return findLoadedClass0(name);
-    }
+// java.lang.ClassLoader
+ protected Class <? > loadClass(String name, boolean resolve)
+ throws ClassNotFoundException {
+     // 先获取锁
+     synchronized(getClassLoadingLock(name)) {
+         // First, check if the class has already been loaded
+         // 如果已经加载了的话，就不用再加载了
+         Class <? > c = findLoadedClass(name);
+         if (c == null) {
+             long t0 = System.nanoTime();
+             try {
+                 // 双亲委托加载
+                 if (parent != null) {
+                     c = parent.loadClass(name, false);
+                 } else {
+                     c = findBootstrapClassOrNull(name);
+                 }
+             } catch (ClassNotFoundException e) {
+                 // ClassNotFoundException thrown if class not found
+                 // from the non-null parent class loader
+             }
+
+             // 父类没有加载到时，再自己加载
+             if (c == null) {
+                 // If still not found, then invoke findClass in order
+                 // to find the class.
+                 long t1 = System.nanoTime();
+                 c = findClass(name);
+
+                 // this is the defining class loader; record the stats
+                 sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
+                 sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
+                 sun.misc.PerfCounter.getFindClasses().increment();
+             }
+         }
+         if (resolve) {
+             resolveClass(c);
+         }
+         return c;
+     }
+ }
+
+ protected Object getClassLoadingLock(String className) {
+     Object lock = this;
+     if (parallelLockMap != null) {
+         // 使用 ConcurrentHashMap来保存锁
+         Object newLock = new Object();
+         lock = parallelLockMap.putIfAbsent(className, newLock);
+         if (lock == null) {
+             lock = newLock;
+         }
+     }
+     return lock;
+ }
+
+ protected final Class <? > findLoadedClass(String name) {
+     if (!checkName(name))
+         return null;
+     return findLoadedClass0(name);
+ }
 ```
 
 
@@ -248,67 +246,65 @@ forName()反射获取类信息，并没有将实现留给了java,而是交给了
 
 ```java
 // 首先肯定是 Class.newInstance
-    @CallerSensitive
-    public T newInstance()
-        throws InstantiationException, IllegalAccessException
-    {
-        if (System.getSecurityManager() != null) {
-            checkMemberAccess(Member.PUBLIC, Reflection.getCallerClass(), false);
-        }
+@CallerSensitive
+public T newInstance() throws InstantiationException, IllegalAccessException {
+    if (System.getSecurityManager() != null) {
+        checkMemberAccess(Member.PUBLIC, Reflection.getCallerClass(), false);
+    }
 
-        // NOTE: the following code may not be strictly correct under
-        // the current Java memory model.
+    // NOTE: the following code may not be strictly correct under
+    // the current Java memory model.
 
-        // Constructor lookup
-        // newInstance() 其实相当于调用类的无参构造函数，所以，首先要找到其无参构造器
-        if (cachedConstructor == null) {
-            if (this == Class.class) {
-                // 不允许调用 Class 的 newInstance() 方法
-                throw new IllegalAccessException(
-                    "Can not call newInstance() on the Class for java.lang.Class"
-                );
-            }
-            try {
-                // 获取无参构造器
-                Class<?>[] empty = {};
-                final Constructor<T> c = getConstructor0(empty, Member.DECLARED);
-                // Disable accessibility checks on the constructor
-                // since we have to do the security check here anyway
-                // (the stack depth is wrong for the Constructor's
-                // security check to work)
-                java.security.AccessController.doPrivileged(
-                    new java.security.PrivilegedAction<Void>() {
-                        public Void run() {
-                                c.setAccessible(true);
-                                return null;
-                            }
-                        });
-                cachedConstructor = c;
-            } catch (NoSuchMethodException e) {
-                throw (InstantiationException)
-                    new InstantiationException(getName()).initCause(e);
-            }
+    // Constructor lookup
+    // newInstance() 其实相当于调用类的无参构造函数，所以，首先要找到其无参构造器
+    if (cachedConstructor == null) {
+        if (this == Class.class) {
+            // 不允许调用 Class 的 newInstance() 方法
+            throw new IllegalAccessException(
+                "Can not call newInstance() on the Class for java.lang.Class"
+            );
         }
-        Constructor<T> tmpConstructor = cachedConstructor;
-        // Security check (same as in java.lang.reflect.Constructor)
-        int modifiers = tmpConstructor.getModifiers();
-        if (!Reflection.quickCheckMemberAccess(this, modifiers)) {
-            Class<?> caller = Reflection.getCallerClass();
-            if (newInstanceCallerCache != caller) {
-                Reflection.ensureMemberAccess(caller, this, null, modifiers);
-                newInstanceCallerCache = caller;
-            }
-        }
-        // Run constructor
         try {
-            // 调用无参构造器
-            return tmpConstructor.newInstance((Object[])null);
-        } catch (InvocationTargetException e) {
-            Unsafe.getUnsafe().throwException(e.getTargetException());
-            // Not reached
-            return null;
+            // 获取无参构造器
+            Class <? > [] empty = {};
+            final Constructor < T > c = getConstructor0(empty, Member.DECLARED);
+            // Disable accessibility checks on the constructor
+            // since we have to do the security check here anyway
+            // (the stack depth is wrong for the Constructor's
+            // security check to work)
+            java.security.AccessController.doPrivileged(
+                new java.security.PrivilegedAction < Void > () {
+                    public Void run() {
+                        c.setAccessible(true);
+                        return null;
+                    }
+                });
+            cachedConstructor = c;
+        } catch (NoSuchMethodException e) {
+            throw (InstantiationException)
+            new InstantiationException(getName()).initCause(e);
         }
     }
+    Constructor < T > tmpConstructor = cachedConstructor;
+    // Security check (same as in java.lang.reflect.Constructor)
+    int modifiers = tmpConstructor.getModifiers();
+    if (!Reflection.quickCheckMemberAccess(this, modifiers)) {
+        Class <? > caller = Reflection.getCallerClass();
+        if (newInstanceCallerCache != caller) {
+            Reflection.ensureMemberAccess(caller, this, null, modifiers);
+            newInstanceCallerCache = caller;
+        }
+    }
+    // Run constructor
+    try {
+        // 调用无参构造器
+        return tmpConstructor.newInstance((Object[]) null);
+    } catch (InvocationTargetException e) {
+        Unsafe.getUnsafe().throwException(e.getTargetException());
+        // Not reached
+        return null;
+    }
+}
 ```
 
 newInstance() 主要做了三件事：
@@ -322,19 +318,17 @@ newInstance() 主要做了三件事：
 下面是获取构造器的过程：
 
 ```java
- private Constructor<T> getConstructor0(Class<?>[] parameterTypes,
-                                        int which) throws NoSuchMethodException
-    {
-        // 获取所有构造器
-        Constructor<T>[] constructors = privateGetDeclaredConstructors((which == Member.PUBLIC));
-        for (Constructor<T> constructor : constructors) {
-            if (arrayContentsEq(parameterTypes,
-                                constructor.getParameterTypes())) {
-                return getReflectionFactory().copyConstructor(constructor);
-            }
-        }
-        throw new NoSuchMethodException(getName() + ".<init>" + argumentTypesToString(parameterTypes));
-    }
+ private Constructor < T > getConstructor0(Class <? > [] parameterTypes, int which) throws NoSuchMethodException {
+     // 获取所有构造器
+     Constructor < T > [] constructors = privateGetDeclaredConstructors((which == Member.PUBLIC));
+     for (Constructor < T > constructor: constructors) {
+         if (arrayContentsEq(parameterTypes,
+                 constructor.getParameterTypes())) {
+             return getReflectionFactory().copyConstructor(constructor);
+         }
+     }
+     throw new NoSuchMethodException(getName() + ".<init>" + argumentTypesToString(parameterTypes));
+ }
 ```
 
 getConstructor0() 为获取匹配的构造方器；分三步：
@@ -345,77 +339,77 @@ getConstructor0() 为获取匹配的构造方器；分三步：
 
 ```java
 // 获取当前类所有的构造方法，通过jvm或者缓存
-    // Returns an array of "root" constructors. These Constructor
-    // objects must NOT be propagated to the outside world, but must
-    // instead be copied via ReflectionFactory.copyConstructor.
-    private Constructor<T>[] privateGetDeclaredConstructors(boolean publicOnly) {
-        checkInitted();
-        Constructor<T>[] res;
-        // 调用 reflectionData(), 获取保存的信息，使用软引用保存，从而使内存不够可以回收
-        ReflectionData<T> rd = reflectionData();
-        if (rd != null) {
-            res = publicOnly ? rd.publicConstructors : rd.declaredConstructors;
-            // 存在缓存，则直接返回
-            if (res != null) return res;
-        }
-        // No cached value available; request value from VM
-        if (isInterface()) {
-            @SuppressWarnings("unchecked")
-            Constructor<T>[] temporaryRes = (Constructor<T>[]) new Constructor<?>[0];
-            res = temporaryRes;
-        } else {
-            // 使用native方法从jvm获取构造器
-            res = getDeclaredConstructors0(publicOnly);
-        }
-        if (rd != null) {
-            // 最后，将从jvm中读取的内容，存入缓存
-            if (publicOnly) {
-                rd.publicConstructors = res;
-            } else {
-                rd.declaredConstructors = res;
-            }
-        }
-        return res;
+// Returns an array of "root" constructors. These Constructor
+// objects must NOT be propagated to the outside world, but must
+// instead be copied via ReflectionFactory.copyConstructor.
+private Constructor < T > [] privateGetDeclaredConstructors(boolean publicOnly) {
+    checkInitted();
+    Constructor < T > [] res;
+    // 调用 reflectionData(), 获取保存的信息，使用软引用保存，从而使内存不够可以回收
+    ReflectionData < T > rd = reflectionData();
+    if (rd != null) {
+        res = publicOnly ? rd.publicConstructors : rd.declaredConstructors;
+        // 存在缓存，则直接返回
+        if (res != null) return res;
     }
-    
-    // Lazily create and cache ReflectionData
-    private ReflectionData<T> reflectionData() {
-        SoftReference<ReflectionData<T>> reflectionData = this.reflectionData;
-        int classRedefinedCount = this.classRedefinedCount;
-        ReflectionData<T> rd;
-        if (useCaches &&
-            reflectionData != null &&
-            (rd = reflectionData.get()) != null &&
+    // No cached value available; request value from VM
+    if (isInterface()) {@
+        SuppressWarnings("unchecked")
+        Constructor < T > [] temporaryRes = (Constructor < T > []) new Constructor <? > [0];
+        res = temporaryRes;
+    } else {
+        // 使用native方法从jvm获取构造器
+        res = getDeclaredConstructors0(publicOnly);
+    }
+    if (rd != null) {
+        // 最后，将从jvm中读取的内容，存入缓存
+        if (publicOnly) {
+            rd.publicConstructors = res;
+        } else {
+            rd.declaredConstructors = res;
+        }
+    }
+    return res;
+}
+
+// Lazily create and cache ReflectionData
+private ReflectionData < T > reflectionData() {
+    SoftReference < ReflectionData < T >> reflectionData = this.reflectionData;
+    int classRedefinedCount = this.classRedefinedCount;
+    ReflectionData < T > rd;
+    if (useCaches &&
+        reflectionData != null &&
+        (rd = reflectionData.get()) != null &&
+        rd.redefinedCount == classRedefinedCount) {
+        return rd;
+    }
+    // else no SoftReference or cleared SoftReference or stale ReflectionData
+    // -> create and replace new instance
+    return newReflectionData(reflectionData, classRedefinedCount);
+}
+
+// 新创建缓存，保存反射信息
+private ReflectionData < T > newReflectionData(SoftReference < ReflectionData < T >> oldReflectionData,
+    int classRedefinedCount) {
+    if (!useCaches) return null;
+
+    // 使用cas保证更新的线程安全性，所以反射是保证线程安全的
+    while (true) {
+        ReflectionData < T > rd = new ReflectionData < > (classRedefinedCount);
+        // try to CAS it...
+        if (Atomic.casReflectionData(this, oldReflectionData, new SoftReference < > (rd))) {
+            return rd;
+        }
+        // 先使用CAS更新，如果更新成功，则立即返回，否则测查当前已被其他线程更新的情况，如果和自己想要更新的状态一致，则也算是成功了
+        oldReflectionData = this.reflectionData;
+        classRedefinedCount = this.classRedefinedCount;
+        if (oldReflectionData != null &&
+            (rd = oldReflectionData.get()) != null &&
             rd.redefinedCount == classRedefinedCount) {
             return rd;
         }
-        // else no SoftReference or cleared SoftReference or stale ReflectionData
-        // -> create and replace new instance
-        return newReflectionData(reflectionData, classRedefinedCount);
     }
-    
-    // 新创建缓存，保存反射信息
-    private ReflectionData<T> newReflectionData(SoftReference<ReflectionData<T>> oldReflectionData,
-                                                int classRedefinedCount) {
-        if (!useCaches) return null;
-
-        // 使用cas保证更新的线程安全性，所以反射是保证线程安全的
-        while (true) {
-            ReflectionData<T> rd = new ReflectionData<>(classRedefinedCount);
-            // try to CAS it...
-            if (Atomic.casReflectionData(this, oldReflectionData, new SoftReference<>(rd))) {
-                return rd;
-            }
-            // 先使用CAS更新，如果更新成功，则立即返回，否则测查当前已被其他线程更新的情况，如果和自己想要更新的状态一致，则也算是成功了
-            oldReflectionData = this.reflectionData;
-            classRedefinedCount = this.classRedefinedCount;
-            if (oldReflectionData != null &&
-                (rd = oldReflectionData.get()) != null &&
-                rd.redefinedCount == classRedefinedCount) {
-                return rd;
-            }
-        }
-    }
+}
 ```
 
 如上，privateGetDeclaredConstructors(), 获取所有的构造器主要步骤；
@@ -427,25 +421,25 @@ getConstructor0() 为获取匹配的构造方器；分三步：
 
 ```java
 // reflection data that might get invalidated when JVM TI RedefineClasses() is called
-    private static class ReflectionData<T> {
-        volatile Field[] declaredFields;
-        volatile Field[] publicFields;
-        volatile Method[] declaredMethods;
-        volatile Method[] publicMethods;
-        volatile Constructor<T>[] declaredConstructors;
-        volatile Constructor<T>[] publicConstructors;
-        // Intermediate results for getFields and getMethods
-        volatile Field[] declaredPublicFields;
-        volatile Method[] declaredPublicMethods;
-        volatile Class<?>[] interfaces;
+private static class ReflectionData < T > {
+    volatile Field[] declaredFields;
+    volatile Field[] publicFields;
+    volatile Method[] declaredMethods;
+    volatile Method[] publicMethods;
+    volatile Constructor < T > [] declaredConstructors;
+    volatile Constructor < T > [] publicConstructors;
+    // Intermediate results for getFields and getMethods
+    volatile Field[] declaredPublicFields;
+    volatile Method[] declaredPublicMethods;
+    volatile Class <? > [] interfaces;
 
-        // Value of classRedefinedCount when we created this ReflectionData instance
-        final int redefinedCount;
+    // Value of classRedefinedCount when we created this ReflectionData instance
+    final int redefinedCount;
 
-        ReflectionData(int redefinedCount) {
-            this.redefinedCount = redefinedCount;
-        }
+    ReflectionData(int redefinedCount) {
+        this.redefinedCount = redefinedCount;
     }
+}
 ```
 
 
@@ -478,34 +472,34 @@ private static boolean arrayContentsEq(Object[] a1, Object[] a2) {
     /** Makes a copy of the passed constructor. The returned
         constructor is a "child" of the passed one; see the comments
         in Constructor.java for details. */
-    public <T> Constructor<T> copyConstructor(Constructor<T> arg) {
-        return langReflectAccess().copyConstructor(arg);
-    }
-    
-    // java.lang.reflect.Constructor, copy 其实就是新new一个 Constructor 出来
-    Constructor<T> copy() {
-        // This routine enables sharing of ConstructorAccessor objects
-        // among Constructor objects which refer to the same underlying
-        // method in the VM. (All of this contortion is only necessary
-        // because of the "accessibility" bit in AccessibleObject,
-        // which implicitly requires that new java.lang.reflect
-        // objects be fabricated for each reflective call on Class
-        // objects.)
-        if (this.root != null)
-            throw new IllegalArgumentException("Can not copy a non-root Constructor");
+public < T > Constructor < T > copyConstructor(Constructor < T > arg) {
+    return langReflectAccess().copyConstructor(arg);
+}
 
-        Constructor<T> res = new Constructor<>(clazz,
-                                               parameterTypes,
-                                               exceptionTypes, modifiers, slot,
-                                               signature,
-                                               annotations,
-                                               parameterAnnotations);
-        // root 指向当前 constructor
-        res.root = this;
-        // Might as well eagerly propagate this if already present
-        res.constructorAccessor = constructorAccessor;
-        return res;
-    }
+// java.lang.reflect.Constructor, copy 其实就是新new一个 Constructor 出来
+Constructor < T > copy() {
+    // This routine enables sharing of ConstructorAccessor objects
+    // among Constructor objects which refer to the same underlying
+    // method in the VM. (All of this contortion is only necessary
+    // because of the "accessibility" bit in AccessibleObject,
+    // which implicitly requires that new java.lang.reflect
+    // objects be fabricated for each reflective call on Class
+    // objects.)
+    if (this.root != null)
+        throw new IllegalArgumentException("Can not copy a non-root Constructor");
+
+    Constructor < T > res = new Constructor < > (clazz,
+        parameterTypes,
+        exceptionTypes, modifiers, slot,
+        signature,
+        annotations,
+        parameterAnnotations);
+    // root 指向当前 constructor
+    res.root = this;
+    // Might as well eagerly propagate this if already present
+    res.constructorAccessor = constructorAccessor;
+    return res;
+}
 ```
 
 
@@ -516,59 +510,47 @@ private static boolean arrayContentsEq(Object[] a1, Object[] a2) {
 
 ```java
 // return tmpConstructor.newInstance((Object[])null); 
-    // java.lang.reflect.Constructor
-    @CallerSensitive
-    public T newInstance(Object ... initargs)
-        throws InstantiationException, IllegalAccessException,
-               IllegalArgumentException, InvocationTargetException
-    {
-        if (!override) {
-            if (!Reflection.quickCheckMemberAccess(clazz, modifiers)) {
-                Class<?> caller = Reflection.getCallerClass();
-                checkAccess(caller, clazz, null, modifiers);
-            }
+// java.lang.reflect.Constructor
+@CallerSensitive
+public T newInstance(Object...initargs) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    if (!override) {
+        if (!Reflection.quickCheckMemberAccess(clazz, modifiers)) {
+            Class <? > caller = Reflection.getCallerClass();
+            checkAccess(caller, clazz, null, modifiers);
         }
-        if ((clazz.getModifiers() & Modifier.ENUM) != 0)
-            throw new IllegalArgumentException("Cannot reflectively create enum objects");
-        ConstructorAccessor ca = constructorAccessor;   // read volatile
-        if (ca == null) {
-            ca = acquireConstructorAccessor();
-        }
-        @SuppressWarnings("unchecked")
-        T inst = (T) ca.newInstance(initargs);
-        return inst;
     }
-    // sun.reflect.DelegatingConstructorAccessorImpl
-    public Object newInstance(Object[] args)
-      throws InstantiationException,
-             IllegalArgumentException,
-             InvocationTargetException
-    {
-        return delegate.newInstance(args);
+    if ((clazz.getModifiers() & Modifier.ENUM) != 0)
+        throw new IllegalArgumentException("Cannot reflectively create enum objects");
+    ConstructorAccessor ca = constructorAccessor; // read volatile
+    if (ca == null) {
+        ca = acquireConstructorAccessor();
+    }@
+    SuppressWarnings("unchecked")
+    T inst = (T) ca.newInstance(initargs);
+    return inst;
+}
+// sun.reflect.DelegatingConstructorAccessorImpl
+public Object newInstance(Object[] args) throws InstantiationException, IllegalArgumentException, InvocationTargetException {
+    return delegate.newInstance(args);
+}
+// sun.reflect.NativeConstructorAccessorImpl
+public Object newInstance(Object[] args) throws InstantiationException, IllegalArgumentException, InvocationTargetException {
+    // We can't inflate a constructor belonging to a vm-anonymous class
+    // because that kind of class can't be referred to by name, hence can't
+    // be found from the generated bytecode.
+    if (++numInvocations > ReflectionFactory.inflationThreshold() && !ReflectUtil.isVMAnonymousClass(c.getDeclaringClass())) {
+        ConstructorAccessorImpl acc = (ConstructorAccessorImpl)
+        new MethodAccessorGenerator().
+        generateConstructor(c.getDeclaringClass(),
+            c.getParameterTypes(),
+            c.getExceptionTypes(),
+            c.getModifiers());
+        parent.setDelegate(acc);
     }
-    // sun.reflect.NativeConstructorAccessorImpl
-    public Object newInstance(Object[] args)
-        throws InstantiationException,
-               IllegalArgumentException,
-               InvocationTargetException
-    {
-        // We can't inflate a constructor belonging to a vm-anonymous class
-        // because that kind of class can't be referred to by name, hence can't
-        // be found from the generated bytecode.
-        if (++numInvocations > ReflectionFactory.inflationThreshold()
-                && !ReflectUtil.isVMAnonymousClass(c.getDeclaringClass())) {
-            ConstructorAccessorImpl acc = (ConstructorAccessorImpl)
-                new MethodAccessorGenerator().
-                    generateConstructor(c.getDeclaringClass(),
-                                        c.getParameterTypes(),
-                                        c.getExceptionTypes(),
-                                        c.getModifiers());
-            parent.setDelegate(acc);
-        }
 
-        // 调用native方法，进行调用 constructor
-        return newInstance0(c, args);
-    }
+    // 调用native方法，进行调用 constructor
+    return newInstance0(c, args);
+}
 ```
 
 返回构造器的实例后，可以根据外部进行进行类型转换，从而使用接口或方法进行调用实例功能了。
@@ -579,16 +561,16 @@ private static boolean arrayContentsEq(Object[] a1, Object[] a2) {
 
 ```java
 // java.lang.Class
-    @CallerSensitive
-    public Method getDeclaredMethod(String name, Class<?>... parameterTypes)
-        throws NoSuchMethodException, SecurityException {
-        checkMemberAccess(Member.DECLARED, Reflection.getCallerClass(), true);
-        Method method = searchMethods(privateGetDeclaredMethods(false), name, parameterTypes);
-        if (method == null) {
-            throw new NoSuchMethodException(getName() + "." + name + argumentTypesToString(parameterTypes));
-        }
-        return method;
+@CallerSensitive
+public Method getDeclaredMethod(String name, Class <? > ...parameterTypes)
+throws NoSuchMethodException, SecurityException {
+    checkMemberAccess(Member.DECLARED, Reflection.getCallerClass(), true);
+    Method method = searchMethods(privateGetDeclaredMethods(false), name, parameterTypes);
+    if (method == null) {
+        throw new NoSuchMethodException(getName() + "." + name + argumentTypesToString(parameterTypes));
     }
+    return method;
+}
 ```
 
 忽略第一个检查权限，剩下就只有两个动作了。
@@ -603,27 +585,27 @@ private static boolean arrayContentsEq(Object[] a1, Object[] a2) {
 
 ```java
 // Returns an array of "root" methods. These Method objects must NOT
-    // be propagated to the outside world, but must instead be copied
-    // via ReflectionFactory.copyMethod.
-    private Method[] privateGetDeclaredMethods(boolean publicOnly) {
-        checkInitted();
-        Method[] res;
-        ReflectionData<T> rd = reflectionData();
-        if (rd != null) {
-            res = publicOnly ? rd.declaredPublicMethods : rd.declaredMethods;
-            if (res != null) return res;
-        }
-        // No cached value available; request value from VM
-        res = Reflection.filterMethods(this, getDeclaredMethods0(publicOnly));
-        if (rd != null) {
-            if (publicOnly) {
-                rd.declaredPublicMethods = res;
-            } else {
-                rd.declaredMethods = res;
-            }
-        }
-        return res;
+// be propagated to the outside world, but must instead be copied
+// via ReflectionFactory.copyMethod.
+private Method[] privateGetDeclaredMethods(boolean publicOnly) {
+    checkInitted();
+    Method[] res;
+    ReflectionData < T > rd = reflectionData();
+    if (rd != null) {
+        res = publicOnly ? rd.declaredPublicMethods : rd.declaredMethods;
+        if (res != null) return res;
     }
+    // No cached value available; request value from VM
+    res = Reflection.filterMethods(this, getDeclaredMethods0(publicOnly));
+    if (rd != null) {
+        if (publicOnly) {
+            rd.declaredPublicMethods = res;
+        } else {
+            rd.declaredMethods = res;
+        }
+    }
+    return res;
+}
 ```
 
 很相似，和获取所有构造器的方法很相似，都是先从缓存中获取方法，如果没有，则从jvm中获取。
@@ -632,48 +614,49 @@ private static boolean arrayContentsEq(Object[] a1, Object[] a2) {
 
 ```java
 // sun.misc.Reflection
-    public static Method[] filterMethods(Class<?> containingClass, Method[] methods) {
-        if (methodFilterMap == null) {
-            // Bootstrapping
-            return methods;
-        }
-        return (Method[])filter(methods, methodFilterMap.get(containingClass));
+public static Method[] filterMethods(Class <? > containingClass, Method[] methods) {
+    if (methodFilterMap == null) {
+        // Bootstrapping
+        return methods;
     }
-    // 可以过滤指定的方法，一般为空，如果要指定过滤，可以调用 registerMethodsToFilter(), 或者...
-    private static Member[] filter(Member[] members, String[] filteredNames) {
-        if ((filteredNames == null) || (members.length == 0)) {
-            return members;
-        }
-        int numNewMembers = 0;
-        for (Member member : members) {
-            boolean shouldSkip = false;
-            for (String filteredName : filteredNames) {
-                if (member.getName() == filteredName) {
-                    shouldSkip = true;
-                    break;
-                }
-            }
-            if (!shouldSkip) {
-                ++numNewMembers;
-            }
-        }
-        Member[] newMembers =
-            (Member[])Array.newInstance(members[0].getClass(), numNewMembers);
-        int destIdx = 0;
-        for (Member member : members) {
-            boolean shouldSkip = false;
-            for (String filteredName : filteredNames) {
-                if (member.getName() == filteredName) {
-                    shouldSkip = true;
-                    break;
-                }
-            }
-            if (!shouldSkip) {
-                newMembers[destIdx++] = member;
-            }
-        }
-        return newMembers;
+    return (Method[]) filter(methods, methodFilterMap.get(containingClass));
+}
+
+// 可以过滤指定的方法，一般为空，如果要指定过滤，可以调用 registerMethodsToFilter(), 或者...
+private static Member[] filter(Member[] members, String[] filteredNames) {
+    if ((filteredNames == null) || (members.length == 0)) {
+        return members;
     }
+    int numNewMembers = 0;
+    for (Member member: members) {
+        boolean shouldSkip = false;
+        for (String filteredName: filteredNames) {
+            if (member.getName() == filteredName) {
+                shouldSkip = true;
+                break;
+            }
+        }
+        if (!shouldSkip) {
+            ++numNewMembers;
+        }
+    }
+    Member[] newMembers =
+        (Member[]) Array.newInstance(members[0].getClass(), numNewMembers);
+    int destIdx = 0;
+    for (Member member: members) {
+        boolean shouldSkip = false;
+        for (String filteredName: filteredNames) {
+            if (member.getName() == filteredName) {
+                shouldSkip = true;
+                break;
+            }
+        }
+        if (!shouldSkip) {
+            newMembers[destIdx++] = member;
+        }
+    }
+    return newMembers;
+}
 ```
 
 
@@ -681,24 +664,19 @@ private static boolean arrayContentsEq(Object[] a1, Object[] a2) {
 #### 根据方法名和参数类型过滤指定方法返回
 
 ```java
-private static Method searchMethods(Method[] methods,
-                                        String name,
-                                        Class<?>[] parameterTypes)
-    {
-        Method res = null;
-        // 使用常量池，避免重复创建String
-        String internedName = name.intern();
-        for (int i = 0; i < methods.length; i++) {
-            Method m = methods[i];
-            if (m.getName() == internedName
-                && arrayContentsEq(parameterTypes, m.getParameterTypes())
-                && (res == null
-                    || res.getReturnType().isAssignableFrom(m.getReturnType())))
-                res = m;
-        }
-
-        return (res == null ? res : getReflectionFactory().copyMethod(res));
+private static Method searchMethods(Method[] methods, String name, Class <? > [] parameterTypes) {
+    Method res = null;
+    // 使用常量池，避免重复创建String
+    String internedName = name.intern();
+    for (int i = 0; i < methods.length; i++) {
+        Method m = methods[i];
+        if (m.getName() == internedName && arrayContentsEq(parameterTypes, m.getParameterTypes()) 
+            && (res == null || res.getReturnType().isAssignableFrom(m.getReturnType())))
+            res = m;
     }
+
+    return (res == null ? res : getReflectionFactory().copyMethod(res));
+}
 ```
 
 大概意思看得明白，就是匹配到方法名，然后参数类型匹配，才可以。
@@ -713,29 +691,26 @@ private static Method searchMethods(Method[] methods,
 
 ```java
 @CallerSensitive
-    public Object invoke(Object obj, Object... args)
-        throws IllegalAccessException, IllegalArgumentException,
-           InvocationTargetException
-    {
-        if (!override) {
-            if (!Reflection.quickCheckMemberAccess(clazz, modifiers)) {
-                Class<?> caller = Reflection.getCallerClass();
-                checkAccess(caller, clazz, obj, modifiers);
-            }
+public Object invoke(Object obj, Object...args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    if (!override) {
+        if (!Reflection.quickCheckMemberAccess(clazz, modifiers)) {
+            Class <? > caller = Reflection.getCallerClass();
+            checkAccess(caller, clazz, obj, modifiers);
         }
-        MethodAccessor ma = methodAccessor;             // read volatile
-        if (ma == null) {
-            ma = acquireMethodAccessor();
-        }
-        return ma.invoke(obj, args);
     }
+    MethodAccessor ma = methodAccessor; // read volatile
+    if (ma == null) {
+        ma = acquireMethodAccessor();
+    }
+    return ma.invoke(obj, args);
+}
 ```
 
 invoke时，是通过 MethodAccessor 进行调用的，而 MethodAccessor 是个接口，在第一次时调用 acquireMethodAccessor() 进行新创建。
 
 ```java
 // probably make the implementation more scalable.
-    private MethodAccessor acquireMethodAccessor() {
+private MethodAccessor acquireMethodAccessor() {
         // First check to see if one has been created yet, and take it
         // if so
         MethodAccessor tmp = null;
@@ -752,26 +727,26 @@ invoke时，是通过 MethodAccessor 进行调用的，而 MethodAccessor 是个
         return tmp;
     }
     // sun.reflect.ReflectionFactory
-    public MethodAccessor newMethodAccessor(Method method) {
-        checkInitted();
+public MethodAccessor newMethodAccessor(Method method) {
+    checkInitted();
 
-        if (noInflation && !ReflectUtil.isVMAnonymousClass(method.getDeclaringClass())) {
-            return new MethodAccessorGenerator().
-                generateMethod(method.getDeclaringClass(),
-                               method.getName(),
-                               method.getParameterTypes(),
-                               method.getReturnType(),
-                               method.getExceptionTypes(),
-                               method.getModifiers());
-        } else {
-            NativeMethodAccessorImpl acc =
-                new NativeMethodAccessorImpl(method);
-            DelegatingMethodAccessorImpl res =
-                new DelegatingMethodAccessorImpl(acc);
-            acc.setParent(res);
-            return res;
-        }
+    if (noInflation && !ReflectUtil.isVMAnonymousClass(method.getDeclaringClass())) {
+        return new MethodAccessorGenerator().
+        generateMethod(method.getDeclaringClass(),
+            method.getName(),
+            method.getParameterTypes(),
+            method.getReturnType(),
+            method.getExceptionTypes(),
+            method.getModifiers());
+    } else {
+        NativeMethodAccessorImpl acc =
+            new NativeMethodAccessorImpl(method);
+        DelegatingMethodAccessorImpl res =
+            new DelegatingMethodAccessorImpl(acc);
+        acc.setParent(res);
+        return res;
     }
+}
 ```
 
 
@@ -779,7 +754,7 @@ invoke时，是通过 MethodAccessor 进行调用的，而 MethodAccessor 是个
 两个Accessor详情：
 
 ```java
-//     NativeMethodAccessorImpl / DelegatingMethodAccessorImpl
+//NativeMethodAccessorImpl / DelegatingMethodAccessorImpl
 class NativeMethodAccessorImpl extends MethodAccessorImpl {
     private final Method method;
     private DelegatingMethodAccessorImpl parent;
@@ -841,28 +816,25 @@ class DelegatingMethodAccessorImpl extends MethodAccessorImpl {
 最后被委托到 NativeMethodAccessorImpl.invoke(), 即：
 
 ```java
-public Object invoke(Object obj, Object[] args)
-        throws IllegalArgumentException, InvocationTargetException
-    {
-        // We can't inflate methods belonging to vm-anonymous classes because
-        // that kind of class can't be referred to by name, hence can't be
-        // found from the generated bytecode.
-        if (++numInvocations > ReflectionFactory.inflationThreshold()
-                && !ReflectUtil.isVMAnonymousClass(method.getDeclaringClass())) {
-            MethodAccessorImpl acc = (MethodAccessorImpl)
-                new MethodAccessorGenerator().
-                    generateMethod(method.getDeclaringClass(),
-                                   method.getName(),
-                                   method.getParameterTypes(),
-                                   method.getReturnType(),
-                                   method.getExceptionTypes(),
-                                   method.getModifiers());
-            parent.setDelegate(acc);
-        }
-
-        // invoke0 是个 native 方法，由jvm进行调用业务方法。从而完成反射调用功能。
-        return invoke0(method, obj, args);
+public Object invoke(Object obj, Object[] args) throws IllegalArgumentException, InvocationTargetException {
+    // We can't inflate methods belonging to vm-anonymous classes because
+    // that kind of class can't be referred to by name, hence can't be
+    // found from the generated bytecode.
+    if (++numInvocations > ReflectionFactory.inflationThreshold() && !ReflectUtil.isVMAnonymousClass(method.getDeclaringClass())) {
+        MethodAccessorImpl acc = (MethodAccessorImpl)
+        new MethodAccessorGenerator().
+        generateMethod(method.getDeclaringClass(),
+            method.getName(),
+            method.getParameterTypes(),
+            method.getReturnType(),
+            method.getExceptionTypes(),
+            method.getModifiers());
+        parent.setDelegate(acc);
     }
+
+    // invoke0 是个 native 方法，由jvm进行调用业务方法。从而完成反射调用功能。
+    return invoke0(method, obj, args);
+}
 ```
 
 
@@ -871,318 +843,311 @@ public Object invoke(Object obj, Object[] args)
 
 ```java
 /** This routine is not thread-safe */
-    public MethodAccessor generateMethod(Class<?> declaringClass,
-                                         String   name,
-                                         Class<?>[] parameterTypes,
-                                         Class<?>   returnType,
-                                         Class<?>[] checkedExceptions,
-                                         int modifiers)
-    {
-        return (MethodAccessor) generate(declaringClass,
-                                         name,
-                                         parameterTypes,
-                                         returnType,
-                                         checkedExceptions,
-                                         modifiers,
-                                         false,
-                                         false,
-                                         null);
-    }
+public MethodAccessor generateMethod(Class <? > declaringClass,
+                                        String name,
+                                        Class <? > [] parameterTypes,
+                                        Class <? > returnType,
+                                        Class <? > [] checkedExceptions,
+                                        int modifiers) {
+    return (MethodAccessor) generate(declaringClass,
+        name,
+        parameterTypes,
+        returnType,
+        checkedExceptions,
+        modifiers,
+        false,
+        false,
+        null);
+}
 ```
 
 generate() 戳详情。
 
 ```java
  /** This routine is not thread-safe */
-    private MagicAccessorImpl generate(final Class<?> declaringClass,
-                                       String name,
-                                       Class<?>[] parameterTypes,
-                                       Class<?>   returnType,
-                                       Class<?>[] checkedExceptions,
-                                       int modifiers,
-                                       boolean isConstructor,
-                                       boolean forSerialization,
-                                       Class<?> serializationTargetClass)
-    {
-        ByteVector vec = ByteVectorFactory.create();
-        asm = new ClassFileAssembler(vec);
-        this.declaringClass = declaringClass;
-        this.parameterTypes = parameterTypes;
-        this.returnType = returnType;
-        this.modifiers = modifiers;
-        this.isConstructor = isConstructor;
-        this.forSerialization = forSerialization;
+ private MagicAccessorImpl generate(final Class <? > declaringClass,
+                                     String name,
+                                     Class <? > [] parameterTypes,
+                                     Class <? > returnType,
+                                     Class <? > [] checkedExceptions,
+                                     int modifiers,
+                                     boolean isConstructor,
+                                     boolean forSerialization,
+                                     Class <? > serializationTargetClass) {
+     ByteVector vec = ByteVectorFactory.create();
+     asm = new ClassFileAssembler(vec);
+     this.declaringClass = declaringClass;
+     this.parameterTypes = parameterTypes;
+     this.returnType = returnType;
+     this.modifiers = modifiers;
+     this.isConstructor = isConstructor;
+     this.forSerialization = forSerialization;
 
-        asm.emitMagicAndVersion();
+     asm.emitMagicAndVersion();
 
-        // Constant pool entries:
-        // ( * = Boxing information: optional)
-        // (+  = Shared entries provided by AccessorGenerator)
-        // (^  = Only present if generating SerializationConstructorAccessor)
-        //     [UTF-8] [This class's name]
-        //     [CONSTANT_Class_info] for above
-        //     [UTF-8] "sun/reflect/{MethodAccessorImpl,ConstructorAccessorImpl,SerializationConstructorAccessorImpl}"
-        //     [CONSTANT_Class_info] for above
-        //     [UTF-8] [Target class's name]
-        //     [CONSTANT_Class_info] for above
-        // ^   [UTF-8] [Serialization: Class's name in which to invoke constructor]
-        // ^   [CONSTANT_Class_info] for above
-        //     [UTF-8] target method or constructor name
-        //     [UTF-8] target method or constructor signature
-        //     [CONSTANT_NameAndType_info] for above
-        //     [CONSTANT_Methodref_info or CONSTANT_InterfaceMethodref_info] for target method
-        //     [UTF-8] "invoke" or "newInstance"
-        //     [UTF-8] invoke or newInstance descriptor
-        //     [UTF-8] descriptor for type of non-primitive parameter 1
-        //     [CONSTANT_Class_info] for type of non-primitive parameter 1
-        //     ...
-        //     [UTF-8] descriptor for type of non-primitive parameter n
-        //     [CONSTANT_Class_info] for type of non-primitive parameter n
-        // +   [UTF-8] "java/lang/Exception"
-        // +   [CONSTANT_Class_info] for above
-        // +   [UTF-8] "java/lang/ClassCastException"
-        // +   [CONSTANT_Class_info] for above
-        // +   [UTF-8] "java/lang/NullPointerException"
-        // +   [CONSTANT_Class_info] for above
-        // +   [UTF-8] "java/lang/IllegalArgumentException"
-        // +   [CONSTANT_Class_info] for above
-        // +   [UTF-8] "java/lang/InvocationTargetException"
-        // +   [CONSTANT_Class_info] for above
-        // +   [UTF-8] "<init>"
-        // +   [UTF-8] "()V"
-        // +   [CONSTANT_NameAndType_info] for above
-        // +   [CONSTANT_Methodref_info] for NullPointerException's constructor
-        // +   [CONSTANT_Methodref_info] for IllegalArgumentException's constructor
-        // +   [UTF-8] "(Ljava/lang/String;)V"
-        // +   [CONSTANT_NameAndType_info] for "<init>(Ljava/lang/String;)V"
-        // +   [CONSTANT_Methodref_info] for IllegalArgumentException's constructor taking a String
-        // +   [UTF-8] "(Ljava/lang/Throwable;)V"
-        // +   [CONSTANT_NameAndType_info] for "<init>(Ljava/lang/Throwable;)V"
-        // +   [CONSTANT_Methodref_info] for InvocationTargetException's constructor
-        // +   [CONSTANT_Methodref_info] for "super()"
-        // +   [UTF-8] "java/lang/Object"
-        // +   [CONSTANT_Class_info] for above
-        // +   [UTF-8] "toString"
-        // +   [UTF-8] "()Ljava/lang/String;"
-        // +   [CONSTANT_NameAndType_info] for "toString()Ljava/lang/String;"
-        // +   [CONSTANT_Methodref_info] for Object's toString method
-        // +   [UTF-8] "Code"
-        // +   [UTF-8] "Exceptions"
-        //  *  [UTF-8] "java/lang/Boolean"
-        //  *  [CONSTANT_Class_info] for above
-        //  *  [UTF-8] "(Z)V"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "booleanValue"
-        //  *  [UTF-8] "()Z"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "java/lang/Byte"
-        //  *  [CONSTANT_Class_info] for above
-        //  *  [UTF-8] "(B)V"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "byteValue"
-        //  *  [UTF-8] "()B"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "java/lang/Character"
-        //  *  [CONSTANT_Class_info] for above
-        //  *  [UTF-8] "(C)V"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "charValue"
-        //  *  [UTF-8] "()C"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "java/lang/Double"
-        //  *  [CONSTANT_Class_info] for above
-        //  *  [UTF-8] "(D)V"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "doubleValue"
-        //  *  [UTF-8] "()D"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "java/lang/Float"
-        //  *  [CONSTANT_Class_info] for above
-        //  *  [UTF-8] "(F)V"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "floatValue"
-        //  *  [UTF-8] "()F"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "java/lang/Integer"
-        //  *  [CONSTANT_Class_info] for above
-        //  *  [UTF-8] "(I)V"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "intValue"
-        //  *  [UTF-8] "()I"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "java/lang/Long"
-        //  *  [CONSTANT_Class_info] for above
-        //  *  [UTF-8] "(J)V"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "longValue"
-        //  *  [UTF-8] "()J"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "java/lang/Short"
-        //  *  [CONSTANT_Class_info] for above
-        //  *  [UTF-8] "(S)V"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
-        //  *  [UTF-8] "shortValue"
-        //  *  [UTF-8] "()S"
-        //  *  [CONSTANT_NameAndType_info] for above
-        //  *  [CONSTANT_Methodref_info] for above
+     // Constant pool entries:
+     // ( * = Boxing information: optional)
+     // (+  = Shared entries provided by AccessorGenerator)
+     // (^  = Only present if generating SerializationConstructorAccessor)
+     //     [UTF-8] [This class's name]
+     //     [CONSTANT_Class_info] for above
+     //     [UTF-8] "sun/reflect/{MethodAccessorImpl,ConstructorAccessorImpl,SerializationConstructorAccessorImpl}"
+     //     [CONSTANT_Class_info] for above
+     //     [UTF-8] [Target class's name]
+     //     [CONSTANT_Class_info] for above
+     // ^   [UTF-8] [Serialization: Class's name in which to invoke constructor]
+     // ^   [CONSTANT_Class_info] for above
+     //     [UTF-8] target method or constructor name
+     //     [UTF-8] target method or constructor signature
+     //     [CONSTANT_NameAndType_info] for above
+     //     [CONSTANT_Methodref_info or CONSTANT_InterfaceMethodref_info] for target method
+     //     [UTF-8] "invoke" or "newInstance"
+     //     [UTF-8] invoke or newInstance descriptor
+     //     [UTF-8] descriptor for type of non-primitive parameter 1
+     //     [CONSTANT_Class_info] for type of non-primitive parameter 1
+     //     ...
+     //     [UTF-8] descriptor for type of non-primitive parameter n
+     //     [CONSTANT_Class_info] for type of non-primitive parameter n
+     // +   [UTF-8] "java/lang/Exception"
+     // +   [CONSTANT_Class_info] for above
+     // +   [UTF-8] "java/lang/ClassCastException"
+     // +   [CONSTANT_Class_info] for above
+     // +   [UTF-8] "java/lang/NullPointerException"
+     // +   [CONSTANT_Class_info] for above
+     // +   [UTF-8] "java/lang/IllegalArgumentException"
+     // +   [CONSTANT_Class_info] for above
+     // +   [UTF-8] "java/lang/InvocationTargetException"
+     // +   [CONSTANT_Class_info] for above
+     // +   [UTF-8] "<init>"
+     // +   [UTF-8] "()V"
+     // +   [CONSTANT_NameAndType_info] for above
+     // +   [CONSTANT_Methodref_info] for NullPointerException's constructor
+     // +   [CONSTANT_Methodref_info] for IllegalArgumentException's constructor
+     // +   [UTF-8] "(Ljava/lang/String;)V"
+     // +   [CONSTANT_NameAndType_info] for "<init>(Ljava/lang/String;)V"
+     // +   [CONSTANT_Methodref_info] for IllegalArgumentException's constructor taking a String
+     // +   [UTF-8] "(Ljava/lang/Throwable;)V"
+     // +   [CONSTANT_NameAndType_info] for "<init>(Ljava/lang/Throwable;)V"
+     // +   [CONSTANT_Methodref_info] for InvocationTargetException's constructor
+     // +   [CONSTANT_Methodref_info] for "super()"
+     // +   [UTF-8] "java/lang/Object"
+     // +   [CONSTANT_Class_info] for above
+     // +   [UTF-8] "toString"
+     // +   [UTF-8] "()Ljava/lang/String;"
+     // +   [CONSTANT_NameAndType_info] for "toString()Ljava/lang/String;"
+     // +   [CONSTANT_Methodref_info] for Object's toString method
+     // +   [UTF-8] "Code"
+     // +   [UTF-8] "Exceptions"
+     //  *  [UTF-8] "java/lang/Boolean"
+     //  *  [CONSTANT_Class_info] for above
+     //  *  [UTF-8] "(Z)V"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "booleanValue"
+     //  *  [UTF-8] "()Z"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "java/lang/Byte"
+     //  *  [CONSTANT_Class_info] for above
+     //  *  [UTF-8] "(B)V"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "byteValue"
+     //  *  [UTF-8] "()B"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "java/lang/Character"
+     //  *  [CONSTANT_Class_info] for above
+     //  *  [UTF-8] "(C)V"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "charValue"
+     //  *  [UTF-8] "()C"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "java/lang/Double"
+     //  *  [CONSTANT_Class_info] for above
+     //  *  [UTF-8] "(D)V"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "doubleValue"
+     //  *  [UTF-8] "()D"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "java/lang/Float"
+     //  *  [CONSTANT_Class_info] for above
+     //  *  [UTF-8] "(F)V"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "floatValue"
+     //  *  [UTF-8] "()F"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "java/lang/Integer"
+     //  *  [CONSTANT_Class_info] for above
+     //  *  [UTF-8] "(I)V"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "intValue"
+     //  *  [UTF-8] "()I"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "java/lang/Long"
+     //  *  [CONSTANT_Class_info] for above
+     //  *  [UTF-8] "(J)V"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "longValue"
+     //  *  [UTF-8] "()J"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "java/lang/Short"
+     //  *  [CONSTANT_Class_info] for above
+     //  *  [UTF-8] "(S)V"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
+     //  *  [UTF-8] "shortValue"
+     //  *  [UTF-8] "()S"
+     //  *  [CONSTANT_NameAndType_info] for above
+     //  *  [CONSTANT_Methodref_info] for above
 
-        short numCPEntries = NUM_BASE_CPOOL_ENTRIES + NUM_COMMON_CPOOL_ENTRIES;
-        boolean usesPrimitives = usesPrimitiveTypes();
-        if (usesPrimitives) {
-            numCPEntries += NUM_BOXING_CPOOL_ENTRIES;
-        }
-        if (forSerialization) {
-            numCPEntries += NUM_SERIALIZATION_CPOOL_ENTRIES;
-        }
+     short numCPEntries = NUM_BASE_CPOOL_ENTRIES + NUM_COMMON_CPOOL_ENTRIES;
+     boolean usesPrimitives = usesPrimitiveTypes();
+     if (usesPrimitives) {
+         numCPEntries += NUM_BOXING_CPOOL_ENTRIES;
+     }
+     if (forSerialization) {
+         numCPEntries += NUM_SERIALIZATION_CPOOL_ENTRIES;
+     }
 
-        // Add in variable-length number of entries to be able to describe
-        // non-primitive parameter types and checked exceptions.
-        numCPEntries += (short) (2 * numNonPrimitiveParameterTypes());
+     // Add in variable-length number of entries to be able to describe
+     // non-primitive parameter types and checked exceptions.
+     numCPEntries += (short)(2 * numNonPrimitiveParameterTypes());
 
-        asm.emitShort(add(numCPEntries, S1));
+     asm.emitShort(add(numCPEntries, S1));
 
-        final String generatedName = generateName(isConstructor, forSerialization);
-        asm.emitConstantPoolUTF8(generatedName);
-        asm.emitConstantPoolClass(asm.cpi());
-        thisClass = asm.cpi();
-        if (isConstructor) {
-            if (forSerialization) {
-                asm.emitConstantPoolUTF8
-                    ("sun/reflect/SerializationConstructorAccessorImpl");
-            } else {
-                asm.emitConstantPoolUTF8("sun/reflect/ConstructorAccessorImpl");
-            }
-        } else {
-            asm.emitConstantPoolUTF8("sun/reflect/MethodAccessorImpl");
-        }
-        asm.emitConstantPoolClass(asm.cpi());
-        superClass = asm.cpi();
-        asm.emitConstantPoolUTF8(getClassName(declaringClass, false));
-        asm.emitConstantPoolClass(asm.cpi());
-        targetClass = asm.cpi();
-        short serializationTargetClassIdx = (short) 0;
-        if (forSerialization) {
-            asm.emitConstantPoolUTF8(getClassName(serializationTargetClass, false));
-            asm.emitConstantPoolClass(asm.cpi());
-            serializationTargetClassIdx = asm.cpi();
-        }
-        asm.emitConstantPoolUTF8(name);
-        asm.emitConstantPoolUTF8(buildInternalSignature());
-        asm.emitConstantPoolNameAndType(sub(asm.cpi(), S1), asm.cpi());
-        if (isInterface()) {
-            asm.emitConstantPoolInterfaceMethodref(targetClass, asm.cpi());
-        } else {
-            if (forSerialization) {
-                asm.emitConstantPoolMethodref(serializationTargetClassIdx, asm.cpi());
-            } else {
-                asm.emitConstantPoolMethodref(targetClass, asm.cpi());
-            }
-        }
-        targetMethodRef = asm.cpi();
-        if (isConstructor) {
-            asm.emitConstantPoolUTF8("newInstance");
-        } else {
-            asm.emitConstantPoolUTF8("invoke");
-        }
-        invokeIdx = asm.cpi();
-        if (isConstructor) {
-            asm.emitConstantPoolUTF8("([Ljava/lang/Object;)Ljava/lang/Object;");
-        } else {
-            asm.emitConstantPoolUTF8
-                ("(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
-        }
-        invokeDescriptorIdx = asm.cpi();
+     final String generatedName = generateName(isConstructor, forSerialization);
+     asm.emitConstantPoolUTF8(generatedName);
+     asm.emitConstantPoolClass(asm.cpi());
+     thisClass = asm.cpi();
+     if (isConstructor) {
+         if (forSerialization) {
+             asm.emitConstantPoolUTF8("sun/reflect/SerializationConstructorAccessorImpl");
+         } else {
+             asm.emitConstantPoolUTF8("sun/reflect/ConstructorAccessorImpl");
+         }
+     } else {
+         asm.emitConstantPoolUTF8("sun/reflect/MethodAccessorImpl");
+     }
+     asm.emitConstantPoolClass(asm.cpi());
+     superClass = asm.cpi();
+     asm.emitConstantPoolUTF8(getClassName(declaringClass, false));
+     asm.emitConstantPoolClass(asm.cpi());
+     targetClass = asm.cpi();
+     short serializationTargetClassIdx = (short) 0;
+     if (forSerialization) {
+         asm.emitConstantPoolUTF8(getClassName(serializationTargetClass, false));
+         asm.emitConstantPoolClass(asm.cpi());
+         serializationTargetClassIdx = asm.cpi();
+     }
+     asm.emitConstantPoolUTF8(name);
+     asm.emitConstantPoolUTF8(buildInternalSignature());
+     asm.emitConstantPoolNameAndType(sub(asm.cpi(), S1), asm.cpi());
+     if (isInterface()) {
+         asm.emitConstantPoolInterfaceMethodref(targetClass, asm.cpi());
+     } else {
+         if (forSerialization) {
+             asm.emitConstantPoolMethodref(serializationTargetClassIdx, asm.cpi());
+         } else {
+             asm.emitConstantPoolMethodref(targetClass, asm.cpi());
+         }
+     }
+     targetMethodRef = asm.cpi();
+     if (isConstructor) {
+         asm.emitConstantPoolUTF8("newInstance");
+     } else {
+         asm.emitConstantPoolUTF8("invoke");
+     }
+     invokeIdx = asm.cpi();
+     if (isConstructor) {
+         asm.emitConstantPoolUTF8("([Ljava/lang/Object;)Ljava/lang/Object;");
+     } else {
+         asm.emitConstantPoolUTF8("(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;");
+     }
+     invokeDescriptorIdx = asm.cpi();
 
-        // Output class information for non-primitive parameter types
-        nonPrimitiveParametersBaseIdx = add(asm.cpi(), S2);
-        for (int i = 0; i < parameterTypes.length; i++) {
-            Class<?> c = parameterTypes[i];
-            if (!isPrimitive(c)) {
-                asm.emitConstantPoolUTF8(getClassName(c, false));
-                asm.emitConstantPoolClass(asm.cpi());
-            }
-        }
+     // Output class information for non-primitive parameter types
+     nonPrimitiveParametersBaseIdx = add(asm.cpi(), S2);
+     for (int i = 0; i < parameterTypes.length; i++) {
+         Class <? > c = parameterTypes[i];
+         if (!isPrimitive(c)) {
+             asm.emitConstantPoolUTF8(getClassName(c, false));
+             asm.emitConstantPoolClass(asm.cpi());
+         }
+     }
 
-        // Entries common to FieldAccessor, MethodAccessor and ConstructorAccessor
-        emitCommonConstantPoolEntries();
+     // Entries common to FieldAccessor, MethodAccessor and ConstructorAccessor
+     emitCommonConstantPoolEntries();
 
-        // Boxing entries
-        if (usesPrimitives) {
-            emitBoxingContantPoolEntries();
-        }
+     // Boxing entries
+     if (usesPrimitives) {
+         emitBoxingContantPoolEntries();
+     }
 
-        if (asm.cpi() != numCPEntries) {
-            throw new InternalError("Adjust this code (cpi = " + asm.cpi() +
-                                    ", numCPEntries = " + numCPEntries + ")");
-        }
+     if (asm.cpi() != numCPEntries) {
+         throw new InternalError("Adjust this code (cpi = " + asm.cpi() +
+             ", numCPEntries = " + numCPEntries + ")");
+     }
 
-        // Access flags
-        asm.emitShort(ACC_PUBLIC);
+     // Access flags
+     asm.emitShort(ACC_PUBLIC);
 
-        // This class
-        asm.emitShort(thisClass);
+     // This class
+     asm.emitShort(thisClass);
 
-        // Superclass
-        asm.emitShort(superClass);
+     // Superclass
+     asm.emitShort(superClass);
 
-        // Interfaces count and interfaces
-        asm.emitShort(S0);
+     // Interfaces count and interfaces
+     asm.emitShort(S0);
 
-        // Fields count and fields
-        asm.emitShort(S0);
+     // Fields count and fields
+     asm.emitShort(S0);
 
-        // Methods count and methods
-        asm.emitShort(NUM_METHODS);
+     // Methods count and methods
+     asm.emitShort(NUM_METHODS);
 
-        emitConstructor();
-        emitInvoke();
+     emitConstructor();
+     emitInvoke();
 
-        // Additional attributes (none)
-        asm.emitShort(S0);
+     // Additional attributes (none)
+     asm.emitShort(S0);
 
-        // Load class
-        vec.trim();
-        final byte[] bytes = vec.getData();
-        // Note: the class loader is the only thing that really matters
-        // here -- it's important to get the generated code into the
-        // same namespace as the target class. Since the generated code
-        // is privileged anyway, the protection domain probably doesn't
-        // matter.
-        return AccessController.doPrivileged(
-            new PrivilegedAction<MagicAccessorImpl>() {
-                public MagicAccessorImpl run() {
-                        try {
-                        return (MagicAccessorImpl)
-                        ClassDefiner.defineClass
-                                (generatedName,
-                                 bytes,
-                                 0,
-                                 bytes.length,
-                                 declaringClass.getClassLoader()).newInstance();
-                        } catch (InstantiationException | IllegalAccessException e) {
-                            throw new InternalError(e);
-                        }
-                    }
-                });
-    }
+     // Load class
+     vec.trim();
+     final byte[] bytes = vec.getData();
+     // Note: the class loader is the only thing that really matters
+     // here -- it's important to get the generated code into the
+     // same namespace as the target class. Since the generated code
+     // is privileged anyway, the protection domain probably doesn't
+     // matter.
+     return AccessController.doPrivileged(
+         new PrivilegedAction < MagicAccessorImpl > () {
+             public MagicAccessorImpl run() {
+                 try {
+                     return (MagicAccessorImpl)
+                     ClassDefiner.defineClass(generatedName,
+                         bytes,
+                         0,
+                         bytes.length,
+                         declaringClass.getClassLoader()).newInstance();
+                 } catch (InstantiationException | IllegalAccessException e) {
+                     throw new InternalError(e);
+                 }
+             }
+         });
+ }
 ```
-
-
 
 主要看这一句：ClassDefiner.defineClass(xx, declaringClass.getClassLoader()).newInstance();
 
@@ -1200,7 +1165,6 @@ generate() 戳详情。
 6. 当找到需要的方法，都会copy一份出来，而不是使用原来的实例，从而保证数据隔离；
 7. 调度反射方法，最终是由jvm执行invoke0()执行；
 
- 
-<!-- @include: @article-footer.snippet.md -->     
 
+<!-- @include: @article-footer.snippet.md -->     
 

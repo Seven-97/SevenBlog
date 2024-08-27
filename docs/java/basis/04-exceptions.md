@@ -215,7 +215,6 @@ public class Test {
 }
 //输出：
 31
-
 ```
 
 try、catch、finally 的基础用法，在 return 前会先执行 finally 语句块，所以会先输出 finally 里的 3，再输出 return 的 1。由于这里try中没有异常发生，因此catch中的return不会执行
@@ -240,7 +239,6 @@ public class Test {
 }
 //输出：
 32
-
 ```
 
 在 return 前会先执行 finally 语句块，所以会先输出 finally 里的 3，再输出 catch 中 return 的 2。由于这里try中有异常发生，因此try后续语句不会再执行
@@ -305,13 +303,13 @@ public class Test {
 每当有关闭资源的需求都会使用到try-finally这个语句，比如在使用锁的时候，无论是本地的可重入锁还是分布式锁都会有下面类似的结构代码，会在finally里面进行unlock，用于强制解锁：
 
 ```java
-    Lock lock = new ReentrantLock();
-    lock.lock();
-    try{
-        // doSometing
-    }finally {
-        lock.unlock();
-    }
+Lock lock = new ReentrantLock();
+lock.lock();
+try {
+    // doSometing
+} finally {
+    lock.unlock();
+}
 ```
 
 
@@ -319,12 +317,12 @@ public class Test {
 或者使用java的文件流读取或者写入文件的时候，也会在finally中强制关闭文件流，防止资源泄漏。
 
 ```java
-    InputStream inputStream = new FileInputStream("file");
-    try {
-        System.out.println(inputStream.read(new byte[4]));
-    }finally {
-        inputStream.close();
-    }
+InputStream inputStream = new FileInputStream("file");
+try {
+    System.out.println(inputStream.read(new byte[4]));
+} finally {
+    inputStream.close();
+}
 ```
 
 
@@ -333,15 +331,15 @@ public class Test {
 
 ```java
 InputStream inputStream = new FileInputStream("file");
-    OutputStream outStream = new FileOutputStream("file1");
+OutputStream outStream = new FileOutputStream("file1");
 
-    try {
-        System.out.println(inputStream.read(new byte[4]));
-        outStream.write(new byte[4]);
-    }finally {
-        inputStream.close();
-        outStream.close();
-    }
+try {
+    System.out.println(inputStream.read(new byte[4]));
+    outStream.write(new byte[4]);
+} finally {
+    inputStream.close();
+    outStream.close();
+}
 ```
 
 在外面定义了两个资源，然后在finally里面依次对这两个资源进行关闭，那么这个哪里有问题呢？
@@ -349,18 +347,18 @@ InputStream inputStream = new FileInputStream("file");
 问题其实在于如果在inputStream.close的时候抛出异常，那么outStream.close()就不会执行，这很明显不是想要的结果，所以后面就改成了下面这种多重嵌套的方式去写：
 
 ```java
-    InputStream inputStream = new FileInputStream("file");
+InputStream inputStream = new FileInputStream("file");
+try {
+    System.out.println(inputStream.read(new byte[4]));
     try {
-        System.out.println(inputStream.read(new byte[4]));
-        try{
-            OutputStream outStream = new FileOutputStream("file1");
-            outStream.write(new byte[4]);
-        }finally {
-            outStream.close();
-        }
-    }finally {
-        inputStream.close();
+        OutputStream outStream = new FileOutputStream("file1");
+        outStream.write(new byte[4]);
+    } finally {
+        outStream.close();
     }
+} finally {
+    inputStream.close();
+}
 ```
 
 在这种方式中即便是outStream.close()抛出了异常，但是依然会执行到inputStream.close(),因为他们是在不同的finally块，这个的确解决了问题，但是还有两个问题没有解决：
@@ -386,7 +384,7 @@ public class CloseTest {
     }
 
 }
-输出结果：Exception in thread "main" java.lang.RuntimeException: close
+//输出结果：Exception in thread "main" java.lang.RuntimeException: close
 ```
 
 上面这个代码，期望的是能抛出doSomething的这个异常，但是实际的数据结果却是close的异常，这和预期不符合。
@@ -396,11 +394,11 @@ public class CloseTest {
 上面介绍了两个问题，于是在java7中引入了try-with-resources的语句，只要资源实现了AutoCloseable这个接口那就可以使用这个语句了,之前的文件流已经实现了这个接口，因此可以直接使用：
 
 ```java
-try(InputStream inputStream = new FileInputStream("file");
-            OutputStream outStream = new FileOutputStream("file1")) {
-            System.out.println(inputStream.read(new byte[4]));
-            outStream.write(new byte[4]);
-        }
+try (InputStream inputStream = new FileInputStream("file"); 
+    OutputStream outStream = new FileOutputStream("file1")) {
+    System.out.println(inputStream.read(new byte[4]));
+    outStream.write(new byte[4]);
+}
 ```
 
 所有的资源定义全部都在try后面的括号中进行定义，通过这种方式就可以解决上面所说的几个问题：
@@ -426,7 +424,7 @@ public class CloseTest implements AutoCloseable {
     }
 
 }
-输出结果为：
+//输出结果为：
 close
 close
 Exception in thread "main" java.lang.RuntimeException: Something
@@ -469,7 +467,7 @@ public static void simpleTryCatch() {
 
 ```java
 //javap -c Main
- public static void simpleTryCatch();
+public static void simpleTryCatch();
     Code:
        0: invokestatic  #3                  // Method testNPE:()V
        3: goto          11
@@ -623,7 +621,7 @@ public class ExceptionTest {
     }  
 }  
 
-结果：
+//结果：
 建立对象：575817  
 建立异常对象：9589080  
 建立、抛出并接住异常对象：47394475 
