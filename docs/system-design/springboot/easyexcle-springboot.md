@@ -499,4 +499,308 @@ public void exportExcel4(HttpServletResponse response) throws IOException, Inter
 
 以上问题可以通过 [分布式锁](https://www.seven97.top/database/redis/05-implementdistributedlocks.html)来实现
 
+
+
+## 模板方法设计模式简化EasyExcel的读取
+
+看 [官方文档](https://easyexcel.opensource.alibaba.com/docs/current/quickstart/read) 上读取Excel挺简单的，只需要一行代码
+
+```java
+/**
+ * 指定列的下标或者列名
+ *
+ * <p>1. 创建excel对应的实体对象,并使用{@link ExcelProperty}注解. 参照{@link IndexOrNameData}
+ * <p>2. 由于默认一行行的读取excel，所以需要创建excel一行一行的回调监听器，参照{@link IndexOrNameDataListener}
+ * <p>3. 直接读即可
+ */
+@Test
+public void indexOrNameRead() {
+    String fileName = TestFileUtil.getPath() + "demo" + File.separator + "demo.xlsx";
+    // 这里默认读取第一个sheet
+    EasyExcel.read(fileName, DemoData.class, new  DemoDataListener()).sheet().doRead();
+}
+```
+
+
+
+但仔细看，其实这里还需要创建一个回调监听器 DemoDataListener，也就是针对每个DemoData 即每个Excel 都需要创建一个单独的回调监听器类。
+
+```java
+// 有个很重要的点 DemoDataListener 不能被spring管理，要每次读取excel都要new,然后里面用到spring可以构造方法传进去
+@Slf4j
+public class DemoDataListener implements ReadListener<DemoData> {
+ 
+    /**
+     * 每隔5条存储数据库，实际使用中可以100条，然后清理list ，方便内存回收
+     */
+    private static final int BATCH_COUNT = 100;
+    /**
+     * 缓存的数据
+     */
+    private List<DemoData> cachedDataList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
+    /**
+     * 假设这个是一个DAO，当然有业务逻辑这个也可以是一个service。当然如果不用存储这个对象没用。
+     */
+    private DemoDataDAO demoDAO;
+ 
+    public DemoDataListener() {
+        // 这里是demo，所以随便new一个。实际使用如果到了spring,请使用下面的有参构造函数
+        demoDAO = new DemoDAO();
+    }
+ 
+    /**
+     * 如果使用了spring,请使用这个构造方法。每次创建Listener的时候需要把spring管理的类传进来
+     *
+     * @param demoDAO
+     */
+    public DemoDataListener(DemoDataDAO demoDAO) {
+        this.demoDAO = demoDAO;
+    }
+ 
+    /**
+     * 这个每一条数据解析都会来调用
+     *
+     * @param data    one row value. Is is same as {@link AnalysisContext#readRowHolder()}
+     * @param context
+     */
+    @Override
+    public void invoke(DemoData data, AnalysisContext context) {
+        log.info("解析到一条数据:{}", JSON.toJSONString(data));
+        cachedDataList.add(data);
+        // 达到BATCH_COUNT了，需要去存储一次数据库，防止数据几万条数据在内存，容易OOM
+        if (cachedDataList.size() >= BATCH_COUNT) {
+            saveData();
+            // 存储完成清理 list
+            cachedDataList = ListUtils.newArrayListWithExpectedSize(BATCH_COUNT);
+        }
+    }
+ 
+    /**
+     * 所有数据解析完成了 都会来调用
+     *
+     * @param context
+     */
+    @Override
+    public void doAfterAllAnalysed(AnalysisContext context) {
+        // 这里也要保存数据，确保最后遗留的数据也存储到数据库
+        saveData();
+        log.info("所有数据解析完成！");
+    }
+ 
+    /**
+     * 加上存储数据库
+     */
+    private void saveData() {
+        log.info("{}条数据，开始存储数据库！", cachedDataList.size());
+        demoDAO.save(cachedDataList);
+        log.info("存储数据库成功！");
+    }
+}
+```
+
+
+
+在使用EasyExcel读取Excel时就在想能够如何简化读取方式，而不是读取每个Excel都创建一个XXDataListener 的监听器类
+
+**首先，可以把DataListener加上泛型，共用一个`DataListener<T>`**
+
+看上面代码，只需要在new的时候再去`new DataListener<DemoData>`即可
+
+但是，如果要传递Dao 和 并且每个Dao如何保存数据，而且保存数据前可能还需要对数据进行校验，那么该如何处理呢？
+
+
+
+**最后想到了可以用Function(数据校验) + Consumer(数据存储) + 模板方法设计模式，创建一个共用的EasyExcel读取监听器，从而不在监听器中对数据进行处理，把处理都前置**
+
+> EasyExcel 的监听器类 Listener 已经定义了每一步会做什么，如通过 invokeHead 方法一行一行读取表头数据，通过invoke 方法一行一行读取真实数据。
+>
+> 也就是说，我们已经知道了 Listener 类所需的关键步骤，即一行一行读取数据，而且确定了这些步骤的执行顺序，但表头数据的校验和处理，真实数据的校验和处理还无法确定；并且这些是由导入的具体数据决定的，不同的表会有不同的校验 和 处理方式。基于此，我们就可以想到用 **模板方法模式**！
+
+
+
+代码详情如下：
+
+```java
+import cn.hutool.core.util.StrUtil;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.metadata.data.ReadCellData;
+import com.alibaba.excel.read.listener.ReadListener;
+import com.alibaba.excel.util.ConverterUtils;
+import lombok.extern.slf4j.Slf4j;
+ 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+ 
+@Slf4j
+public class EasyExcelListener<T> implements ReadListener<T> {
+ 
+    private static final int defaultBatchSize = 5000;
+ 
+    private final int batchSize;
+ 
+    private List<Map<Integer, String>> headData;
+ 
+    private List<T> realData;
+ 
+    private final int headRowCount;
+ 
+    private Function<Map<Integer, String>, String> headDataCheck;
+ 
+    private final Consumer<List<Map<Integer, String>>> headDataConsumer;
+ 
+    private Function<T, String> realDataCheck;
+ 
+    private final Consumer<List<T>> realDataConsumer;
+ 
+    private final List<String> errorList;
+ 
+    /**
+     * 构造函数
+     *
+     * @param headRowCount     表头行数
+     * @param headDataCheck    表头数据校验
+     * @param headDataConsumer 表头数据处理
+     * @param realDataCheck    真实数据校验
+     * @param realDataConsumer 真实数据处理
+     */
+    public EasyExcelListener(int headRowCount, Function<Map<Integer, String>, String> headDataCheck, Consumer<List<Map<Integer, String>>> headDataConsumer
+            , Function<T, String> realDataCheck, Consumer<List<T>> realDataConsumer) {
+ 
+        this.headRowCount = headRowCount;
+        this.batchSize = defaultBatchSize;
+        this.headDataCheck = headDataCheck;
+        this.headDataConsumer = headDataConsumer;
+        this.realDataCheck = realDataCheck;
+        this.realDataConsumer = realDataConsumer;
+        headData = new ArrayList<>(headRowCount);
+        realData = new ArrayList<>(batchSize);
+        errorList = new ArrayList<>();
+    }
+ 
+    public EasyExcelListener(int headRowCount, int batchSize, Function<Map<Integer, String>, String> headDataCheck, Consumer<List<Map<Integer, String>>> headDataConsumer
+            , Function<T, String> realDataCheck, Consumer<List<T>> realDataConsumer) {
+ 
+        this.headRowCount = headRowCount;
+        this.batchSize = batchSize;
+        this.headDataCheck = headDataCheck;
+        this.headDataConsumer = headDataConsumer;
+        this.realDataCheck = realDataCheck;
+        this.realDataConsumer = realDataConsumer;
+        headData = new ArrayList<>(headRowCount);
+        realData = new ArrayList<>(batchSize);
+        errorList = new ArrayList<>();
+    }
+ 
+    @Override
+    public void invokeHead(Map<Integer, ReadCellData<?>> headMap, AnalysisContext context) {
+        //获取表头数据
+        Map<Integer, String> map = ConverterUtils.convertToStringMap(headMap, context);
+ 
+        //校验表头数据
+        String checkRes = headDataCheck.apply(map);
+        if (StrUtil.isNotBlank(checkRes)) {
+            int rowIndex = context.readRowHolder().getRowIndex() + 1;
+            errorList.add("行号为:" + rowIndex + checkRes);
+            return;
+        }
+ 
+        if (!errorList.isEmpty()) {
+            //有错误信息，就不会再处理，只做校验
+            return;
+        }
+         
+        //没有问题的数据添加进list中
+        headData.add(map);
+        if (context.readRowHolder().getRowIndex() == headRowCount - 1) {
+            //全部读取完表头数据后，处理表头数据
+            headDataConsumer.accept(headData);
+        }
+    }
+ 
+    @Override
+    public void invoke(T data, AnalysisContext context) {
+        //判断真实数据是否符合要求
+        String checkRes = realDataCheck.apply(data);
+        if (StrUtil.isNotBlank(checkRes)) {
+            int rowIndex = context.readRowHolder().getRowIndex() + 1;
+            errorList.add("行号为:" + rowIndex + checkRes);
+            return;
+        }
+ 
+        //没有报错的数据添加进list
+        realData.add(data);
+        if (realData.size() >= batchSize) {
+            //处理真实数据
+            realDataConsumer.accept(realData);
+            //清空realData
+            realData = new ArrayList<>(batchSize);
+        }
+    }
+ 
+    @Override
+    public void doAfterAllAnalysed(AnalysisContext context) {
+        // 解析完所有excel行, 剩余的数据还需要进行处理
+        realDataConsumer.accept(realData);
+    }
+ 
+    public List<Map<Integer, String>> getHeadData() {
+        return headData;
+    }
+ 
+    public List<T> getRealData() {
+        return realData;
+    }
+ 
+    public List<String> getErrorList() {
+        return errorList;
+    }
+}
+```
+
+
+
+EasyExcel读取封装后的使用示例：
+
+```java
+//构建 EasyExcelListener
+EasyExcelListener < TaskImportDTO > taskImportDTOEasyExcelListener =
+    new EasyExcelListener < > (
+        4, //表头行数
+        (map) - > { //表头数据校验
+            return checkMap(map, startTime, taskMainDOList);
+        }, headList - > {
+            //表头数据处理    
+            saveHeadData(headList);
+        }, (data) - > {
+            //真实数据校验
+            return checkImportData(data);
+        }, realDataList - > {
+            //真实数据处理
+            saveRealData(realDataList);
+        }
+    );
+ 
+//读取数据
+EasyExcelUtil.read(inputStream, TaskImportDTO.class, taskImportDTOEasyExcelListener).headRowNumber(4) //表头行数
+    .sheet()
+    .doRead();
+```
+
+
+
+上面的 checkMap ，saveHeadData，checkImportData，saveRealData皆为针对本次导入数据自定义的校验和处理方法。
+
+若还有其它导入需求，只需new EasyExcelListener 方法，并自定义自己的校验和处理逻辑即可，从而完成代码复用！
+
+
+
+
+
+
+
+
+
 <!-- @include: @article-footer.snippet.md -->     

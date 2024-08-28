@@ -68,7 +68,7 @@ class s = data.getClass()；
  
 //4.通过类加载器获取
 ClassLoader classLoader = Practice0.class.getClassLoader();
- Class s = classLoader.loadClass("全类名");
+Class s = classLoader.loadClass("全类名");
 ```
 
 比较四种获取方式的区别？通过类加载器获取的方式不常用，在此不做比较。
@@ -139,7 +139,7 @@ public static Class <? > forName(String className) throws ClassNotFoundException
 }
 ```
 
-forName()反射获取类信息，并没有将实现留给了java,而是交给了jvm去加载。
+forName()反射获取类信息，并没有将实现留给了java，而是交给了jvm去加载。
 
 主要是先获取 ClassLoader, 然后调用 native 方法，获取信息，加载类则是回调 java.lang.ClassLoader.
 
@@ -249,6 +249,7 @@ public Class <? > loadClass(String name) throws ClassNotFoundException {
 @CallerSensitive
 public T newInstance() throws InstantiationException, IllegalAccessException {
     if (System.getSecurityManager() != null) {
+        //如果存在安全管理器，则调用 checkMemberAccess 方法进行安全检查，以确保调用者具有足够的权限来创建实例。
         checkMemberAccess(Member.PUBLIC, Reflection.getCallerClass(), false);
     }
 
@@ -256,7 +257,7 @@ public T newInstance() throws InstantiationException, IllegalAccessException {
     // the current Java memory model.
 
     // Constructor lookup
-    // newInstance() 其实相当于调用类的无参构造函数，所以，首先要找到其无参构造器
+    //如果 cachedConstructor 为空，则查找无参构造函数。
     if (cachedConstructor == null) {
         if (this == Class.class) {
             // 不允许调用 Class 的 newInstance() 方法
@@ -267,6 +268,8 @@ public T newInstance() throws InstantiationException, IllegalAccessException {
         try {
             // 获取无参构造器
             Class <? > [] empty = {};
+            
+            //getConstructor0 方法获取无参构造函数，并将其设置为可访问（setAccessible(true)）。
             final Constructor < T > c = getConstructor0(empty, Member.DECLARED);
             // Disable accessibility checks on the constructor
             // since we have to do the security check here anyway
@@ -279,16 +282,19 @@ public T newInstance() throws InstantiationException, IllegalAccessException {
                         return null;
                     }
                 });
+            //将获取到的构造函数缓存起来，以便下次调用时可以直接使用。
             cachedConstructor = c;
         } catch (NoSuchMethodException e) {
-            throw (InstantiationException)
-            new InstantiationException(getName()).initCause(e);
+            //如果不存在无参构造函数，那么就会抛出 InstantiationException
+            throw (InstantiationException) new InstantiationException(getName()).initCause(e);
         }
     }
+    //获取缓存的构造函数，并检查其修饰符。
     Constructor < T > tmpConstructor = cachedConstructor;
     // Security check (same as in java.lang.reflect.Constructor)
     int modifiers = tmpConstructor.getModifiers();
     if (!Reflection.quickCheckMemberAccess(this, modifiers)) {
+        //如果快速检查不通过，则获取调用者类，并调用 Reflection.ensureMemberAccess 方法进行更详细的检查，并将调用者类缓存起来。
         Class <? > caller = Reflection.getCallerClass();
         if (newInstanceCallerCache != caller) {
             Reflection.ensureMemberAccess(caller, this, null, modifiers);
@@ -313,6 +319,8 @@ newInstance() 主要做了三件事：
 2. 查找无参构造器，并将其缓存起来；
 3. 调用具体方法的无参构造方法，生成实例并返回；
 
+
+
 #### 获取构造器
 
 下面是获取构造器的过程：
@@ -333,7 +341,7 @@ newInstance() 主要做了三件事：
 
 getConstructor0() 为获取匹配的构造方器；分三步：
 
-1. 先获取所有的constructors, 然后通过进行参数类型比较；
+1. 先获取所有的constructors，然后通过进行参数类型比较；
 2. 找到匹配后，通过 ReflectionFactory copy一份constructor返回；
 3. 否则抛出 NoSuchMethodException;
 
@@ -554,6 +562,19 @@ public Object newInstance(Object[] args) throws InstantiationException, IllegalA
 ```
 
 返回构造器的实例后，可以根据外部进行进行类型转换，从而使用接口或方法进行调用实例功能了。
+
+
+
+#### 获取类示例两种方式的区别
+
+- Class.newInstance()：只能够调用无参的构造函数，即默认的构造函数；并且要求被调用的构造函数是可见的，也即必须是public类型的; 
+- Constructor.newInstance()：可以根据传入的参数，调用任意构造构造函数；可以调用私有的构造函数。 
+
+
+
+在JDK9之后 class.newInstance()方法就被弃用了，详情可以看这篇文章 [弃用class-newinstance](https://www.seven97.top/java/new-features/java9.html#弃用class-newinstance)
+
+
 
 ### 反射获取方法
 

@@ -216,8 +216,8 @@ public class RepeatAnnotationUseNewVersion {
 ### 注解实现的原理
 
 ```java
-//元注解
-public @interface 注解名称{
+//这里是元注解
+public @interface MyAnno{
 }
 ```
 

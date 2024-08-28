@@ -224,6 +224,38 @@ update、delete的where条件列、order by、group by、distinct字段、多表
 
 
 
+### order by的坑
+
+已知存在 **custom_id 和 order_date 的联合索引**。
+
+在对数据进行，custom_id 排序的情况下，再对 order_date 进行排序。
+
+```
+SELECT customer_id from orders order by customer_id, order_date
+```
+
+耗时 0.669 秒
+
+
+
+当调换排序顺序，就无法走索引了，此时针对custom_id的索引排序就是失效了。
+
+```sql
+SELECT customer_id from orders order by order_date,customer_id
+```
+
+耗时 1.645 秒
+
+**即order by也需满足联合索引的最左匹配原则**
+
+
+
+同时默认情况下，索引是升序的，如果需要降序排序，那么索引也会失效！！！
+
+```
+SELECT` `customer_id ``from` `orders ``order` `by` `customer_id ``desc``, order_date
+```
+
 
 
 

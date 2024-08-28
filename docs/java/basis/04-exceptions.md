@@ -296,7 +296,7 @@ public class Test {
 
  
 
-## try-with-resources
+## try-with-resources语法糖
 
 ### 背景
 
@@ -441,9 +441,7 @@ Exception in thread "main" java.lang.RuntimeException: Something
 
  
 
-
-
-## 异常原理
+## 异常实现原理
 
 ### JVM处理异常的机制
 
