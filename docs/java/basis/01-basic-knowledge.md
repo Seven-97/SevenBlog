@@ -761,7 +761,74 @@ public synchronized StringBuffer append(Object obj) {
 
 ### 拼接字符串建议StringBuilder
 
-#### 源码
+#### JDK 8下的字符串拼接实现
+
+```java
+class Demo {
+    public static String concatIndy(int i) {
+        return  "value " + i;
+    }
+}
+```
+
+编译查看字节码
+
+```
+jdk8/bin/javac Demo.java 
+jdk8/bin/javap -c Dem
+```
+
+
+
+javap输出的字节码：
+
+```java
+class Demo {
+  Demo();
+    Code:
+       0: aload_0
+       1: invokespecial #1 // Method java/lang/Object."<init>":()V
+       4: return
+
+  public static java.lang.String concatIndy(int);
+    Code:
+       0: new           #2 // class java/lang/StringBuilder
+       3: dup
+       4: invokespecial #3 // Method java/lang/StringBuilder."<init>":()V
+       7: ldc           #4 // String value
+       9: invokevirtual #5 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      12: iload_0
+      13: invokevirtual #6 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      16: invokevirtual #7 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+      19: areturn
+}
+```
+
+
+
+反编译后的Java代码
+
+```java
+public static String concatIndy(int i) {
+    return new StringBuilder("value ")
+            .append(i)
+            .toString();
+}
+```
+
+可以看出，+ 号操作符其实就是一种语法糖，让字符串的拼接变得更简便了。可以看到编译器自动将 `+` 转换成了 `StringBuilder.append()` 方法，拼接之后再调用 `StringBuilder.toString()` 方法转换成字符串。
+
+但这是单次拼接，如果要拼接大量字符串呢？例如使用 `for` 循环模拟频繁的字符串拼接操作时，使用 `+` 的话，在每一次循环中，都将重复下列操作：
+
+- 新建 `StringBuilder` 对象
+- 调用 `StringBuilder.append()` 方法
+- 调用 `StringBuilder.toString()` 方法，该方法会通过 `new String()` 创建字符串
+
+如果是几万次循环下来，可以看看创建了多少中间对象，别人要么以空间换时间，要么以时间换空间。这家伙倒好，即浪费时间，又浪费空间。所以，在频繁拼接字符串的情况下，尽量避免使用 `+` 。
+
+
+
+#### StringBuilder源码
 
 String源码，存放字符串的地方
 
@@ -834,6 +901,8 @@ System.out.println("超过16个字的SB容量：" + sb.capacity());
 超过16个字的SB容量：34
 ```
 
+
+
 **StringBuilder特征**：StringBuilder初始化容量是16(无参构造)
 
 ```java
@@ -883,19 +952,38 @@ private int newCapacity(int minCapacity) {
 
 因此，如果再一次追加的时候容量足够，就无需创建新数组，也就省去了很多创建char[]的次数.
 
-#### 小结：
 
-- String之所以慢是因为，大部分cpu资源都被浪费在分配资源拷贝资源的部分了，相比StringBuilder有更多的内存消耗。
 
-- StringBuilder快就快在，相比String，他在运算的时候分配内存次数小，所以拷贝次数和内存占用也随之减少，当有大量字符串拼接时，StringBuilder创建char[]的次数会少很多。
+#### 小结
 
-- 由于GC的机制，即使原来的char[]没有引用了，那么也得等到GC触发的时候才能回收，String运算过多的时候就会产生大量垃圾，消耗内存。
+- 在非循环体内
+
+  - 可以看出，在JDK 8中，在非循环体内（少数拼接）使用"+"实现字符串拼接和使用StringBuilder是一样的，用"+"做拼接代码更简洁，推荐使用"+"
+
+- 拼接次数较多，如循环体内拼接
+
+  - String之所以慢是因为，大部分cpu资源都被浪费在分配资源，新建StringBuilder对象，拷贝资源的部分了，相比StringBuilder有更多的内存消耗。
+
+  - StringBuilder快就快在，相比String，他在运算的时候分配内存次数小，所以拷贝次数和内存占用也随之减少，当有大量字符串拼接时，StringBuilder创建char[]的次数会少很多。
+
+  - 由于GC的机制，即使原来的char[]没有引用了，那么也得等到GC触发的时候才能回收，String运算过多的时候就会产生大量垃圾，消耗内存。
+
 
 因此：
 
-- 如果目标字符串需要大量拼接的操作，那么这个时候应当使用StringBuilder.
+- 如果目标字符串需要大量拼接的操作，那么这个时候应当使用StringBuilder。
 
-- 反之，如果目标字符串操作次数极少，或者是常量，那么就直接使用String.
+- 反之，如果目标字符串操作次数极少，或者是常量，那么就直接使用String。
+
+
+
+#### 着重注意
+
+这是JDK8版本的结论，在JDK 9之后，JDK官方已经对字符串拼接做了优化，使用"+"做字符串拼接会比StringBuilder快，详情可以看这篇文章，[JDK9的新特性](https://www.seven97.top/java/new-features/java9.html)。
+
+但这也是在非循环体内，少数拼接的情况，当多大量拼接，还是建议使用StringBuilder
+
+
 
 ### String.intern()
 

@@ -565,7 +565,7 @@ public Object newInstance(Object[] args) throws InstantiationException, IllegalA
 
 
 
-#### 获取类示例两种方式的区别
+#### 获取类实例两种方式的区别
 
 - Class.newInstance()：只能够调用无参的构造函数，即默认的构造函数；并且要求被调用的构造函数是可见的，也即必须是public类型的; 
 - Constructor.newInstance()：可以根据传入的参数，调用任意构造构造函数；可以调用私有的构造函数。 

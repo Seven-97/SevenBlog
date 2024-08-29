@@ -44,6 +44,8 @@ tag:
 
 设置分布式锁后，能保证并发安全，但上述代码还存在问题，如果执行过程中出现异常，程序就直接抛出异常退出，导致锁没有释放造成最终死锁的问题。（即使将锁放在finally中释放，但是假如是执行到中途系统宕机，锁还是没有被成功的释放掉，依然会出现死锁现象）
 
+
+
 ### 设置超时时间
 
 ```
@@ -52,7 +54,9 @@ SET lock_key unique_value NX PX 10000
 
 但是，即使设置了超时时间后，还存在问题。
 
-假设有多个线程，假设设置锁的过期时间10s,线程1上锁后执行业务逻辑的时长超过十秒，锁到期释放锁，线程2就可以获得锁执行，此时线程1执行完删除锁,删除的就是线程2持有的锁，线程3又可以获取锁，线程2执行完删除锁，删除的是线程3的锁，如此往后，这样就会出问题。
+假设有多个线程，假设设置锁的过期时间10s,线程1上锁后执行业务逻辑的时长超过十秒，锁到期释放锁，线程2就可以获得锁执行，此时线程1执行完删除锁，删除的就是线程2持有的锁，线程3又可以获取锁，线程2执行完删除锁，删除的是线程3的锁，如此往后，这样就会出问题。
+
+
 
 ### 让线程只删除自己的锁
 
@@ -148,7 +152,70 @@ SET lock_key unique_value NX PX 10000
 }
 ```
 
+
+尽管这样，还是会有问题，锁超时释放虽然可以避免死锁，但如果是业务执行耗时较长，也会导致锁的释放，但其实此时业务还在执行中，还是应该将业务执行结束之后再释放锁。
+
+
+
+### 续时
+
+因此可以设定，任务不完成，锁就不释放。
+
+可以维护一个定时线程池 `ScheduledExecutorService`，每隔 2s 去扫描加入队列中的 Task，判断失效时间是否快到了，如果快到了，则给锁续上时间。
+
+那如何判断是否快到失效时间了呢？可以用以下公式：【失效时间】<= 【当前时间】+【失效间隔（三分之一超时）】
+
+```java
+// 扫描的任务队列
+private static ConcurrentLinkedQueue<RedisLockDefinitionHolder> holderList = new ConcurrentLinkedQueue();
+/**
+ * 线程池，维护keyAliveTime
+ */
+private static final ScheduledExecutorService SCHEDULER = new ScheduledThreadPoolExecutor(1,
+        new BasicThreadFactory.Builder().namingPattern("redisLock-schedule-pool").daemon(true).build());
+{
+    // 两秒执行一次「续时」操作
+    SCHEDULER.scheduleAtFixedRate(() -> {
+        // 这里记得加 try-catch，否者报错后定时任务将不会再执行=-=
+        Iterator<RedisLockDefinitionHolder> iterator = holderList.iterator();
+        while (iterator.hasNext()) {
+            RedisLockDefinitionHolder holder = iterator.next();
+            // 判空
+            if (holder == null) {
+                iterator.remove();
+                continue;
+            }
+            // 判断 key 是否还有效，无效的话进行移除
+            if (redisTemplate.opsForValue().get(holder.getBusinessKey()) == null) {
+                iterator.remove();
+                continue;
+            }
+            // 超时重试次数，超过时给线程设定中断
+            if (holder.getCurrentCount() > holder.getTryCount()) {
+                holder.getCurrentTread().interrupt();
+                iterator.remove();
+                continue;
+            }
+            // 判断是否进入最后三分之一时间
+            long curTime = System.currentTimeMillis();
+            boolean shouldExtend = (holder.getLastModifyTime() + holder.getModifyPeriod()) <= curTime;
+            if (shouldExtend) {
+                holder.setLastModifyTime(curTime);
+                redisTemplate.expire(holder.getBusinessKey(), holder.getLockTime(), TimeUnit.SECONDS);
+                log.info("businessKey : [" + holder.getBusinessKey() + "], try count : " + holder.getCurrentCount());
+                holder.setCurrentCount(holder.getCurrentCount() + 1);
+            }
+        }
+    }, 0, 2, TimeUnit.SECONDS);
+}
+```
+
+
+
+
+
 ## Redission
+
 使用Redis + lua方式存在的问题
 1. 不可重入性。同一个线程无法多次获取同一把锁
 2. 不可重试。获取锁只尝试一次就返回false，没有重试机制

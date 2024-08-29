@@ -193,6 +193,163 @@ static char getChar(byte[] val, int index) {
 
 
 
+### String字符串拼接"+"
+
+代码：
+
+```java
+class Demo {
+    public static String concatIndy(int i) {
+        return  "value " + i;
+    }
+}
+```
+
+
+
+编译查看字节码：
+
+```java
+class Demo {
+  Demo();
+    Code:
+       0: aload_0
+       1: invokespecial #1 // Method java/lang/Object."<init>":()V
+       4: return
+
+  public static java.lang.String concatIndy(int);
+    Code:
+       0: iload_0
+       1: invokedynamic #2,  0 // InvokeDynamic #0:makeConcatWithConstants:(I)Ljava/lang/String;
+       6: areturn
+}
+```
+
+可以看到，编译后的字节码和 JDK 8 是不一样的，不再是基于StringBuilder实现，而是基于`StringConcatFactory.makeConcatWithConstants`动态生成一个方法来实现。这个会比StringBuilder更快，不需要创建StringBuilder对象，也会减少一次数组拷贝。
+
+这里由于是内部使用的数组，所以用了UNSAFE.allocateUninitializedArray的方式更快分配byte[]数组。通过：`StringConcatFactory.makeConcatWithConstants`而不是JavaC生成代码，是因为生成的代码无法使用JDK的内部方法进行优化，还有就是，如果有算法变化，存量的Lib不需要重新编译，升级新版本JDk就能提速。
+
+这个字节码相当如下手工调用：`StringConcatFactory.makeConcatWithConstants`
+
+```java
+import java.lang.invoke.*;
+
+static final MethodHandle STR_INT;
+
+static {
+    try {
+        STR_INT = StringConcatFactory.makeConcatWithConstants(
+            MethodHandles.lookup(),
+            "concat_str_int",
+            MethodType.methodType(String.class, int.class),
+            "value \1"
+        ).dynamicInvoker();
+    } catch (Exception e) {
+        throw new Error("Bootstrap error", e);
+    }
+}
+
+static String concat_str_int(int value) throws Throwable {
+    return (String) STR_INT.invokeExact(value);
+}
+```
+
+`StringConcatFactory.makeConcatWithConstants`是公开API，可以用来动态生成字符串拼接的方法，除了编译器生成字节码调用，也可以直接调用。调用生成方法一次大约需要1微秒（千分之一毫秒）。
+
+
+
+#### makeConcatWithConstants动态生成方法的代码
+
+makeConcatWithConstants使用recipe ("value \1")动态生成的方法大致如下：
+
+```java
+import java.lang.StringConcatHelper;
+import static java.lang.StringConcatHelper.mix;
+import static java.lang.StringConcatHelper.newArray;
+import static java.lang.StringConcatHelper.prepend;
+import static java.lang.StringConcatHelper.newString;
+
+public static String invokeStatic(String str, int value) throws Throwable {
+    long lengthCoder = 0;
+    lengthCoder = mix(lengthCoder, str);
+    lengthCoder = mix(lengthCoder, value);
+    byte[] bytes = newArray(lengthCoder);
+    lengthCoder = prepend(lengthCoder, bytes, value);
+    lengthCoder = prepend(lengthCoder, bytes, str);
+    return newString(bytes, lengthCoder);
+}
+```
+
+
+
+StringConcatHelper是：StringConcatFactory.makeConcatWithConstants实现用到的内部类。
+
+```java
+
+package java.lang;
+
+class StringConcatHelper {
+     static String newString(byte[] buf, long indexCoder) {
+        // Use the private, non-copying constructor (unsafe!)
+        if (indexCoder == LATIN1) {
+            return new String(buf, String.LATIN1);
+        } else if (indexCoder == UTF16) {
+            return new String(buf, String.UTF16);
+        }
+    }
+}
+
+
+public class String {
+    String(byte[] value, byte coder) {
+        // 无拷贝构造
+        this.value = value;
+        this.coder = coder;
+    }
+}
+```
+
+可以看出，生成的方法是通过如下步骤来实现：
+
+1. StringConcatHelper的mix方法计算长度和字符编码 (将长度和coder组合放到一个long中)；
+2. 根据长度和编码构造一个byte[]；
+3. 然后把相关的值写入到byte[]中；
+4. 使用byte[]无拷贝的方式构造String对象。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408291407245.webp)
+
+上面的火焰图可以看到实现的细节。这样的实现，**和使用StringBuilder相比，减少了StringBuilder以及StringBuilder内部byte[]对象的分配，可以减轻GC的负担。也能避免可能产生的StringBuilder在latin1编码到UTF16时的数组拷贝**。
+
+
+
+- StringBuilder缺省编码是LATIN1(ISO_8859_1)，如果append过程中遇到UTF16编码，会有一个将LATIN1转换为UTF16的动作，这个动作实现的方法是inflate。如果拼接的参数如果是带中文的字符串，使用StringBuilder还会多一次数组拷贝。
+
+```java
+class AbstractStringBuilder
+    private void inflate() {
+        if (!isLatin1()) {
+            return;
+        }
+        byte[] buf = StringUTF16.newBytesFor(value.length);
+        StringLatin1.inflate(value, 0, buf, 0, count);
+        this.value = buf;
+        this.coder = UTF16;
+    }
+}
+```
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408291408861.webp)
+
+
+
+
+
+
+
+
+
+
+
 ## @Deprecated注解的变化
 
 该注解用于标识废弃的内容，在jdk9中新增了2个内容：
