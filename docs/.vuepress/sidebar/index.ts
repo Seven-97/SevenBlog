@@ -524,6 +524,7 @@ export default sidebar({
             "singletonpattern",
             "structuralpatterns",
             "behavioralpattern",
+            "dppractical-sceneexecutiontool",
           ],
         },
         {

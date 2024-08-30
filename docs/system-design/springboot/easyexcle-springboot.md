@@ -784,7 +784,8 @@ EasyExcelListener < TaskImportDTO > taskImportDTOEasyExcelListener =
     );
  
 //读取数据
-EasyExcelUtil.read(inputStream, TaskImportDTO.class, taskImportDTOEasyExcelListener).headRowNumber(4) //表头行数
+EasyExcelUtil.read(inputStream, TaskImportDTO.class, taskImportDTOEasyExcelListener)
+    .headRowNumber(4) //表头行数
     .sheet()
     .doRead();
 ```

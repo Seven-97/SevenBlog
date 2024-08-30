@@ -214,7 +214,7 @@ private static final ScheduledExecutorService SCHEDULER = new ScheduledThreadPoo
 
 
 
-## Redission
+## Redisson
 
 使用Redis + lua方式存在的问题
 1. 不可重入性。同一个线程无法多次获取同一把锁
@@ -594,7 +594,7 @@ pexpire重置锁的有效期。
 ### multilock解决主从一致性问题
 如果Redis是主从集群，主从同步存在延迟，当主机宕机时，从成为了主，但可能存在从此时还未完成同步，因此从上就没有锁标识，此时会出现并发安全问题。
 
-因此redission提出来了MutiLock锁，使用这把锁就不使用主从了，每个节点的地位都是一样的， 这把锁加锁的逻辑需要写入到每一个主丛节点上，只有所有的服务器都写入成功，此时才是加锁成功，假设现在某个节点挂了，那么他去获得锁的时候，只要有一个节点拿不到，都不能算是加锁成功，就保证了加锁的可靠性。
+因此redisson提出来了MutiLock锁，使用这把锁就不使用主从了，每个节点的地位都是一样的， 这把锁加锁的逻辑需要写入到每一个主丛节点上，只有所有的服务器都写入成功，此时才是加锁成功，假设现在某个节点挂了，那么他去获得锁的时候，只要有一个节点拿不到，都不能算是加锁成功，就保证了加锁的可靠性。
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270809473.png)
 
 使用multilock（）方法。必须在所有的节点都获取锁成功，才算成功。 缺点是运维成本高，实现复杂。
@@ -610,8 +610,8 @@ private RedissonClient3 redissonClient3;
 RLock lock = redissonClient.getMultilock(lock1,lock2,lock3)
 ```
 
-### 总结Redission
-Redission分布式锁解决前三个问题原理
+### 总结Redisson
+Redisson分布式锁解决前三个问题原理
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270809485.png)
 
 总结Redisson分布式锁原理：
