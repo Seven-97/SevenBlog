@@ -570,6 +570,7 @@ export default sidebar({
             "springboot-annotation",
             "parameterverification",
             "elegantlyclosetheprogram",
+            "aop-limit-repeatsubmit-antishake",
             "minio-springboot",
             "easyexcle-springboot",
             "springboot-all"
