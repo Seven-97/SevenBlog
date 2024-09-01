@@ -9,15 +9,26 @@ tag:
 
 
 
-接口限流、防重复提交、接口防抖，是保证接口安全、稳定提供服务，以及防止错误数据 和 脏数据产生的重要手段。
+关于AOP不理解的可以看[这篇文章](https://www.seven97.top/framework/spring/aop1-summary.html)，AOP适合在在不改变业务代码的情况下，灵活地添加各种横切关注点，实现一些通用公共的业务场景，例如日志记录、事务管理、安全检查、性能监控、缓存管理、限流、防重复提交等功能。这样不仅提高了代码的可维护性，还使得业务逻辑更加清晰专注。
 
-关于AOP不理解的可以看[这篇文章](https://www.seven97.top/framework/spring/aop1-summary.html)
+而接口限流、防重复提交、接口防抖，是保证接口安全、稳定提供服务，以及防止错误数据 和 脏数据产生的重要手段。
 
 本文源码位置[点击这里](https://github.com/Seven-97/SpringBoot-Demo/tree/master/09-aop-limit-repeatsubmit-antishake)
 
 ## 接口限流
 
-接口限流是一种控制应用程序或服务访问速率的技术措施，主要用于防止因请求过多导致系统过载、响应延迟或服务崩溃。在高并发场景下，合理地实施接口限流对于保障系统的稳定性和可用性至关重要。
+接口限流是一种控制访问频率的技术，通过限制在一定时间内允许的最大请求数来保护系统免受过载。限流可以在应用的多个层面实现，比如在网关层、应用层甚至数据库层。常用的限流算法有[漏桶算法（Leaky Bucket）、令牌桶算法（Token Bucket）](https://www.seven97.top/microservices/protocol/requestflowlimitingalgorithm.html)等。限流不仅可以防止系统过载，还可以防止恶意用户的请求攻击。
+
+限流框架大概有
+
+1. spring cloud gateway集成redis限流，但属于网关层限流
+2. 阿里Sentinel，功能强大、带监控平台
+3. srping cloud hystrix，属于接口层限流，提供线程池与信号量两种方式
+4. 其他：redission、redis手撸代码
+
+本文主要是通过 Redission 的分布式计数来实现的 [固定窗口](https://www.seven97.top/microservices/protocol/requestflowlimitingalgorithm.html) 模式的限流，也可以通过 Redission  分布式限流方案(令牌桶)的的方式RRateLimiter。
+
+在高并发场景下，合理地实施接口限流对于保障系统的稳定性和可用性至关重要。
 
 - 自定义接口限流注解类 `@AccessLimit`
 
@@ -129,20 +140,11 @@ public Result getUser() {
 
 
 
-以上是通过 Redission 的分布式计数来实现的 [固定窗口](https://www.seven97.top/microservices/protocol/requestflowlimitingalgorithm.html) 模式的限流，也可以通过 Redission  分布式限流方案(令牌桶)的的方式RRateLimiter。
-
-限流框架大概有
-
-1. spring cloud gateway集成redis限流，但属于网关层限流
-2. 阿里Sentinel，功能强大、带监控平台
-3. srping cloud hystrix，属于接口层限流，提供线程池与信号量两种方式
-4. 其他：redission、redis手撸代码
-
 
 
 ## 防重复提交
 
-接口防重复提交是防止用户在短时间内多次点击提交按钮或重复发送相同请求导致的多次执行同一操作的问题，这对于保护数据一致性、避免资源浪费非常重要
+在一些业务场景中，重复提交同一个请求可能会导致数据的不一致，甚至严重影响业务逻辑的正确性。例如，在提交订单的场景中，重复提交可能会导致用户被多次扣款。为了避免这种情况，可以使用防重复提交技术，这对于保护数据一致性、避免资源浪费非常重要
 
 - 自定义接口防重注解类 `@RepeatSubmit`
 
@@ -283,7 +285,7 @@ public Result saveUser() {
 
 ## 接口防抖
 
-接口防抖是一种常见的前端性能优化策略，用于限制在一定时间内连续触发的函数只会执行一次，常用于搜索框的输入监听、按钮防连击等情况，以减少不必要的计算或网络请求。
+接口防抖是一种优化用户操作体验的技术，主要用于减少短时间内高频率触发的操作。例如，当用户快速点击按钮时，我们可以通过防抖机制，只处理最后一次触发的操作，而忽略前面短时间内的多次操作。防抖技术常用于输入框文本变化事件、按钮点击事件等场景，以提高系统的性能和用户体验。
 
 后端接口防抖处理主要是为了避免在短时间内接收到大量相同的请求，特别是由于前端操作（如快速点击按钮）、网络重试或异常情况导致的重复请求。后端接口防抖通常涉及记录最近的请求信息，并在特定时间窗口内拒绝处理相同或相似的请求。
 
@@ -339,7 +341,7 @@ public Result clickButton() {
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->     
 
 
 
