@@ -24,9 +24,9 @@ tag:
 1. spring cloud gateway集成redis限流，但属于网关层限流
 2. 阿里Sentinel，功能强大、带监控平台
 3. srping cloud hystrix，属于接口层限流，提供线程池与信号量两种方式
-4. 其他：redission、redis手撸代码
+4. 其他：redisson、redis手撸代码
 
-本文主要是通过 Redission 的分布式计数来实现的 [固定窗口](https://www.seven97.top/microservices/protocol/requestflowlimitingalgorithm.html) 模式的限流，也可以通过 Redission  分布式限流方案(令牌桶)的的方式RRateLimiter。
+本文主要是通过 Redisson 的分布式计数来实现的 [固定窗口](https://www.seven97.top/microservices/protocol/requestflowlimitingalgorithm.html) 模式的限流，也可以通过 Redisson  分布式限流方案(令牌桶)的方式：RRateLimiter。
 
 在高并发场景下，合理地实施接口限流对于保障系统的稳定性和可用性至关重要。
 
@@ -105,7 +105,7 @@ public class AccessLimitAspect {
         }
 
         long count = atomicLong.incrementAndGet();
-        ;
+
         if (count > maxCount) {
             throw new LimitException(accessLimit.msg());
         }

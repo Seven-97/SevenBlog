@@ -7,207 +7,268 @@ tag:
 
 
 
-## 什么是SPI机制
+## 为什么需要SPI机制
 
-SPI（Service Provider Interface），是JDK内置的一种 服务提供发现机制，可以用来启用框架扩展和替换组件，主要是被框架的开发人员使用，比如java.sql.Driver接口，其他不同厂商可以针对同一接口做出不同的实现，MySQL和PostgreSQL都有不同的实现提供给用户，而Java的SPI机制可以为某个接口寻找服务实现。Java中SPI机制主要思想是将装配的控制权移到程序之外，在模块化设计中这个机制尤其重要，其核心思想就是 **解耦**。
+### SPI和API的区别是什么
+
+SPI是一种跟API相对应的反向设计思想：API由实现方确定标准规范和功能，调用方无权做任何干预； 而SPI是由调用方确定标准规范，也就是接口，然后调用方依赖此接口，第三方实现此接口，这样做就可以方便的进行扩展，类似于插件机制，这是SPI出现的需求背景。
+
+
+
+SPI ： “接口”位于“调用方”所在的“包”中
+
+- 概念上更依赖调用方。
+
+- 组织上位于调用方所在的包中。
+
+- 实现位于独立的包中。
+
+- 常见的例子是：插件模式的插件。
+
+ 
+
+API ： “接口”位于“实现方”所在的“包”中
+
+- 概念上更接近实现方。
+
+- 组织上位于实现方所在的包中。
+
+- 实现和接口在一个包中。
+
+
+
+### 什么是SPI机制
+
+SPI（Service Provider Interface），是JDK内置的一种 服务提供发现机制，可以用来启用框架扩展和替换组件，主要是被框架的开发人员使用，例如数据库中的java.sql.Driver接口，不同的厂商可以针对同一接口做出不同的实现，如下图所示，MySQL和PostgreSQL都有不同的实现提供给用户。
+而Java的SPI机制可以为某个接口寻找服务实现，Java中SPI机制主要思想是**将装配的控制权移到程序之外**，在模块化设计中这个机制尤其重要，其核心思想就是 **解耦**。
 
 SPI整体机制图如下：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250822076.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202409011908086.jpeg)
 
- 当服务的提供者提供了一种接口的实现之后，需要在classpath下的 META-INF/services/ 目录里创建一个以服务接口命名的文件，这个文件里的内容就是这个接口的具体的实现类。当其他的程序需要这个服务的时候，就可以通过查找这个jar包（一般都是以jar包做依赖）的META-INF/services/中的配置文件，配置文件中有接口的具体实现类名，可以根据这个类名进行加载实例化，就可以使用该服务了。JDK中查找服务的实现的工具类是：java.util.ServiceLoader。
+1. 当服务的提供者提供了一种接口的实现之后，需要在classpath下的 META-INF/services/ 目录里创建一个文件，文件名是以**服务接口**命名的，而文件里的内容是这个接口的**具体的实现类**。
+2. 当其他的程序需要这个服务的时候，就可以通过查找这个jar包（一般都是以jar包做依赖）的META-INF/services/中的配置文件，配置文件中有接口的具体实现类名，再根据这个类名进行加载实例化，就可以使用该服务了。JDK中查找服务的实现的工具类是：java.util.ServiceLoader。
 
 
 
 ## SPI机制的简单示例
 
-我们现在需要使用一个内容搜索接口，搜索的实现可能是基于文件系统的搜索，也可能是基于数据库的搜索。
+假设现在需要一个发送消息的服务MessageService，发送消息的实现可能是基于短信、也可能是基于电子邮件、或推送通知发送消息。
 
-- 先定义好接口
+- **接口定义**：首先定义一个接口 `MessageService`
 
 ```java
-public interface Search {
-    public List<String> searchDoc(String keyword);   
+public interface MessageService {
+    void sendMessage(String message);
 }
 ```
 
 
 
-- 文件搜索实现
+- **提供两个实现类**：一个通过短信发送消息，一个通过电子邮件发送消息。
 
 ```java
-public class FileSearch implements Search{
+// 短信发送实现
+public class SmsMessageService implements MessageService {
     @Override
-    public List<String> searchDoc(String keyword) {
-        System.out.println("文件搜索 "+keyword);
-        return null;
+    public void sendMessage(String message) {
+        System.out.println("Sending SMS: " + message);
+    }
+}
+
+// 电子邮件发送实现
+public class EmailMessageService implements MessageService {
+    @Override
+    public void sendMessage(String message) {
+        System.out.println("Sending Email: " + message);
     }
 }
 ```
 
 
 
-- 数据库搜索实现
+- **配置文件**：在 `META-INF/services/` 目录下创建一个配置文件，文件名为 `MessageService` ，全限定名 `com.example.MessageService`，文件内容为接口的实现类的全限定名。
 
 ```java
-public class DatabaseSearch implements Search{
-    @Override
-    public List<String> searchDoc(String keyword) {
-        System.out.println("数据搜索 "+keyword);
-        return null;
-    }
-}
+# 文件: META-INF/services/com.seven.MessageService
+com.seven.SmsMessageService
+com.seven.EmailMessageService
 ```
 
 
 
-- 接下来可以在resources下新建META-INF/services/目录，然后新建接口全限定名的文件：com.seven.spi.Search，里面加上需要用到的实现类
+- **加载服务实现**：在应用程序中，通过 `ServiceLoader` 动态加载并使用这些实现类。
 
 ```java
-com.seven.spi.FileSearch
-```
-
-
-
-- 测试方法
-
-```java
-public class TestCase {
+public class Application {
     public static void main(String[] args) {
-        ServiceLoader<Search> s = ServiceLoader.load(Search.class);
-        Iterator<Search> iterator = s.iterator();
-        while (iterator.hasNext()) {
-           Search search =  iterator.next();
-           search.searchDoc("hello world");
+        ServiceLoader<MessageService> loader = ServiceLoader.load(MessageService.class);
+
+        for (MessageService service : loader) {
+            service.sendMessage("Hello, SPI!");
         }
     }
 }
 ```
 
-可以看到输出结果：文件搜索 hello world
+运行时，`ServiceLoader` 会发现并加载配置文件中列出的所有实现类，并依次调用它们的 `sendMessage` 方法。
 
  
 
-如果在com.seven.spi.Search文件里写上两个实现类，那最后的输出结果就是两行了。
+由于在 配置文件 写了两个实现类，因此两个实现类都会执行 sendMessage 方法。
 
 这就是因为ServiceLoader.load(Search.class)在加载某接口时，会去 META-INF/services 下找接口的全限定名文件，再根据里面的内容加载相应的实现类。
 
 这就是spi的思想，接口的实现由provider实现，provider只用在提交的jar包里的META-INF/services下根据平台定义的接口新建文件，并添加进相应的实现类内容就好。
 
+
+
 ## SPI机制的应用
 
 ### JDBC DriverManager
 
-> 在JDBC4.0之前，开发连接数据库的时候，通常会用Class.forName("com.mysql.jdbc.Driver")这句先加载数据库相关的驱动，然后再进行获取连接等的操作。**而JDBC4.0之后不需要用Class.forName("com.mysql.jdbc.Driver")来加载驱动，直接获取连接就可以了，现在这种方式就是使用了Java的SPI扩展机制来实现**。
+在JDBC4.0之前，开发连接数据库的时候，通常会用`Class.forName("com.mysql.jdbc.Driver")`这句先加载数据库相关的驱动，然后再进行获取连接等的操作。而JDBC4.0之后不需要用`Class.forName("com.mysql.jdbc.Driver")`来加载驱动，直接获取连接就可以了，原因就是现在使用了Java的SPI扩展机制来实现。
 
-#### JDBC接口定义
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202409011908150.png)
 
-首先在java中定义了接口 java.sql.Driver，并没有具体的实现，具体的实现都是由不同厂商来提供的。
+如上图所示：
 
-#### mysql实现
+1. 首先在java中定义了接口 java.sql.Driver，并没有具体的实现，具体的实现都是由不同厂商来提供的。
+2. 在mysql的jar包mysql-connector-java-8.0.26.jar中，可以找到 META-INF/services 目录，该目录下会有一个名字为 java.sql.Driver 的文件，文件内容是com.mysql.cj.jdbc.Driver，这里面的内容就是mysql针对Java中定义的接口的实现。
+3. 同样在ojdbc的jar包ojdbc11.jar中，也可以找到同样的配置文件，文件内容是 oracle.jdbc.OracleDriver，这是oracle数据库对Java的java.sql.Driver的实现。
 
-在mysql的jar包mysql-connector-java-6.0.6.jar中，可以找到 META-INF/services 目录，该目录下会有一个名字为 java.sql.Driver 的文件，文件内容是com.mysql.cj.jdbc.Driver，这里面的内容就是针对Java中定义的接口的实现。
 
-#### postgresql实现
-
-同样在postgresql的jar包postgresql-42.0.0.jar中，也可以找到同样的配置文件，文件内容是 org.postgresql.Driver，这是postgresql对Java的java.sql.Driver的实现。
 
 #### 使用方法
 
-现在使用SPI扩展来加载具体的驱动，我们在Java中写连接数据库的代码的时候，不需要再使用Class.forName("com.mysql.jdbc.Driver")来加载驱动了，而是直接使用如下代码：
+而现在Java中写连接数据库的代码的时候，不需要再使用`Class.forName("com.mysql.jdbc.Driver")`来加载驱动了，直接获取连接就可以了：
 
 ```java
 String url = "jdbc:xxxx://xxxx:xxxx/xxxx";
-Connection conn = DriverManager.getConnection(url,username,password);
+Connection conn = DriverManager.getConnection(url, username, password);
 .....
 ```
 
-这里并没有涉及到spi的使用，接着看下面的解析。
+这里并没有涉及到spi的使用，看下面源码。
+
+
 
 #### 源码实现
 
-上面的使用方法，就是普通的连接数据库的代码，并没有涉及到SPI的东西，但是有一点我们可以确定的是，我们没有写有关具体驱动的硬编码Class.forName("com.mysql.jdbc.Driver")！
+上面的使用方法，就是普通的连接数据库的代码，实际上并没有涉及到 SPI 的东西，但是有一点可以确定的是，我们没有写有关具体驱动的硬编码`Class.forName("com.mysql.jdbc.Driver")`！
 
-上面的代码可以直接获取数据库连接进行操作，但是跟SPI有啥关系呢？上面代码没有了加载驱动的代码，我们怎么去确定使用哪个数据库连接的驱动呢？这里就涉及到使用Java的SPI扩展机制来查找相关驱动的东西了，关于驱动的查找其实都在DriverManager中，DriverManager是Java中的实现，用来获取数据库连接，在DriverManager中有一个静态代码块如下：
+而上面的代码就可以直接获取数据库连接进行操作，但是跟SPI有啥关系呢？
+既然上面代码没有加载驱动的代码，那实际上是怎么去确定使用哪个数据库连接的驱动呢？
 
-```java
-static {
-    loadInitialDrivers();
-    println("JDBC DriverManager initialized");
-}
-```
-
-可以看到是加载实例化驱动的，接着看loadInitialDrivers方法：
+这里就涉及到使用Java的SPI 扩展机制来查找相关驱动的东西了，关于驱动的查找其实都在DriverManager中，DriverManager是Java中的实现，用来获取数据库连接，源码如下：
 
 ```java
-private static void loadInitialDrivers() {
-    String drivers;
-    try {
-        drivers = AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty("jdbc.drivers");
+public class DriverManager {
+
+    // 存放注册的jdbc驱动
+    private final static CopyOnWriteArrayList<DriverInfo> registeredDrivers = new CopyOnWriteArrayList<>();
+
+    /**
+     * Load the initial JDBC drivers by checking the System property
+     * jdbc.properties and then use the {@code ServiceLoader} mechanism
+     */
+    static {
+        loadInitialDrivers();
+        println("JDBC DriverManager initialized");
+    }
+    
+    private static void loadInitialDrivers() {
+        String drivers;
+        try {
+            // 从JVM -D参数读取jdbc驱动
+            drivers = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                public String run() {
+                    return System.getProperty("jdbc.drivers");
+                }
+            });
+        } catch (Exception ex) {
+            drivers = null;
+        }
+        // If the driver is packaged as a Service Provider, load it.
+        // Get all the drivers through the classloader
+        // exposed as a java.sql.Driver.class service.
+        // ServiceLoader.load() replaces the sun.misc.Providers()
+
+        AccessController.doPrivileged(new PrivilegedAction<Void>() {
+            public Void run() {
+
+                ServiceLoader<Driver> loadedDrivers = ServiceLoader.load(Driver.class);
+                Iterator<Driver> driversIterator = loadedDrivers.iterator();
+
+                /* Load these drivers, so that they can be instantiated.
+                 * It may be the case that the driver class may not be there
+                 * i.e. there may be a packaged driver with the service class
+                 * as implementation of java.sql.Driver but the actual class
+                 * may be missing. In that case a java.util.ServiceConfigurationError
+                 * will be thrown at runtime by the VM trying to locate
+                 * and load the service.
+                 *
+                 * Adding a try catch block to catch those runtime errors
+                 * if driver not available in classpath but it's
+                 * packaged as service and that service is there in classpath.
+                 */
+                try{
+                    // 加载创建所有Driver
+                    while(driversIterator.hasNext()) {
+                        // 触发Driver的类加载->在静态代码块中创建Driver对象并放到DriverManager
+                        driversIterator.next();
+                    }
+                } catch(Throwable t) {
+                // Do nothing
+                }
+                return null;
             }
         });
-    } catch (Exception ex) {
-        drivers = null;
-    }
 
-    AccessController.doPrivileged(new PrivilegedAction<Void>() {
-        public Void run() {
-            //使用SPI的ServiceLoader来加载接口的实现
-            ServiceLoader<Driver> loadedDrivers = ServiceLoader.load(Driver.class);
-            Iterator<Driver> driversIterator = loadedDrivers.iterator();
-            try{
-                while(driversIterator.hasNext()) {
-                    driversIterator.next();
-                }
-            } catch(Throwable t) {
-            // Do nothing
+        println("DriverManager.initialize: jdbc.drivers = " + drivers);
+
+        if (drivers == null || drivers.equals("")) {
+            return;
+        }
+        // 解析JVM参数的jdbc驱动
+        String[] driversList = drivers.split(":");
+        println("number of Drivers:" + driversList.length);
+        for (String aDriver : driversList) {
+            try {
+                println("DriverManager.Initialize: loading " + aDriver);
+                // initial为ture 
+                // 触发Driver的类加载->在静态代码块中创建Driver对象并放到DriverManager
+                Class.forName(aDriver, true,
+                        ClassLoader.getSystemClassLoader());
+            } catch (Exception ex) {
+                println("DriverManager.Initialize: load failed: " + ex);
             }
-            return null;
-        }
-    });
-
-    println("DriverManager.initialize: jdbc.drivers = " + drivers);
-
-    if (drivers == null || drivers.equals("")) {
-        return;
-    }
-    String[] driversList = drivers.split(":");
-    println("number of Drivers:" + driversList.length);
-    for (String aDriver : driversList) {
-        try {
-            println("DriverManager.Initialize: loading " + aDriver);
-            Class.forName(aDriver, true,
-                    ClassLoader.getSystemClassLoader());
-        } catch (Exception ex) {
-            println("DriverManager.Initialize: load failed: " + ex);
         }
     }
+
 }
 ```
 
 上面的代码主要步骤是：
 
-- 从系统变量中获取有关驱动的定义。
+1. 从系统变量中获取有关驱动的定义。
+2. 使用SPI来获取驱动的实现。
+3. 遍历使用SPI获取到的具体实现，实例化各个实现类。
+4. 根据第一步获取到的驱动列表来实例化具体实现类。
 
-- 使用SPI来获取驱动的实现。
 
-- 遍历使用SPI获取到的具体实现，实例化各个实现类。
 
-- 根据第一步获取到的驱动列表来实例化具体实现类。
-
-主要关注2,3步，这两步是SPI的用法，首先看第二步，使用SPI来获取驱动的实现，对应的代码是：
+- 第二步：使用SPI来获取驱动的实现，对应的代码是：
 
 ```java
 ServiceLoader<Driver> loadedDrivers = ServiceLoader.load(Driver.class);
 ```
 
+这里封装了接口类型和类加载器，并初始化了一个迭代器。
 
 
-这里没有去 META-INF/services 目录下查找配置文件，也没有加载具体实现类，做的事情就是封装了我们的接口类型和类加载器，并初始化了一个迭代器。
 
-接着看第三步，遍历使用SPI获取到的具体实现，实例化各个实现类，对应的代码如下：
+- 第三步：遍历获取到的具体实现，实例化各个实现类，对应的代码如下：
 
 ```java
 //获取迭代器
@@ -224,15 +285,13 @@ while(driversIterator.hasNext()) {
 
 然后是调用driversIterator.next();方法，此时就会根据驱动名字具体实例化各个实现类了。现在驱动就被找到并实例化了。
 
-可以看下截图，在测试项目中添加了两个jar包，mysql-connector-java-6.0.6.jar和postgresql-42.0.0.0.jar，跟踪到DriverManager中之后：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250822073.jpg)
-
-可以看到此时迭代器中有两个驱动，mysql和postgresql的都被加载了。
 
 ### Common-Logging
 
-common-logging（也称Jakarta Commons Logging，缩写 JCL）是常用的日志库门面，具体日志库相关可以看这篇。我们看下它是怎么解耦的。
+common-logging（也称Jakarta Commons Logging，缩写 JCL）是常用的日志库门面， 使用了SPI的方式来动态加载和配置日志实现。这种机制允许库在运行时找到合适的日志实现，而无需硬编码具体的日志库。
+
+我们看下它是怎么通过SPI解耦的。
 
 首先，日志实例是通过LogFactory的getLog(String)方法创建的：
 
@@ -244,7 +303,7 @@ public static getLog(Class clazz) throws LogConfigurationException {
 
 
 
-LogFatory是一个抽象类，它负责加载具体的日志实现，分析其Factory getFactory()方法：
+LogFatory是一个抽象类，它负责加载具体的日志实现，getFactory()方法源码如下：
 
 ```java
 public static org.apache.commons.logging.LogFactory getFactory() throws LogConfigurationException {
@@ -273,15 +332,6 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
         logHierarchy("[LOOKUP] ", contextClassLoader);
     }
 
-    // Load properties file.
-    //
-    // If the properties file exists, then its contents are used as
-    // "attributes" on the LogFactory implementation class. One particular
-    // property may also control which LogFactory concrete subclass is
-    // used, but only if other discovery mechanisms fail..
-    //
-    // As the properties file (if it exists) will be used one way or
-    // another in the end we may as well look for it first.
     // classpath根目录下寻找commons-logging.properties
     Properties props = getConfigurationFile(contextClassLoader, FACTORY_PROPERTIES);
 
@@ -292,16 +342,7 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
     if (props != null) {
         String useTCCLStr = props.getProperty(TCCL_KEY);
         if (useTCCLStr != null) {
-            // The Boolean.valueOf(useTCCLStr).booleanValue() formulation
-            // is required for Java 1.2 compatibility.
             if (Boolean.valueOf(useTCCLStr).booleanValue() == false) {
-                // Don't use current context classloader when locating any
-                // LogFactory or Log classes, just use the class that loaded
-                // this abstract class. When this class is deployed in a shared
-                // classpath of a container, it means webapps cannot deploy their
-                // own logging implementations. It also means that it is up to the
-                // implementation whether to load library-specific config files
-                // from the TCCL or not.
                 baseClassLoader = thisClassLoader;
             }
         }
@@ -309,8 +350,6 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
 
     // 这里真正开始决定使用哪个factory
     // 首先，尝试查找vm系统属性org.apache.commons.logging.LogFactory，其是否指定factory
-    // Determine which concrete LogFactory subclass to use.
-    // First, try a global system property
     if (isDiagnosticsEnabled()) {
         logDiagnostic("[LOOKUP] Looking for system property [" + FACTORY_PROPERTY +
                 "] to define the LogFactory subclass to use...");
@@ -337,11 +376,6 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
         }
         // ignore
     } catch (RuntimeException e) {
-        // This is not consistent with the behaviour when a bad LogFactory class is
-        // specified in a services file.
-        //
-        // One possible exception that can occur here is a ClassCastException when
-        // the specified class wasn't castable to this LogFactory type.
         if (isDiagnosticsEnabled()) {
             logDiagnostic("[LOOKUP] An exception occurred while trying to create an" +
                     " instance of the custom factory class" + ": [" +
@@ -351,13 +385,7 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
         throw e;
     }
 
-    // 第二，尝试使用java spi服务发现机制，载META-INF/services下寻找org.apache.commons.logging.LogFactory实现
-    // Second, try to find a service by using the JDK1.3 class
-    // discovery mechanism, which involves putting a file with the name
-    // of an interface class in the META-INF/services directory, where the
-    // contents of the file is a single line specifying a concrete class
-    // that implements the desired interface.
-
+    // 第二，尝试使用java spi服务发现机制，在META-INF/services下寻找org.apache.commons.logging.LogFactory实现
     if (factory == null) {
         if (isDiagnosticsEnabled()) {
             logDiagnostic("[LOOKUP] Looking for a resource file of name [" + SERVICE_ID +
@@ -411,8 +439,6 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
     }
 
     // 第三，尝试从classpath根目录下的commons-logging.properties中查找org.apache.commons.logging.LogFactory属性指定的factory
-    // Third try looking into the properties file read earlier (if found)
-
     if (factory == null) {
         if (props != null) {
             if (isDiagnosticsEnabled()) {
@@ -442,8 +468,6 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
     }
 
     // 最后，使用后备factory实现，org.apache.commons.logging.impl.LogFactoryImpl
-    // Fourth, try the fallback implementation class
-
     if (factory == null) {
         if (isDiagnosticsEnabled()) {
             logDiagnostic(
@@ -452,22 +476,10 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
                             " class (ie not looking in the context classloader).");
         }
 
-        // Note: unlike the above code which can try to load custom LogFactory
-        // implementations via the TCCL, we don't try to load the default LogFactory
-        // implementation via the context classloader because:
-        // * that can cause problems (see comments in newFactory method)
-        // * no-one should be customising the code of the default class
-        // Yes, we do give up the ability for the child to ship a newer
-        // version of the LogFactoryImpl class and have it used dynamically
-        // by an old LogFactory class in the parent, but that isn't
-        // necessarily a good idea anyway.
         factory = newFactory(FACTORY_DEFAULT, thisClassLoader, contextClassLoader);
     }
 
     if (factory != null) {
-        /**
-            * Always cache using context class loader.
-            */
         cacheFactory(contextClassLoader, factory);
 
         if (props != null) {
@@ -486,13 +498,10 @@ public static org.apache.commons.logging.LogFactory getFactory() throws LogConfi
 
 可以看出，抽象类LogFactory加载具体实现的步骤如下：
 
-- 从vm系统属性org.apache.commons.logging.LogFactory
-
-- 使用SPI服务发现机制，发现org.apache.commons.logging.LogFactory的实现
-
-- 查找classpath根目录commons-logging.properties的org.apache.commons.logging.LogFactory属性是否指定factory实现
-
-- 使用默认factory实现，org.apache.commons.logging.impl.LogFactoryImpl
+1. 从vm系统属性org.apache.commons.logging.LogFactory
+2. 使用SPI服务发现机制，发现org.apache.commons.logging.LogFactory的实现
+3. 查找classpath根目录commons-logging.properties的org.apache.commons.logging.LogFactory属性是否指定factory实现
+4. 使用默认factory实现，org.apache.commons.logging.impl.LogFactoryImpl
 
 LogFactory的getLog()方法返回类型是org.apache.commons.logging.Log接口，提供了从trace到fatal方法。可以确定，如果日志实现提供者只要实现该接口，并且使用继承自org.apache.commons.logging.LogFactory的子类创建Log，必然可以构建一个松耦合的日志系统。
 
@@ -500,7 +509,14 @@ LogFactory的getLog()方法返回类型是org.apache.commons.logging.Log接口�
 
 ### Spring中SPI机制
 
-在springboot的自动装配过程中，最终会加载META-INF/spring.factories文件，而加载的过程是由SpringFactoriesLoader加载的。从CLASSPATH下的每个Jar包中搜寻所有META-INF/spring.factories配置文件，然后将解析properties文件，找到指定名称的配置后返回。需要注意的是，其实这里不仅仅是会去ClassPath路径下查找，会扫描所有路径下的Jar包，只不过这个文件只会在Classpath下的jar包中。
+在springboot的[自动装配](https://www.seven97.top/framework/springboot/principleofautomaticassembly.html)过程中，最终会加载META-INF/spring.factories文件，主要通过以下几个步骤实现：
+
+1. **服务接口定义**： Spring 定义了许多服务接口，如 `org.springframework.boot.autoconfigure.EnableAutoConfiguration`。
+2. **服务提供者实现**： 各种具体的模块和库会提供这些服务接口的实现，如各种自动配置类。
+3. **服务描述文件**： 在实现模块的 JAR 包中，会有一个 `META-INF/spring.factories` 文件，这个文件中列出了该 JAR 包中实现的自动配置类。
+4. **服务加载**： Spring Boot 在启动时加载 `spring.factories` 文件，并实例化这些文件中列出的实现类。
+
+Spring Boot 使用 `SpringFactoriesLoader` 来加载 `spring.factories` 文件中列出的所有类，并将它们注册到应用上下文中。需要注意的是，其实这里不仅仅是会去ClassPath路径下查找，会扫描所有路径下的Jar包，只不过这个文件只会在Classpath下的jar包中。
 
 ```java
 public static final String FACTORIES_RESOURCE_LOCATION = "META-INF/spring.factories";
@@ -525,35 +541,20 @@ public static List<String> loadFactoryNames(Class<?> factoryClass, ClassLoader c
 }
 ```
 
+通过 SPI 机制和 `spring.factories` 文件的配合，Spring Boot 实现了模块化和自动配置的能力。开发者可以通过定义自动配置类并在 `spring.factories` 文件中声明它们，从而实现模块的独立和松耦合。这种机制不仅简化了配置和启动过程，还提升了应用的可扩展性和维护性。
 
 
-## SPI机制深入理解
 
-### SPI机制通常怎么使用
+
+
+## SPI 机制通常怎么使用
 
 看完上面的几个例子解析，应该都能知道大概的流程了：
 
-- 有关组织或者公司定义标准。
-
-- 具体厂商或者框架开发者实现。
-
-- 程序猿使用。
-
-#### 定义标准
-
-定义标准，就是定义接口。比如接口java.sql.Driver
-
-#### 具体厂商或者框架开发者实现
-
-厂商或者框架开发者开发具体的实现：
-
-在META-INF/services目录下定义一个名字为接口全限定名的文件，比如java.sql.Driver文件，文件内容是具体的实现名字，比如me.cxis.sql.MyDriver。
-
-写具体的实现me.cxis.sql.MyDriver，都是对接口Driver的实现。
-
-#### 程序猿使用
-
-会引用具体厂商的jar包来实现我们的功能：
+1. 定义标准：定义标准，就是定义接口。比如接口java.sql.Driver
+2. 具体厂商或者框架开发者实现：厂商或者框架开发者开发具体的实现：
+   在META-INF/services目录下定义一个名字为接口全限定名的文件，比如java.sql.Driver文件，文件内容是具体的实现名字，比如me.cxis.sql.MyDriver。写具体的实现me.cxis.sql.MyDriver，都是对接口Driver的实现。
+3. 具体使用：引用具体厂商的jar包来实现我们的功能：
 
 ```java
 ServiceLoader<Driver> loadedDrivers = ServiceLoader.load(Driver.class);
@@ -567,49 +568,23 @@ while(driversIterator.hasNext()) {
 
 ```
 
-
-
-#### 使用规范
-
-最后总结一下jdk spi需要遵循的规范
+4. 使用规范：
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250822070.jpg)
 
 
 
-### SPI和API的区别是什么
-
-SPI ： “接口”位于“调用方”所在的“包”中
-
-- 概念上更依赖调用方。
-
-- 组织上位于调用方所在的包中。
-
-- 实现位于独立的包中。
-
-- 常见的例子是：插件模式的插件。
-
  
 
-API ： “接口”位于“实现方”所在的“包”中
+## SPI机制实现原理
 
-- 概念上更接近实现方。
+那么问题来了： 怎么样才能加载这些SPI接口的实现类呢，真正的原因是Java的[类加载机制](https://www.seven97.top/java/jvm/01-jvmbasic2-classloadingmechanism.html)！ SPI接口属于java rt核心包，只能由启动类加载器BootStrap classLoader加载，而第三方jar包是用户classPath路径下，根据类加载器的可见性原则：启动类加载器无法加载这些jar包，也就是没法向下委托，所以spi必须打破这种传统的双亲委派机制，通过自定义的类加载器来加载第三方jar包下的spi接口实现类！
 
-- 组织上位于实现方所在的包中。
-
-- 实现和接口在一个包中。
-
- 
-
-### SPI机制实现原理
-
-不妨看下JDK中ServiceLoader方法的具体实现：
+JDK中ServiceLoader方法的具体实现：
 
 ```java
 //ServiceLoader实现了Iterable接口，可以遍历所有的服务实现者
-public final class ServiceLoader<S>
-    implements Iterable<S>
-{
+public final class ServiceLoader<S> implements Iterable<S>{
 
     //查找配置文件的目录
     private static final String PREFIX = "META-INF/services/";
@@ -628,7 +603,6 @@ public final class ServiceLoader<S>
 
     // 迭代器
     private LazyIterator lookupIterator;
-
 
     //重新加载，就相当于重新创建ServiceLoader了，用于新的服务提供者安装到正在运行的Java虚拟机中的情况。
     public void reload() {
@@ -672,10 +646,8 @@ public final class ServiceLoader<S>
     //首先去掉注释校验，然后保存
     //返回下一行行号
     //重复的配置项和已经被实例化的配置项不会被保存
-    private int parseLine(Class<?> service, URL u, BufferedReader r, int lc,
-                          List<String> names)
-        throws IOException, ServiceConfigurationError
-    {
+    private int parseLine(Class<?> service, URL u, BufferedReader r, int lc, List<String> names)
+        	throws IOException, ServiceConfigurationError{
         //读取一行
         String ln = r.readLine();
         if (ln == null) {
@@ -705,9 +677,7 @@ public final class ServiceLoader<S>
 
     //解析配置文件，解析指定的url配置文件
     //使用parseLine方法进行解析，未被实例化的服务提供者会被保存到缓存中去
-    private Iterator<String> parse(Class<?> service, URL u)
-        throws ServiceConfigurationError
-    {
+    private Iterator<String> parse(Class<?> service, URL u) throws ServiceConfigurationError{
         InputStream in = null;
         BufferedReader r = null;
         ArrayList<String> names = new ArrayList<>();
@@ -721,9 +691,7 @@ public final class ServiceLoader<S>
     }
 
     //服务提供者查找的迭代器
-    private class LazyIterator
-        implements Iterator<S>
-    {
+    private class LazyIterator implements Iterator<S>{
 
         Class<S> service;//服务提供者接口
         ClassLoader loader;//类加载器
@@ -836,9 +804,7 @@ public final class ServiceLoader<S>
     }
 
     //为指定的服务使用指定的类加载器来创建一个ServiceLoader
-    public static <S> ServiceLoader<S> load(Class<S> service,
-                                            ClassLoader loader)
-    {
+    public static <S> ServiceLoader<S> load(Class<S> service, ClassLoader loader){
         return new ServiceLoader<>(service, loader);
     }
 
@@ -871,17 +837,17 @@ public final class ServiceLoader<S>
 2. **其次**，LazyIterator 中的 hasNext 方法，静态变量PREFIX就是”META-INF/services/”目录，这也就是为什么需要在classpath下的META-INF/services/目录里创建一个以服务接口命名的文件。
 3. **最后**，通过反射方法Class.forName()加载类对象，并用newInstance方法将类实例化，并把实例化后的类缓存到providers对象中，(LinkedHashMap<String,S>类型）然后返回实例对象。
 
-所以我们可以看到ServiceLoader不是实例化以后，就去读取配置文件中的具体实现，并进行实例化。而是等到使用迭代器去遍历的时候，才会加载对应的配置文件去解析，调用hasNext方法的时候会去加载配置文件进行解析，调用next方法的时候进行实例化并缓存。
+所以可以看到ServiceLoader不是实例化以后，就去读取配置文件中的具体实现，并进行实例化。而是等到使用迭代器去遍历的时候，才会加载对应的配置文件去解析，调用hasNext方法的时候会去加载配置文件进行解析，调用next方法的时候进行实例化并缓存。
 
 所有的配置文件只会加载一次，服务提供者也只会被实例化一次，重新加载配置文件可使用reload方法。
 
-### SPI机制的缺陷
+
+
+## JDK SPI机制的缺陷
 
 通过上面的解析，可以发现，我们使用SPI机制的缺陷：
 
-- 不能按需加载，需要遍历所有的实现，并实例化，然后在循环中才能找到我们需要的实现。如果不想用某些实现类，或者某些类实例化很耗时，它也被载入并实例化了，这就造成了浪费。
-
-- 获取某个实现类的方式不够灵活，只能通过 Iterator 形式获取，不能根据某个参数来获取对应的实现类。
+- 获取某个实现类的方式不够灵活，只能通过 Iterator 形式获取，不能根据某个参数来获取对应的实现类。如果不想用某些实现类，或者某些类实例化很耗时，它也被载入并实例化了，这就造成了浪费。
 
 - 多个并发多线程使用 ServiceLoader 类的实例是不安全的
 
