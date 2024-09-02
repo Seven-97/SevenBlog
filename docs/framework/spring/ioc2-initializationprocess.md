@@ -411,7 +411,7 @@ Xml Bean读取器(XmlBeanDefinitionReader)调用其父类AbstractBeanDefinitionR
 
 
 
-#### AbstractBeanDefinitionReader读取Bean定义资源
+### AbstractBeanDefinitionReader读取Bean定义资源
 
 AbstractBeanDefinitionReader的loadBeanDefinitions方法源码如下：
 
@@ -469,7 +469,7 @@ public int loadBeanDefinitions(String location, @Nullable Set<Resource> actualRe
 
 
 
-##### XmlBeanDefinitionReader加载Bean定义资源
+#### XmlBeanDefinitionReader加载Bean定义资源
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408251132737.png)
 
@@ -528,7 +528,7 @@ protected Document doLoadDocument(InputSource inputSource, Resource resource) th
 
 
 
-##### DocumentLoader将Bean定义资源转换为Document对象
+#### DocumentLoader将Bean定义资源转换为Document对象
 
 DocumentLoader将Bean定义资源转换成Document对象的源码如下：
 
@@ -586,7 +586,7 @@ protected DocumentBuilderFactory createDocumentBuilderFactory(int validationMode
 
 
 
-#### XmlBeanDefinitionReader解析载入的Bean定义资源文件
+### XmlBeanDefinitionReader解析载入的Bean定义资源文件
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408251139671.png)
 
@@ -621,11 +621,11 @@ Bean定义资源的载入解析分为以下两个过程：
 - 首先，通过调用XML解析器将Bean定义资源文件转换得到Document对象，但是这些Document对象并没有按照Spring的Bean规则进行解析。这一步是载入的过程
 - 其次，在完成通用的XML解析之后，按照Spring的Bean规则对Document对象进行解析。
 
-按照Spring的Bean规则对Document对象解析的过程是在接口BeanDefinitionDocumentReader的实现类DefaultBeanDefinitionDocumentReader中实现的。
+在这个方法中很好地应用了面向对象中单一职责的原则，将逻辑处理委托给单一的类进行处理，而这个逻辑处理类就是BeanDefinitionDocumentReader。BeanDefinitionDocumentReader是一个接口，而实例化的工作是在createBeanDefinitionDocumentReader()中完成的，而通过此方法，BeanDefinitionDocumentReader真正的类型其实已经是DefaultBeanDefinitionDocumentReader了。按照Spring的Bean规则对Document对象解析的过程是在接口BeanDefinitionDocumentReader的实现类DefaultBeanDefinitionDocumentReader中实现的。
 
 
 
-##### DefaultBeanDefinitionDocumentReader对Bean定义的Document对象解析
+#### DefaultBeanDefinitionDocumentReader对Bean定义的Document对象解析
 
 BeanDefinitionDocumentReader接口通过registerBeanDefinitions方法调用其实现类DefaultBeanDefinitionDocumentReader对Document对象进行解析，解析的代码如下：
 
@@ -649,12 +649,14 @@ protected void doRegisterBeanDefinitions(Element root) {
     this.delegate = createDelegate(getReaderContext(), root, parent);
 
     if (this.delegate.isDefaultNamespace(root)) {
+        //专门对 profile 标签进行解析
         String profileSpec = root.getAttribute(PROFILE_ATTRIBUTE);
         if (StringUtils.hasText(profileSpec)) {
             String[] specifiedProfiles = StringUtils.tokenizeToStringArray(
                     profileSpec, BeanDefinitionParserDelegate.MULTI_VALUE_ATTRIBUTE_DELIMITERS);
             // We cannot use Profiles.of(...) since profile expressions are not supported
             // in XML config. See SPR-12458 for details.
+            //
             if (!getReaderContext().getEnvironment().acceptsProfiles(specifiedProfiles)) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Skipped XML bean definition file due to specified profiles [" + profileSpec +
@@ -665,15 +667,29 @@ protected void doRegisterBeanDefinitions(Element root) {
         }
     }
 
-    preProcessXml(root);
+    
+    preProcessXml(root);//解析前处理，留给子类实现
     parseBeanDefinitions(root, this.delegate); // 从Document的根元素开始进行Bean定义的Document对象  
-    postProcessXml(root);
+    postProcessXml(root);//解析后处理，留给子类实现
 
     this.delegate = parent;
 }
 ```
 
-##### BeanDefinitionParserDelegate解析Bean定义资源文件生成BeanDefinition
+这里我们注意到在注册Bean的最开始是对PROFILE_ATTRIBUTE属性的解析，有了 profile 这个特性我们就可以同时在配置文件中部署两套配置来适用于生产环境和开发环境，这样可以方便的进行切换开发、部署环境，最常用的就是更换不同的数据库。
+
+首先程序会获取beans节点是否定义了profile属性，如果定义了则会需要到环境变量中去寻找，因为profile是可以同时指定多个的，需要程序对其拆分，并解析每个profile是都符合环境变量中所定义的，不定义则不会浪费性能去解析。
+
+
+
+> 注意：跟进 preProcessXml(root) 和 postProcessXml(root) 后发现代码是空的。
+> 记住，一个类要么是面向继承设计，要么是final修饰的。而这个类并不是final修饰的，那么就是面向继承设计的，显然这里是用到了[模板方法设计模式](https://www.seven97.top/system-design/design-pattern/behavioralpattern.html)，如果继承自DefaultBeanDefinitionDocumentReader的子类需要在Bean解析前后做一些处理的话，那么只需要重写这两个方法即可
+
+
+
+#### BeanDefinitionParserDelegate解析Bean定义资源文件生成BeanDefinition
+
+处理了profile后就可以进行XML的读取了，跟踪代码进入parseBeanDefinitions(root, this.delegate)。
 
 ```java
 /**
@@ -689,9 +705,11 @@ protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate d
             if (node instanceof Element) {
                 Element ele = (Element) node;
                 if (delegate.isDefaultNamespace(ele)) {
+                    //对Bean的处理
                     parseDefaultElement(ele, delegate);
                 }
                 else {
+                    //对Bean的处理
                     delegate.parseCustomElement(ele);
                 }
             }
@@ -701,7 +719,27 @@ protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate d
         delegate.parseCustomElement(root);
     }
 }
+```
 
+上面的代码看起来逻辑还是蛮清晰的，因为在Spring的XML配置里面有两大类Bean声明，一个是默认的，如：
+
+```java
+<bean id="test" class="test.TestBean"/>
+```
+
+另一类就是自定义的，如：
+
+```java
+<tx:annotation-driven/>
+```
+
+而两种方式的读取及解析差别是非常大的，如果采用Spring默认的配置，Spring当然知道该怎么做，但是如果是自定义的，那么就需要用户实现一些接口及配置了。对于根节点或者子节点如果是默认命名空间的话则采用parseDefaultElement方法进行解析，否则使用delegate.parseCustomElement方法对自定义命名空间进行解析。而判断是否默认命名空间还是自定义命名空间的办法其实是使用node.getNamespaceURI()获取命名空间，并与Spring中固定的命名空间http://www.Springframework.org/schema/beans进行比对。如果一致则认为是默认，否则就认为是自定义。
+
+
+
+##### 默认标签的解析
+
+```java
 private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate delegate) {
       
     // 如果元素节点是<Import>导入元素，进行导入解析
@@ -724,13 +762,15 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
 }
 ```
 
-解析Bean生成BeanDefinitionHolder的方法
+
+
+委托BeanDefinitionDelegate类的parseBeanDefinitionElement方法进行元素解析，返回BeanDefinitionHolder类型的实例bdHolder，经过这个方法后，bdHolder实例已经包含我们配置文件中配置的各种属性了，例如class、name、id、alias之类的属性。
 
 ```java
 /**
-    * Process the given bean element, parsing the bean definition
-    * and registering it with the registry.
-    */
+* Process the given bean element, parsing the bean definition
+* and registering it with the registry.
+*/
 protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate delegate) {
     BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele);
     if (bdHolder != null) {
@@ -749,9 +789,17 @@ protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate d
 }
 ```
 
-（这里就不一一展开了，无非就是解析XML各种元素，来生成BeanDefinition）
+parseBeanDefinitionElement的解析方法 就不一一展开了，无非就是解析XML各种元素，来生成BeanDefinition。解析的过程与mybatis解析xml文件同理，详情可以看[这篇文章](https://www.seven97.top/framework/orm/mybatis-configurationparsingprocess.html)
 
-#### 解析过后的BeanDefinition在IoC容器中的注册
+
+
+##### 自定义标签的解析
+
+
+
+
+
+### 解析过后的BeanDefinition在IoC容器中的注册
 
 Document对象的解析后得到封装 BeanDefinition 的 BeanDefinitionHold 对象，然后调用 BeanDefinitionReaderUtils 的 registerBeanDefinition 方法向IoC容器注册解析的Bean，BeanDefinitionReaderUtils的注册的源码如下：
 
@@ -779,7 +827,7 @@ public static void registerBeanDefinition(
 
 
 
-#### DefaultListableBeanFactory向IoC容器注册解析后的BeanDefinition
+### DefaultListableBeanFactory向IoC容器注册解析后的BeanDefinition
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408251144850.png)
 
@@ -1193,7 +1241,6 @@ protected void finishRefresh() {
 ```
 
 initLifecycleProcessor，这个方法极具简单，就看一下当前Bean中是否存在生命周期处理器，如果存在直接使用这个，如果不存在则创建一个默认的，并且注册为一个单例的扔到容器中。
-
 
 
 
