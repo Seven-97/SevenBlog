@@ -9,9 +9,9 @@ tag:
 
 
 
-关于AOP不理解的可以看[这篇文章](https://www.seven97.top/framework/spring/aop1-summary.html)，AOP适合在在不改变业务代码的情况下，灵活地添加各种横切关注点，实现一些通用公共的业务场景，例如日志记录、事务管理、安全检查、性能监控、缓存管理、限流、防重复提交等功能。这样不仅提高了代码的可维护性，还使得业务逻辑更加清晰专注。
+最近上了一个新项目，考虑到一个问题，在高并发场景下，我们无法控制前端的请求频率和次数，这就可能导致服务器压力过大，响应速度变慢，甚至引发系统崩溃等严重问题。为了解决这些问题，我们需要在后端实现一些机制，如接口限流、防重复提交和接口防抖，而这些是保证接口安全、稳定提供服务，以及防止错误数据 和 脏数据产生的重要手段。
 
-而接口限流、防重复提交、接口防抖，是保证接口安全、稳定提供服务，以及防止错误数据 和 脏数据产生的重要手段。
+而AOP适合在在不改变业务代码的情况下，灵活地添加各种横切关注点，实现一些通用公共的业务场景，例如日志记录、事务管理、安全检查、性能监控、缓存管理、限流、防重复提交等功能。这样不仅提高了代码的可维护性，还使得业务逻辑更加清晰专注，关于AOP不理解的可以看[这篇文章](https://www.seven97.top/framework/spring/aop1-summary.html)。
 
 本文源码位置[点击这里](https://github.com/Seven-97/SpringBoot-Demo/tree/master/09-aop-limit-repeatsubmit-antishake)
 
@@ -293,12 +293,16 @@ public Result saveUser() {
 
 ```java
 // 该注解只能用于方法
-@Target(ElementType.METHOD) 
-// 运行时保留，这样才能在AOP中被检测到
-@Retention(RetentionPolicy.RUNTIME) 
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)// 运行时保留，这样才能在AOP中被检测到
 public @interface AntiShake {
-    // 默认防抖时间1秒，单位秒
-    long value() default 1000L; 
+
+    String preKey() default "";
+
+    // 默认防抖时间1秒
+    long value() default 1000L;
+
+    TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
 }
 ```
 
@@ -307,22 +311,43 @@ public @interface AntiShake {
 ```java
 @Aspect // 标记为切面类
 @Component // 让Spring管理这个Bean
+@RequiredArgsConstructor // 通过构造方法注入依赖
 public class AntiShakeAspect {
- 
-    private ThreadLocal<Long> lastInvokeTime = new ThreadLocal<>();
- 
+
+    private final String ANTI_SHAKE_LOCK_KEY = "ANTI_SHAKE_LOCK_KEY";
+
+    private final RedissonClient redissonClient;
+
     @Around("@annotation(antiShake)") // 拦截所有标记了@AntiShake的方法
     public Object aroundAdvice(ProceedingJoinPoint joinPoint, AntiShake antiShake) throws Throwable {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+
         long currentTime = System.currentTimeMillis();
-        long lastTime = lastInvokeTime.get() != null ? lastInvokeTime.get() : 0;
-        
-        if (currentTime - lastTime < antiShake.value()) {
+
+        // 获取方法签名和参数作为 Redis 键
+        String ipAddr = IPUtil.getIpAddr(request);
+        String key = generateTokenRedisKey(joinPoint, ipAddr, antiShake.preKey());
+
+        RBucket<Long> bucket = redissonClient.getBucket(key);
+        Long lastTime = bucket.get();
+
+        if (lastTime != null && currentTime - lastTime < antiShake.value()) {
             // 如果距离上次调用时间小于指定的防抖时间，则直接返回，不执行方法
-            return null; // 或者根据业务需要返回特定值
+            return null; // 根据业务需要返回特定值
         }
-        
-        lastInvokeTime.set(currentTime);
+
+        // 更新 Redis 中的时间戳
+        bucket.set(currentTime, antiShake.value(), antiShake.timeUnit());
         return joinPoint.proceed(); // 执行原方法
+    }
+
+    private String generateTokenRedisKey(ProceedingJoinPoint joinPoint, String ipAddr, String preKey) {
+        //根据ip地址、用户id、类名方法名、生成唯一的key
+        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+        Method method = methodSignature.getMethod();
+        String className = method.getDeclaringClass().getName();
+        String userId = "seven";
+        return String.format("%s:%s:%s", ANTI_SHAKE_LOCK_KEY, preKey, DigestUtil.md5Hex(String.format("%s-%s-%s-%s", ipAddr, className, method, userId)));
     }
 }
 ```
@@ -336,6 +361,8 @@ public Result clickButton() {
     return Result.success("成功点击按钮");
 }
 ```
+
+接口防抖整体思路与防重复提交思路类似，防重复提交代码也可重用于接口防抖
 
 
 
