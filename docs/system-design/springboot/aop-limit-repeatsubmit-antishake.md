@@ -356,7 +356,7 @@ public class AntiShakeAspect {
 
 ```java
 @PostMapping("/clickButton")
-@AntiShake(value = 1000)
+@AntiShake(value = 1000, timeUnit = TimeUnit.MILLISECONDS, preKey = "clickButton")
 public Result clickButton() {
     return Result.success("成功点击按钮");
 }
