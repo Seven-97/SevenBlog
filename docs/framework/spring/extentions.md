@@ -15,9 +15,7 @@ Spring的核心思想就是容器，当容器refresh的时候，外部看上去�
 
 想要把自动装配玩的转，就必须要了解spring对于bean的构造生命周期以及各个扩展接口，当然了解了bean的各个生命周期也能促进我们加深对spring的理解。业务代码也能合理利用这些扩展点写出更优雅的代码。本文不讲原理，只将扩展点与使用方式讲清楚，原理可以移步[IOC系列文章](https://www.seven97.top/framework/spring/ioc2-initializationprocess.html)。
 
-在网上搜索spring扩展点，发现很少有博文说的很全的，只有一些常用的扩展点的说明。
-
-所以在这篇文章里，我总结了几乎Spring & Springboot所有的扩展接口，各个扩展点的使用场景，并整理出一个bean在spring中从被加载到初始化到销毁的所有可扩展点的顺序调用图。
+在网上搜索spring扩展点，发现很少有博文说的很全的，只有一些常用的扩展点的说明。所以在这篇文章里，我总结了几乎Spring & Springboot所有的扩展接口，各个扩展点的使用场景，并整理出一个bean在spring中从被加载到初始化到销毁的所有可扩展点的顺序调用图。
 
 ![img](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202409021555378.png)
 
@@ -140,19 +138,21 @@ public class MySpringExApplication {
 
 
 
-2. application配置文件 配置`context.initializer.classes=com.seven.demo.TestApplicationContextInitializer`
+2. application配置文件 配置` com.seven.springsrpingbootextentions.extentions.TestApplicationContextInitializer`
 
 ```java
-# application.properties文件
-context.initializer.classes = com.seven.demo.TestApplicationContextInitializer
+# application.yml文件
+context:
+  initializer:
+    classes: com.seven.springsrpingbootextentions.extentions.TestApplicationContextInitializer
 ```
 
 
 
-3. Spring SPI扩展，在spring.factories中加入（官方推荐）：`org.springframework.context.ApplicationContextInitializer=com.seven.demo.TestApplicationContextInitializer`
+3. Spring SPI扩展，在spring.factories中加入（官方推荐）：
 
 ```java
-org.springframework.context.ApplicationContextInitializer = com.seven.demo.TestApplicationContextInitializer
+com.seven.springsrpingbootextentions.extentions.TestApplicationContextInitializer
 ```
 
 
@@ -183,7 +183,7 @@ org.springframework.context.ApplicationContextInitializer = com.seven.demo.TestA
 
 BeanDefinitionRegistryPostProcessor为容器级后置处理器。**容器级的后置处理器会在Spring容器初始化后、刷新前执行一次，用于动态注册Bean到容器**。
 
-通过 BeanFactoryPostProcessor的子类BeanDefinitionRegistryPostProcessor，可以注册一个你自己的BeanDefinition对象到容器中，等待容器内部依次调用进行对象实例化就能当bean用了。
+通过 BeanFactoryPostProcessor 的子类BeanDefinitionRegistryPostProcessor，可以注册一个你自己的BeanDefinition对象到容器中，等待容器内部依次调用进行对象实例化就能当bean用了。
 
 BeanDefinitionRegistryPostProcessor用于在bean解析后实例化之前通过BeanDefinitionRegistry对BeanDefintion进行增删改查。
 
@@ -196,6 +196,7 @@ public class TestBeanDefinitionRegistryPostProcessor implements BeanDefinitionRe
         System.out.println("[BeanDefinitionRegistryPostProcessor] postProcessBeanDefinitionRegistry");
     }
 
+    //BeanFactoryPostProcessor方法
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         System.out.println("[BeanDefinitionRegistryPostProcessor] postProcessBeanFactory");
@@ -223,22 +224,11 @@ public class User {
 }
 
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.MutablePropertyValues;
-import org.springframework.beans.PropertyValue;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.core.Ordered;
-import org.springframework.stereotype.Component;
-
 @Component
-public class DynamicBeanRegistration implements BeanDefinitionRegistryPostProcessor, Ordered {
-
+public class Test2BeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
     @Override
-    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry beanRegistry) throws BeansException {
+    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry beanDefinitionRegistry) throws BeansException {
+        System.out.println("进入[TestBeanDefinitionRegistryPostProcessor]...postProcessBeanDefinitionRegistry..." + beanDefinitionRegistry);
         RootBeanDefinition beanDefinition = new RootBeanDefinition();
         beanDefinition.setBeanClass(User.class);
         MutablePropertyValues propertyValues = new MutablePropertyValues();
@@ -247,21 +237,19 @@ public class DynamicBeanRegistration implements BeanDefinitionRegistryPostProces
         propertyValues.addPropertyValue(propertyValue1);
         propertyValues.addPropertyValue(propertyValue2);
         beanDefinition.setPropertyValues(propertyValues);
-        beanRegistry.registerBeanDefinition("user", beanDefinition);
+        beanDefinitionRegistry.registerBeanDefinition("user", beanDefinition);
     }
 
+    //BeanFactoryPostProcessor的方法
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        BeanDefinition beanDefinition = beanFactory.getBeanDefinition("user");
-        System.out.println(beanDefinition.getBeanClassName());
-        User user = beanFactory.getBean(User.class);
-        System.out.println(user.getName());
-        System.out.println(user.getPassword());
-    }
+        System.out.println("进入[TestBeanDefinitionRegistryPostProcessor]...postProcessBeanFactory..." + beanFactory);
 
-    @Override
-    public int getOrder() {
-        return 0;
+        BeanDefinition beanDefinition = beanFactory.getBeanDefinition("user");
+        System.out.println("打印[TestBeanDefinitionRegistryPostProcessor]...postProcessBeanFactory..." + beanDefinition.getBeanClassName());
+        User user = beanFactory.getBean(User.class);
+        System.out.println("打印[TestBeanDefinitionRegistryPostProcessor]...postProcessBeanFactory..." + user.getName());
+        System.out.println("打印[TestBeanDefinitionRegistryPostProcessor]...postProcessBeanFactory..." + user.getPassword());
     }
 }
 ```
@@ -282,7 +270,7 @@ public class DynamicBeanRegistration implements BeanDefinitionRegistryPostProces
 
 也可以在这里面添加自己的BeanPostProcessor，以及其他容器相关操作，此方法只调用一次，**同时记住不要在这里做Bean的实例化**。
 
-**前文介绍的BeanDefinitionRegistryPostProcessor是这个接口的子接口**，因此实现BeanDefinitionRegistryPostProcessor这个接口，也可以重写其postProcessBeanFactory 方法
+**前文介绍的BeanDefinitionRegistryPostProcessor是这个接口的子接口**，因此实现BeanDefinitionRegistryPostProcessor这个接口，也可以重写其postProcessBeanFactory 方法。实现了BeanDefinitionRegistryPostProcessor的postProcessBeanFactory方法会先执行，再执行实现了BeanFactoryPostProcessor的postProcessBeanFactory
 
 
 
@@ -311,24 +299,17 @@ public class User {
     String password;
 }
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.MutablePropertyValues;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.stereotype.Component;
-
 @Component
-public class MyBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
-
+public class Test3BeanFactoryPostProcessor implements BeanFactoryPostProcessor {
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        System.out.println("进入[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + beanFactory);
+
         BeanDefinition beanDefinition = beanFactory.getBeanDefinition("user");
-        if (Objects.nonNull(beanDefinition)) {
-            MutablePropertyValues propertyValues = beanDefinition.getPropertyValues();
-            propertyValues.addPropertyValue("name", "seven");
-            propertyValues.addPropertyValue("password", "123456");
-        }
+        System.out.println("打印[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + beanDefinition.getBeanClassName());
+        User user = beanFactory.getBean(User.class);
+        System.out.println("打印[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + user.getName());
+        System.out.println("打印[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + user.getPassword());
     }
 }
 ```
@@ -343,9 +324,9 @@ public class MyBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
 > org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor
 
-该接口继承了`BeanPostProcess`接口，因为InstantiationAwareBeanPostProcessor也属于Bean级的后置处理器，区别如下：
+该接口继承了`BeanPostProcessor`接口，因为InstantiationAwareBeanPostProcessor也属于Bean级的后置处理器，区别如下：
 
-`BeanPostProcess`接口只在bean的初始化阶段进行扩展（注入spring上下文前后），而`InstantiationAwareBeanPostProcessor`接口在此基础上增加了3个方法，把可扩展的范围增加了实例化阶段和属性注入阶段。要注意的是，虽然InstantiationAwareBeanPostProcessor继承于BeanPostProcessor，但是InstantiationAwareBeanPostProcessor的**执行时机要稍早于BeanPostProcessor**；
+`BeanPostProcess`接口只**在bean的初始化阶段进行扩展**（注入spring上下文前后），而`InstantiationAwareBeanPostProcessor`接口在此基础上增加了3个方法，把可扩展的范围增加了实例化阶段和属性注入阶段。要注意的是，虽然InstantiationAwareBeanPostProcessor继承于BeanPostProcessor，但是InstantiationAwareBeanPostProcessor的**执行时机要稍早于BeanPostProcessor**；
 
 
 
@@ -353,7 +334,7 @@ public class MyBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
 - `postProcessBeforeInstantiation`：在Bean实例化之前调用，如果返回null，一切按照正常顺序执行；如果返回的是一个实例的对象，那么`postProcessAfterInstantiation()`会执行，其他的扩展点将不再触发。
 - `postProcessAfterInstantiation`：在Bean实例化之后调用，可以对已实例化的Bean进行进一步的自定义处理。
-- `postProcessPropertyValues`：bean已经实例化完成，在属性注入时阶段触发，`@Autowired`，`@Resource`等注解原理基于此方法实现；可以修改Bean的属性值或进行其他自定义操作，**当postProcessAfterInstantiation返回true才执行。**
+- `postProcessPropertyValues`（方法已弃用）：bean已经实例化完成，在属性注入时阶段触发，`@Autowired`，`@Resource`等注解原理基于此方法实现；可以修改Bean的属性值或进行其他自定义操作，**当postProcessAfterInstantiation返回true才执行。**
 - `postProcessBeforeInitialization`(BeanPostProcessor的扩展)：初始化bean之前，相当于把bean注入spring上下文之前；可用于创建代理类，如果返回的不是 null（也就是返回的是一个代理类） ，那么后续只会调用 postProcessAfterInitialization() 方法
 - `postProcessAfterInitialization`(BeanPostProcessor的扩展)：初始化bean之后，相当于把bean注入spring上下文之后；返回值会影响 postProcessProperties() 是否执行，其中返回 false 的话，是不会执行。
 - `postProcessProperties()`：在 Bean 设置属性前调用；用于修改 bean 的属性，如果返回值不为空，那么会更改指定字段的值
@@ -365,37 +346,48 @@ public class MyBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 ### 扩展方式
 
 ```java
-public class TestInstantiationAwareBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
-
-    @Override
-    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        System.out.println("[TestInstantiationAwareBeanPostProcessor] before initialization " + beanName);
-        return bean;
-    }
-
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        System.out.println("[TestInstantiationAwareBeanPostProcessor] after initialization " + beanName);
-        return bean;
-    }
+@Component
+public class Test4InstantiationAwareBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
-        System.out.println("[TestInstantiationAwareBeanPostProcessor] before instantiation " + beanName);
+        System.out.println("[TestInstantiationAwareBeanPostProcessor]...postProcessBeforeInstantiation..." + beanName);
         return null;
     }
 
     @Override
     public boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException {
-        System.out.println("[TestInstantiationAwareBeanPostProcessor] after instantiation " + beanName);
+        System.out.println("[TestInstantiationAwareBeanPostProcessor]...postProcessAfterInstantiation..." + beanName);
         return true;
     }
 
     @Override
     public PropertyValues postProcessPropertyValues(PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeansException {
-        System.out.println("[TestInstantiationAwareBeanPostProcessor] postProcessPropertyValues " + beanName);
+        System.out.println("[TestInstantiationAwareBeanPostProcessor]...postProcessPropertyValues..." + beanName);
         return pvs;
     }
+
+    //BeanPostProcessor的方法
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("[TestInstantiationAwareBeanPostProcessor]...postProcessBeforeInitialization..." + beanName);
+        return bean;
+    }
+
+    //BeanPostProcessor的方法
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("[TestInstantiationAwareBeanPostProcessor]...postProcessAfterInitialization..." + beanName);
+        return bean;
+    }
+
+    @Override
+    public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) throws BeansException {
+        System.out.println("[TestInstantiationAwareBeanPostProcessor]...postProcessProperties..." + beanName);
+        return InstantiationAwareBeanPostProcessor.super.postProcessProperties(pvs, bean, beanName);
+    }
+
+}
 ```
 
 
@@ -407,32 +399,59 @@ public class TestInstantiationAwareBeanPostProcessor implements InstantiationAwa
 ```java
 // InstantiationAwareBeanPostProcessor扩展实现
 @Component
-public class MyInstantiationAwareBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
+public class Test4InstantiationAwareBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
+
     @Override
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
-        if(isMatchClass(beanClass)){
-            System.out.println("调用 postProcessBeforeInstantiation 方法");
+        if (isMatchClass(beanClass)) {
+            System.out.println("进入[TestInstantiationAwareBeanPostProcessor]...postProcessBeforeInstantiation..." + beanName);
         }
         return null;
     }
 
     @Override
     public boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException {
-        if(isMatchClass(bean.getClass())){
-            System.out.println("调用 postProcessAfterInstantiation 方法");
+        if (isMatchClass(bean.getClass())) {
+            System.out.println("进入[TestInstantiationAwareBeanPostProcessor]...postProcessAfterInstantiation..." + beanName);
         }
         return true;
     }
 
     @Override
-    public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) throws BeansException {
-        if(isMatchClass(bean.getClass())){
-            System.out.println("调用 postProcessProperties 方法");
+    public PropertyValues postProcessPropertyValues(PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeansException {
+        if (isMatchClass(bean.getClass())) {
+            System.out.println("进入[TestInstantiationAwareBeanPostProcessor]...postProcessPropertyValues..." + beanName);
         }
         return pvs;
     }
 
-    private boolean isMatchClass(Class<?> beanClass){
+    //BeanPostProcessor的方法
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        if (isMatchClass(bean.getClass())) {
+            System.out.println("进入[TestInstantiationAwareBeanPostProcessor]...postProcessBeforeInitialization..." + beanName);
+        }
+        return bean;
+    }
+
+    //BeanPostProcessor的方法
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        if (isMatchClass(bean.getClass())) {
+            System.out.println("进入[TestInstantiationAwareBeanPostProcessor]...postProcessAfterInitialization..." + beanName);
+        }
+        return bean;
+    }
+
+    @Override
+    public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) throws BeansException {
+        if (isMatchClass(bean.getClass())) {
+            System.out.println("进入[TestInstantiationAwareBeanPostProcessor]...postProcessProperties..." + beanName);
+        }
+        return InstantiationAwareBeanPostProcessor.super.postProcessProperties(pvs, bean, beanName);
+    }
+
+    private boolean isMatchClass(Class<?> beanClass) {
         return TestUser.class.equals(ClassUtils.getUserClass(beanClass));
     }
 }
@@ -1151,6 +1170,8 @@ public void test5(){
 > org.springframework.beans.factory.FactoryBean
 
 一般情况下，Spring通过[反射机制](https://www.seven97.top/java/basis/05-reflection.html)利用bean的class属性指定支线类去实例化bean，在某些情况下，实例化Bean过程比较复杂，如果按照传统的方式，则需要在bean中提供大量的配置信息。Spring为此提供了一个`org.springframework.bean.factory.FactoryBean`的工厂类接口，用户可以通过实现该接口定制实例化Bean的逻辑。`FactoryBean`接口对于Spring框架来说占用重要的地位，Spring自身就提供了70多个`FactoryBean`的实现。它们隐藏了实例化一些复杂bean的细节，给上层应用带来了便利。
+
+触发点：
 
 例如其他框架技术与Spring集成的时候，如mybatis与Spring的集成，mybatis是通过SqlSessionFactory创建出Sqlsession来执行sql的，那么Service层在调用Dao层的接口来执行数据库操作时肯定得持有SqlSessionFactory，那么问题来了：Spring容器怎么才能持有SqlSessionFactory呢？答案就是SqlSessionFactoryBean，它实现了FactoryBean接口。
 
