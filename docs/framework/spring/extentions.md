@@ -149,7 +149,7 @@ context:
 
 
 
-3. Spring SPI扩展，在spring.factories中加入（官方推荐）：
+3. Spring [SPI](https://www.seven97.top/java/basis/06-SPI.html#spring中spi机制)扩展，在spring.factories中加入（官方推荐）：
 
 ```java
 com.seven.springsrpingbootextentions.extentions.TestApplicationContextInitializer

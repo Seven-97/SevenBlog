@@ -13,7 +13,7 @@ tag:
 
 ## 介绍
 
-**LinkedList**同时实现了**List**接口和**Deque**接口，也就是说它既可以看作一个顺序容器，又可以看作一个队列(**Queue**)，同时又可以看作一个栈(**Stack**)。这样看来，**LinkedList**简直就是个全能冠军。当你需要使用栈或者队列时，可以考虑使用**LinkedList**，一方面是因为Java官方已经声明不建议使用**Stack**类，更遗憾的是，Java里根本没有一个叫做**Queue**的类(它是个接口名字)。关于栈或队列，现在的首选是**ArrayDeque**，它有着比**LinkedList**(当作栈或队列使用时)有着更好的性能。
+**LinkedList**同时实现了**List**接口和**Deque**接口，也就是说它既可以看作一个顺序容器，又可以看作一个队列(**Queue**)，同时又可以看作一个栈(**Stack**)。这样看来，**LinkedList**简直就是个全能冠军。当你需要使用栈或者队列时，可以考虑使用**LinkedList**，一方面是因为Java官方已经声明不建议使用**Stack**类，更遗憾的是，Java里根本没有一个叫做**Queue**的类(它是个接口名字，无法直接创建)。关于栈或队列，现在的首选是**ArrayDeque**，它有着比**LinkedList**(当作栈或队列使用时)有着更好的性能。
 
 对于频繁的插入或删除元素的操作，建议使用LinkedList类，效率较高；底层使用双向链表存储
 
@@ -39,24 +39,24 @@ transient Node<E> last;
 
 ### 底层数据结构
 
-**LinkedList**底层**通过双向链表实现**。双向链表的每个节点用内部类**Node**表示。**LinkedList**通过first和last引用分别指向链表的第一个和最后一个元素。注意这里没有所谓的哑元，当链表为空的时候first和last都指向null。
+**LinkedList**底层**通过双向链表实现**。双向链表的每个节点用内部类**Node**表示。**LinkedList**通过first和last引用分别指向链表的第一个和最后一个元素。注意这里没有所谓的哑元（也就是没有虚拟变量），当链表为空的时候first和last都指向null。
 
 ```java
 transient int size = 0;
 
-    /**
-     * Pointer to first node.
-     * Invariant: (first == null && last == null) ||
-     *            (first.prev == null && first.item != null)
-     */
-    transient Node<E> first;
+/**
+ * Pointer to first node.
+ * Invariant: (first == null && last == null) ||
+ *            (first.prev == null && first.item != null)
+ */
+transient Node <E> first;
 
-    /**
-     * Pointer to last node.
-     * Invariant: (first == null && last == null) ||
-     *            (last.next == null && last.item != null)
-     */
-    transient Node<E> last;
+/**
+ * Pointer to last node.
+ * Invariant: (first == null && last == null) ||
+ *            (last.next == null && last.item != null)
+ */
+transient Node <E> last;
 ```
 
 
@@ -64,17 +64,17 @@ transient int size = 0;
 其中Node是私有的内部类:
 
 ```java
-private static class Node<E> {
-        E item;
-        Node<E> next;
-        Node<E> prev;
+private static class Node <E> {
+    E item;
+    Node <E> next;
+    Node <E> prev;
 
-        Node(Node<E> prev, E element, Node<E> next) {
-            this.item = element;
-            this.next = next;
-            this.prev = prev;
-        }
+    Node(Node <E> prev, E element, Node <E> next) {
+        this.item = element;
+        this.next = next;
+        this.prev = prev;
     }
+}
 ```
 
 
@@ -83,23 +83,22 @@ private static class Node<E> {
 
 ```java
  /**
-     * Constructs an empty list.
-     */
-    public LinkedList() {
-    }
+  * Constructs an empty list.
+  */
+ public LinkedList() {}
 
-    /**
-     * Constructs a list containing the elements of the specified
-     * collection, in the order they are returned by the collection's
-     * iterator.
-     *
-     * @param  c the collection whose elements are to be placed into this list
-     * @throws NullPointerException if the specified collection is null
-     */
-    public LinkedList(Collection<? extends E> c) {
-        this();
-        addAll(c);
-    }
+ /**
+  * Constructs a list containing the elements of the specified
+  * collection, in the order they are returned by the collection's
+  * iterator.
+  *
+  * @param  c the collection whose elements are to be placed into this list
+  * @throws NullPointerException if the specified collection is null
+  */
+ public LinkedList(Collection <? extends E> c) {
+     this();
+     addAll(c);
+ }
 ```
 
 
@@ -110,30 +109,30 @@ private static class Node<E> {
 
 ```java
 /**
-     * Returns the first element in this list.
-     *
-     * @return the first element in this list
-     * @throws NoSuchElementException if this list is empty
-     */
-    public E getFirst() {
-        final Node<E> f = first;
-        if (f == null)
-            throw new NoSuchElementException();
-        return f.item;
-    }
+ * Returns the first element in this list.
+ *
+ * @return the first element in this list
+ * @throws NoSuchElementException if this list is empty
+ */
+public E getFirst() {
+    final Node <E> f = first;
+    if (f == null)
+        throw new NoSuchElementException();
+    return f.item;
+}
 
-    /**
-     * Returns the last element in this list.
-     *
-     * @return the last element in this list
-     * @throws NoSuchElementException if this list is empty
-     */
-    public E getLast() {
-        final Node<E> l = last;
-        if (l == null)
-            throw new NoSuchElementException();
-        return l.item;
-    }
+/**
+ * Returns the last element in this list.
+ *
+ * @return the last element in this list
+ * @throws NoSuchElementException if this list is empty
+ */
+public E getLast() {
+    final Node <E> l = last;
+    if (l == null)
+        throw new NoSuchElementException();
+    return l.item;
+}
 ```
 
 
@@ -149,17 +148,17 @@ public E get(int index) {
 }
 
 //找到具体索引位置的  Node
-Node<E> node(int index) {
+Node <E> node(int index) {
     // assert isElementIndex(index);
 
     //类似二分法，size >> 1 即元素数量的一半
-    if (index < (size >> 1)) {//索引小于一半，就从头开始找
-        Node<E> x = first;
+    if (index < (size >> 1)) { //索引小于一半，就从头开始找
+        Node <E> x = first;
         for (int i = 0; i < index; i++)
             x = x.next;
         return x;
-    } else {//否则就从尾部开始找
-        Node<E> x = last;
+    } else { //否则就从尾部开始找
+        Node <E> x = last;
         for (int i = size - 1; i > index; i--)
             x = x.prev;
         return x;
@@ -179,56 +178,59 @@ remove()方法也有两个版本
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250842847.jpg)
 
-删除元素 - 指的是删除第一次出现的这个元素, 如果没有这个元素，则返回false；判断的依据是equals方法， 如果equals，则直接unlink这个node；由于LinkedList可存放null元素，故也可以删除第一次出现null的元素；
+
+
+删除元素：指的是删除第一次出现的这个元素, 如果没有这个元素，则返回false；判断的依据是equals方法， 如果equals，则直接unlink这个node；
+由于LinkedList可存放null元素，故也可以删除第一次出现null的元素；
 
  ```java
  public boolean remove(Object o) {
-         if (o == null) {
-             for (Node<E> x = first; x != null; x = x.next) {
-                 if (x.item == null) {
-                     unlink(x);
-                     return true;
-                 }
-             }
-         } else {
-             for (Node<E> x = first; x != null; x = x.next) {
-                 if (o.equals(x.item)) {
-                     unlink(x);
-                     return true;
-                 }
+     if (o == null) {
+         for (Node <E> x = first; x != null; x = x.next) {
+             if (x.item == null) {
+                 unlink(x);
+                 return true;
              }
          }
-         return false;
-     }
-     
-     /**
-      * Unlinks non-null node x.
-      */
-     E unlink(Node<E> x) {
-         // assert x != null;
-         final E element = x.item;
-         final Node<E> next = x.next;
-         final Node<E> prev = x.prev;
- 
-         if (prev == null) {// 第一个元素
-             first = next;
-         } else {
-             prev.next = next;
-             x.prev = null;
+     } else {
+         for (Node <E> x = first; x != null; x = x.next) {
+             if (o.equals(x.item)) {
+                 unlink(x);
+                 return true;
+             }
          }
- 
-         if (next == null) {// 最后一个元素
-             last = prev;
-         } else {
-             next.prev = prev;
-             x.next = null;
-         }
- 
-         x.item = null; // GC
-         size--;
-         modCount++;
-         return element;
      }
+     return false;
+ }
+ 
+ /**
+  * Unlinks non-null node x.
+  */
+ E unlink(Node <E> x) {
+     // assert x != null;
+     final E element = x.item;
+     final Node <E> next = x.next;
+     final Node <E> prev = x.prev;
+ 
+     if (prev == null) { // 第一个元素
+         first = next;
+     } else {
+         prev.next = next;
+         x.prev = null;
+     }
+ 
+     if (next == null) { // 最后一个元素
+         last = prev;
+     } else {
+         next.prev = prev;
+         x.next = null;
+     }
+ 
+     x.item = null; // GC
+     size--;
+     modCount++;
+     return element;
+ }
  ```
 
 
@@ -298,37 +300,40 @@ void linkLast(E e) {
 
  
 
-add(int index, E element), 当index==size时，等同于add(E e); 如果不是，则分两步: 1.先根据index找到要插入的位置,即node(index)方法；2.修改引用，完成插入操作。
+add(int index, E element)，当index==size时，等同于add(E e); 如果不是，则分两步: 
+
+1. 先根据index找到要插入的位置,即node(index)方法；
+2. 修改引用，完成插入操作。
 
 ```java
 public void add(int index, E element) {
-        checkPositionIndex(index);
+    checkPositionIndex(index);
 
-        if (index == size)
-            linkLast(element);
-        else
-            linkBefore(element, node(index));
-    }
+    if (index == size)
+        linkLast(element);
+    else
+        linkBefore(element, node(index));
+}
 ```
 
-上面代码中的node(int index)函数有一点小小的trick，因为链表双向的，可以从开始往后找，也可以从结尾往前找，具体朝那个方向找取决于条件index < (size >> 1)，也即是index是靠近前端还是后端。从这里也可以看出，linkedList通过index检索元素的效率没有arrayList高。
+上面代码中的node(int index)函数有一点小小的trick，因为链表双向的，可以从开始往后找，也可以从结尾往前找，具体朝那个方向找取决于条件index < (size >> 1)，也即是index是靠近前端还是后端。从这里也可以看出，linkedList通过index查询元素的效率没有arrayList高。
 
 ```java
-Node<E> node(int index) {
-        // assert isElementIndex(index);
+Node <E> node(int index) {
+    // assert isElementIndex(index);
 
-        if (index < (size >> 1)) {
-            Node<E> x = first;
-            for (int i = 0; i < index; i++)
-                x = x.next;
-            return x;
-        } else {
-            Node<E> x = last;
-            for (int i = size - 1; i > index; i--)
-                x = x.prev;
-            return x;
-        }
+    if (index < (size >> 1)) {
+        Node <E> x = first;
+        for (int i = 0; i < index; i++)
+            x = x.next;
+        return x;
+    } else {
+        Node <E> x = last;
+        for (int i = size - 1; i > index; i--)
+            x = x.prev;
+        return x;
     }
+}
 ```
 
 
@@ -338,74 +343,77 @@ Node<E> node(int index) {
 addAll(index, c) 实现方式并不是直接调用add(index,e)来实现，主要是因为效率的问题，另一个是fail-fast中modCount只会增加1次；
 
  ```java
-  public boolean addAll(Collection<? extends E> c) {
-         return addAll(size, c);
-     }
-     
-      public boolean addAll(int index, Collection<? extends E> c) {
-         checkPositionIndex(index);
+  public boolean addAll(Collection <? extends E> c) {
+      return addAll(size, c);
+  }
  
-         Object[] a = c.toArray();
-         int numNew = a.length;
-         if (numNew == 0)
-             return false;
+  public boolean addAll(int index, Collection <? extends E> c) {
+      checkPositionIndex(index);
  
-         Node<E> pred, succ;
-         if (index == size) {
-             succ = null;
-             pred = last;
-         } else {
-             succ = node(index);
-             pred = succ.prev;
-         }
+      Object[] a = c.toArray();
+      int numNew = a.length;
+      if (numNew == 0)
+          return false;
  
-         for (Object o : a) {
-             @SuppressWarnings("unchecked") E e = (E) o;
-             Node<E> newNode = new Node<>(pred, e, null);
-             if (pred == null)
-                 first = newNode;
-             else
-                 pred.next = newNode;
-             pred = newNode;
-         }
+      Node <E> pred, succ;
+      if (index == size) {
+          succ = null;
+          pred = last;
+      } else {
+          succ = node(index);
+          pred = succ.prev;
+      }
  
-         if (succ == null) {
-             last = pred;
-         } else {
-             pred.next = succ;
-             succ.prev = pred;
-         }
+      for (Object o: a) {
+          @SuppressWarnings("unchecked") E e = (E) o;
+          Node <E> newNode = new Node <> (pred, e, null);
+          if (pred == null)
+              first = newNode;
+          else
+              pred.next = newNode;
+          pred = newNode;
+      }
  
-         size += numNew;
-         modCount++;
-         return true;
-     }
+      if (succ == null) {
+          last = pred;
+      } else {
+          pred.next = succ;
+          succ.prev = pred;
+      }
+ 
+      size += numNew;
+      modCount++;
+      return true;
+  }
  ```
 
 
 
 ### clear()
 
-为了让GC更快可以回收放置的元素，需要将node之间的引用关系赋空。
+这里是将node之间的引用关系都变成null，这样GC可以在[年轻代](https://www.seven97.top/java/jvm/02-gc1-theory.html)回收元素了
 
 ```java
 public void clear() {
-        // Clearing all of the links between nodes is "unnecessary", but:
-        // - helps a generational GC if the discarded nodes inhabit
-        //   more than one generation
-        // - is sure to free memory even if there is a reachable Iterator
-        for (Node<E> x = first; x != null; ) {
-            Node<E> next = x.next;
-            x.item = null;
-            x.next = null;
-            x.prev = null;
-            x = next;
-        }
-        first = last = null;
-        size = 0;
-        modCount++;
+    // Clearing all of the links between nodes is "unnecessary", but:
+    // - helps a generational GC if the discarded nodes inhabit
+    //   more than one generation
+    // - is sure to free memory even if there is a reachable Iterator
+    for (Node <E> x = first; x != null;) {
+        Node <E> next = x.next;
+        x.item = null;
+        x.next = null;
+        x.prev = null;
+        x = next;
     }
+    first = last = null;
+    size = 0;
+    modCount++;
+}
 ```
+
+注意：有些同学可能注意到这里的判定条件是x != null，但是 LinkedList 是可以设置null值的，那是不是当链表中有null的元素，并且爱clear遍历到元素为null时，条件 `x != null`就为false了，那就不会继续执行，也就是后续的元素都无法置为空了？
+ 实际上不是的，这里的`x != null`是没有这个元素，而LinkedList 中可以设置null值是指，x.item = null ，也就是有Node，但是Node的item属性为null
 
 
 
@@ -415,9 +423,9 @@ public void clear() {
 
 ```java
  public E get(int index) {
-        checkElementIndex(index);
-        return node(index).item;
-    }
+     checkElementIndex(index);
+     return node(index).item;
+ }
 ```
 
 
@@ -426,12 +434,12 @@ public void clear() {
 
 ```java
 public E set(int index, E element) {
-        checkElementIndex(index);
-        Node<E> x = node(index);
-        E oldVal = x.item;
-        x.item = element;
-        return oldVal;
-    }
+    checkElementIndex(index);
+    Node <E> x = node(index);
+    E oldVal = x.item;
+    x.item = element;
+    return oldVal;
+}
 ```
 
 
@@ -440,13 +448,13 @@ public E set(int index, E element) {
 
 ```java
  public void add(int index, E element) {
-        checkPositionIndex(index);
+     checkPositionIndex(index);
 
-        if (index == size)
-            linkLast(element);
-        else
-            linkBefore(element, node(index));
-    }
+     if (index == size)
+         linkLast(element);
+     else
+         linkBefore(element, node(index));
+ }
 ```
 
 
@@ -455,9 +463,9 @@ public E set(int index, E element) {
 
  ```java
   public E remove(int index) {
-         checkElementIndex(index);
-         return unlink(node(index));
-     }
+      checkElementIndex(index);
+      return unlink(node(index));
+  }
  ```
 
 
@@ -466,28 +474,28 @@ public E set(int index, E element) {
 
 ```java
  private boolean isElementIndex(int index) {
-        return index >= 0 && index < size;
-    }
-
-   
-    private boolean isPositionIndex(int index) {
-        return index >= 0 && index <= size;
-    }
+     return index >= 0 && index < size;
+ }
 
 
-    private String outOfBoundsMsg(int index) {
-        return "Index: "+index+", Size: "+size;
-    }
+ private boolean isPositionIndex(int index) {
+     return index >= 0 && index <= size;
+ }
 
-    private void checkElementIndex(int index) {
-        if (!isElementIndex(index))
-            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
-    }
 
-    private void checkPositionIndex(int index) {
-        if (!isPositionIndex(index))
-            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
-    }
+ private String outOfBoundsMsg(int index) {
+     return "Index: " + index + ", Size: " + size;
+ }
+
+ private void checkElementIndex(int index) {
+     if (!isElementIndex(index))
+         throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+ }
+
+ private void checkPositionIndex(int index) {
+     if (!isPositionIndex(index))
+         throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+ }
 ```
 
 
@@ -500,22 +508,22 @@ public E set(int index, E element) {
 
 ```java
 public int indexOf(Object o) {
-        int index = 0;
-        if (o == null) {
-            for (Node<E> x = first; x != null; x = x.next) {
-                if (x.item == null)
-                    return index;
-                index++;
-            }
-        } else {
-            for (Node<E> x = first; x != null; x = x.next) {
-                if (o.equals(x.item))
-                    return index;
-                index++;
-            }
+    int index = 0;
+    if (o == null) {
+        for (Node <E> x = first; x != null; x = x.next) {
+            if (x.item == null)
+                return index;
+            index++;
         }
-        return -1;
+    } else {
+        for (Node <E> x = first; x != null; x = x.next) {
+            if (o.equals(x.item))
+                return index;
+            index++;
+        }
     }
+    return -1;
+}
 ```
 
 
@@ -523,23 +531,23 @@ public int indexOf(Object o) {
 查找最后一次出现的index, 如果找不到返回-1；
 
 ```java
- public int lastIndexOf(Object o) {
-        int index = size;
-        if (o == null) {
-            for (Node<E> x = last; x != null; x = x.prev) {
-                index--;
-                if (x.item == null)
-                    return index;
-            }
-        } else {
-            for (Node<E> x = last; x != null; x = x.prev) {
-                index--;
-                if (o.equals(x.item))
-                    return index;
-            }
-        }
-        return -1;
-    }
+public int lastIndexOf(Object o) {
+     int index = size;
+     if (o == null) {
+         for (Node <E> x = last; x != null; x = x.prev) {
+             index--;
+             if (x.item == null)
+                 return index;
+         }
+     } else {
+         for (Node <E> x = last; x != null; x = x.prev) {
+             index--;
+             if (o.equals(x.item))
+                 return index;
+         }
+     }
+     return -1;
+ }
 ```
 
 
@@ -568,7 +576,6 @@ public int indexOf(Object o) {
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 
 
 
