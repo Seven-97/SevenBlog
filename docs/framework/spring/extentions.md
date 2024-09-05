@@ -318,8 +318,6 @@ public class Test3BeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
 
 
-
-
 ## InstantiationAwareBeanPostProcessor
 
 > org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor
@@ -330,16 +328,16 @@ public class Test3BeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
 
 
-该类主要的扩展点有以下6个方法，主要在bean生命周期的两大阶段：**实例化阶段**和**初始化阶段**，下面一起进行说明，按调用顺序为：
+该类主要的扩展点有以下6个方法，其中有两个是BeanPostProcessor的扩展，主要在bean生命周期的两大阶段：**实例化阶段**和**初始化阶段**，下面一起进行说明，按调用顺序为：
 
 - `postProcessBeforeInstantiation`：在Bean实例化之前调用，如果返回null，一切按照正常顺序执行；如果返回的是一个实例的对象，那么`postProcessAfterInstantiation()`会执行，其他的扩展点将不再触发。
 - `postProcessAfterInstantiation`：在Bean实例化之后调用，可以对已实例化的Bean进行进一步的自定义处理。
-- `postProcessPropertyValues`（方法已弃用）：bean已经实例化完成，在属性注入时阶段触发，`@Autowired`，`@Resource`等注解原理基于此方法实现；可以修改Bean的属性值或进行其他自定义操作，**当postProcessAfterInstantiation返回true才执行。**
+- `postProcessPropertyValues`（方法在spring5.1版本后就已弃用）：bean已经实例化完成，在属性注入时阶段触发，`@Autowired`，`@Resource`等注解原理基于此方法实现；可以修改Bean的属性值或进行其他自定义操作，**当postProcessAfterInstantiation返回true才执行。**
 - `postProcessBeforeInitialization`(BeanPostProcessor的扩展)：初始化bean之前，相当于把bean注入spring上下文之前；可用于创建代理类，如果返回的不是 null（也就是返回的是一个代理类） ，那么后续只会调用 postProcessAfterInitialization() 方法
 - `postProcessAfterInitialization`(BeanPostProcessor的扩展)：初始化bean之后，相当于把bean注入spring上下文之后；返回值会影响 postProcessProperties() 是否执行，其中返回 false 的话，是不会执行。
 - `postProcessProperties()`：在 Bean 设置属性前调用；用于修改 bean 的属性，如果返回值不为空，那么会更改指定字段的值
 
-使用场景：这个扩展点非常有用 ，无论是写中间件和业务中，都能利用这个特性。比如对实现了某一类接口的bean在各个生命期间进行收集，或者对某个类型的bean进行统一的设值等等。
+
 
 
 
@@ -347,7 +345,7 @@ public class Test3BeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
 ```java
 @Component
-public class Test4InstantiationAwareBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
+public class TestInstantiationAwareBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
@@ -389,6 +387,12 @@ public class Test4InstantiationAwareBeanPostProcessor implements InstantiationAw
 
 }
 ```
+
+使用场景：这个扩展点非常有用 ，无论是写中间件和业务中，都能利用这个特性。比如对实现了某一类接口的bean在各个生命期间进行收集，或者对某个类型的bean进行统一的设值等等。
+
+注意：
+
+
 
 
 
@@ -509,6 +513,8 @@ public class TestUser implements InitializingBean {
 - `determineCandidateConstructors`：该触发点发生在`postProcessBeforeInstantiation`之后，用于决定使用哪个构造器构造Bean，返回的是该bean的所有构造函数列表；如果不指定，默认为null，即bean的无参构造方法。用户可以扩展这个点，来自定义选择相应的构造器来实例化这个bean。
 - `getEarlyBeanReference`：该触发点发生在`postProcessAfterInstantiation`之后，主要用于Spring循环依赖问题的解决，如果Spring中检测不到循环依赖，这个方法不会被调用；当存在Spring循环依赖这种情况时，会在InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation方法触发执行之后执行；
 
+但由于SmartInstantiationAwareBeanPostProcessor 是 InstantiationAwareBeanPostProcessor的子类，因此也SmartInstantiationAwareBeanPostProcessor 也同样能扩展 InstantiationAwareBeanPostProcessor的所有方法
+
 
 
 ### 扩展方式
@@ -530,7 +536,7 @@ public class TestSmartInstantiationAwareBeanPostProcessor implements SmartInstan
         return null;
     }
 
-     //获得提前暴露的bean引用，主要用于Spring循环依赖问题的解决；
+    //获得提前暴露的bean引用，主要用于Spring循环依赖问题的解决；
     @Override
     public Object getEarlyBeanReference(Object bean, String beanName) throws BeansException {
         System.out.println("[TestSmartInstantiationAwareBeanPostProcessor] getEarlyBeanReference " + beanName);
@@ -546,79 +552,77 @@ public class TestSmartInstantiationAwareBeanPostProcessor implements SmartInstan
 - 定义一个Student类，然后注入一个Teacher类；
 
 ```java
-@Slf4j
 @Component
 public class Student {
     private String name="xiao ming";
     @Autowired
     private Teacher teacher;
- 
+
     public Student() {
-        log.info("----student的无参数构造方法被执行");
+        System.out.println("Student无参数构造器...创建Student对象");
     }
- 
+
     public Student(String name) {
         this.name = name;
-        log.info("----student的有参数构造方法被执行");
+        System.out.println("Student有参数构造器...创建Student对象...构造器参数name=" + name);
     }
- 
+
     public Student(Teacher teacher) {
         this.teacher = teacher;
-        log.info("----student的有参数构造方法（teacher）被执行");
+        System.out.println("Student有参数构造器...创建Student对象...构造器参数teacher=" + teacher);
     }
- 
+
     public Student(String name, Teacher teacher) {
         this.name = name;
         this.teacher = teacher;
-        log.info("----student的有参数构造方法（name,teacher）被执行");
+        System.out.println("Student有参数构造器...创建Student对象...构造器参数name=" + name + ",teacher=" + teacher);
     }
- 
+
     public String getName() {
         return name;
     }
- 
+
     public void setName(String name) {
         this.name = name;
     }
- 
+
     public Teacher getTeacher() {
         return teacher;
     }
- 
+
     public void setTeacher(Teacher teacher) {
-        log.info("----student中的setTeacher方法被调用");
+        System.out.println("Student...setTeacher...设置【teacher】属性");
         this.teacher = teacher;
     }
 }
 ```
 
-- Teacher.java：定义一个Teacher类，然后给Teacher类注入一个Student类，这样Student类和Teacher类就形成了循环依赖，方便后面验验MySmartInstantiationAwareBeanPostProcessor#getEarlyBeanReference执行情况；
+- Teacher.java：定义一个Teacher类，然后给Teacher类注入一个Student类，这样Student类和Teacher类就形成了循环依赖，方便后面验验Test5SmartInstantiationAwareBeanPostProcessor#getEarlyBeanReference执行情况；
 
 ```java
 @Component
-@Slf4j
 public class Teacher {
     private String name="li lao shi";
     @Autowired
     private Student student;
     public Teacher() {
-        log.info("----teacher的无参数构造方法被执行");
+        System.out.println("Teacher无参数构造器...创建Teacher对象");
     }
- 
+
     public String getName() {
         return name;
     }
- 
+
     public void setName(String name) {
         this.name = name;
     }
- 
+
     public Student getStudent() {
         return student;
     }
- 
+
     public void setStudent(Student student) {
-        log.info("----teacher中的setStudent方法被调用");
+        System.out.println("Teacher...setStudent...设置【student】属性");
         this.student = student;
     }
 }
@@ -626,7 +630,7 @@ public class Teacher {
 
 
 
-- MySmartInstantiationAwareBeanPostProcessor 
+- Test5SmartInstantiationAwareBeanPostProcessor 
 
 ```java
 @Component
@@ -688,6 +692,28 @@ public class MySmartInstantiationAwareBeanPostProcessor implements SmartInstanti
 
  }
 ```
+
+
+
+## BeanPostProcessor
+
+> org.springframework.beans.factory.config.BeanPostProcessor
+
+
+
+
+
+### 扩展方式
+
+
+
+
+
+### 使用案例
+
+
+
+
 
 
 
