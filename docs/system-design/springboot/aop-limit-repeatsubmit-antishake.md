@@ -101,6 +101,7 @@ public class AccessLimitAspect {
         RAtomicLong atomicLong = redissonClient.getAtomicLong(key);
 
         if (!atomicLong.isExists() || atomicLong.remainTimeToLive() <= 0) {
+            atomicLong.set(0);
             atomicLong.expire(time, timeUnit);
         }
 
