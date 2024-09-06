@@ -13,7 +13,7 @@ Spring的核心思想就是容器，当容器refresh的时候，外部看上去�
 
 由spring提供的、在容器或bean生命周期各个阶段、供spring框架回调使用的函数方法，即为扩展点。扩展点体现了Spring框架的灵活性、业务亲和性。使开发人员可以在不修改spring源码的情况下，对容器和bean的行为、属性进行额外的管理。
 
-想要把自动装配玩的转，就必须要了解spring对于bean的构造生命周期以及各个扩展接口，当然了解了bean的各个生命周期也能促进我们加深对spring的理解。业务代码也能合理利用这些扩展点写出更优雅的代码。本文不讲原理，只将扩展点与使用方式讲清楚，原理可以移步[IOC系列文章](https://www.seven97.top/framework/spring/ioc2-initializationprocess.html)。
+想要把自动装配玩的转，就必须要了解spring对于bean的构造生命周期以及各个扩展接口，当然了解了bean的各个生命周期也能促进我们加深对spring的理解。业务代码也能合理利用这些扩展点写出更优雅的代码。本文不讲原理，只将扩展点与使用方式讲清楚，特别是调用顺序，原理可以移步[IOC系列文章](https://www.seven97.top/framework/spring/ioc2-initializationprocess.html)。
 
 在网上搜索spring扩展点，发现很少有博文说的很全的，只有一些常用的扩展点的说明。所以在这篇文章里，我总结了几乎Spring & Springboot所有的扩展接口，各个扩展点的使用场景，并整理出一个bean在spring中从被加载到初始化到销毁的所有可扩展点的顺序调用图。
 
@@ -177,13 +177,69 @@ com.seven.springsrpingbootextentions.extentions.TestApplicationContextInitialize
 
 
 
+## BeanFactoryPostProcessor
+
+> org.springframework.beans.factory.config.BeanFactoryPostProcessor
+
+这个接口是`beanFactory`的扩展接口，调用时机在spring在读取`beanDefinition`信息之后，实例化bean之前。虽然此时不能再注册beanDefinition，但是可以趁着bean没有实例化，对已经注册进容器的BeanDefinition进行修改，例如Scope、依赖查找方式、初始化方法、修改属性值、添加额外的元数据等，进而影响初始化行为。
+
+在应用程序启动时，Spring容器会自动检测并调用所有实现了BeanFactoryPostProcessor接口的类的postProcessBeanFactory方法。开发人员可以利用这个方法来实现自定义的逻辑，从而实现一些高级的自定义逻辑和功能扩展。
+
+也可以在这里面添加自己的BeanPostProcessor，以及其他容器相关操作，此方法只调用一次，**同时记住不要在这里做Bean的实例化**。
+
+**前文介绍的BeanDefinitionRegistryPostProcessor是这个接口的子接口**，因此实现BeanDefinitionRegistryPostProcessor这个接口，也可以重写其postProcessBeanFactory 方法。实现了BeanDefinitionRegistryPostProcessor的postProcessBeanFactory方法会先执行，再执行实现了BeanFactoryPostProcessor的postProcessBeanFactory
+
+
+
+### 扩展方式
+
+```java
+public class TestBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        System.out.println("[BeanFactoryPostProcessor]");
+    }
+}
+```
+
+
+
+### 使用案例
+
+示例，展示了如何实现动态的给Bean修改属性值：
+
+```java
+public class User {
+    String name;
+    String password;
+}
+
+@Component
+public class Test3BeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        System.out.println("进入[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + beanFactory);
+
+        BeanDefinition beanDefinition = beanFactory.getBeanDefinition("user");
+        System.out.println("打印[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + beanDefinition.getBeanClassName());
+        User user = beanFactory.getBean(User.class);
+        System.out.println("打印[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + user.getName());
+        System.out.println("打印[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + user.getPassword());
+    }
+}
+```
+
+
+
+
+
 ## BeanDefinitionRegistryPostProcessor
 
 > org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor
 
 BeanDefinitionRegistryPostProcessor为容器级后置处理器。**容器级的后置处理器会在Spring容器初始化后、刷新前执行一次，用于动态注册Bean到容器**。
 
-通过 BeanFactoryPostProcessor 的子类BeanDefinitionRegistryPostProcessor，可以注册一个你自己的BeanDefinition对象到容器中，等待容器内部依次调用进行对象实例化就能当bean用了。
+通过 BeanFactoryPostProcessor 的子类 BeanDefinitionRegistryPostProcessor，可以注册一个你自己的BeanDefinition对象到容器中，等待容器内部依次调用进行对象实例化就能当bean用了。
 
 BeanDefinitionRegistryPostProcessor用于在bean解析后实例化之前通过BeanDefinitionRegistry对BeanDefintion进行增删改查。
 
@@ -260,59 +316,39 @@ public class Test2BeanDefinitionRegistryPostProcessor implements BeanDefinitionR
 
 
 
-## BeanFactoryPostProcessor
+## BeanPostProcessor
 
-> org.springframework.beans.factory.config.BeanFactoryPostProcessor
+> org.springframework.beans.factory.config.BeanPostProcessor
 
-这个接口是`beanFactory`的扩展接口，调用时机在spring在读取`beanDefinition`信息之后，实例化bean之前。虽然此时不能再注册beanDefinition，但是可以趁着bean没有实例化，对已经注册进容器的BeanDefinition进行修改，例如Scope、依赖查找方式、初始化方法、修改属性值、添加额外的元数据等，进而影响初始化行为。
+InstantiationAwareBeanPostProcessor的父类，`BeanPostProcessor` 接口定义了两个基本的Bean初始化回调方法，在属性赋值前后执行。
 
-在应用程序启动时，Spring容器会自动检测并调用所有实现了BeanFactoryPostProcessor接口的类的postProcessBeanFactory方法。开发人员可以利用这个方法来实现自定义的逻辑，从而实现一些高级的自定义逻辑和功能扩展。
+该接口有两个扩展方法：
 
-也可以在这里面添加自己的BeanPostProcessor，以及其他容器相关操作，此方法只调用一次，**同时记住不要在这里做Bean的实例化**。
-
-**前文介绍的BeanDefinitionRegistryPostProcessor是这个接口的子接口**，因此实现BeanDefinitionRegistryPostProcessor这个接口，也可以重写其postProcessBeanFactory 方法。实现了BeanDefinitionRegistryPostProcessor的postProcessBeanFactory方法会先执行，再执行实现了BeanFactoryPostProcessor的postProcessBeanFactory
+- `postProcessBeforeInitialization`(BeanPostProcessor的扩展)：初始化bean之前，相当于把bean注入spring上下文之前；可用于创建代理类
+- `postProcessAfterInitialization`(BeanPostProcessor的扩展)：初始化bean之后，相当于把bean注入spring上下文之后；
 
 
 
 ### 扩展方式
 
 ```java
-public class TestBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+public class TestBeanPostProcessor implements BeanPostProcessor {
     @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        System.out.println("[BeanFactoryPostProcessor]");
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("[TestBeanPostProcessor]...postProcessBeforeInstantiation..." + beanName);
+        return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        System.out.println("[TestBeanPostProcessor]...postProcessAfterInitialization..." + beanName);
+        return bean;
     }
 }
+
 ```
 
 
-
-
-
-### 使用案例
-
-示例，展示了如何实现动态的给Bean修改属性值：
-
-```java
-public class User {
-    String name;
-    String password;
-}
-
-@Component
-public class Test3BeanFactoryPostProcessor implements BeanFactoryPostProcessor {
-    @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        System.out.println("进入[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + beanFactory);
-
-        BeanDefinition beanDefinition = beanFactory.getBeanDefinition("user");
-        System.out.println("打印[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + beanDefinition.getBeanClassName());
-        User user = beanFactory.getBean(User.class);
-        System.out.println("打印[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + user.getName());
-        System.out.println("打印[TestBeanFactoryPostProcessor]...postProcessBeanFactory..." + user.getPassword());
-    }
-}
-```
 
 
 
@@ -328,7 +364,7 @@ public class Test3BeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
 
 
-该类主要的扩展点有以下6个方法，其中有两个是BeanPostProcessor的扩展，主要在bean生命周期的两大阶段：**实例化阶段**和**初始化阶段**，下面一起进行说明，按调用顺序为：
+该类主要的扩展点有以下4个方法，其中有两个是BeanPostProcessor的扩展，主要在bean生命周期的两大阶段：**实例化阶段**和**初始化阶段**，下面一起进行说明，按调用顺序为：
 
 - `postProcessBeforeInstantiation`：在Bean实例化之前调用，如果返回null，一切按照正常顺序执行；如果返回的是一个实例的对象，那么`postProcessAfterInstantiation()`会执行，其他的扩展点将不再触发。
 - `postProcessAfterInstantiation`：在Bean实例化之后调用，可以对已实例化的Bean进行进一步的自定义处理。
@@ -390,9 +426,7 @@ public class TestInstantiationAwareBeanPostProcessor implements InstantiationAwa
 
 使用场景：这个扩展点非常有用 ，无论是写中间件和业务中，都能利用这个特性。比如对实现了某一类接口的bean在各个生命期间进行收集，或者对某个类型的bean进行统一的设值等等。
 
-注意：
-
-
+注意：InstantiationAwareBeanPostProcessor和 BeanPostProcessor 是可以同时被实现的，并且也会同时生效，但是InstantiationAwareBeanPostProcessor的**执行时机要稍早于BeanPostProcessor**；
 
 
 
@@ -509,11 +543,9 @@ public class TestUser implements InitializingBean {
 
 该扩展接口有3个触发点方法：
 
-- `predictBeanType`：该触发点发生在`postProcessBeforeInstantiation`之前(也就是在 InstantiationAwareBeanPostProcessor的方法之前，在图上并没有标明，因为一般不太需要扩展这个点)，这个方法用于预测Bean的类型，返回第一个预测成功的Class类型，如果不能预测，则返回null；当调用`BeanFactory.getType(name)`时当通过bean的名字无法得到bean类型信息时就调用该回调方法来决定类型信息。
+- `predictBeanType`：该触发点发生在`postProcessBeforeInstantiation`之前(也就是在 InstantiationAwareBeanPostProcessor的方法之前，在图上并没有标明，因为**一般不太需要扩展这个点**)，这个方法用于预测Bean的类型，返回第一个预测成功的Class类型，如果不能预测，则返回null；当调用`BeanFactory.getType(name)`时当通过bean的名字无法得到bean类型信息时就调用该回调方法来决定类型信息。
 - `determineCandidateConstructors`：该触发点发生在`postProcessBeforeInstantiation`之后，用于决定使用哪个构造器构造Bean，返回的是该bean的所有构造函数列表；如果不指定，默认为null，即bean的无参构造方法。用户可以扩展这个点，来自定义选择相应的构造器来实例化这个bean。
-- `getEarlyBeanReference`：该触发点发生在`postProcessAfterInstantiation`之后，主要用于Spring循环依赖问题的解决，如果Spring中检测不到循环依赖，这个方法不会被调用；当存在Spring循环依赖这种情况时，会在InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation方法触发执行之后执行；
-
-但由于SmartInstantiationAwareBeanPostProcessor 是 InstantiationAwareBeanPostProcessor的子类，因此也SmartInstantiationAwareBeanPostProcessor 也同样能扩展 InstantiationAwareBeanPostProcessor的所有方法
+- `getEarlyBeanReference`：该触发点发生在`postProcessAfterInstantiation`之后，主要用于Spring循环依赖问题的解决，如果Spring中检测不到循环依赖，这个方法不会被调用；当存在Spring循环依赖这种情况时，当bean实例化好之后，为了防止有循环依赖，会提前暴露回调方法，用于bean实例化的后置处理，会在InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation方法触发执行之后执行；
 
 
 
@@ -544,6 +576,9 @@ public class TestSmartInstantiationAwareBeanPostProcessor implements SmartInstan
     }
 }
 ```
+
+注意：同InstantiationAwareBeanPostProcessor，由于SmartInstantiationAwareBeanPostProcessor 是 InstantiationAwareBeanPostProcessor的子类，因此也SmartInstantiationAwareBeanPostProcessor 也同样能扩展 InstantiationAwareBeanPostProcessor的所有方法。但是如果有两个类分别重写了 SmartInstantiationAwareBeanPostProcessor 和  InstantiationAwareBeanPostProcessor 的方法，那么**重写 InstantiationAwareBeanPostProcessor 的类的方法 会先于 重写了 SmartInstantiationAwareBeanPostProcessor的类的方法**（注意，这里说的是两者都有的方法）。
+同样的，也有方法实现了BeanPostProcessor，那么会执行顺序为   InstantiationAwareBeanPostProcessor  > SmartInstantiationAwareBeanPostProcessor > BeanPostProcessor
 
 
 
@@ -635,7 +670,7 @@ public class Teacher {
 ```java
 @Component
 @Slf4j
-public class MySmartInstantiationAwareBeanPostProcessor implements SmartInstantiationAwareBeanPostProcessor {
+public class Test5SmartInstantiationAwareBeanPostProcessor implements SmartInstantiationAwareBeanPostProcessor {
     @Override
     public Class<?> predictBeanType(Class<?> beanClass, String beanName) throws BeansException {
         if (beanName.equals("student")) {
@@ -650,7 +685,7 @@ public class MySmartInstantiationAwareBeanPostProcessor implements SmartInstanti
     public Constructor<?>[] determineCandidateConstructors(Class<?> beanClass, String beanName) throws BeansException {
         if (beanName.equals("student") ) {
             log.info("----determineCandidateConstructors方法被执行," + beanName);
-            Constructor<?> constructor = beanClass.getConstructors()[3];
+            Constructor<?> constructor = beanClass.getConstructors()[0];//获取无参构造方法
             Constructor<?>[] constructors={constructor};
             return constructors;
         }
@@ -679,41 +714,65 @@ public class MySmartInstantiationAwareBeanPostProcessor implements SmartInstanti
 
 
 
-- 验证
+## MergedBeanDefinitionPostProcessor
 
-```java
- @Test
- public void test1() {
-     log.info("----单元测试执行开始");
-     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("com.seven");
-     Teacher student = context.getBean(Teacher.class);
-     log.info("student的实际ClassName是----：" + student.getClass().getName());
-     log.info("----单元测试执行完毕");
+> org.springframework.beans.factory.support.MergedBeanDefinitionPostProcessor
 
- }
-```
+MergedBeanDefinitionPostProcessor 继承自 BeanPostProcessor。调用的时机是，在实例化之后进行的调用，只要是收集bean上的属性的，比如收集标记了某些注解的字段或者方法，都可以基于MergedBeanDefinitionPostProcessor来进行扩展。
+
+对于不同方式导入的Bean定义，如果存在重复对同一个Bean的定义，则会根据allowBeanDefinitionOverriding属性是否设置为true,判断是否允许Bean定义的覆盖，如果不允许，则抛出异常。而在Bean实例化之前，会进行BeanDefinition类型的归一化，即 mergeBeanFintion ，统一转换为RootBeanfintion进行后续处理。当然，这里的merge更多指代的是父子Bean定义的合并。
+
+也用于收集bean上的注解，比如常见的@Value、@NacosValue、@Mapper等，再将收集好的数据缓存在injectionMetadataCache中，以便后续比如属性注入的时候使用。
 
 
 
-## BeanPostProcessor
+该接口有两个扩展方法：
 
-> org.springframework.beans.factory.config.BeanPostProcessor
-
-
+- `postProcessMergedBeanDefinition`：此方法在Spring将多个Bean定义合并为一个`RootBeanDefinition`之后，但在实例化Bean之前被调用。主要作用是让开发者有机会在Bean定义合并后，对其进行进一步的定制和调整。使用场景如下：
+  - **自定义注解处理**：处理自定义注解并将其应用于Bean定义。
+  - **属性修改**：在Bean实例化之前对Bean定义中的某些属性进行调整或设置默认值。
+- `resetBeanDefinition`：此方法在Bean定义被重置时调用。它通常用于清理或重置与特定Bean定义相关的状态或缓存。使用场景如下：
+  - **状态清理**：清理缓存或临时状态，以便Bean定义可以被重新解析。
+  - **重置自定义元数据**：在Bean定义被重置时，重置自定义的元数据或状态。
 
 
 
 ### 扩展方式
 
+```java
+@Component
+public class Test7MergedBeanDefinitionPostProcessor implements MergedBeanDefinitionPostProcessor {
+
+    @Override
+    public void postProcessMergedBeanDefinition(RootBeanDefinition rootBeanDefinition, Class<?> aClass, String s) {
+        System.out.println("进入[Test7MergedBeanDefinitionPostProcessor]...postProcessMergedBeanDefinition...");
+    }
+}
+```
 
 
 
+## BeanNameAware
 
-### 使用案例
+> org.springframework.beans.factory.BeanNameAware
+
+可以看到，这个类也是Aware扩展的一种，触发点在bean的初始化之前，也就是`postProcessBeforeInitialization`之前，这个类的触发点方法只有一个：`setBeanName`
 
 
 
+### 扩展方式
 
+```java
+@Component
+public class TestUser implements BeanNameAware{
+    @Override
+    public void setBeanName(String name) {
+        System.out.println("[BeanNameAware] " + name);
+    }
+}
+```
+
+使用场景：用户可以扩展这个点，在初始化bean之前拿到spring容器中注册的的beanName，来自行修改这个beanName的值。
 
 
 
@@ -725,13 +784,14 @@ public class MySmartInstantiationAwareBeanPostProcessor implements SmartInstanti
 
 这个类只有一个触发点，发生在bean的实例化之后，注入属性之前，也就是Setter之前。这个类的扩展点方法为`setBeanFactory`，可以拿到`BeanFactory`这个属性。
 
-使用场景为，你可以在bean实例化之后，但还未初始化之前，拿到 `BeanFactory`，在这个时候，可以对每个bean作特殊化的定制。也或者可以把`BeanFactory`拿到进行缓存，日后使用。
+使用场景为，可以在bean实例化之后，但还未初始化之前，拿到 `BeanFactory`，在这个时候，可以对每个bean作特殊化的定制。也或者可以把`BeanFactory`拿到进行缓存，日后使用。
 
 
 
 ### 扩展方式
 
 ```java
+@Component
 public class TestBeanFactoryAware implements BeanFactoryAware {
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
@@ -745,33 +805,6 @@ public class TestBeanFactoryAware implements BeanFactoryAware {
 
 
 
-### 使用案例
-
-- 创建并实现接口
-
-```java
-@Component
-public class DemoBean implements BeanFactoryAware {
-    @Override
-    public void setBeanFactory(BeanFactory beanFactory) {
-        System.out.println("【BeanFactoryAware】Bean 的工厂是：" + beanFactory);
-    }
-}
-```
-
-- 测试
-
-```java
-@Test
-public void test3(){
-    log.info("----单元测试执行开始");
-    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("com.seven");
-    log.info("----单元测试执行完毕");
-}
-```
-
-
-
 
 
 ## ApplicationContextAwareProcessor
@@ -780,7 +813,7 @@ public void test3(){
 
 该类本身并没有扩展点，而是 BeanPostProcessor 扩展接口的具体实现，但是该类内部却有6个扩展点可供实现 ，这些扩展点的触发时机在bean实例化之后，初始化之前。
 
-可以看到，该类用于执行各种驱动接口，在bean实例化之后，属性填充之后。其内部有6个扩展点可供实现，这几个接口都是Spring预留的重点扩展实现，与Spring的 [Bean的生命周期](https://www.seven97.top/framework/spring/ioc3-Instantiationofbeans.html) 密切相关。
+可以看到，该类用于执行各种驱动接口，在bean实例化之后，属性填充之后。其内部有6个扩展点可供实现，这几个接口都是Spring预留的重点扩展实现，与Spring的 [Bean的生命周期](https://www.seven97.top/framework/spring/ioc3-Instantiationofbeans.html) 密切相关，以下按照扩展点调用顺序介绍：
 
 - `EnvironmentAware`：用于获取`EnviromentAware`的一个扩展类，这个变量非常有用， 可以获得系统内的所有参数；另外也可以通过注入的方式来获得Environment，用哪种方式需要以实现场景而决定。当然个人认为这个Aware没必要去扩展，因为spring内部都可以通过注入的方式来直接获得。
 
@@ -790,10 +823,6 @@ public void test3(){
 - `MessageSourceAware`：用于获取`MessageSource`的一个扩展类，`MessageSource`主要用来做国际化。
 - `ApplicationContextAware`：用来获取`ApplicationContext`的一个扩展类，`ApplicationContext`就是spring上下文管理器，可以手动的获取任何在spring上下文注册的bean。较多的做法是扩展这个接口来缓存spring上下文，包装成静态方法。
   同时`ApplicationContext`也实现了`BeanFactory`，`MessageSource`，`ApplicationEventPublisher`等接口，也可以用来做相关接口的事情。
-
-
-
-### 扩展方式
 
 
 
@@ -818,45 +847,7 @@ public class Bird implements ApplicationContextAware {
 }
 ```
 
-- 测试
 
-```java
-@Test
-public void test3(){
-    log.info("----单元测试执行开始");
-    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("com.seven");
-    log.info("----单元测试执行完毕");
-}
-```
-
-
-
-
-
-## BeanNameAware
-
-> org.springframework.beans.factory.BeanNameAware
-
-可以看到，这个类也是Aware扩展的一种，触发点在bean的初始化之前，也就是`postProcessBeforeInitialization`之前，这个类的触发点方法只有一个：`setBeanName`
-
-
-
-### 扩展方式
-
-```java
-public class NormalBeanA implements BeanNameAware{
-    public NormalBeanA() {
-        System.out.println("NormalBean constructor");
-    }
-
-    @Override
-    public void setBeanName(String name) {
-        System.out.println("[BeanNameAware] " + name);
-    }
-}
-```
-
-使用场景：用户可以扩展这个点，在初始化bean之前拿到spring容器中注册的的beanName，来自行修改这个beanName的值。
 
 
 
@@ -1197,9 +1188,7 @@ public void test5(){
 
 一般情况下，Spring通过[反射机制](https://www.seven97.top/java/basis/05-reflection.html)利用bean的class属性指定支线类去实例化bean，在某些情况下，实例化Bean过程比较复杂，如果按照传统的方式，则需要在bean中提供大量的配置信息。Spring为此提供了一个`org.springframework.bean.factory.FactoryBean`的工厂类接口，用户可以通过实现该接口定制实例化Bean的逻辑。`FactoryBean`接口对于Spring框架来说占用重要的地位，Spring自身就提供了70多个`FactoryBean`的实现。它们隐藏了实例化一些复杂bean的细节，给上层应用带来了便利。
 
-触发点：
-
-例如其他框架技术与Spring集成的时候，如mybatis与Spring的集成，mybatis是通过SqlSessionFactory创建出Sqlsession来执行sql的，那么Service层在调用Dao层的接口来执行数据库操作时肯定得持有SqlSessionFactory，那么问题来了：Spring容器怎么才能持有SqlSessionFactory呢？答案就是SqlSessionFactoryBean，它实现了FactoryBean接口。
+触发点：例如其他框架技术与Spring集成的时候，如mybatis与Spring的集成，mybatis是通过SqlSessionFactory创建出Sqlsession来执行sql的，那么Service层在调用Dao层的接口来执行数据库操作时肯定得持有SqlSessionFactory，那么问题来了：Spring容器怎么才能持有SqlSessionFactory呢？答案就是SqlSessionFactoryBean，它实现了FactoryBean接口。
 
 
 
