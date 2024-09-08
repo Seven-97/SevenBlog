@@ -341,8 +341,6 @@ private void rotateRight(Entry<K,V> p) {
 }
 ```
 
-**以下情景中插入的操作转载于：**[**https://www.jianshu.com/p/e136ec79235c**](https://www.jianshu.com/p/e136ec79235c)
-
 
 
 ### 情景1：红黑树为空树

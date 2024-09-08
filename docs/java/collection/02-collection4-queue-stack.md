@@ -7,9 +7,86 @@ tag:
 
 
 
+## 为什么不推荐使用Stack
+
+Java已不推荐使用Stack，而是推荐使用更高效的ArrayDeque
+
+### 为什么不推荐使用
+
+- 性能低：是因为 Stack 继承自 Vector， 而 Vector 在每个方法中都加了锁。由于需要兼容老的项目，很难在原有的基础上进行优化，因此 Vector 就被淘汰掉了，使用 [ArrayList](https://www.seven97.top/java/collection/02-collection1-arraylist.html) 和 [CopyOnWriteArrayList](https://www.seven97.top/java/collection/04-juc1-copyonwritearrayList.html) 来代替，如果在非线程安全的情况下可以使用  [ArrayList](https://www.seven97.top/java/collection/02-collection1-arraylist.html)，线程安全的情况下可以使用 [CopyOnWriteArrayList](https://www.seven97.top/java/collection/04-juc1-copyonwritearrayList.html) 。
+
+- 破坏了原有的数据结构：栈的定义是在一端进行 push 和 pop 操作，除此之外不应该包含其他 入栈和出栈 的方法，但是 Stack 继承自 Vector，使得 Stack 可以使用父类 Vector 公有的方法。
+
+ 
+
+### 为什么现在还在用
+
+但是为什么还有很多人在使用 Stack。总结了一下主要有两个原因。
+
+- JDK 官方是不推荐使用 Stack，之所以还有很多人在使用，是因为 JDK 并没有加 deprecation 注解，只是在文档和注释中声明不建议使用，但是很少有人会去关注其实现细节
+
+- 更多的是为了笔试面试在做算法题的时候，关注点在解决问题的算法逻辑思路上，并不会关注在不同语言下 Stack 实现细节，但是对于使用 Java 语言的业务开发者，不仅需要关注算法逻辑本身，也需要关注它的实现细节
 
 
-## 概述
+
+### 为什么推荐使用 Deque 接口替换栈
+
+如果 JDK 不推荐使用 Stack，那应该使用什么集合类来替换栈，一起看看官方的文档。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856058.jpg)
+
+正如图中标注部分所示，栈的相关操作应该由 Deque 接口来提供，推荐使用 Deque 这种数据结构， 以及它的子类，例如 ArrayDeque。
+
+```java
+val stack: Deque<Int> = ArrayDeque()
+```
+
+
+
+使用 Deque 接口来实现栈的功能有什么好处：
+
+- 速度比 Stack 快
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856079.jpg)
+
+这个类作为栈使用时可能比 Stack 快，作为队列使用时可能比 LinkedList 快。因为原来的 Java 的 Stack 继承自 Vector，而 Vector 在每个方法中都加了锁，而 Deque 的子类 ArrayDeque 并没有锁的开销。
+
+- 屏蔽掉无关的方法
+
+原来的 Java 的 Stack，包含了在任何位置添加或者删除元素的方法，这些不是栈应该有的方法，所以需要屏蔽掉这些无关的方法。声明为 Deque 接口可以解决这个问题，在接口中声明栈需要用到的方法，无需管子类是如何是实现的，对于上层使用者来说，只可以调用和栈相关的方法。
+
+### Stack 和 ArrayDeque的 区别
+
+| 集合类型   | 数据结构 | 是否线程安全 |
+| ---------- | -------- | ------------ |
+| Stack      | 数组     | 是           |
+| ArrayDeque | 数组     | 否           |
+
+ 
+
+Stack 常用的方法如下所示：
+
+| 操作     | 方法                   |
+| -------- | ---------------------- |
+| 入栈     | push(E  item)          |
+| 出栈     | pop()                  |
+| 查看栈顶 | peek() 为空时返回 null |
+
+ 
+
+ArrayDeque 常用的方法如下所示：
+
+| 操作     | 方法                                                |
+| -------- | --------------------------------------------------- |
+| 入栈     | push(E  item)                                       |
+| 出栈     | poll() 栈为空时返回    nullpop() 栈为空时会抛出异常 |
+| 查看栈顶 | peek() 为空时返回 null                              |
+
+ 
+
+
+
+## Queue介绍
 
 Java里有一个叫做Stack的类，却没有叫做Queue的类(它是个接口名字)。当需要使用栈时，Java已不推荐使用Stack，而是推荐使用更高效的ArrayDeque；既然Queue只是一个接口，当需要使用队列时也就首选ArrayDeque了(次选是LinkedList)。
 
@@ -188,86 +265,12 @@ public E peekLast() {
 
 
 
-## 为什么不推荐使用Stack
 
-Java已不推荐使用Stack，而是推荐使用更高效的ArrayDeque
-
-### 为什么不推荐使用
-
-- 性能能低：是因为 Stack 继承自 Vector， 而 Vector 在每个方法中都加了锁。由于需要兼容老的项目，很难在原有的基础上进行优化，因此 Vector 就被淘汰掉了，使用 ArrayList 和 CopyOnWriteArrayList 来代替，如果在非线程安全的情况下可以使用 ArrayList，线程安全的情况下可以使用 CopyOnWriteArrayList 。
-
-- 破坏了原有的数据结构：栈的定义是在一端进行 push 和 pop 操作，除此之外不应该包含其他 入栈和出栈 的方法，但是 Stack 继承自 Vector，使得 Stack 可以使用父类 Vector 公有的方法。
-
- 
-
-### 为什么现在还在用
-
-但是为什么还有很多人在使用 Stack。总结了一下主要有两个原因。
-
-- JDK 官方是不推荐使用 Stack，之所以还有很多人在使用，是因为 JDK 并没有加 deprecation 注解，只是在文档和注释中声明不建议使用，但是很少有人会去关注其实现细节
-
-- 在做算法题的时候，关注点在解决问题的算法逻辑思路上，并不会关注在不同语言下 Stack 实现细节，但是对于使用 Java 语言的开发者，不仅需要关注算法逻辑本身，也需要关注它的实现细节
-
-### 为什么推荐使用 Deque 接口替换栈
-
-如果 JDK 不推荐使用 Stack，那应该使用什么集合类来替换栈，一起看看官方的文档。
-
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856058.jpg)
-
-正如图中标注部分所示，栈的相关操作应该由 Deque 接口来提供，推荐使用 Deque 这种数据结构， 以及它的子类，例如 ArrayDeque。
-
-```java
-val stack: Deque<Int> = ArrayDeque()
-```
-
-
-
-使用 Deque 接口来实现栈的功能有什么好处：
-
-- 速度比 Stack 快
-
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250856079.jpg)
-
-这个类作为栈使用时可能比 Stack 快，作为队列使用时可能比 LinkedList 快。因为原来的 Java 的 Stack 继承自 Vector，而 Vector 在每个方法中都加了锁，而 Deque 的子类 ArrayDeque 并没有锁的开销。
-
-- 屏蔽掉无关的方法
-
-原来的 Java 的 Stack，包含了在任何位置添加或者删除元素的方法，这些不是栈应该有的方法，所以需要屏蔽掉这些无关的方法。声明为 Deque 接口可以解决这个问题，在接口中声明栈需要用到的方法，无需管子类是如何是实现的，对于上层使用者来说，只可以调用和栈相关的方法。
-
-### Stack 和 ArrayDeque的 区别
-
-| 集合类型   | 数据结构 | 是否线程安全 |
-| ---------- | -------- | ------------ |
-| Stack      | 数组     | 是           |
-| ArrayDeque | 数组     | 否           |
-
- 
-
-Stack 常用的方法如下所示：
-
-| 操作     | 方法                   |
-| -------- | ---------------------- |
-| 入栈     | push(E  item)          |
-| 出栈     | pop()                  |
-| 查看栈顶 | peek() 为空时返回 null |
-
- 
-
-ArrayDeque 常用的方法如下所示：
-
-| 操作     | 方法                                                |
-| -------- | --------------------------------------------------- |
-| 入栈     | push(E  item)                                       |
-| 出栈     | poll() 栈为空时返回    nullpop() 栈为空时会抛出异常 |
-| 查看栈顶 | peek() 为空时返回 null                              |
-
- 
 
  
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 
 
 

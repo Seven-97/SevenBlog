@@ -282,7 +282,7 @@ export default sidebar({
           collapsible: true,
           children: [
             "servlet",
-            "tomcat1",
+            "tomcat-config",
             "tomcat-logs",
           ],
         },
