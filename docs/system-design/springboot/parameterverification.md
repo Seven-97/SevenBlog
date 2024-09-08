@@ -102,7 +102,6 @@ Spring 提供了相应的 Bean Validation 实现：Java Bean Validation，并在
 - 在方法在入参对应元素上配置校验注解：
 
 ```java
-
 @Data
 public class UserRequest {
     @NotBlank(message = "用户ID不能为空")
@@ -146,7 +145,6 @@ public class TestController {
 如果数据校验通过，就会继续执行方法里的业务逻辑；否则，就会抛出一个 MethodArgumentNotValidException 异常。默认情况下，Spring 会将该异常及其信息以错误码 400 进行下发，返回结果示例如下：
 
 ```json
-
 {
   "timestamp": 1666777674977,
   "status": 400,
@@ -271,7 +269,7 @@ public class TestController {
         // 省略其他业务代码
         return new ResponseEntity<>(HttpStatus.OK);
     }
-}﻿
+}
 ```
 
 
@@ -299,7 +297,6 @@ public interface BasicEnum {
 
 
  ```java
- 
  public enum GenderEnum implements BasicEnum {
      MALE("1", "男性"),
      FEMALE("2", "女性"),
@@ -401,7 +398,7 @@ public class UserRequest {
 
 #### 校验原理
 
-1. MethodValidationPostProcessor -- 是 Spring 提供的来实现基于方法的JSR校验的核心处理器，能让约束作用在方法入参、返回值上。关于校验方面的逻辑在切面MethodValidationInterceptor。
+1. MethodValidationPostProcessor是 Spring 提供的来实现基于方法的JSR校验的核心处理器，能让约束作用在方法入参、返回值上。关于校验方面的逻辑在切面MethodValidationInterceptor。
 
 ```java
 public class MethodValidationPostProcessor extends AbstractBeanFactoryAwareAdvisingPostProcessor
@@ -455,13 +452,12 @@ public class MethodValidationPostProcessor extends AbstractBeanFactoryAwareAdvis
 
 
 
-2. MethodValidationInterceptor -- 用于处理方法的数据校验
+2. MethodValidationInterceptor：用于处理方法的数据校验
 
 ```java
-
 public class MethodValidationInterceptor implements MethodInterceptor {
 
-    //xxx
+  //xxx
 
   @Override
   @SuppressWarnings("unchecked")
@@ -471,7 +467,7 @@ public class MethodValidationInterceptor implements MethodInterceptor {
       return invocation.proceed();
     }
 
-        // 获取方法上@Validated注解里的分组信息
+    // 获取方法上@Validated注解里的分组信息
     Class<?>[] groups = determineValidationGroups(invocation);
 
     if (forExecutablesMethod != null) {
@@ -489,8 +485,8 @@ public class MethodValidationInterceptor implements MethodInterceptor {
       Method methodToValidate = invocation.getMethod();
       Set<ConstraintViolation<?>> result;
             
-            // 对方法的参数进行验证，验证结果保存在 result 中，如果验证失败，result 不为空，
-            // 此时会抛出异常 ConstraintViolationException
+      // 对方法的参数进行验证，验证结果保存在 result 中，如果验证失败，result 不为空，
+      // 此时会抛出异常 ConstraintViolationException
       try {
         result = (Set<ConstraintViolation<?>>) ReflectionUtils.invokeMethod(validateParametersMethod,
             execVal, invocation.getThis(), methodToValidate, invocation.getArguments(), groups);
@@ -507,11 +503,11 @@ public class MethodValidationInterceptor implements MethodInterceptor {
         throw new ConstraintViolationException(result);
       }
 
-            // 调用目标方法
+      // 调用目标方法
       Object returnValue = invocation.proceed();
 
-            // 对方法执行的返回值进行验证 ，验证结果保存在 result 中，如果验证失败，result 不为空，
-            // 此时会抛出异常 ConstraintViolationException
+      // 对方法执行的返回值进行验证 ，验证结果保存在 result 中，如果验证失败，result 不为空，
+      // 此时会抛出异常 ConstraintViolationException
       result = (Set<ConstraintViolation<?>>) ReflectionUtils.invokeMethod(validateReturnValueMethod,
           execVal, invocation.getThis(), methodToValidate, returnValue, groups);
       if (!result.isEmpty()) {
@@ -533,11 +529,11 @@ public class MethodValidationInterceptor implements MethodInterceptor {
 
 
 
-3. LocalValidatorFactoryBean -- 最终是使用它来执行验证功能的，它也是Spring MVC默认的验证器。默认情况下， LocalValidatorFactoryBean 会配置一个 SpringConstraintValidatorFactory 实例。如果有指定的 ConstraintValidatorFactory，就会使用指定的，因此在遇到自定义约束注解的时候，就会自动实例化 @Constraint指定的关联 Validator，从而完成数据校验过程。
+3. LocalValidatorFactoryBean：最终是使用它来执行验证功能的，它也是Spring MVC默认的验证器。默认情况下， LocalValidatorFactoryBean 会配置一个 SpringConstraintValidatorFactory 实例。如果有指定的 ConstraintValidatorFactory，就会使用指定的，因此在遇到自定义约束注解的时候，就会自动实例化 @Constraint指定的关联 Validator，从而完成数据校验过程。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404272147677.png)
 
-4. SpringValidatorAdapter -- 是javax.validation.Validator到Spring的Validator的适配，通过它就可以对接到Bean Validation来完成校验了。
+4. SpringValidatorAdapter：是javax.validation.Validator到Spring的Validator的适配，通过它就可以对接到Bean Validation来完成校验了。
 
  ```java
  public class SpringValidatorAdapter implements SmartValidator, javax.validation.Validator {
@@ -595,16 +591,15 @@ public class MethodValidationInterceptor implements MethodInterceptor {
 
 更多情况下是需要对 Service 层的接口进行参数校验的，那么该怎么配置呢？
 
-在校验方法入参的约束时，若是 @Override 父类/接口的方法，那么这个入参约束只能写在父类/接口上面。
+在校验方法入参的约束时，若是 @Override 父类/接口的方法，那么这个入参约束只能写在父类/接口上面。（至于为什么只能写在接口处，其实是和 Bean Validation 的实现产品有关，可参考此类：OverridingMethodMustNotAlterParameterConstraints）
 
-（至于为什么只能写在接口处，其实是和 Bean Validation 的实现产品有关，可参考此类：OverridingMethodMustNotAlterParameterConstraints）
 
-如果入参是平铺的参数
 
-首先需要在父类/接口的方法入参里增加注解约束，然后用 @Validated 修饰我们的实现类。
+1. 如果入参是平铺的参数
+
+首先需要在父类/接口的方法入参里增加注解约束，然后用 @Validated 修饰实现类。
 
 ```java
-
 public interface SchedulerServiceClient {
     /**
      * 获取应用不同环境的所有定时任务
@@ -623,7 +618,6 @@ public interface SchedulerServiceClient {
 
 ```java
 @Component
-@Slf4j(topic = "BIZ-SERVICE")
 @HSFProvider(serviceInterface = SchedulerServiceClient.class, clientTimeout = 3000)
 @Validated
 public class SchedulerServiceClientImpl implements SchedulerServiceClient {
@@ -640,11 +634,9 @@ public class SchedulerServiceClientImpl implements SchedulerServiceClient {
 
 
 
-1. 如果入参是对象
+2. 如果入参是对象：在实际开发中，其实大多数情况下方法入参是个对象，而不是单单平铺的参数。
 
-在实际开发中，其实大多数情况下我们方法入参是个对象，而不是单单平铺的参数。
-
-首先需要在方法入参类里增加 @NotNull 等注解约束，然后在父类/接口的方法入参里增加 @Valid（便于嵌套校验），最后用 @Validated 修饰我们的实现类。
+首先需要在方法入参类里增加 @NotNull 等注解约束，然后在父类/接口的方法入参里增加 @Valid（便于嵌套校验），最后用 @Validated 修饰实现类。
 
 ```java
 @Data
@@ -692,13 +684,11 @@ public class ProcessControlDingServiceImpl implements ProcessControlDingService 
 }
 ```
 
-
-
 如果需要格式化错误结果，可以再来个异常处理切面，就可以得到一个完美的异常结果。﻿
 
 
 
-#### 较简洁的方式-FastValidatorUtils
+#### 较简洁的方式：FastValidatorUtils
 
 ```java
 // 返回 bean 中所有约束违反约束校验结果
@@ -712,10 +702,8 @@ Set<ConstraintViolation<T>> violationSet = FastValidatorUtils.validate(bean);
 自定义注解@RequestValid和对应切面RequestValidAspect。注解在具体的方法上，对于被注解的方法，在 AOP 中会扫描所有入参，对参数进行校验。
 
  ```java
- 
  @Aspect
  @Component
- @Slf4j(topic = "BIZ-SERVICE")
  public class RequestValidAspect {
  
      @Around("@annotation(requestValid)")
@@ -771,5 +759,7 @@ Set<ConstraintViolation<T>> violationSet = FastValidatorUtils.validate(bean);
      }
  }
  ```
+
+
 
 <!-- @include: @article-footer.snippet.md -->     
