@@ -13,13 +13,11 @@ Spring 容器可以管理 singleton 作用域 Bean 的生命周期，在此作�
 
 而对于 prototype 作用域的 Bean，Spring 只负责创建，当容器创建了 Bean 的实例后，Bean 的实例就交给客户端代码管理，Spring 容器**将不再跟踪其生命周期**。每次客户端请求 prototype 作用域的 Bean 时，Spring 容器都会创建一个新的实例，并且不会管那些被配置成 prototype 作用域的 Bean 的生命周期。
 
-了解 Spring 生命周期的意义就在于，**可以利用 Bean 在其存活期间的指定时刻完成一些相关操作**。这种时刻可能有很多，但一般情况下，会在 Bean 被初始化后和被销毁前执行一些相关操作。
+了解 Spring 生命周期的意义就在于，**可以利用 Bean 在其存活期间的指定时刻完成一些相关操作**，即扩展点。这种时刻可能有很多，但一般情况下，会在 Bean 被初始化后和被销毁前执行一些相关操作。具体扩展点的使用可以看[这篇文章](https://www.seven97.top/framework/spring/extentions-use.html)，可以这里两篇文章结合着看。
 
  
 
-
-
-在执行初始化方法之前和之后，还需要对Bean的后置处理器BeanPostProcessors进行处理
+在执行初始化方法之前和之后，还需要对Bean的后置处理器BeanPostProcessors进行处理：
 
 1. 在invokeInitMethods 的前后进行applyBeanPostProcessorsBeforeInitialization，applyBeanPostProcessorsAfterInitialization
 
@@ -29,7 +27,7 @@ Spring 容器可以管理 singleton 作用域 Bean 的生命周期，在此作�
 
 
 
-整体流程如下：
+- Bean生命周期整体流程如下：
 
 1. 加载Bean定义：通过 loadBeanDefinitions 扫描所有xml配置、注解将Bean记录在beanDefinitionMap中。即[IOC容器的初始化过程](https://www.seven97.top/framework/spring/ioc2-initializationprocess.html)
 
@@ -61,7 +59,7 @@ Spring 容器可以管理 singleton 作用域 Bean 的生命周期，在此作�
 
    3. 初始化Bean对象：通过initializeBean对填充后的实例进行初始化
 
-      1. 执行Aware：检查是否有实现着三个Aware，BeanNameAware，BeanClassLoaderAware, BeanFactoryAware；让实例化后的对象能够感知自己在Spring容器里的存在的位置信息，创建信息
+      1. 执行Aware：检查是否有实现者三个Aware：`BeanNameAware`，`BeanClassLoaderAware`, `BeanFactoryAware`；让实例化后的对象能够感知自己在Spring容器里的存在的位置信息，创建信息
 
       2. 初始化前：BeanPostProcessor，也就是拿出所有的后置处理器对bean进行处理，当有一个处理器返回null，将不再调用后面的处理器处理。
 
@@ -104,8 +102,6 @@ Spring 容器可以管理 singleton 作用域 Bean 的生命周期，在此作�
       3. 没有close方法就会去执行shutdown方法
 
       4. 都没有的话就都不执行，不影响
-
-
 
 
 

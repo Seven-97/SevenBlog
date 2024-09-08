@@ -117,7 +117,11 @@ rollbackFor ：用于指定能够触发事务回滚的异常类型，可以指�
 
 noRollbackFor：抛出指定的异常类型，不回滚事务，也可以指定多个异常类型。
 
+
+
 ## @Transactional
+
+### 作用范围
 
 @Transactional 可以作用在接口、类、类方法。
 
@@ -127,11 +131,94 @@ noRollbackFor：抛出指定的异常类型，不回滚事务，也可以指定�
 
 - 作用于接口：不推荐这种使用方法，因为一旦标注在Interface上并且配置了Spring AOP 使用CGLib动态代理，将会导致@Transactional注解失效
 
+
+
+### 错误使用场景
+
+#### 无需事务的业务
+
+在没有事务操作的业务方法上使用 @Transactional 注解；
+
+例如，在只有查询的操作上，或者在只操作单表的情况下 使用 @Transactional 注解。
+
+- 虽然对业务功能无影响，但从编码角度看是不规范的。其他开发者可能会认为该方法实际需要事务支持，从而增加理解代码的复杂性。
+- @Transactional是通过动态代理实现的，每次调用带有 `@Transactional` 注解的方法时，事务管理器都会检查是否需要启动一个新事务，造成性能开销。虽然事务管理的开销在大多数现代数据库和应用服务器中相对较小，但仍然存在。
+
+```java
+@Transactional
+public String testQuery() {
+    standardBak2Service.getById(1L);
+    return "testB";
+}
+```
+
+#### 事务范围过大
+
+有些同学为了省事直接将 @Transactional 注解加在了类上或者抽象类上，这样做导致的问题就是**类内的方法或抽象类的实现类中所有方法全部都被事务管理**。增加了不必要的性能开销或复杂性，建议按需使用，只在有事务逻辑的方法上加@Transactional。
+
+以下是事务范围过大可能引发的问题及其相关处理建议：
+
+- 锁竞争：事务范围过大可能会导致较长时间持有数据库锁，从而增加锁竞争的可能性。其他事务在等待锁释放期间，可能会导致响应时间变长或出现超时。
+- [死锁](https://www.seven97.top/database/mysql/02-lock3-deadlock-mysql.html)：长时间持有锁的事务增加了死锁的风险。当多个事务相互持有对方需要的资源时，可能会陷入死锁状态。
+
+
+
+
+
 ### 失效场景
 
 #### 应用在非 public 修饰的方法上
 
-之所以会失效是因为在Spring AOP 代理时，如上图所示 TransactionInterceptor （事务拦截器）在目标方法执行前后进行拦截，DynamicAdvisedInterceptor（CglibAopProxy 的内部类）的 intercept 方法或 JdkDynamicAopProxy 的 invoke 方法会间接调用 AbstractFallbackTransactionAttributeSource的 computeTransactionAttribute 方法，获取Transactional 注解的事务配置信息。
+之所以会失效是因为@Transactional 注解依赖于Spring AOP切面来增强事务行为，这个 AOP 是通过代理来实现的
+
+而无论是JDK动态代理还是CGLIB代理，Spring AOP的默认行为都是只代理`public`方法。
+
+
+
+#### 被用 final 、static 修饰方法
+
+和上边的原因类似，被用 `final` 、`static` 修饰的方法上加 @Transactional 也不会生效。
+
+- static 静态方法属于类本身的而非实例，因此代理机制是无法对静态方法进行代理或拦截的
+- final 修饰的方法不能被子类重写，事务相关的逻辑无法插入到 final 方法中，代理机制无法对 final 方法进行拦截或增强。
+
+
+
+#### 同一个类中方法调用
+
+比如有一个类Test，它的一个方法A，A再调用本类的方法B（不论方法B是用public还是private修饰），但方法A没有声明注解事务，而B方法有。则外部调用方法A之后，方法B的事务是不会起作用的。
+
+那为啥会出现这种情况？其实这还是由于使用Spring AOP代理造成的，因为只有当事务方法被当前类以外的代码调用时，才会由Spring生成的代理对象来管理。
+
+但是如果是A声明了事务，A的事务是会生效的。
+
+
+
+#### Bean 未被 spring 管理
+
+上边我们知道 @Transactional 注解通过 AOP 来管理事务，而 AOP 依赖于代理机制。因此，**Bean 必须由Spring管理实例！** 要确保为类加上如 `@Controller`、`@Service` 或 `@Component`注解，让其被Spring所管理，这很容易忽视。
+
+
+
+#### 异步线程调用
+
+如果我们在 testMerge() 方法中使用异步线程执行事务操作，通常也是无法成功回滚的，来个具体的例子。
+
+假设testMerge() 方法在事务中调用了 testA()，testA() 方法中开启了事务。接着，在 testMerge() 方法中，我们通过一个新线程调用了 testB()，testB() 中也开启了事务，并且在 testB() 中抛出了异常。此时，testA() 不会回滚 和 testB() 回滚。
+
+testA() 无法回滚是因为没有捕获到新线程中 testB()抛出的异常；testB()方法正常回滚。
+
+在多线程环境下，Spring 的事务管理器不会跨线程传播事务，事务的状态（如事务是否已开启）是存储在线程本地的 `ThreadLocal` 来存储和管理事务上下文信息。这意味着每个线程都有一个独立的事务上下文，事务信息在不同线程之间不会共享。
+
+
+
+#### 数据库引擎不支持事务
+
+事务能否生效数据库引擎是否支持事务是关键。常用的MySQL数据库默认使用支持事务的innodb引擎。一旦数据库引擎切换成不支持事务的myisam，那事务就从根本上失效了。
+
+
+
+### 不回滚
 
 #### propagation 设置错误
 
@@ -143,29 +230,72 @@ noRollbackFor：抛出指定的异常类型，不回滚事务，也可以指定�
 
 - TransactionDefinition.PROPAGATION_NEVER：以非事务方式运行，如果当前存在事务，则抛出异常。
 
+
+
 #### rollbackFor 设置错误
 
-rollbackFor 可以指定能够触发事务回滚的异常类型。Spring默认抛出了未检查unchecked异常（继承自 RuntimeException 的异常）或者 Error才回滚事务；其他异常（如IOException）不会触发回滚事务。如果在事务中抛出其他类型的异常，但却期望 Spring 能够回滚事务，就需要指定 rollbackFor属性。
+rollbackFor 可以指定能够触发事务回滚的异常类型。Spring 默认抛出了未检查unchecked异常（继承自 RuntimeException 的异常）或者 Error才回滚事务；其他异常（如IOException）不会触发回滚事务。如果在事务中抛出其他类型的异常，例如 `checked exceptions`（检查型异常），但却期望 Spring 能够回滚事务，就需要指定 rollbackFor属性。
 
-#### 同一个类中方法调用
 
-比如有一个类Test，它的一个方法A，A再调用本类的方法B（不论方法B是用public还是private修饰），但方法A没有声明注解事务，而B方法有。则外部调用方法A之后，方法B的事务是不会起作用的。
-
-那为啥会出现这种情况？其实这还是由于使用Spring AOP代理造成的，因为只有当事务方法被当前类以外的代码调用时，才会由Spring生成的代理对象来管理。
 
 #### 异常被 catch了
 
 spring的事务是在调用业务方法之前开始的，业务方法执行完毕之后才执行commit or rollback，事务是否执行取决于是否抛出runtime异常。如果抛出runtime exception 并在你的业务方法中没有catch到的话，事务会回滚。
 
-在业务方法中一般不需要catch异常，如果非要catch一定要抛出throw new RuntimeException()，或者注解中指定抛异常类型@Transactional(rollbackFor=Exception.class)，否则会导致事务失效，数据commit造成数据不一致，所以有些时候try catch反倒会画蛇添足。
-
-#### 数据库引擎不支持事务
-
-事务能否生效数据库引擎是否支持事务是关键。常用的MySQL数据库默认使用支持事务的innodb引擎。一旦数据库引擎切换成不支持事务的myisam，那事务就从根本上失效了。
+在业务方法中一般不需要catch异常，如果非要catch一定要抛出throw new RuntimeException()，或者注解中指定抛异常类型@Transactional(rollbackFor=Exception.class)，否则会导致事务失效，数据commit造成数据不一致，所以有些时候try catch反倒会画蛇添足。 
 
  
 
- 
+#### 嵌套事务问题
+
+还有一种场景就是嵌套事务问题，比如，我们在 testMerge() 方法中调用了事务方法 testA() 和事务方法 testB()，此时不希望 testB() 抛出异常让整个 testMerge() 都跟着回滚；这就需要单独 try catch 处理 testB() 的异常，不让异常在向上抛。
+
+```java
+@RequiredArgsConstructor
+@Slf4j
+@Service
+public class TestMergeService {
+
+    private final TestBService testBService;
+
+    private final TestAService testAService;
+    @Transactional
+    public String testMerge() {
+    
+        testAService.testA();
+
+        try {
+            testBService.testB();
+        } catch (Exception e) {
+            log.error("testMerge error:{}", e);
+        }
+        return "ok";
+    }
+}
+
+@Service
+public class TestAService {
+
+    @Transactional
+    public String testA() {
+        standardBakService.save(entity);
+        return "ok";
+    }
+}
+
+@Service
+public class TestBService {
+
+    @Transactional
+    public String testB() {
+        standardBakService.save(entity2);
+        
+        throw new RuntimeException("test2");
+    }
+}
+```
+
+
 
  
 

@@ -120,7 +120,7 @@ System.out.println(luyaoBookList);
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250946013.gif)
 
-####  
+
 
 #### 修改子集合的值，会影响原集合
 
@@ -233,7 +233,7 @@ ArrayList的subList方法，返回的是原集合的一个子集合（视图）�
 
 ##  Collections.emptyList()原理
 
-很多大佬写代码的时候，结果集为空的情况,他返回的不是null，而是:
+很多大佬写代码的时候，结果集为空的情况，他返回的不是null，而是:
 
 ```java
 return Collections.EMPTY_LIST;
@@ -262,15 +262,14 @@ return Collections.EMPTY_LIST;
 
  
 
- 
+
 <!-- @include: @article-footer.snippet.md -->     
- 
 
- 
 
- 
 
- 
+
+
+
 
 
 

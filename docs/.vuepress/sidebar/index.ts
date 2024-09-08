@@ -231,6 +231,7 @@ export default sidebar({
             "aop2-implementationofcrosssections",
             "aop3-proxy",
             "spring-transactions",
+            "extentions-use",
             "mvc1-summary",
             "mvc3-initializationprocessofdispatcherservlet",
             "mvc4-processofdispatcherservletprocessingrequests",
