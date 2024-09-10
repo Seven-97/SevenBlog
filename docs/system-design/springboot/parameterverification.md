@@ -7,7 +7,7 @@ tag:
 
 
 
-## 前言
+## 写在前面
 
 在日常的开发工作中，为了程序的健壮性，大部分方法都需要进行入参数据校验。最直接的当然是在相应方法内对数据进行手动校验，但是这样代码里就会有很多冗余繁琐的if-else。
 
@@ -63,15 +63,21 @@ public class TestController {
 
 那么该怎么优雅的进行参数校验呢？
 
+
+
 ## spring validation
 
 Java在早在2009年就提出了 Bean Validation（JSR）规范，其中定义了一系列的校验注解，比如 @NotEmpty、@NotNull等，支持通过注解的方式对字段进行校验，避免在业务逻辑中耦合冗余的校验逻辑。
 
 不过，以上注解本身不做校验，只是能给开发者做个提醒。如果需要达到参数校验的目的，还需要其他配置。
 
+
+
 ### Controller方法参数校验
 
 相关Demo 可以 [点击这里](https://github.com/Seven-97/SpringBoot-Demo/tree/master/03-controller-validation)
+
+
 
 #### 效果示例
 
@@ -136,6 +142,16 @@ public class TestController {
     public ResponseEntity<BaseResult> saveUser(@Validated @RequestBody UserRequest user) {
         // 省略其他业务代码
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+    
+    @GetMapping("/api/selectById")
+    public Result selectById(@RequestParam(required = false) @NotNull(message = "id不能为空") Integer id) {
+        UserVo user = userService.selectUserById(id);
+        log.info("selectById根据id:{}执行查询,查询的用户信息为:{}", id, JsonMapper.toJson(user));
+        if (user != null) {
+            return Result.ok(user);
+        }
+        return Result.ok();
     }
 }
 ```
@@ -591,7 +607,7 @@ public class MethodValidationInterceptor implements MethodInterceptor {
 
 更多情况下是需要对 Service 层的接口进行参数校验的，那么该怎么配置呢？
 
-在校验方法入参的约束时，若是 @Override 父类/接口的方法，那么这个入参约束只能写在父类/接口上面。（至于为什么只能写在接口处，其实是和 Bean Validation 的实现产品有关，可参考此类：OverridingMethodMustNotAlterParameterConstraints）
+在校验方法入参的约束时，若是 @Override 父类/接口的方法，那么这个入参约束只能写在父类/接口上面。（至于为什么只能写在接口处，其实是和 Bean Validation 的实现有关，可参考此类：OverridingMethodMustNotAlterParameterConstraints）
 
 
 
@@ -665,7 +681,6 @@ public interface ProcessControlDingService {
 ```
 
 ```java
-
 @Component
 @HSFProvider(serviceInterface = ProcessControlDingService.class, clientTimeout = 5000)
 @Validated
@@ -685,6 +700,22 @@ public class ProcessControlDingServiceImpl implements ProcessControlDingService 
 ```
 
 如果需要格式化错误结果，可以再来个异常处理切面，就可以得到一个完美的异常结果。﻿
+
+```java
+@RestControllerAdvice
+@Slf4j
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(UnexpectedTypeException.class)
+    public Result handlerUnexpectedTypeException(UnexpectedTypeException e, HttpServletRequest request) {
+        String msg = e.getMessage();
+        log.error("请求[ {} ] {} 的参数校验发生错误，错误信息：{}", request.getMethod(), request.getRequestURL(), msg, e);
+        return Result.error(Result.COMMENT_CODE, msg);
+    }
+}
+```
+
+
 
 
 

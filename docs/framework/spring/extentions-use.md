@@ -653,7 +653,6 @@ public class MyBean {
         return "MyBean{customField='" + customField + "'}";
     }
 }
-
 ```
 
 

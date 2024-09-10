@@ -523,6 +523,14 @@ public void indexOrNameRead() {
 
 
 
+EasyExcel.read 整体流程图如下：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202409101010626.png)
+
+
+
+
+
 但仔细看，其实这里还需要创建一个回调监听器 DemoDataListener，也就是针对每个DemoData 即每个Excel 都需要创建一个单独的回调监听器类。
 
 ```java
@@ -606,11 +614,18 @@ public class DemoDataListener implements ReadListener<DemoData> {
 
 看上面代码，只需要在new的时候再去`new DataListener<DemoData>`即可
 
-但是，如果要传递Dao 和 并且每个Dao如何保存数据，而且保存数据前可能还需要对数据进行校验，那么该如何处理呢？
+但是，如果要传递Dao 和 并且每个Dao如何保存数据，而且保存数据前可能还需要对数据进行校验，也就存在以下问题：
+
+- 如何校验表头？
+- 如何处理表头数据？
+- 如何校验真实数据？
+- 如何处理真实数据？
+
+那么该如何处理呢？
 
 
 
-**最后想到了可以用Function(数据校验) + Consumer(数据存储) + 模板方法设计模式，创建一个共用的EasyExcel读取监听器，从而不在监听器中对数据进行处理，把处理都前置**
+**最后想到了可以用Function(数据校验) + Consumer(数据存储) + 模板方法设计模式，创建一个共用的EasyExcel读取监听器，从而不在监听器中对数据进行处理，把处理都前置**。
 
 > EasyExcel 的监听器类 Listener 已经定义了每一步会做什么，如通过 invokeHead 方法一行一行读取表头数据，通过invoke 方法一行一行读取真实数据。
 >
