@@ -2016,12 +2016,6 @@ protected void run() {
 
 
 
-参考下图
-
-<img src="E:\SevenBlog\docs\framework\netty\img\0032.png"  />
-
-
-
 `io.netty.channel.nio.NioEventLoop#select`
 
 ```java
@@ -2475,5 +2469,4 @@ public boolean continueReading(UncheckedBooleanSupplier maybeMoreDataSupplier) {
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 
