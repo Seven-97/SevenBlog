@@ -163,25 +163,37 @@ System.out.println(s);
 
 ### ThreadLocal的问题
 
-scoped values 是一个隐藏的方法参数，只有方法可以访问scoped values，它可以让两个方法之间传递参数时无需声明形参。例如在UserDao类中编写了saveUser方法，LogDao类中编写了saveLog方法，那么在保存用户的时候需要保证事务，此时就需要在service层获取Connection对象，然后将该对象分别传入到两个Dao的方法中，但对于saveUser方法来说并不是直接使用Connection对象，却又不得不在方法的形参中写上该对象，其实仅从业务上来看，该方法中只要传入User对象就可以了。
+在 Web 应用中，一个请求通常会被多个线程处理，每个线程需要访问自己的数据，使用 ThreadLocal 可以确保数据在每个线程中的独立性。但由于ThreadLocal在设计上的瑕疵，导致下面问题：
 
-```java
-int saveUser(Connection connection,User user);
-```
+1. 内存泄漏：在用完ThreadLocal之后若没有调用remove，这样就会出现内存泄漏。
+2. 增加开销：在具有继承关系的线程中，子线程需要为父线程中ThreadLocal里面的数据分配内存。
+3. 权限问题：任何可以调用ThreadLocal中get方法的代码都可以随时调用set方法，这样就不易辨别哪些方法是按照什么顺序来更新的共享数据，并且这些方法也都有权限给`ThreadLocal`赋值。
 
-对于上面的问题，开发者通常会使用ThreadLocal解决，但由于ThreadLocal在设计上的瑕疵，导致下面问题：
-
-1. 内存泄漏，在用完ThreadLocal之后若没有调用remove，这样就会出现内存泄漏。
-2. 增加开销，在具有继承关系的线程中，子线程需要为父线程中ThreadLocal里面的数据分配内存。
-3. 混乱的可变，任何可以调用ThreadLocal中get方法的代码都可以随时调用set方法，这样就不易辨别哪些方法是按照什么顺序来更新的共享数据。
-
-随着虚拟线程的到来，内存泄漏问题就不用担心了，由于虚拟线程会很快的终止，此时会自动删除ThreadLocal中的数据，这样就不用调用remove方法了。但虚拟线程的数量通常是多的，试想下上百万个虚拟线程都要拷贝一份ThreadLocal中的变量，这会使内存承受更大的压力。为了解决这些问题，scoped values就出现了。
+随着虚拟线程的到来，内存泄漏问题就不用担心了，由于虚拟线程会很快的终止，此时会自动删除ThreadLocal中的数据，这样就不用调用remove方法了。但虚拟线程的数量通常是多的，试想下上百万个虚拟线程都要拷贝一份ThreadLocal中的变量，这会使内存承受更大的压力。为了解决这些问题，scoped values就出现了。scoped values 是一个隐藏的方法参数，只有方法可以访问scoped values，它可以让两个方法之间传递参数时无需声明形参。
 
  
 
 ### ScopeValue初体验
 
-在Java21中新增了ScopeValue类，为了便于多个方法使用，通常会将该类的对象声明为static final ，每个线程都能访问自己的scope value，与ThreadLocal不同的是，它只会被write 1次且仅在线程绑定的期间内有效。
+
+
+#### 基本用法
+
+ScopedValue对象用`jdk.incubator.concurrent`包中的`ScopedValue`类来表示。使用ScopedValue的第一步是创建`ScopedValue`对象，通过静态方法`newInstance`来完成，ScopedValue对象一般声明为`static final`，每个线程都能访问自己的scope value，与ThreadLocal不同的是，它只会被write 1次且仅在线程绑定的期间内有效。
+
+下一步是指定`ScopedValue`对象的值和作用域，通过静态方法`where`来完成。`where`方法有 3 个参数：
+
+- `ScopedValue` 对象
+- `ScopedValue` 对象所绑定的值
+- `Runnable`或`Callable`对象，表示`ScopedValue`对象的作用域
+
+在`Runnable`或`Callable`对象执行过程中，其中的代码可以用`ScopedValue`对象的`get`方法获取到`where`方法调用时绑定的值。这个作用域是动态的，取决于`Runnable`或`Callable`对象所调用的方法，以及这些方法所调用的其他方法。当`Runnable`或`Callable`对象执行完成之后，`ScopedValue`对象会失去绑定，不能再通过`get`方法获取值。在当前作用域中，`ScopedValue`对象的值是不可变的，除非再次调用`where`方法绑定新的值。这个时候会创建一个嵌套的作用域，新的值仅在嵌套的作用域中有效。使用作用域值有以下几个优势：
+
+- 提高数据安全性：由于作用域值只能在当前范围内访问，因此可以避免数据泄露或被恶意修改。
+- 提高数据效率：由于作用域值是不可变的，并且可以在线程之间共享，因此可以减少数据复制或同步的开销。
+- 提高代码清晰度：由于作用域值只能在当前范围内访问，因此可以减少参数传递或全局变量的使用。
+
+
 
 下面代码模拟了送礼和收礼的场景
 
@@ -197,9 +209,9 @@ public class Test{
     //送礼
     public void giveGift() {
         /*
-            在对象GIFT中增加字符串手机，当run方法执行时，
-            会拷贝一份副本与当前线程绑定，当run方法结束时解绑。
-            由此可见，这里GIFT中的字符串仅在收礼方法中可以取得。
+         *  在对象GIFT中增加字符串手机，当run方法执行时，
+         *  会拷贝一份副本与当前线程绑定，当run方法结束时解绑。
+         *  由此可见，这里GIFT中的字符串仅在收礼方法中可以取得。
          */
         ScopedValue.where(GIFT, "手机").run(() -> receiveGift());
     }
@@ -214,14 +226,11 @@ public class Test{
 
 
 
-### 多线程操作相同的ScopeValue
+#### 多线程操作相同的ScopeValue
 
 不同的线程在操作同一个ScopeValue时，相互间不会影响，其本质是利用了Thread类中scopedValueBindings属性进行的线程绑定。
 
 ```java
-import Java.util.concurrent.ExecutorService;
-import Java.util.concurrent.Executors;
-
 public class Test{
     private static final ScopedValue<String> GIFT = ScopedValue.newInstance();
 
@@ -253,7 +262,7 @@ public class Test{
 
 
 
-### ScopeValue的修改
+#### ScopeValue的修改
 
 通过上面的示例可以看到，ScopeValue的值是在第一次使用where的时候就设置好了，该值在当前线程使用的期间是不会被修改的，这样就提高了性能。当然，我们也可以修改ScopeValue中的值，但需要注意，这里的修改会不影响本次方法中读取的值，而是会导致where后run中调用的方法里面的值发生变化。
 
@@ -285,6 +294,14 @@ public class Test{
 
 }
 ```
+
+
+
+所以，从以上分析可以看到，`ScopedValue`有一定的权限控制：**就算在同一个线程中也不能任意修改ScopedValue的值，就算修改了对当前作用域（方法）也是无效的**。另外`ScopedValue`也不需要手动remove，关于这块就需要分析它的实现原理了。这块内容待更新~
+
+
+
+
 
 
 
