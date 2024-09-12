@@ -7,11 +7,105 @@ tag:
 
 
 
+## 写在前面
 
+从一道Leetcode题目说起
+
+首先，来看一下Leetcode里面的一道经典题目：[146.LRU缓存机制](https://leetcode.cn/problems/lru-cache/description/)，题目描述如下：
+
+>  请你设计并实现一个满足 [LRU (最近最少使用) 缓存](https://baike.baidu.com/item/LRU) 约束的数据结构。
+>
+>  实现 `LRUCache` 类：
+>
+>  - `LRUCache(int capacity)` 以 **正整数** 作为容量 `capacity` 初始化 LRU 缓存
+>  - `int get(int key)` 如果关键字 `key` 存在于缓存中，则返回关键字的值，否则返回 `-1` 。
+>  - `void put(int key, int value)` 如果关键字 `key` 已经存在，则变更其数据值 `value` ；如果不存在，则向缓存中插入该组 `key-value` 。如果插入操作导致关键字数量超过 `capacity` ，则应该 **逐出** 最久未使用的关键字。
+>
+>  函数 `get` 和 `put` 必须以 `O(1)` 的平均时间复杂度运行。
+
+LRU 的全称是 Least Recently Used，也就是说我们认为最近使用过的数据应该是是「有用的」，很久都没用过的数据应该是无用的，内存满了就优先删那些很久没用过的数据。
+
+### 分析
+
+要让 LRU 的 `put` 和 `get` 方法的时间复杂度为 O(1)，可以总结出 LRU 这个数据结构必要的条件：
+
+1. 显然  LRU  中的元素必须有时序，以区分最近使用的和久未使用的数据，当容量满了之后要删除最久未使用的那个元素腾位置。
+2. 要在  LRU 中快速找某个 `key` 是否已存在并得到对应的 `val`；
+3. 每次访问  LRU  中的某个 `key`，需要将这个元素变为最近使用的，也就是说  LRU  要支持在任意位置快速插入和删除元素。
+
+那么，什么数据结构同时符合上述条件呢？哈希表查找快，但是数据无固定顺序；链表有顺序之分，插入删除快，但是查找慢。所以结合一下，形成一种新的数据结构：哈希链表 `LinkedHashMap`。
+
+LRU 缓存算法的核心数据结构就是哈希链表，双向链表和哈希表的结合体。这个数据结构长这样：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202409122042336.png)
+
+借助这个结构，逐一分析上面的 3 个条件：
+
+1. 如果我们每次默认从链表尾部添加元素，那么显然越靠尾部的元素就是最近使用的，越靠头部的元素就是最久未使用的。
+2. 对于某一个 `key`，我们可以通过哈希表快速定位到链表中的节点，从而取得对应 `val`。
+3. 链表显然是支持在任意位置快速插入和删除的，改改指针就行。只不过传统的链表无法按照索引快速访问某一个位置的元素，而这里借助哈希表，可以通过 `key` 快速映射到任意一个链表节点，然后进行插入和删除。
+
+
+
+put方法流程图：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202409122042820.png)
+
+
+
+### 代码实现
+
+```java
+class LRUCache {
+    int cap;
+    LinkedHashMap<Integer, Integer> cache = new LinkedHashMap<>();
+    public LRUCache(int capacity) { 
+        this.cap = capacity;
+    }
+    
+    public int get(int key) {
+        if (!cache.containsKey(key)) {
+            return -1;
+        }
+        // 将 key 变为最近使用
+        makeRecently(key);
+        return cache.get(key);
+    }
+    
+    public void put(int key, int val) {
+        if (cache.containsKey(key)) {
+            // 修改 key 的值
+            cache.put(key, val);
+            // 将 key 变为最近使用
+            makeRecently(key);
+            return;
+        }
+        
+        if (cache.size() >= this.cap) {
+            // 链表头部就是最久未使用的 key
+            int oldestKey = cache.keySet().iterator().next();
+            cache.remove(oldestKey);
+        }
+        // 将新的 key 添加链表尾部
+        cache.put(key, val);
+    }
+    
+    private void makeRecently(int key) {
+        int val = cache.get(key);
+        // 删除 key，重新插入到队尾
+        cache.remove(key);
+        cache.put(key, val);
+    }
+}
+```
+
+
+
+
+
+## LinkedHashMap介绍
 
 **LinkedHashSet**和**LinkedHashMap**其实也是一回事。**LinkedHashSet**和**LinkedHashMap**在Java里也有着相同的实现，前者仅仅是对后者做了一层包装，也就是说**LinkedHashSet里面有一个LinkedHashMap(适配器模式)**。
-
-## 介绍
 
 **LinkedHashMap**实现了**Map**接口，即允许放入key为null的元素，也允许插入value为null的元素。从名字上可以看出该容器是**linked list**和**HashMap**的混合体，也就是说它同时满足**HashMap**和**linked list**的某些特性。**可将LinkedHashMap看作采用linked list增强的HashMap。**
 
@@ -143,5 +237,4 @@ public class LinkedHashSet<E>
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 

@@ -16,6 +16,10 @@ footer: |-
   <a href="https://beian.miit.gov.cn/" target="_blank">闽ICP备2022017393号</a> | 主题: <a href="https://vuepress-theme-hope.github.io/v2/" target="_blank">VuePress Theme Hope</a>
 ---
 
+## 公告
+
+目前正在整理Java相关的面试题，欢迎持续关注~
+
 
 ## 关于我
 
