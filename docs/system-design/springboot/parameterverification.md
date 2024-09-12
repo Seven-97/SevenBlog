@@ -121,7 +121,6 @@ public class UserRequest {
     @Max(message = "年龄不能超过150", value = 150)
     private Integer age;
 
-
     @NotNull(message = "用户详情不能为空")
     @Valid
     private UserDetail userDetail;
@@ -418,50 +417,46 @@ public class UserRequest {
 
 ```java
 public class MethodValidationPostProcessor extends AbstractBeanFactoryAwareAdvisingPostProcessor
-    implements InitializingBean {
+implements InitializingBean {
 
-  private Class<? extends Annotation> validatedAnnotationType = Validated.class;
+    private Class <? extends Annotation> validatedAnnotationType = Validated.class;
 
     // 这个是javax.validation.Validator
-  private Validator validator;
+    private Validator validator;
 
-
-  // 可以传入自定义注解
-  public void setValidatedAnnotationType(Class<? extends Annotation> validatedAnnotationType) {
-    Assert.notNull(validatedAnnotationType, "'validatedAnnotationType' must not be null");
-    this.validatedAnnotationType = validatedAnnotationType;
-  }
+    // 可以传入自定义注解
+    public void setValidatedAnnotationType(Class <? extends Annotation> validatedAnnotationType) {
+        Assert.notNull(validatedAnnotationType, "'validatedAnnotationType' must not be null");
+        this.validatedAnnotationType = validatedAnnotationType;
+    }
 
     // 默认情况下，使用LocalValidatorFactoryBean进行校验，也可以传入自定义的Validator
-  public void setValidator(Validator validator) {
-    // Unwrap to the native Validator with forExecutables support
-    if (validator instanceof LocalValidatorFactoryBean) {
-      this.validator = ((LocalValidatorFactoryBean) validator).getValidator();
+    public void setValidator(Validator validator) {
+        // Unwrap to the native Validator with forExecutables support
+        if (validator instanceof LocalValidatorFactoryBean) {
+            this.validator = ((LocalValidatorFactoryBean) validator).getValidator();
+        } else if (validator instanceof SpringValidatorAdapter) {
+            this.validator = validator.unwrap(Validator.class);
+        } else {
+            this.validator = validator;
+        }
     }
-    else if (validator instanceof SpringValidatorAdapter) {
-      this.validator = validator.unwrap(Validator.class);
-    }
-    else {
-      this.validator = validator;
-    }
-  }
 
     // 可以传入自定义ValidatorFactory
-  public void setValidatorFactory(ValidatorFactory validatorFactory) {
-    this.validator = validatorFactory.getValidator();
-  }
+    public void setValidatorFactory(ValidatorFactory validatorFactory) {
+        this.validator = validatorFactory.getValidator();
+    }
 
-
-  @Override
-  public void afterPropertiesSet() {
-    Pointcut pointcut = new AnnotationMatchingPointcut(this.validatedAnnotationType, true);
-    this.advisor = new DefaultPointcutAdvisor(pointcut, createMethodValidationAdvice(this.validator));
-  }
+    @Override
+    public void afterPropertiesSet() {
+        Pointcut pointcut = new AnnotationMatchingPointcut(this.validatedAnnotationType, true);
+        this.advisor = new DefaultPointcutAdvisor(pointcut, createMethodValidationAdvice(this.validator));
+    }
 
     // 使用MethodValidationInterceptor切面
-  protected Advice createMethodValidationAdvice(Validator validator) {
-    return (validator != null ? new MethodValidationInterceptor(validator) : new MethodValidationInterceptor());
-  }
+    protected Advice createMethodValidationAdvice(Validator validator) {
+        return (validator != null ? new MethodValidationInterceptor(validator) : new MethodValidationInterceptor());
+    }
 
 }
 ```
