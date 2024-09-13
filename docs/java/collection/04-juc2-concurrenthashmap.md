@@ -107,11 +107,13 @@ Map m = Collections.synchronizedMap(new LinkedHashMap(...));
 
 
 
-## 介绍
+## concurrentHashMap介绍
 
 concurrentHashMap是一个支持高并发更新与查询的哈希表(基于HashMap)。
 
 hashtable该类不依赖于synchronization去保证线程操作的安全。Collections.synchronizedMap()也可以将map转成线程安全的。而concurrentHashMap在保证安全的前提下，进行get不需要锁定。
+
+
 
 ## 底层源码
 
@@ -411,6 +413,8 @@ private final void tryPresize(int size) {
 
 所以，可能的操作就是执行 1 次 transfer(tab, null) + 多次 transfer(tab, nt)，这里怎么结束循环的需要看完 transfer 源码才清楚。
 
+
+
 ### 数据迁移: transfer
 
 下面这个方法有点长，将原来的 tab 数组的元素迁移到新的 nextTab 数组中。
@@ -629,6 +633,8 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
 
 这个时候，再回去仔细看 tryPresize 方法可能就会更加清晰一些了。
 
+
+
 ### get 过程分析
 
 get 方法从来都是最简单的，这里也不例外:
@@ -825,9 +831,8 @@ ConcurrentMap（如ConcurrentHashMap、ConcurrentSkipListMap）不允许使用nu
 
  
 
- 
-<!-- @include: @article-footer.snippet.md -->     
 
+<!-- @include: @article-footer.snippet.md -->     
 
 
 

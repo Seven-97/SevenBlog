@@ -15,35 +15,39 @@ tag:
 
 但是，如果加载Bean的过程中**部分Bean和Bean之间存在依赖关系**，也就是说`Bean A`的加载需要等待`Bean B`加载完成之后才能进行；或者你正在开发某个中间件需要完成自动装配时，你会声明自己的Configuration类，但是可能你面对的是好几个有互相依赖的Bean，如果不加以控制，这时候可能会报找不到依赖的错误。
 
+而Spring框架在没有明确指定加载顺序的情况下是无法按照业务逻辑预期的顺序进行Bean加载，所以需要Spring框架提供能让开发人员显示地指定Bean加载顺序的能力。
+
 
 
 
 
 ## 几个误区
 
-在正式说如何控制加载顺序之前，先说2个误区。
+在正式说如何控制加载顺序之前，先说2个误区：
 
-在标注了`@Configuration`的类中，写在前面的@Bean一定会被先注册
+- 在标注了`@Configuration`的类中，写在前面的@Bean一定会被先注册吗？
 
-这个不存在的，spring在以前xml的时代，也不存在写在前面一定会被先加载的逻辑。因为xml不是渐进的加载，而是全部parse好，再进行依赖分析和注册。到了springboot中，只是省去了xml被parse成spring内部对象的这一过程，但是加载方式并没有大的改变。
+这个不存在的，spring在xml的时代，也不存在写在前面一定会被先加载的逻辑。因为xml不是渐进的加载，而是全部parse好，再进行依赖分析和注册。到了springboot中，只是省去了xml被parse成spring内部对象的这一过程，但是加载方式并没有大的改变。
 
-利用`@Order`这个标注能进行加载顺序的控制
 
-严格的说，不是所有的Bean都可以通过`@Order`这个标注进行顺序的控制。你把`@Order`这个标注加在普通的方法上或者类上一点鸟用都没有。
 
-那`@Order`能控制哪些bean的加载顺序呢，我们先看看官方的解释：   
+- 利用`@Order`这个标注就一定能进行加载顺序的控制吗？
+
+严格的说，不是所有的Bean都可以通过`@Order`这个标注进行顺序的控制。因为把`@Order`这个标注加在普通的方法上或者类上是没有影响的，
+
+那`@Order`能控制哪些bean的加载顺序呢？官方解释：
 
 ```java
 {@code @Order} defines the sort order for an annotated component. Since Spring 4.0, annotation-based ordering is supported for many kinds of components in Spring, even for collection injection where the order values of the target components are taken into account (either from their target class or from their {@code @Bean} method). While such order values may influence priorities at injection points, please be aware that they do not influence singleton startup order which is an orthogonal concern determined by dependency relationships and {@code @DependsOn} declarations (influencing a runtime-determined dependency graph).
 ```
 
-最开始`@Order`注解用于切面的优先级指定；在 4.0 之后对它的功能进行了增强，支持集合的注入时，指定集合中 bean 的顺序，并且特别指出了，它对于但实例的 bean 之间的顺序，没有任何影响。
-
-目前用的比较多的有以下3点：
+最开始`@Order`注解用于切面的优先级指定；在 4.0 之后对它的功能进行了增强，支持集合的注入时，指定集合中 bean 的顺序，并且特别指出了，它对于单实例的 bean 之间的顺序，没有任何影响。目前用的比较多的有以下3点：
 
 - 控制AOP的类的加载顺序，也就是被`@Aspect`标注的类
 - 控制`ApplicationListener`实现类的加载顺序
 - 控制`CommandLineRunner`实现类的加载顺序
+
+使用详情请看后文
 
 
 
@@ -67,8 +71,6 @@ public class MyConfiguration {
 - @ConditionalOnMissingClass：当类路径下不存在指定的类时，配置类才会生效。
 - @ConditionalOnBean：当容器中存在指定的Bean时，配置类才会生效。
 - @ConditionalOnMissingBean：当容器中不存在指定的Bean时，配置类才会生效。
-
-
 
 
 
@@ -162,7 +164,7 @@ public BeanB beanB(){
 
 以上结果，beanB先于beanA被初始化加载。
 
-需要注意的是，springboot会按类型去寻找。如果这个类型有多个实例被注册到spring上下文，那你就需要加上`@Qualifier("Bean的名称")`来指定
+需要注意的是，springboot会按类型去寻找。如果这个类型有多个实例被注册到spring上下文，那就需要加上`@Qualifier("Bean的名称")`来指定
 
 
 
@@ -173,6 +175,94 @@ public BeanB beanB(){
 这些可扩展点的加载顺序由spring自己控制，大多数是无法进行干预的。可以利用这一点，扩展spring的扩展点。在相应的扩展点加入自己的业务初始化代码。从来达到顺序的控制。
 
 具体关于spring容器中大部分的可扩展点的分析，之前已经写了一篇文章详细介绍了：[Spring&SpringBoot中所有的扩展点](https://www.seven97.top/framework/spring/extentions-use.html)
+
+
+
+
+
+### 实现`Ordered/PriorityOrdered`接口/注解
+
+在Spring中提供了如下的方法来进行Bean加载顺序的控制：
+
+- 实现`Ordered/PriorityOrdered`接口，重写order方法
+- 使用`@Order/@Priority`注解，`@Order`注解可以用于方法级别，而`@Priority`注解则不行；
+
+针对**自定义的Bean**而言，上述的方式都可以实现Bean加载顺序的控制。无论是实现接口的方式还是使用注解的方式，**值设置的越小则优先级越高**，而通过实现PriorityOrdered接口或者使用@Priority注解的Bean时其加载优先级会**高于**实现Ordered接口或者使用@Order注解的Bean。
+
+需要注意的是，使用上述方式只会改变实现同一接口Bean加载到集合*（比如List、Set等）*中的顺序（或者说优先级），但是这种方式并**不会影响到Spring应用上下文启动时不同Bean的初始化顺序**（startup order）。
+
+
+
+- 错误案例：以下案例代码是无法指定配置顺序的
+
+```java
+@Component
+@Order(1)
+public class BeanA {
+    // BeanA的定义
+}
+
+@Component
+@Order(2)
+public class BeanB {
+    // BeanB的定义
+}
+```
+
+
+
+- 正确使用案例：
+
+首先定义两个 Bean 实现同一个接口，并添加上@Order注解。
+
+```java
+public interface IBean {
+}
+
+@Order(2)
+@Component
+public class AnoBean1 implements IBean {
+
+    private String name = "ano order bean 1";
+
+    public AnoBean1() {
+        System.out.println(name);
+    }
+}
+
+@Order(1)
+@Component
+public class AnoBean2 implements IBean {
+
+    private String name = "ano order bean 2";
+
+    public AnoBean2() {
+        System.out.println(name);
+    }
+}
+```
+
+然后在一个测试 bean 中，注入`IBean`的列表，我们需要测试这个列表中的 Bean 的顺序是否和定义的`@Order`规则一致
+
+```java
+@Component
+public class AnoTestBean {
+
+    public AnoTestBean(List<IBean> anoBeanList) {
+        for (IBean bean : anoBeanList) {
+            System.out.println("in ano testBean: " + bean.getClass().getName());
+        }
+    }
+}
+```
+
+
+
+
+
+
+
+
 
 
 
@@ -203,13 +293,9 @@ public class BeanOrderConfiguration2 {
 }
 ```
 
-无论你2个数字填多少，都不会改变其加载顺序结果。
+无论你2个数字填多少，都不会改变其加载顺序结果。那这个`@AutoConfigureOrder`到底是如何使用的呢？
 
-那这个`@AutoConfigureOrder`到底是如何使用的呢。
-
-经过测试发现，`@AutoConfigureOrder`只能改变外部依赖的`@Configuration`的顺序。如何理解是外部依赖呢。
-
-能被你工程内部scan到的包，都是内部的Configuration，而spring引入外部的Configuration，都是通过spring特有的spi文件：`spring.factories`
+@AutoConfigureOrder适用于外部依赖的包中 AutoConfig 的顺序，而不能用来指定本包内的顺序。能被你工程内部scan到的包，都是内部的Configuration，而spring引入外部的Configuration，都是通过spring特有的spi文件：`spring.factories`
 
 换句话说，`@AutoConfigureOrder`能改变`spring.factories`中的`@Configuration`的顺序。
 
@@ -225,7 +311,6 @@ public class BeanOrderConfiguration1 {
         return new BeanA();
     }
 }
- 
  
 @Configuration
 @AutoConfigureOrder(1)

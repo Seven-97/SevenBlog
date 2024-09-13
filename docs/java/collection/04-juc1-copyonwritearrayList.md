@@ -10,14 +10,24 @@ tag:
 
 
 
-## 介绍
+## 前言
 
 Vector无论是add方法还是get方法都加上了**synchronized**修饰，当多线程读写List必须排队执行，很显然这样效率比较是低下的，CopyOnWriteArrayList是读写分离的，好处是提高线程访问效率。
 
-## 底层原理：
+
+
+CopyOnWrite容器即**写时复制**的容器。通俗的理解是当往一个容器添加元素的时候，不直接往当前容器添加，而是先将当前容器里的值Copy到新的容器，然后再往新的容器里添加元素，添加完元素之后，再将原容器的引用指向新的容器。这样做的好处是我们可以对CopyOnWrite容器进行并发的读 要加锁，因为当前容器不会添加任何元素。所以CopyOnWrite容器也是一种读写分离的思想，读和写不同的容器。
+
+
+
+
+
+## 底层原理
 
 1. CopyOnWriteArrayList的动态数组机制 -- 它内部有个volatile数组(array)来保持数据。在“添加/删除”数据时，都会新建一个数组，并将更新后的数据拷贝到新建的数组中，最后再将该数组赋值给volatile数组。这就是它叫做CopyOnWriteArrayList的原因！
 2. 每一个CopyOnWriteArrayList都和一个监视器锁lock绑定，通过lock，实现了对CopyOnWriteArrayList的互斥添加/删除。
+
+
 
 ### 类的继承关系
 
@@ -197,15 +207,13 @@ public CopyOnWriteArrayList(Collection<? extends E> c) {
 
 该构造函数的处理流程如下
 
-- 判断传入的集合c的类型是否为CopyOnWriteArrayList类型，若是，则获取该集合类型的底层数组(Object[])，并且设置当前CopyOnWriteArrayList的数组(Object[]数组)，进入步骤③；否则，进入步骤②
+1. 判断传入的集合c的类型是否为CopyOnWriteArrayList类型，若是，则获取该集合类型的底层数组(Object[])，并且设置当前CopyOnWriteArrayList的数组(Object[]数组)，进入步骤③；否则，进入步骤②
 
-- 将传入的集合转化为数组elements，判断elements的类型是否为Object[]类型(toArray方法可能不会返回Object类型的数组)，若不是，则将elements转化为Object类型的数组。进入步骤③
+2. 将传入的集合转化为数组elements，判断elements的类型是否为Object[]类型(toArray方法可能不会返回Object类型的数组)，若不是，则将elements转化为Object类型的数组。进入步骤③
 
-- 设置当前CopyOnWriteArrayList的Object[]为elements。
+3. 设置当前CopyOnWriteArrayList的Object[]为elements。
 
-- CopyOnWriteArrayList(E[])
-
-该构造函数用于创建一个保存给定数组的副本的列表。
+- CopyOnWriteArrayList(E[])：该构造函数用于创建一个保存给定数组的副本的列表。
 
 ```java
 public CopyOnWriteArrayList(E[] toCopyIn) {
@@ -227,7 +235,8 @@ public CopyOnWriteArrayList(E[] toCopyIn) {
 ```java
 public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
     @SuppressWarnings("unchecked")
-    // 确定copy的类型(将newType转化为Object类型，将Object[].class转化为Object类型，判断两者是否相等，若相等，则生成指定长度的Object数组
+    // 确定copy的类型(将newType转化为Object类型，将Object[].class转化为Object类型；
+    // 判断两者是否相等，若相等，则生成指定长度的Object数组
     // 否则,生成指定长度的新类型的数组)
     T[] copy = ((Object)newType == (Object)Object[].class)
         ? (T[]) new Object[newLength]
@@ -270,11 +279,11 @@ public boolean add(E e) {
 
 此函数用于将指定元素添加到此列表的尾部，处理流程如下
 
-- 获取锁(保证多线程的安全访问)，获取当前的Object数组，获取Object数组的长度为length，进入步骤②。
+1. 获取锁(保证多线程的安全访问)，获取当前的Object数组，获取Object数组的长度为length，进入步骤②。
+2. 根据Object数组复制一个长度为length+1的Object数组为newElements(此时，newElements[length]为null)，进入下一步骤。
+3. 将下标为length的数组元素newElements[length]设置为元素e，再设置当前Object[]为newElements，释放锁，返回。这样就完成了元素的添加。
 
-- 根据Object数组复制一个长度为length+1的Object数组为newElements(此时，newElements[length]为null)，进入下一步骤。
 
-- 将下标为length的数组元素newElements[length]设置为元素e，再设置当前Object[]为newElements，释放锁，返回。这样就完成了元素的添加。
 
 #### addIfAbsent方法
 
@@ -301,8 +310,8 @@ private boolean addIfAbsent(E e, Object[] snapshot) {
                     // 返回
                     return false;
             if (indexOf(e, current, common, len) >= 0) // 在当前数组中找到e元素
-                    // 返回
-                    return false;
+                // 返回
+                return false;
         }
         // 复制数组
         Object[] newElements = Arrays.copyOf(current, len + 1);
@@ -329,6 +338,8 @@ private boolean addIfAbsent(E e, Object[] snapshot) {
 4. 复制当前数组current为newElements，长度为len+1，此时newElements[len]为null。再设置newElements[len]为指定元素e，再设置数组，进入步骤5
 
 5. 释放锁，返回。
+
+
 
 #### set函数
 
@@ -418,6 +429,7 @@ public E remove(int index) {
 1. 获取锁，获取数组elements，数组长度为length，获取索引的值elements[index]，计算需要移动的元素个数(length - index - 1),若个数为0，则表示移除的是数组的最后一个元素，复制elements数组，复制长度为length-1，然后设置数组，进入步骤③；否则，进入步骤②
 2. 先复制index索引前的元素，再复制index索引后的元素，然后设置数组。
 3. 释放锁，返回旧值
+4. 
 
 ## CopyOnWriteArrayList是Fail Safe的
 
@@ -428,6 +440,8 @@ public E remove(int index) {
 缺点：基于拷贝内容的优点是避免了Concurrent Modification Exception，但同样地，迭代器并不能访问到修改后的内容，即：迭代器遍历的是开始遍历那一刻拿到的集合拷贝，在遍历期间原集合发生的修改迭代器是不知道的。
 
 Vector无论是add方法还是get方法都加上了**synchronized**修饰，当多线程读写List必须排队执行，很显然这样效率比较是低下的，CopyOnWriteArrayList是读写分离的，好处是提高线程访问效率。
+
+
 
 ## 缺陷和使用场景
 

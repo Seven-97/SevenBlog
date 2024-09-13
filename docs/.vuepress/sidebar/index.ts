@@ -232,6 +232,7 @@ export default sidebar({
             "aop3-proxy",
             "spring-transactions",
             "extentions-use",
+            "loadingorderofbean",
             "mvc1-summary",
             "mvc3-initializationprocessofdispatcherservlet",
             "mvc4-processofdispatcherservletprocessingrequests",
