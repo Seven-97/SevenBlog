@@ -16,78 +16,89 @@ tag:
 
 由于多线程对HashMap进行put操作，调用了HashMap的putVal()，具体原因：
 
-1. 假设两个线程A、B都在进行put操作，并且hash函数计算出的插入下标是相同的，当线程A执行完第六行由于时间片耗尽导致被挂起，而线程B得到时间片后在该下标处插入了元素，完成了正常的插入，然后线程A获得时间片，由于之前已经进行了hash碰撞的判断，所有此时不会再进行判断，而是直接进行插入，这就导致了线程B插入的数据被线程A覆盖了，从而线程不安全。
-2. 代码的第38行处有个++size，线程A、B，这两个线程同时进行put操作时，假设当前HashMap的zise大小为10，当线程A执行到第38行代码时，从主内存中获得size的值为10后准备进行+1操作，但是由于时间片耗尽只好让出CPU，线程B快乐的拿到CPU还是从主内存中拿到size的值10进行+1操作，完成了put操作并将size=11写回主内存，然后线程A再次拿到CPU并继续执行(此时size的值仍为10)，当执行完put操作后，还是将size=11写回内存，此时，线程A、B都执行了一次put操作，但是size的值只增加了1，所有说还是由于数据覆盖又导致了线程不安全。
+1. 假设两个线程A、B都在进行put操作，并且hash函数计算出的插入下标是相同的；
+   1. 当线程A执行完第六行由于时间片耗尽导致被挂起，而线程B得到时间片后在该下标处插入了元素，完成了正常的插入；
+   2. 接着线程A获得时间片，由于之前已经进行了hash碰撞的判断，所有此时不会再进行判断，而是直接进行插入；
+   3. 最终就导致了线程B插入的数据被线程A覆盖了，从而线程不安全。
+
+2. 代码的第38行处有个++size，线程A、B，这两个线程同时进行put操作时，假设当前HashMap的zise大小为10；
+   1. 当线程A执行到第38行代码时，从主内存中获得size的值为10后准备进行+1操作，但是由于时间片耗尽只好让出CPU；
+   2. 接着线程B拿到CPU后从主内存中拿到size的值10进行+1操作，完成了put操作并将size=11写回主内存；
+   3. 接着线程A再次拿到CPU并继续执行(此时size的值仍为10)，当执行完put操作后，还是将size=11写回内存；
+   4. 此时，线程A、B都执行了一次put操作，但是size的值只增加了1，所有说还是由于数据覆盖又导致了线程不安全。
+
 
 ```java
 1 final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
-2                   boolean evict) {
-3       Node<K,V>[] tab; Node<K,V> p; int n, i;
-4        if ((tab = table) == null || (n = tab.length) == 0)
-5            n = (tab = resize()).length;
-6        if ((p = tab[i = (n - 1) & hash]) == null)//
-            tab[i] = newNode(hash, key, value, null);
+2 											boolean evict) {
+3 	Node <K, V> [] tab; Node <K, V> p; int n, i;
+4	if ((tab = table) == null || (n = tab.length) == 0)
+5 		n = (tab = resize()).length;
+6	if ((p = tab[i = (n - 1) & hash]) == null) //
+        tab[i] = newNode(hash, key, value, null);
+    else {
+        Node < K, V > e;
+        K k;
+        if (p.hash == hash &&
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            e = p;
+        else if (p instanceof TreeNode)
+            e = ((TreeNode <K, V> ) p).putTreeVal(this, tab, hash, key, value);
         else {
-            Node<K,V> e; K k;
-            if (p.hash == hash &&
-                ((k = p.key) == key || (key != null && key.equals(k))))
-                e = p;
-            else if (p instanceof TreeNode)
-                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
-            else {
-                for (int binCount = 0; ; ++binCount) {
-                    if ((e = p.next) == null) {
-                        p.next = newNode(hash, key, value, null);
-                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
-                            treeifyBin(tab, hash);
-                        break;
-                    }
-                    if (e.hash == hash &&
-                        ((k = e.key) == key || (key != null && key.equals(k))))
-                        break;
-                    p = e;
+            for (int binCount = 0;; ++binCount) {
+                if ((e = p.next) == null) {
+                    p.next = newNode(hash, key, value, null);
+                    if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        treeifyBin(tab, hash);
+                    break;
                 }
-            }
-            if (e != null) { // existing mapping for key
-                V oldValue = e.value;
-                if (!onlyIfAbsent || oldValue == null)
-                    e.value = value;
-                afterNodeAccess(e);
-                return oldValue;
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    break;
+                p = e;
             }
         }
-        ++modCount;
-38        if (++size > threshold)
-            resize();
-        afterNodeInsertion(evict);
-        return null;
+        if (e != null) { // existing mapping for key
+            V oldValue = e.value;
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value;
+            afterNodeAccess(e);
+            return oldValue;
+        }
     }
+    ++modCount;
+    
+38  if (++size > threshold)
+        resize();
+    afterNodeInsertion(evict);
+    return null;
+}
 ```
 
 
 
 ### 扩容不安全
 
-Java7中头插法扩容会导致死循环和数据丢失，Java8中将头插法改为尾插法后死循环和数据丢失已经得到解决，但仍然有数据覆盖的问题。
+**Java7**中头插法扩容会导致死循环和数据丢失，Java8中将头插法改为尾插法后死循环和数据丢失已经得到解决，但仍然有数据覆盖的问题。
 
 **这是jdk7中存在的问题**
 
 ```java
 void transfer(Entry[] newTable, boolean rehash) {
-        int newCapacity = newTable.length;
-        for (Entry<K,V> e : table) {
-            while(null != e) {
-                Entry<K,V> next = e.next;
-                if (rehash) {
-                    e.hash = null == e.key ? 0 : hash(e.key);
-                }
-                int i = indexFor(e.hash, newCapacity);
-                e.next = newTable[i];
-                newTable[i] = e;
-                e = next;
+    int newCapacity = newTable.length;
+    for (Entry <K, V> e: table) {
+        while (null != e) {
+            Entry <K, V> next = e.next;
+            if (rehash) {
+                e.hash = null == e.key ? 0 : hash(e.key);
             }
+            int i = indexFor(e.hash, newCapacity);
+            e.next = newTable[i];
+            newTable[i] = e;
+            e = next;
         }
     }
+}
 ```
 
 transfer过程如下：
@@ -123,7 +134,7 @@ hashtable该类不依赖于synchronization去保证线程操作的安全。Colle
 
 1. 计算出key的槽位
 2. 根据槽位类型进行操作(链表，红黑树)
-3. 根据槽位中成员数量进行数据转换,扩容等操作
+3. 根据槽位中成员数量进行数据转换，扩容等操作
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250932684.gif)
 
@@ -143,35 +154,35 @@ final V putVal(K key, V value, boolean onlyIfAbsent) {
     int binCount = 0;
     // 声明临时变量为tab，tab赋值了table，table就是当前HashMap的数组！这是个死循环
     for (Node<K,V>[] tab = table;;) {
-    // 声明了一堆变量
+    	// 声明了一堆变量
         //f-当前索引位置的数据
         //n-数组长度
         //i-数据要存储的索引位置
         //fh-桶位置数据的hash值
         Node<K,V> f; int n, i, fh;
-    // 如果tab为null，或者tab的长度为0
+    	// 如果tab为null，或者tab的长度为0
         if (tab == null || (n = tab.length) == 0)
-        // 进来说明数组没有初始化，开始初始化，ConcurrentHashMap要避免并发初始化时造成的问题
+        	// 进来说明数组没有初始化，开始初始化，ConcurrentHashMap要避免并发初始化时造成的问题
             tab = initTable();
         
-    // tabAt(数组，索引位置)，得到这个数组指定索引位置的值，f就是数组的下标位置的值 
-    // 如果f == null
+        // tabAt(数组，索引位置)，得到这个数组指定索引位置的值，f就是数组的下标位置的值 
+        // 如果f == null
         else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
-        // 进到这，说明索引位置没有值，基于CAS的方式将当前的key-value存储到这个索引位置
+        	// 进到这，说明索引位置没有值，基于CAS的方式将当前的key-value存储到这个索引位置
             if (casTabAt(tab, i, null,
                          new Node<K,V>(hash, key, value, null)))
-            // 如果CAS成功，添加数据成功（添加到了数组上），如果走false，继续上述操作，尝试其他内容
+            	// 如果CAS成功，添加数据成功（添加到了数组上），如果走false，继续上述操作，尝试其他内容
                 break;                   // no lock when adding to empty bin
         }
-    // f是经过上述if得到的索引位置的值，当前key-value的hash是否为MOVED，如果相等，证明当前位置正在扩容
+    	// f是经过上述if得到的索引位置的值，当前key-value的hash是否为MOVED，如果相等，证明当前位置正在扩容
         else if ((fh = f.hash) == MOVED)//MOVED表示正在扩容
         // 如果正在扩容，帮你扩容（构建长度为原来2倍的数组，并且将老数组的值移动到新数组），帮助扩容的操作是迁移数据的操作
             tab = helpTransfer(tab, f);
         else {
-        // 第一个判断：数组初始化了么？ 
-        // 第二个判断：数组指定的位置有值么？ 
-        // 第三个判断：现在正在扩容么？ 
-        // 这个else就是第四个判断：是否需要将数据挂到链表上，或者添加到红黑树中？（出现了Hash冲突（碰撞））
+            // 第一个判断：数组初始化了么？ 
+            // 第二个判断：数组指定的位置有值么？ 
+            // 第三个判断：现在正在扩容么？ 
+            // 这个else就是第四个判断：是否需要将数据挂到链表上，或者添加到红黑树中？（出现了Hash冲突（碰撞））
             V oldVal = null;
             // 加个锁，锁的是f（f是数组的下标位置的值）,也就是在这，锁住了这个桶
             synchronized (f) {
@@ -365,7 +376,7 @@ private final void tryPresize(int size) {
     while ((sc = sizeCtl) >= 0) {
         Node<K,V>[] tab = table; int n;
 
-        // 这个 if 分支和之前说的初始化数组的代码基本上是一样的，在这里，我们可以不用管这块代码
+        // 这个 if 分支和之前说的初始化数组的代码基本上是一样的，在这里，可以不用管这块代码
         if (tab == null || (n = tab.length) == 0) {
             n = (sc > c) ? sc : c;
             if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
@@ -384,7 +395,6 @@ private final void tryPresize(int size) {
         else if (c <= sc || n >= MAXIMUM_CAPACITY)
             break;
         else if (tab == table) {
-            // 我没看懂 rs 的真正含义是什么，不过也关系不大
             int rs = resizeStamp(n);
 
             if (sc < 0) {
@@ -399,7 +409,7 @@ private final void tryPresize(int size) {
                     transfer(tab, nt);
             }
             // 1. 将 sizeCtl 设置为 (rs << RESIZE_STAMP_SHIFT) + 2)
-            //     我是没看懂这个值真正的意义是什么? 不过可以计算出来的是，结果是一个比较大的负数
+            //  没看懂这个值真正的意义是什么? 不过可以计算出来的是，结果是一个比较大的负数
             //  调用 transfer 方法，此时 nextTab 参数为 null
             else if (U.compareAndSwapInt(this, SIZECTL, sc,
                                          (rs << RESIZE_STAMP_SHIFT) + 2))
@@ -419,11 +429,11 @@ private final void tryPresize(int size) {
 
 下面这个方法有点长，将原来的 tab 数组的元素迁移到新的 nextTab 数组中。
 
-虽然我们之前说的 tryPresize 方法中多次调用 transfer 不涉及多线程，但是这个 transfer 方法可以在其他地方被调用，典型地，我们之前在说 put 方法的时候就说过了，请往上看 put 方法，是不是有个地方调用了 helpTransfer 方法，helpTransfer 方法会调用 transfer 方法的。
+虽然之前说的 tryPresize 方法中多次调用 transfer 不涉及多线程，但是这个 transfer 方法可以在其他地方被调用，典型地，我们之前在说 put 方法的时候就说过了，请往上看 put 方法，是不是有个地方调用了 helpTransfer 方法，helpTransfer 方法会调用 transfer 方法的。
 
 此方法支持多线程执行，外围调用此方法的时候，会保证第一个发起数据迁移的线程，nextTab 参数为 null，之后再调用此方法的时候，nextTab 不会为 null。
 
-阅读源码之前，先要理解并发操作的机制。原数组长度为 n，所以我们有 n 个迁移任务，让每个线程每次负责一个小任务是最简单的，每做完一个任务再检测是否有其他没做完的任务，帮助迁移就可以了，而 Doug Lea 使用了一个 stride，简单理解就是步长，每个线程每次负责迁移其中的一部分，如每次迁移 16 个小任务。所以，我们就需要一个全局的调度者来安排哪个线程执行哪几个任务，这个就是属性 transferIndex 的作用。
+阅读源码之前，先要理解并发操作的机制。原数组长度为 n，所以有 n 个迁移任务，让每个线程每次负责一个小任务是最简单的，每做完一个任务再检测是否有其他没做完的任务，帮助迁移就可以了，而 Doug Lea 使用了一个 stride，简单理解就是步长，每个线程每次负责迁移其中的一部分，如每次迁移 16 个小任务。所以，我们就需要一个全局的调度者来安排哪个线程执行哪几个任务，这个就是属性 transferIndex 的作用。
 
 第一个发起数据迁移的线程会将 transferIndex 指向原数组最后的位置，然后从后往前的 stride 个任务属于第一个线程，然后将 transferIndex 指向新的位置，再往前的 stride 个任务属于第二个线程，依此类推。当然，这里说的第二个线程不是真的一定指代了第二个线程，也可以是同一个线程，这个读者应该能理解吧。其实就是将一个大的迁移任务分为了一个个任务包。
 
@@ -438,7 +448,7 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
         stride = MIN_TRANSFER_STRIDE; // subdivide range
 
     // 如果 nextTab 为 null，先进行一次初始化
-    //    前面我们说了，外围会保证第一个发起迁移的线程调用此方法时，参数 nextTab 为 null
+    //    前面说了，外围会保证第一个发起迁移的线程调用此方法时，参数 nextTab 为 null
     //       之后参与迁移的线程调用此方法时，nextTab 不会为 null
     if (nextTab == null) {
         try {
@@ -480,7 +490,7 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
 
         // 下面这个 while 真的是不好理解
         // advance 为 true 表示可以进行下一个位置的迁移了
-        //   简单理解结局: i 指向了 transferIndex，bound 指向了 transferIndex-stride
+        // 简单理解结局: i 指向了 transferIndex，bound 指向了 transferIndex-stride
         while (advance) {
             int nextIndex, nextBound;
             if (--i >= bound || finishing)
@@ -682,6 +692,8 @@ public V get(Object key) {
 
 简单说一句，此方法的大部分内容都很简单，只有正好碰到扩容的情况，ForwardingNode.find(int h, Object k) 稍微复杂一些，不过在了解了数据迁移的过程后，这个也就不难了，所以限于篇幅这里也不展开说了。
 
+
+
 ### 计算Size
 
 ConcurrentHashMap的size()操作中没有加任何锁，那么它是如何在多线程环境下 线程安全的计算出Map的size的？
@@ -724,6 +736,8 @@ final long sumCount() {
 2. 最终在sumCount()方法中通过累加 baseCount和CounterCells数组里每个CounterCell的值得出Map的总大小Size。
 3. 然而 返回的值是一个估计值；如果有并发插入或者删除操作，和实际的数量可能有所不同。
 4. 另外size()方法的最大值是 Integer 类型的最大值，而 Map 的 size 有可能超过 Integer.MAX_VALUE，所以JAVA8 建议使用 mappingCount()。
+
+
 
 ## compute方法
 

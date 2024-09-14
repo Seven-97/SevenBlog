@@ -10,15 +10,40 @@ tag:
 
 
 
-## 介绍
+## 前言
 
-非阻塞队列。高效的并发队列，使用链表实现。可以看做一个线程安全的 LinkedList，通过 CAS 操作实现。
+`ConcurrentLinkedQueue`是基于链接节点的无界线程安全队列。此队列按照FIFO（先进先出）原则对元素进行排序。队列的头部是队列中存在时间最长的元素，而队列的尾部则是最近添加的元素。新的元素总是被插入到队列的尾部，而队列的获取操作（例如`poll`或`peek`）则是从队列头部开始。
 
-ConcurrentLinkedQueue实际对应的是LinkedList,是一个线程安全的无界队列，但LinkedList是一个双向链表，而ConcurrentLinkedQueue是单向链表。
+与传统的`LinkedList`不同，`ConcurrentLinkedQueue`使用了一种高效的非阻塞算法，被称为无锁编程（Lock-Free programming），它通过原子变量和CAS(Compare-And-Swap)操作来保证线程安全，而不是通过传统的锁机制。这使得它在高并发场景下具有出色的性能表现。
 
-ConcurrentLinkedQueue线程安全在于设置head、tail以及next指针时都用的cas操作，而且node里的item和next变量都是用volatile修饰，保证了多线程下变量的可见性。而ConcurrentLinkedQueue的所有读操作都是无锁的，所以可能读会存在不一致性。
+可以看做一个线程安全的`LinkedList`，是一个线程安全的无界队列，但`LinkedList`是一个双向链表，而`ConcurrentLinkedQueue`是单向链表。
 
-如果对队列加锁的成本较高则适合使用无锁的 ConcurrentLinkedQueue 来替代。适合在对性能要求相对较高，同时有多个线程对队列进行读写的场景。
+`ConcurrentLinkedQueue`线程安全在于设置head、tail以及next指针时都用的cas操作，而且node里的item和next变量都是用volatile修饰，保证了多线程下变量的可见性。而`ConcurrentLinkedQueue`的所有读操作都是无锁的，所以可能读会存在不一致性。
+
+
+
+### 应用场景
+
+如果对队列加锁的成本较高则适合使用无锁的 `ConcurrentLinkedQueue `来替代。适合在对性能要求相对较高，同时有多个线程对队列进行读写的场景。
+
+ConcurrentLinkedQueue通过无锁来做到了更高的并发量，是个高性能的队列，但是**使用场景相对不如阻塞队列常见**，毕竟取数据也要不停的去循环，不如阻塞的设计，但是在并发量特别大的情况下，是个不错的选择，性能上好很多，而且这个队列的设计也是特别费力，尤其的使用的改良算法和对哨兵的处理。
+
+
+
+### 主要方法
+
+`ConcurrentLinkedQueue`提供了丰富的方法来操作队列，包括：
+
+- `offer(E e)`：将指定的元素插入此队列的尾部。
+- `add(E e)`：将指定的元素插入此队列的尾部（与`offer`方法功能相同，但在失败时抛出异常）。
+- `poll()`：获取并移除此队列的头部，如果此队列为空，则返回`null`。
+- `peek()`：获取但不移除此队列的头部，如果此队列为空，则返回`null`。
+- `size()`：返回此队列中的元素数量。需要注意的是，由于并发的原因，这个方法返回的结果可能并不准确。如果需要在并发环境下获取准确的元素数量，建议使用`java.util.concurrent.atomic`包中的原子变量进行计数。
+- `isEmpty()`：检查此队列是否为空。与`size()`方法类似，由于并发的原因，这个方法返回的结果也可能不准确。
+
+需要注意的是，在并发环境下使用`size()`和`isEmpty()`方法时需要特别小心，因为它们的结果可能并不准确。如果需要精确的元素数量或空队列检测，建议使用额外的同步机制或原子变量来实现。
+
+
 
 ## 底层源码
 
@@ -32,9 +57,9 @@ private static class Node<E> {
     volatile Node<E> next;
 
     /**
-        * Constructs a new node.  Uses relaxed write because item can
-        * only be seen after publication via casNext.
-        */
+    * Constructs a new node.  Uses relaxed write because item can
+    * only be seen after publication via casNext.
+    */
     // 构造函数
     Node(E item) {
         // 设置item的值
@@ -79,6 +104,8 @@ private static class Node<E> {
 
 说明: Node类表示链表结点，用于存放元素，包含item域和next域，item域表示元素，next域表示下一个结点，其利用反射机制和CAS机制来更新item域和next域，保证原子性。
 
+
+
 ### 类的属性
 
 ```java
@@ -113,6 +140,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 ```
 
 说明: 属性中包含了head域和tail域，表示链表的头节点和尾结点，同时，ConcurrentLinkedQueue也使用了反射机制和CAS机制来更新头节点和尾结点，保证原子性。
+
+
 
 ### 类的构造函数
 
@@ -158,6 +187,8 @@ public ConcurrentLinkedQueue(Collection<? extends E> c) {
 ```
 
 说明: 该构造函数用于创建一个最初包含给定 collection 元素的 ConcurrentLinkedQueue，按照此 collection 迭代器的遍历顺序来添加元素。
+
+
 
 ### 核心函数分析
 
@@ -215,6 +246,8 @@ public boolean offer(E e) {
 
 如上图所示，添加元素20后，tail指向了最新添加的结点。
 
+
+
 #### poll函数
 
 ```java
@@ -269,6 +302,8 @@ public E poll() {
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250939318.jpg)
 
 如上图可知，poll操作后，head结点没有变化，只是指示的结点的item域变成了null。
+
+
 
 #### remove函数
 
@@ -354,6 +389,8 @@ final Node<E> succ(Node<E> p) {
 
 如上图所示，执行remove(20)后，head与tail指向同一个结点，item域为null。
 
+
+
 #### size函数
 
 ```java
@@ -382,13 +419,11 @@ public int size() {
 
 - head更新触发时机：当head指向的节点的item域为null的时候，会执行定位队列真正的队头节点的操作，找到队头节点后完成删除之后才会通过updateHead进行head更新；当head指向的节点的item域不为null的时候，只删除节点不更新head。
 
-并且在更新操作时，源码中会有注释为：hop two nodes at a time。所以这种延迟更新的策略就被叫做HOPS的大概原因是这个(猜的 😃)，从上面更新时的状态图可以看出，head和tail的更新是“跳着的”即中间总是间隔了一个。那么这样设计的意图是什么呢?
+从上面更新时的状态图可以看出，head和tail的更新是“跳着的”即中间总是间隔了一个。那么这样设计的意图是什么呢?
 
 如果让tail永远作为队列的队尾节点，实现的代码量会更少，而且逻辑更易懂。但是，这样做有一个缺点，如果大量的入队操作，每次都要执行CAS进行tail的更新，汇总起来对性能也会是大大的损耗。如果能减少CAS更新的操作，无疑可以大大提升入队的操作效率，所以doug lea大师每间隔1次(tail和队尾节点的距离为1)进行才利用CAS更新tail。对head的更新也是同样的道理，虽然，这样设计会多出在循环中定位队尾节点，但总体来说读的操作效率要远远高于写的性能，因此，多出来的在循环中定位尾节点的操作的性能损耗相对而言是很小的。
 
-## 应用场景
 
-ConcurrentLinkedQueue通过无锁来做到了更高的并发量，是个高性能的队列，但是使用场景相对不如阻塞队列常见，毕竟取数据也要不停的去循环，不如阻塞的逻辑好设计，但是在并发量特别大的情况下，是个不错的选择，性能上好很多，而且这个队列的设计也是特别费力，尤其的使用的改良算法和对哨兵的处理。整体的思路都是比较严谨的，这个也是使用了无锁造成的，我们自己使用无锁的条件的话，这个队列是个不错的参考
 
  
 
