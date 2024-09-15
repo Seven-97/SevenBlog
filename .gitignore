@@ -9,9 +9,8 @@ media/
 .github/
 
 # VuePress Cache
-**/.vuepress/.cache/
-# VuePress Temp
-**/.vuepress/.temp/
+**/.vuepress/
+
 # VuePress Output
 dist/
 # Build files
@@ -23,6 +22,7 @@ lintmd-config.json
 .markdownlint-cli2.mjs
 .nojekyll
 .prettierignore
+.gitattributes
 dist.zip
 index.html
 package.json
