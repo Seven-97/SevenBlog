@@ -10,7 +10,7 @@ media/
 
 # VuePress Cache
 **/.vuepress/
-
+**/interview/
 # VuePress Output
 dist/
 # Build files

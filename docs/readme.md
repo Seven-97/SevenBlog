@@ -9,9 +9,6 @@ actions:
   - text: 开始打怪升级
     link: /home.md
     type: primary
-  # - text: 知识星球
-  #   link: /about-the-author/zhishixingqiu.md
-  #   type: default
 footer: |-
   <a href="https://beian.miit.gov.cn/" target="_blank">闽ICP备2022017393号</a> | 主题: <a href="https://vuepress-theme-hope.github.io/v2/" target="_blank">VuePress Theme Hope</a>
 ---
