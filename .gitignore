@@ -4,7 +4,7 @@ node_modules/
 .DS_Store
 # VS Code Config file
 .vscode/
-.media/
+media/
 .husky/
 .github/
 
