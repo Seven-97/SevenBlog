@@ -4,6 +4,10 @@ node_modules/
 .DS_Store
 # VS Code Config file
 .vscode/
+.media/
+.husky/
+.github/
+
 # VuePress Cache
 **/.vuepress/.cache/
 # VuePress Temp
@@ -16,3 +20,11 @@ traversal-folder-replace-string.py
 format-markdown.py
 package-lock.json
 lintmd-config.json
+.markdownlint-cli2.mjs
+.nojekyll
+.prettierignore
+dist.zip
+index.html
+package.json
+pnpm-lock.yaml
+sw.js

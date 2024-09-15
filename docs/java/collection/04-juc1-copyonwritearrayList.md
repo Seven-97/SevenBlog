@@ -12,7 +12,7 @@ tag:
 
 ## 前言
 
-Vector无论是add方法还是get方法都加上了**synchronized**修饰，当多线程读写List必须排队执行，很显然这样效率比较是低下的，CopyOnWriteArrayList是读写分离的，好处是提高线程访问效率。
+Vector无论是add方法还是get方法都加上了[**synchronized**](https://www.seven97.top/java/concurrent/02-keyword1-synchronized.html)修饰，当多线程读写List必须排队执行，很显然这样效率比较是低下的，CopyOnWriteArrayList是读写分离的，好处是提高线程访问效率。
 
 
 
@@ -449,7 +449,7 @@ Vector无论是add方法还是get方法都加上了**synchronized**修饰，当�
 
 - 弱一致性：不能用于实时读的场景，像拷贝数组、新增元素都需要时间，所以调用一个set操作后，读取到数据可能还是旧的，虽然CopyOnWriteArrayList 能做到最终一致性，但是还是没法满足实时性要求；
 
-**小结：** CopyOnWriteArrayList合适读多写少的场景
+**小结：** CopyOnWriteArrayList合适读多写少的场景，例如黑名单白名单等
 
 
 

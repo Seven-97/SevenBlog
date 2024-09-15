@@ -10,6 +10,8 @@ tag:
 
 
 
+
+
 ## 前言
 
 `ConcurrentLinkedQueue`是基于链接节点的无界线程安全队列。此队列按照FIFO（先进先出）原则对元素进行排序。队列的头部是队列中存在时间最长的元素，而队列的尾部则是最近添加的元素。新的元素总是被插入到队列的尾部，而队列的获取操作（例如`poll`或`peek`）则是从队列头部开始。
@@ -425,6 +427,4 @@ public int size() {
 
 
 
- 
-
-<!-- @include: @article-footer.snippet.md -->     
+ <!-- @include: @article-footer.snippet.md -->     
