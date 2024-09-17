@@ -629,7 +629,6 @@ public interface SchedulerServiceClient {
 
 ```java
 @Component
-@HSFProvider(serviceInterface = SchedulerServiceClient.class, clientTimeout = 3000)
 @Validated
 public class SchedulerServiceClientImpl implements SchedulerServiceClient {
 
@@ -677,7 +676,6 @@ public interface ProcessControlDingService {
 
 ```java
 @Component
-@HSFProvider(serviceInterface = ProcessControlDingService.class, clientTimeout = 5000)
 @Validated
 public class ProcessControlDingServiceImpl implements ProcessControlDingService {
 
