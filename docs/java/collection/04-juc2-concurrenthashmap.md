@@ -825,7 +825,7 @@ HashMap中，null可以作为键或者值都可以。而在ConcurrentHashMap中�
 
 ConcurrentHashMap的作者——Doug Lea的解释如下：
 
-![截图.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250932692.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404250932692.gif)
 
 主要意思就是说：
 

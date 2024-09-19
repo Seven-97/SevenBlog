@@ -430,9 +430,166 @@ class TimSort<T> {
 }
 ```
 
-
-
 上面的代码中最终会跑到 countRunAndMakeAscending() 这个方法中。我们可以看见，只用了compare方法，所以在调用Arrays.sort方法只传具体compare重写方法的类对象就行，这也是Comparator接口中必须要子类实现的一个方法。
+
+
+
+### 策略枚举替换大量的if-else语句
+
+若遇到大量流程判断语句，几乎满屏都是if-else语句，**其实if-else是一种面向过程的实现。**那么，如何避免在面向对象编程里大量使用if-else呢？
+
+网络上有很多解决思路，有工厂模式、策略模式、甚至是规则引擎，但这些使用起来还是过于繁重了。虽说避免出现过多的if-else，但是，却会增加很多额外的类。
+
+假如有这样一个需求，需实现一周七天内分别知道要做事情的备忘功能，这里面就会涉及到一个流程判断，你可能会立马想到用if-else，那么，可能是会这样实现
+
+```java
+//if-else形式判断
+public String getToDo(String day){
+     if("Monday".equals(day)){          
+         //......省略复杂语句
+         return "今天上英语课";
+     }else if("Tuesday".equals(day)){          
+         //.....省略复杂语句          
+         return "今天上语文课";
+     }else if("Wednesday".equals(day)){         
+         //......省略复杂语句
+         return "今天上数学课";
+     }else if("Thursday".equals(day)){         
+         //......省略复杂语句
+         return "今天上音乐课";
+     }else if("sunday".equals(day)){         
+         //......省略复杂语句
+         return "今天上编程课";
+     }else{
+         //此处省略10086行......
+     }
+ }
+```
+
+这种代码，在业务逻辑里，少量还好，若是几百个判断呢，可能整块业务逻辑里都是满屏if-else,既不优雅也显得很少冗余。
+
+这时，就可以考虑使用策略枚举形式来替换这堆面向过程的if-else实现了。
+
+首先，先定义一个getToDo()调用方法，假如传进的是“星期一”，即参数"Monday"。
+
+```java
+//策略枚举判断
+public String getToDo(String day){
+    CheckDay checkDay=new CheckDay();
+    return checkDay.day(DayEnum.valueOf(day));
+}
+```
+
+在getToDo()方法里，通过DayEnum.valueOf("Monday")可获取到一个DayEnum枚举元素，这里得到的是Monday。
+
+接下来，执行checkDay.day(DayEnum.valueOf("Monday"))，会进入到day（）方法中，这里，**通过dayEnum.toDo()做了一个策略匹配时**。注意一点，DayEnum.valueOf("Monday")得到的是枚举中的Monday，这样，实质上就是执行了Monday.toDo()，也就是说，会执行Monday里的toDo()
+
+```java
+public class CheckDay {
+    public String day( DayEnum dayEnum) {
+        return dayEnum.toDo();
+    }
+}
+```
+
+上面的执行过程为什么会是这样子呢？只有进入到DayEnum枚举当中，才知道是怎么回事了
+
+```java
+public enum DayEnum {
+    Monday {
+        @Override
+        public String toDo() {            ......省略复杂语句
+            return "今天上英语课";
+        }
+    },
+    Tuesday {
+        @Override
+        public String toDo() {            ......省略复杂语句
+            return "今天上语文课";
+        }
+    },
+    Wednesday {
+        @Override
+        public String toDo() {            ......省略复杂语句
+            return "今天上数学课";
+        }
+    },
+    Thursday {
+        @Override
+        public String toDo() {            ......省略复杂语句
+            return "今天上音乐课";
+        }
+    };
+    //定义了一个实现了toDo()抽象方法
+    public abstract String toDo();
+}
+```
+
+在每个枚举元素当中，都重写了该toDo()抽象方法。这样，当传参DayEnum.valueOf("Monday")流转到dayEnum.toDo()时，实质上是去DayEnum枚举里找到对应Monday定义的枚举元素，然后执行其内部重写的toDo()方法。用if-esle形式表示，就类似"Monday".equals(day)匹配为true时，可得到其内部东西。
+
+总结一下，策略枚举就是**枚举当中使用了策略模式**，所谓的策略模式，即给你一把钥匙，按照某种约定的方式，可以立马被指引找到可以打开的门。例如，我给你的钥匙叫“Monday”，那么，就可以通过约定方式dayEnum.toDo()，立马找到枚举里的Monday大门，然后进到门里，去做想做的事toDo()，其中，每扇门后的房间都有不同的功能，但它们都有一个相同抽象功能——toDo()，即各房间共同地方都是可以用来做一些事情的功能，但具体可以什么事情，就各有不同了。在本文的案例里，每扇大门里的toDo()，根据不同策略模式可得到不同字符串返回，例如，"今天上英语课"、"今天上语文课"，等等。
+
+可见，把流程判断抽取到策略枚举当中，还可以把一堆判断解耦出来，避免在业务代码逻辑里呈现一大片密密麻麻冗余的if-else。
+
+这里，会出现一种情况，即，假如有多个重复共同样功能的判断话，例如，在if-else里，是这样
+
+```java
+public String getToDoByIfElse(String day){
+    if("Monday".equals(day) || "Tuesday".equals(day) || "Wednesday".equals(day)){        
+        //......省略复杂语句
+        return "今天上英语课";
+    }else if("Thursday".equals(day)){
+        ......
+    }
+}
+```
+
+那么，在策略枚举下应该如何使用从而避免代码冗余呢？
+
+可以参考一下以下思路，设置一个内部策略枚举，将有相同功能的外部引用指向同一个内部枚举元素，这样即可实现调用重复功能了
+
+```java
+public enum DayEnum {
+    //指向内部枚举的同一个属性即可执行相同重复功能
+    Monday("星期一", Type.ENGLISH),
+    Tuesday("星期二", Type.ENGLISH),
+    Wednesday("星期三", Type.ENGLISH),
+    
+    Thursday("星期四", Type.CHINESE);
+    
+    private final Type type;
+    private final String day;
+    DayEnum(String day, Type type) {
+        this.day = day;
+        this.type = type;
+    }
+    String toDo() {
+        return type.toDo();
+    }
+    /**
+     * 内部策略枚举
+     */
+    private enum Type {
+        ENGLISH {
+            @Override
+            public String toDo() {                ......省略复杂语句
+                return "今天上英语课";
+            }
+        },
+        CHINESE {
+            @Override
+            public String toDo() {                ......省略复杂语句
+                return "今天上语文课";
+            }
+        };
+        public abstract String toDo();
+    }
+}
+```
+
+若要扩展其判断流程，只需要直接在枚举增加一个属性和内部toDo（实现），就可以增加新的判断流程了，而外部，仍旧用同一个入口dayEnum.toDo()即可。
+
+
 
 ## 命令模式
 
@@ -2949,8 +3106,6 @@ public class Client {
 
  
 
- 
-<!-- @include: @article-footer.snippet.md -->     
- 
 
- 
+<!-- @include: @article-footer.snippet.md -->     
+
