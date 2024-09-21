@@ -899,7 +899,7 @@ MergedBeanDefinitionPostProcessor 继承自 BeanPostProcessor。调用的时机�
 
 该接口有两个扩展方法：
 
-- `postProcessMergedBeanDefinition`：此方法在Spring将多个Bean定义合并为一个`RootBeanDefinition`之后，但在实例化Bean之前被调用。主要作用是让开发者有机会在Bean定义合并后，对其进行进一步的定制和调整。使用场景如下：
+- `postProcessMergedBeanDefinition`：此方法在Spring将多个Bean定义合并为一个`RootBeanDefinition`之后调用。主要作用是让开发者有机会在Bean定义合并后，对其进行进一步的定制和调整。使用场景如下：
   - **自定义注解处理**：处理自定义注解并将其应用于Bean定义。
   - **属性修改**：在Bean实例化之前对Bean定义中的某些属性进行调整或设置默认值。
 - `resetBeanDefinition`：此方法在Bean定义被重置时调用。它通常用于清理或重置与特定Bean定义相关的状态或缓存。使用场景如下：

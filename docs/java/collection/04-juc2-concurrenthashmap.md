@@ -739,9 +739,63 @@ final long sumCount() {
 
 
 
-## compute方法
+## 集合线程安全不等于业务安全
 
-需要知道的是，业务线程安全并不等于集合线程安全，并不是说使用了线程安全的集合 如ConcurrentHashMap 就能保证业务的线程安全。这是因为，ConcurrentHashMap只能保证put时是安全的，但是在put操作前如果还有其他的操作，那业务并不一定是线程安全的。
+需要知道的是，集合线程安全并不等于业务线程安全，并不是说使用了线程安全的集合 如ConcurrentHashMap 就能保证业务的线程安全。这是因为，ConcurrentHashMap只能保证put时是安全的，但是在put操作前如果还有其他的操作，那业务并不一定是线程安全的。
+
+例如存在复合操作，也就是存在多个基本操作(如`put`、`get`、`remove`、`containsKey`等)组成的操作，例如先判断某个键是否存在`containsKey(key)`，然后根据结果进行插入或更新`put(key, value)`。这种操作在执行过程中可能会被其他线程打断，导致结果不符合预期。
+
+例如，有两个线程 A 和 B 同时对 `ConcurrentHashMap` 进行复合操作，如下：
+
+```java
+// 线程 A
+if (!map.containsKey(key)) {
+map.put(key, value);
+}
+// 线程 B
+if (!map.containsKey(key)) {
+map.put(key, anotherValue);
+}
+```
+
+如果线程 A 和 B 的执行顺序是这样：
+
+1. 线程 A 判断 map 中不存在 key
+2. 线程 B 判断 map 中不存在 key
+3. 线程 B 将 (key, anotherValue) 插入 map
+4. 线程 A 将 (key, value) 插入 map
+
+那么最终的结果是 (key, value)，而不是预期的 (key, anotherValue)。这就是复合操作的非原子性导致的问题。
+
+
+
+### 那如何保证 `ConcurrentHashMap` 复合操作的原子性呢？
+
+`ConcurrentHashMap` 提供了一些原子性的复合操作，如 `putIfAbsent`、`compute`、`computeIfAbsent` 、`computeIfPresent`、`merge`等。这些方法都可以接受一个函数作为参数，根据给定的 key 和 value 来计算一个新的 value，并且将其更新到 map 中。
+
+上面的代码可以改写为：
+
+```java
+// 线程 A
+map.putIfAbsent(key, value);
+// 线程 B
+map.putIfAbsent(key, anotherValue);
+```
+
+或者：
+
+```java
+// 线程 A
+map.computeIfAbsent(key, k -> value);
+// 线程 B
+map.computeIfAbsent(key, k -> anotherValue);
+```
+
+很多同学可能会说了，这种情况也能加锁同步呀！确实可以，但不建议使用加锁的同步机制，违背了使用 `ConcurrentHashMap` 的初衷。在使用 `ConcurrentHashMap` 的时候，尽量使用这些原子性的复合操作方法来保证原子性。
+
+
+
+### compute()方法
 
 以下是`compute()`方法的一些典型使用场景：
 

@@ -28,3 +28,4 @@ index.html
 package.json
 pnpm-lock.yaml
 sw.js
+.gitignore

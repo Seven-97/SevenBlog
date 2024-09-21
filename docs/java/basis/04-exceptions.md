@@ -497,69 +497,80 @@ public static void simpleTryCatch();
 5. 如果所有的栈帧被弹出，仍然没有处理，则抛给当前的Thread，Thread则会终止。
 6. 如果当前Thread为最后一个非守护线程，且未处理异常，则会导致JVM终止运行。
 
+
+
 #### try-catch-finally
 
 ```java
-public static void simpleTryCatchFinally() {
-   try {
-       testNPE();
-   } catch (Exception e) {
-       e.printStackTrace();
-   } finally {
-       System.out.println("Finally");
-   }
+public class TestCode {
+    public int foo() {
+        int x;
+        try {
+            x = 1;
+            return x;
+        } catch (Exception e) {
+            x = 2;
+            return x;
+        } finally {
+            x = 3;
+        }
+    }
 }
 ```
 
 同样使用javap分析一下代码
 
 ```java
-public static void simpleTryCatchFinally();
+public int foo();
+    descriptor: ()I
+    flags: ACC_PUBLIC
     Code:
-      
-      //try 部分: 
-      //如果有异常，则调用14位置代码，也就是catch部分代码
-      //如果没有异常发生，则执行输出finally操作，直至goto到41位置，执行返回操作。   
-
-       0: invokestatic  #3                  // Method testNPE:()V
-       3: getstatic     #6                  // Field java/lang/System.out:Ljava/io/PrintStream;
-       6: ldc           #7                  // String Finally
-       8: invokevirtual #8                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
-      11: goto          41
-
-      //catch部分:。如果没有异常发生，则执行输出finally操作，直至执行got到41位置，执行返回操作。
-      14: astore_0
-      15: aload_0
-      16: invokevirtual #5                  // Method java/lang/Exception.printStackTrace:()V
-      19: getstatic     #6                  // Field java/lang/System.out:Ljava/io/PrintStream;
-      22: ldc           #7                  // String Finally
-      24: invokevirtual #8                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
-      27: goto          41
-      
-      //finally部分的代码如果被调用，有可能是try部分，也有可能是catch部分发生异常。
-      30: astore_1
-      31: getstatic     #6                  // Field java/lang/System.out:Ljava/io/PrintStream;
-      34: ldc           #7                  // String Finally
-      36: invokevirtual #8                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
-      39: aload_1
-      40: athrow     //如果异常没有被catch捕获，而是到了这里，执行完finally的语句后，仍然要把这个异常抛出去，传递给调用处。
-      41: return
-    Exception table:
-       from    to  target type
-           0     3    14   Class java/lang/Exception
-           0     3    30   any
-          14    19    30   any
+      stack=1, locals=5, args_size=1
+         0: iconst_1 //int型1入栈 -> 栈顶=1
+         1: istore_1 // 将栈顶的int型数值存入第二个局部变量 -> 局部2 = 1
+         2: iload_1 // 将第二个int型局部变量推送至栈顶 -> 栈顶=1
+         3: istore_2 //!! 将栈顶int型数值存入第三个局部变量 -> 局部3 = 1
+         
+         4: iconst_3 // int型3入栈 -> 栈顶 = 3
+         5: istore_1 // 将栈顶的int型数值存入第二个局部变量 -> 局部2 = 3
+         6: iload_2 //!! 将第三个int型局部变量推送至栈顶 -> 栈顶=1
+         7: ireturn // 从当前方法返回栈顶int数值 -> 1
+         
+         8: astore_2 // ->局部3=Exception
+         9: iconst_2 // ->栈顶=2
+        10: istore_1 // ->局部2=2
+        11: iload_1 //->栈顶=2
+        12: istore_3 //!! ->局部4=2
+        
+        13: iconst_3 // ->栈顶=3
+        14: istore_1 // ->局部1=3
+        15: iload_3 //!! ->栈顶=2
+        16: ireturn // -> 2
+        
+        17: astore        4 //将栈顶引用型数值存入第五个局部变量=any
+        19: iconst_3 //将int型数值3入栈 -> 栈顶3
+        20: istore_1 //将栈顶第一个int数值存入第二个局部变量 -> 局部2=3
+        21: aload         4 //将局部第五个局部变量(引用型)推送至栈顶
+        23: athrow //将栈顶的异常抛出
+      Exception table:
+         from    to  target type
+             0     4     8   Class java/lang/Exception //0到4行对应的异常，对应#8中储存的异常
+             0     4    17   any //Exeption之外的其他异常
+             8    13    17   any
+            17    19    17   any
 ```
 
-上面的三条异常表item的意思为:
+在字节码的4,5，以及13,14中执行的是同一个操作，就是将int型的3入操作数栈顶，并存入第二个局部变量。这正是源码在finally语句块中内容。也就是说，JVM在处理异常时，会在每个可能的分支都将finally语句重复执行一遍。
 
-- 如果0到3之间，发生了Exception类型的异常，调用14位置的异常处理者。
+通过分析字节码，可以得出最后的运行结果是：
 
-- 如果0到3之间，无论发生什么异常，都调用30位置的处理者
+- 不发生异常时: return 1
 
-- 如果14到19之间（即catch部分），不论发生什么异常，都调用30位置的处理者。
+- 发生异常时: return 2
 
-其实后两点的意思就是，无论有没有异常，finally语句块一定会被调用
+- 发生非Exception及其子类的异常，抛出异常，不返回值
+
+
 
 #### try-with-resources
 
@@ -624,8 +635,6 @@ public class ExceptionTest {
 建立异常对象：9589080  
 建立、抛出并接住异常对象：47394475 
 ```
-
-
 
 建立一个异常对象，是建立一个普通Object耗时的约20倍（实际上差距会比这个数字更大一些，因为循环也占用了时间，追求精确的读者可以再测一下空循环的耗时然后在对比前减掉这部分），而抛出、接住一个异常对象，所花费时间大约是建立异常对象的4倍。
 

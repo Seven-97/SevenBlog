@@ -131,7 +131,7 @@ new Thread(() -> {
 
  
 
-## 线程使用方式
+## 创建线程的几种方式
 
 有三种使用线程的方法:
 
@@ -999,4 +999,3 @@ private V report(int s) throws ExecutionException {
 
 
 <!-- @include: @article-footer.snippet.md -->     
- 

@@ -264,76 +264,7 @@ code内的主要属性为:
 
 方法体内的内容是：将this入栈，获取字段#2并置于栈顶, 将int类型的1入栈，将栈内顶部的两个数值相加，返回一个int类型的值。
 
-## 字节码分析try-catch-finally
 
-```java
-public class TestCode {
-    public int foo() {
-        int x;
-        try {
-            x = 1;
-            return x;
-        } catch (Exception e) {
-            x = 2;
-            return x;
-        } finally {
-            x = 3;
-        }
-    }
-}
-```
-
-当不发生异常和发生异常的情况下，foo()的返回值分别是多少。
-
-```java
-public int foo();
-    descriptor: ()I
-    flags: ACC_PUBLIC
-    Code:
-      stack=1, locals=5, args_size=1
-         0: iconst_1 //int型1入栈 -> 栈顶=1
-         1: istore_1 // 将栈顶的int型数值存入第二个局部变量 -> 局部2 = 1
-         2: iload_1 // 将第二个int型局部变量推送至栈顶 -> 栈顶=1
-         3: istore_2 //!! 将栈顶int型数值存入第三个局部变量 -> 局部3 = 1
-         
-         4: iconst_3 // int型3入栈 -> 栈顶 = 3
-         5: istore_1 // 将栈顶的int型数值存入第二个局部变量 -> 局部2 = 3
-         6: iload_2 //!! 将第三个int型局部变量推送至栈顶 -> 栈顶=1
-         7: ireturn // 从当前方法返回栈顶int数值 -> 1
-         
-         8: astore_2 // ->局部3=Exception
-         9: iconst_2 // ->栈顶=2
-        10: istore_1 // ->局部2=2
-        11: iload_1 //->栈顶=2
-        12: istore_3 //!! ->局部4=2
-        
-        13: iconst_3 // ->栈顶=3
-        14: istore_1 // ->局部1=3
-        15: iload_3 //!! ->栈顶=2
-        16: ireturn // -> 2
-        
-        17: astore        4 //将栈顶引用型数值存入第五个局部变量=any
-        19: iconst_3 //将int型数值3入栈 -> 栈顶3
-        20: istore_1 //将栈顶第一个int数值存入第二个局部变量 -> 局部2=3
-        21: aload         4 //将局部第五个局部变量(引用型)推送至栈顶
-        23: athrow //将栈顶的异常抛出
-      Exception table:
-         from    to  target type
-             0     4     8   Class java/lang/Exception //0到4行对应的异常，对应#8中储存的异常
-             0     4    17   any //Exeption之外的其他异常
-             8    13    17   any
-            17    19    17   any
-```
-
-在字节码的4,5，以及13,14中执行的是同一个操作，就是将int型的3入操作数栈顶，并存入第二个局部变量。这正是源码在finally语句块中内容。也就是说，JVM在处理异常时，会在每个可能的分支都将finally语句重复执行一遍。
-
-通过分析字节码，可以得出最后的运行结果是：
-
-- 不发生异常时: return 1
-
-- 发生异常时: return 2
-
-- 发生非Exception及其子类的异常，抛出异常，不返回值
 
 ## 字节码的好处，编译型与解释型
 
@@ -351,8 +282,6 @@ Java 语言“编译与解释并存”？
 
  
 
- 
-<!-- @include: @article-footer.snippet.md -->     
- 
 
- 
+<!-- @include: @article-footer.snippet.md -->     
+
