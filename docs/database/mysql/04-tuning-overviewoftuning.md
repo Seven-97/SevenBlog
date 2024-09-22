@@ -300,7 +300,7 @@ SELECT * from table limit 500000, 10; //1.2秒
 select * from xxx  where id >=(select id from xxx order by id limit 500000, 1) order by id limit 10;
 ```
 
-#### 方法2
+#### 方法2：根据id主键进行排序
 将所有的数据**根据id主键进行排序**，然后分批次取，将当前批次的最大id作为下次筛选的条件进行查询。
 ```sql
 select * from xxx where id > start_id order by id limit 10;
