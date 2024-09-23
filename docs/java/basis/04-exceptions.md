@@ -642,6 +642,89 @@ public class ExceptionTest {
 
  
 
+## try catch 应该在 for 循环里面还是外面？
+
+try catch 放在 for循环 外面 和里面 ，如果出现异常，产生的效果是不一样的。
+
+怎么用，就需要看好业务场景，去使用了。
+
+### try  catch  在 for 循环 外面
+
+代码示例 ：
+
+```java
+public static void tryOutside() {  
+    try {  
+        for (int count = 1; count <= 5; count++) {  
+            if (count == 3) {  
+                //故意制造一下异常  
+                int num = 1 / 0;  
+            } else {  
+                System.out.println("count:" + count + " 业务正常执行");  
+            }  
+        }  
+    } catch (Exception e) {  
+        System.out.println("try catch  在for 外面的情形， 出现了异常，for循环显然被中断");  
+    }  
+}  
+```
+
+结果：
+
+```java
+count:1 业务正常执行
+count:2 业务正常执行
+try catch  在for 外面的情形， 出现了异常，for循环显然被中断
+```
+
+try  catch  在 for 循环 外面 的时候， 如果 for循环过程中出现了异常， 那么for循环会终止。
+
+### try  catch  在 for 循环 里面
+
+代码示例 ：
+
+```java
+public static void tryInside() {  
+  
+    for (int count = 1; count <= 5; count++) {  
+        try {  
+            if (count == 3) {  
+                //故意制造一下异常  
+                int num = 1 / 0;  
+            } else {  
+                System.out.println("count:" + count + " 业务正常执行");  
+            }  
+        } catch (Exception e) {  
+            System.out.println("try catch  在for 里面的情形， 出现了异常，for循环显然继续执行");  
+        }  
+    }  
+}  
+```
+
+结果：
+
+```java
+count:1 业务正常执行
+count:2 业务正常执行
+try catch  在for 里面的情形， 出现了异常，for循环显然继续执行
+count:3 业务正常执行
+count:4 业务正常执行
+```
+
+try  catch  在 for 循环 里面 的时候， 如果 for循环过程中出现了异常，异常被catch抓掉，不影响for循环 继续执行。
+
+
+
+### 小结
+
+其实就是看业务。需要出现异常就终止循环的，就放外头；
+
+不需要终止循环，就放循环里。
+
+
+
+
+
  
 
 <!-- @include: @article-footer.snippet.md -->      
