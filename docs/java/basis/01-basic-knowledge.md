@@ -1,7 +1,7 @@
 ---
 title: 基础知识点
 category: Java
-tag:
+tags:
   - Java基础
 ---
 
