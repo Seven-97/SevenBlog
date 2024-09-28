@@ -4,9 +4,16 @@ category: Java
 tag:
  - 集合
  - 枚举
+head:
+  - - meta
+    - name: keywords
+      content: Java,EnumMap,源码分析,实现原理,java EnumMap,EnumSet,enumset
+  - - meta
+    - name: description
+      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
-## 
+
 
 在[EffectiveJava](https://www.seven97.top/books/software-quality/effectivejava-summary.html)中的第 36条中建议 用 EnumSet 替代位字段，在第37条中建议 用EnumMap替换序数索引，为什么？
 

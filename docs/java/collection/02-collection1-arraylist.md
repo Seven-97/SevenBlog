@@ -3,6 +3,13 @@ title: Collection - ArrayList详解
 category: Java
 tag:
  - 集合
+head:
+  - - meta
+    - name: keywords
+      content: Java,ArrayList,ArrayList源码,源码分析,java arraylist,fail-fast,java foreach 删除元素,删除操作,并发修改异常
+  - - meta
+    - name: description
+      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -461,34 +468,32 @@ ArrayList和LinkedList的区别：
 
  
 
- 
+
 <!-- @include: @article-footer.snippet.md -->     
- 
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
+
+
+
+
+
+
+
+
+
+
+
+
+

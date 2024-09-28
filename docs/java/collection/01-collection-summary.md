@@ -3,6 +3,13 @@ title: Collection概述
 category: Java
 tag:
  - 集合
+head:
+  - - meta
+    - name: keywords
+      content: 集合,colletion,set,map
+  - - meta
+    - name: description
+      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -74,7 +81,7 @@ tag:
 使用双向链表来维护元素的顺序，顺序为插入顺序或者最近最少使用(LRU)顺序。
 
 
- 
+
 
  <!-- @include: @article-footer.snippet.md -->     
 

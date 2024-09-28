@@ -3,6 +3,13 @@ title: 网络编程 - NIO的零拷贝实现
 category: Java
 tag:
  - IO流
+head:
+  - - meta
+    - name: keywords
+      content: Java,java io,异步,网络IO,NIO,IO多路复用,零拷贝,实现原理,底层源码
+  - - meta
+    - name: description
+      content: 全网最全的的Java IO知识点总结，让天下没有难学的八股文！
 ---
 
 

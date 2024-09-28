@@ -3,6 +3,13 @@ title: GC - 理论基础
 category: Java
 tag:
  - JVM
+head:
+  - - meta
+    - name: keywords
+      content: Java,JVM,弱引用,软引用,垃圾回收,GC,GC算法,标记清除,标记整理,三色标记,垃圾收集器
+  - - meta
+    - name: description
+      content: 全网最全的的Java JVM知识点总结，让天下没有难学的八股文！
 ---
 
 

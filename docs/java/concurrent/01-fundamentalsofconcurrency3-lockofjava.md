@@ -3,6 +3,13 @@ title: Java中的锁
 category: Java
 tag:
  - 并发编程
+head:
+  - - meta
+    - name: keywords
+      content: 多线程,锁，偏向锁,自旋锁,乐观锁,悲观锁,公平锁,非公平锁,独享锁,共享锁,轻量级锁
+  - - meta
+    - name: description
+      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 

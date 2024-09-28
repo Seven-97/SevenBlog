@@ -3,6 +3,13 @@ title: GC - ZGC详解
 category: Java
 tag:
  - JVM
+head:
+  - - meta
+    - name: keywords
+      content: Java,JVM,ZGC,低延迟
+  - - meta
+    - name: description
+      content: 全网最全的的Java JVM知识点总结，让天下没有难学的八股文！
 ---
 
 

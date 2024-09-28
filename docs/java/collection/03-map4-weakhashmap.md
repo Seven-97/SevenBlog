@@ -3,6 +3,13 @@ title: Map - WeakHashMap详解
 category: Java
 tag:
  - 集合
+head:
+  - - meta
+    - name: keywords
+      content: Java,WeakHashMap,java WeakHashMap,实现原理,源码解析
+  - - meta
+    - name: description
+      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
 

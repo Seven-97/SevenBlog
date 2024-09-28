@@ -3,6 +3,13 @@ title: 虚拟线程
 category: Java
 tag:
  - 并发编程
+head:
+  - - meta
+    - name: keywords
+      content: 线程,虚拟线程,实现源码,新特性,携带器
+  - - meta
+    - name: description
+      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -621,6 +628,7 @@ private boolean yieldContinuation() {
 ```
 
 mount()和unmount()会在Java堆和本地线程栈之间做栈帧的拷贝，这是Project Loom中为数不多的在JVM层面实现的本地方法，感兴趣的可以去Loom的github库里搜一下continuationFreezeThaw.cpp。其余的大部分代码在JDK中实现， 参见java.base模块下的jdk.internal.vm包。
+
 
 
 <!-- @include: @article-footer.snippet.md -->     

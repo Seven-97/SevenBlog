@@ -3,6 +3,13 @@ title: 网络编程 - NIO详解
 category: Java
 tag:
  - IO流
+head:
+  - - meta
+    - name: keywords
+      content: Java,java io,异步,网络IO,NIO,通道,选择器,IO多路复用
+  - - meta
+    - name: description
+      content: 全网最全的的Java IO知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -1063,9 +1070,8 @@ while (true) {
 
  
 
- 
+
 <!-- @include: @article-footer.snippet.md -->     
- 
 
 
 

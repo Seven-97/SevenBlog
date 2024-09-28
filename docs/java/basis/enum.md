@@ -3,6 +3,13 @@ title: 枚举详解
 category: Java
 tag:
  - Java基础
+head:
+  - - meta
+    - name: keywords
+      content: Java,枚举,enum,java 枚举,java enum
+  - - meta
+    - name: description
+      content: 全网最全的的Java知识点总结，希望对你有帮助！
 ---
 
 

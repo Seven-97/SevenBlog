@@ -3,6 +3,13 @@ title: Stream流原理
 category: Java
 tag:
   - Java基础
+head:
+  - - meta
+    - name: keywords
+      content: Integer缓存,BigDecimal,Java 基本数据类型,String,Object,数组,hashcode,equals,哈希冲突,final,static,trancient,值传递,引用传递,序列化和反序列化,LocalDate
+  - - meta
+    - name: description
+      content: 全网最全的的Java知识点总结，希望对你有帮助！
 ---
 
 

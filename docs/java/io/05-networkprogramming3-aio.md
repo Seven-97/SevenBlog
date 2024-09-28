@@ -3,6 +3,13 @@ title: 网络编程 - AIO详解
 category: Java
 tag:
  - IO流
+head:
+  - - meta
+    - name: keywords
+      content: Java,java io,异步,网络IO,AIO,异步IO
+  - - meta
+    - name: description
+      content: 全网最全的的Java IO知识点总结，让天下没有难学的八股文！
 ---
 
 

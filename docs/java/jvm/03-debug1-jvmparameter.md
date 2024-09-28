@@ -3,6 +3,13 @@ title: 调试排错 - JVM参数
 category: Java
 tag:
  - JVM
+head:
+  - - meta
+    - name: keywords
+      content: Java,JVM,参数调优
+  - - meta
+    - name: description
+      content: 全网最全的的Java JVM知识点总结，让天下没有难学的八股文！
 ---
 
 

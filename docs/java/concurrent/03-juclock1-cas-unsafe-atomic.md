@@ -3,6 +3,13 @@ title: JUC锁 - CAS & Unsafe & 原子类
 category: Java
 tag:
  - 并发编程
+head:
+  - - meta
+    - name: keywords
+      content: Java,并发编程,多线程,Thread,cas,Unsafe,ABA问题,无锁并发,原子类,Atomic,LongAdder
+  - - meta
+    - name: description
+      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -1195,5 +1202,5 @@ public class AtomicStampedReference<V> {
 - 最后，外部传入元素值及版本号，而不是节点(Pair)的引用。
 
 
- 
+
 <!-- @include: @article-footer.snippet.md -->     

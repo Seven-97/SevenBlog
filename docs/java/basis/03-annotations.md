@@ -3,6 +3,13 @@ title: 注解详解
 category: Java
 tag:
   - Java基础
+head:
+  - - meta
+    - name: keywords
+      content: Java,注解,annotation,java 注解,java annotation
+  - - meta
+    - name: description
+      content: 全网最全的的Java知识点总结，希望对你有帮助！
 ---
 
 

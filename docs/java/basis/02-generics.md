@@ -3,6 +3,13 @@ title: 泛型详解
 category: Java
 tag:
  - Java基础
+head:
+  - - meta
+    - name: keywords
+      content: Java,泛型,generic,java 泛型,java egeneric
+  - - meta
+    - name: description
+      content: 全网最全的的Java知识点总结，希望对你有帮助！
 ---
 
 ## 概念

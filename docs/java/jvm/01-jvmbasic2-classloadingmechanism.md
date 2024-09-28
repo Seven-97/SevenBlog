@@ -3,6 +3,13 @@ title: JVM基础 - 类加载机制
 category: Java
 tag:
  - JVM
+head:
+  - - meta
+    - name: keywords
+      content: Java,JVM,对象结构,对象布局,对象头,Class Pointer,Mark Word,指针压缩
+  - - meta
+    - name: description
+      content: 全网最全的的Java JVM知识点总结，让天下没有难学的八股文！
 ---
 
 

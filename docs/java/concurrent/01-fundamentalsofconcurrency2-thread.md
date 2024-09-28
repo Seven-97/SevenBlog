@@ -3,6 +3,13 @@ title: 线程基础
 category: Java
 tag:
  - 并发编程
+head:
+  - - meta
+    - name: keywords
+      content: 线程状态转换,线程,阻塞,等待,Thread,Daemon,sleep,yield,标志位,interrupted,join,wait,notify,callable,异常
+  - - meta
+    - name: description
+      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -996,6 +1003,5 @@ private V report(int s) throws ExecutionException {
 ```
 
 因此可以通过get方法获取到异常结果
-
 
 <!-- @include: @article-footer.snippet.md -->     

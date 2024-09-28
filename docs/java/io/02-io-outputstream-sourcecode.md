@@ -3,6 +3,13 @@ title: OutputStream源码
 category: Java
 tag:
  - IO流
+head:
+  - - meta
+    - name: keywords
+      content: Java,java io,OutputStream
+  - - meta
+    - name: description
+      content: 全网最全的的Java IO知识点总结，让天下没有难学的八股文！
 ---
 
 

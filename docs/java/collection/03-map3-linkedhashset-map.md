@@ -3,6 +3,13 @@ title: Map - LinkedHashSet & Map详解
 category: Java
 tag:
  - 集合
+head:
+  - - meta
+    - name: keywords
+      content: Java,LinkedHashMap,java LinkedHashMap,源码分析,实现原理,LinkedHashSet,java LinkedHashSet
+  - - meta
+    - name: description
+      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
 

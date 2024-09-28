@@ -4,6 +4,14 @@ category: Java
 tag:
  - 集合
  - JUC
+ - 并发编程
+head:
+  - - meta
+    - name: keywords
+      content: Java,并发修改异常,并发编程,多线程,Thread,CopyOnWriteArrayList
+  - - meta
+    - name: description
+      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
 

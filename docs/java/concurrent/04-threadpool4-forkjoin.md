@@ -3,6 +3,13 @@ title: 线程池 - Fork Join框架详解
 category: Java
 tag:
  - 并发编程
+head:
+  - - meta
+    - name: keywords
+      content: Java,并发编程,多线程,Thread,Fork Join,分治,实现原理,底层源码
+  - - meta
+    - name: description
+      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -1707,7 +1714,6 @@ Fork/Join的很多使用场景都用到数组或者List等数据结构，子任�
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 
 
 

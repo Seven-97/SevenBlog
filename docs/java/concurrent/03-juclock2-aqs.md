@@ -3,6 +3,14 @@ title: JUC锁 - AQS详解（以ReentrantLock为例）
 category: Java
 tag:
  - 并发编程
+ - JUC
+head:
+  - - meta
+    - name: keywords
+      content: Java,并发编程,多线程,Thread,AQS,抽象队列同步器,实现原理,底层源码,ReentrantLock,锁
+  - - meta
+    - name: description
+      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 

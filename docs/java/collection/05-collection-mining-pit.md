@@ -3,6 +3,13 @@ title: 集合采坑记录
 category: Java
 tag:
  - 集合
+head:
+  - - meta
+    - name: keywords
+      content: Java,ArrayList,List
+  - - meta
+    - name: description
+      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
 

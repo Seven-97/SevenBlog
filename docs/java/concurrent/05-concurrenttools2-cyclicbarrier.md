@@ -3,6 +3,14 @@ title: 并发工具 - CyclicBarrier详解
 category: Java
 tag:
  - 并发编程
+ - JUC
+head:
+  - - meta
+    - name: keywords
+      content: Java,并发编程,多线程,Thread,并发工具,CountDownLatch,实现原理,底层源码
+  - - meta
+    - name: description
+      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -439,6 +447,5 @@ CyclicBarrier可以用于多线程计算数据，最后合并计算结果的场�
 
  
 
- 
+
 <!-- @include: @article-footer.snippet.md -->     
- 

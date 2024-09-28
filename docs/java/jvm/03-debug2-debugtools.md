@@ -3,6 +3,13 @@ title: 调试排错 - 排查工具单
 category: Java
 tag:
  - JVM
+head:
+  - - meta
+    - name: keywords
+      content: Java,JVM,排查工具
+  - - meta
+    - name: description
+      content: 全网最全的的Java JVM知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -198,7 +205,7 @@ java -classpath /opt/taobao/java/lib/sa-jdi.jar sun.jvm.hotspot.CLHSDB
 ```
 
 更详细的可见[R大此贴](http://rednaxelafx.iteye.com/blog/1847971)
- 
+
 
 
 
@@ -587,12 +594,10 @@ MBeans
 
  
 
- 
+
 <!-- @include: @article-footer.snippet.md -->     
- 
 
- 
 
- 
 
- 
+
+

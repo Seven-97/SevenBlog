@@ -3,6 +3,14 @@ title: 并发工具 - CountDownLatch详解
 category: Java
 tag:
  - 并发编程
+ - JUC
+head:
+  - - meta
+    - name: keywords
+      content: Java,并发编程,多线程,Thread,并发工具,CountDownLatch,实现原理,底层源码
+  - - meta
+    - name: description
+      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -589,5 +597,4 @@ T2正在执行
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 

@@ -3,6 +3,13 @@ title: Collection - PriorityQueue详解
 category: Java
 tag:
  - 集合
+head:
+  - - meta
+    - name: keywords
+      content: Java,优先级队列,PriorityQueue,java 优先级队列,java PriorityQueue, 源码分析, 实现原理
+  - - meta
+    - name: description
+      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
 

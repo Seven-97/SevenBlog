@@ -3,6 +3,13 @@ title: 网络编程 - BIO详解
 category: Java
 tag:
  - IO流
+head:
+  - - meta
+    - name: keywords
+      content: Java,java io,多线程异步,网络IO,同步,阻塞,BIO
+  - - meta
+    - name: description
+      content: 全网最全的的Java IO知识点总结，让天下没有难学的八股文！
 ---
 
 

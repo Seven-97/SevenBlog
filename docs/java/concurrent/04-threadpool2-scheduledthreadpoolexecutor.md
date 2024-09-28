@@ -3,6 +3,13 @@ title: 线程池 - ScheduledThreadPoolExecutor详解
 category: Java
 tag:
  - 并发编程
+head:
+  - - meta
+    - name: keywords
+      content: Java,并发编程,多线程,Thread,ScheduledThreadPoolExecutor,定时任务,实现原理,底层源码
+  - - meta
+    - name: description
+      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -358,14 +365,12 @@ public void shutdown() {
 
  
 
- 
+
 <!-- @include: @article-footer.snippet.md -->     
- 
 
- 
 
- 
 
- 
 
- 
+
+
+
