@@ -5,7 +5,7 @@ tag:
   - 计算机网络
 ---
 
-> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
+
 
 TCP Keepalive 和 HTTP Keep-Alive 是一个东西吗？
 
@@ -295,9 +295,9 @@ keepalive默认7200秒太长了，建议改成20秒，可以在OS镜像层面固
 在触发TCP retransmission后会停止keepalive探测。
 
 
+## 参考链接
 
-
-
+> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
 
 
 

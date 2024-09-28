@@ -1,8 +1,8 @@
 ---
-title: 关键字 - Volatile详解
+title: 关键字 - volatile详解
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

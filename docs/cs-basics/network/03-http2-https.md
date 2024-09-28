@@ -5,8 +5,6 @@ tag:
   - 计算机网络
 ---
 
-> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
-
 ## 概述
 HTTP 是超文本传输协议，信息是明文传输，存在安全风险的问题。HTTPS 则解决 HTTP 不安全的缺陷，在 TCP 和 HTTP 网络层之间加入了 SSL/TLS 安全协议，使得报文能够加密传输。
 
@@ -232,6 +230,8 @@ ECDHE 密钥交换算法的过程：
 		- client random + server random + pre-master = master secret
 		Encrypted Handshake Message：使用生成的主密钥 Master Secret 对之前的握手数据进行对称加密，然后通过 Encrypted Handshake Message 消息发送给客户端进行验证。
 
+## 参考链接
 
+> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
 
 <!-- @include: @article-footer.snippet.md -->     
