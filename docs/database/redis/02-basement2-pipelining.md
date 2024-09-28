@@ -7,17 +7,15 @@ tag:
 
 
 
-来源 [vivo互联网技术](https://zhuanlan.zhihu.com/p/691890536)
-
 Redis是一种基于客户端-服务端模型以及请求/响应的TCP服务。在遇到批处理命令执行时，Redis提供了Pipelining(管道)来提升批处理性能。本文结合实践分析了Spring Boot框架下Redis的Lettuce客户端和Redisson客户端对Pipeline特性的支持原理，并针对实践过程中遇到的问题进行了分析，可以帮助开发者了解不同客户端对Pipeline支持原理及避免实际使用中出现问题。
 
-## 一、前言
+## 前言
 
 Redis 已经提供了像 mget 、mset 这种批量的命令，但是某些操作根本就不支持或没有批量的操作，从而与 Redis 高性能背道而驰。为此, Redis基于管道机制，提供Redis Pipeline新特性。Redis Pipeline是一种通过一次性发送多条命令并在执行完后一次性将结果返回，从而减少客户端与redis的通信次数来实现降低往返延时时间提升操作性能的技术。目前，Redis Pipeline是被很多个版本的Redis 客户端所支持的。
 
-## 二、Pipeline 底层原理分析
+## Pipeline 底层原理分析
 
-### 2.1 Redis单个命令执行基本步骤
+### Redis单个命令执行基本步骤
 
 Redis是一种基于客户端-服务端模型以及请求/响应的TCP服务。一次Redis客户端发起的请求，经过服务端的响应后，大致会经历如下的步骤：
 
@@ -29,13 +27,13 @@ Redis是一种基于客户端-服务端模型以及请求/响应的TCP服务。�
 
 
 
-### 2.2 RTT 时间
+### RTT 时间
 
 Redis客户端和服务端之间通过网络连接进行数据传输，数据包从客户端到达服务器，并从服务器返回数据回复客户端的时间被称之为RTT(Round Trip Time - 往返时间)。我们可以很容易就意识到，Redis在连续请求服务端时，如果RTT时间为250ms, 即使Redis每秒能处理100k请求，但也会因为网络传输花费大量时间，导致每秒最多也只能处理4个请求，导致整体性能的下降。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270803314.png)
 
-### 2.3 Redis Pipeline
+### Redis Pipeline
 
 为了提升效率，这时候Pipeline出现了。Pipelining不仅仅能够降低RRT，实际上它极大的提升了单次执行的操作数。这是因为如果不使用Pipelining，那么每次执行单个命令,从访问数据的结构和服务端产生应答的角度，它的成本是很低的。但是从执行网络IO的角度，它的成本其实是很高的。其中涉及到read()和write()的系统调用，这意味着需要从用户态切换到内核态,而这个上下文的切换成本是巨大的。
 
@@ -45,7 +43,7 @@ Redis客户端和服务端之间通过网络连接进行数据传输，数据包
 
 要支持Pipeline，其实既要服务端的支持，也要客户端支持。对于服务端来说，所需要的是能够处理一个客户端通过同一个TCP连接发来的多个命令，可以理解为，这里将多个命令切分，和处理单个命令一样，Redis就是这样处理的。而客户端，则是要将多个命令缓存起来，缓冲区满了就发送，然后再写缓冲，最后才处理Redis的应答。
 
-## 三、Pipeline 基本使用及性能比较
+## Pipeline 基本使用及性能比较
 
 下面我们以给10w个set结构分别插入一个整数值为例，分别使用jedis单个命令插入、jedis使用Pipeline模式进行插入和redisson使用Pipeline模式进行插入以及测试其耗时。
 
@@ -102,7 +100,7 @@ public class RedisPipelineTestDemo {
 
 我们发现使用Pipeline模式对应的性能会明显好于单个命令执行的情况。
 
-## 四、项目中实际应用
+## 项目中实际应用
 
 在实际使用过程中有这样一个场景，很多应用在节假日的时候需要更新应用图标样式，在运营进行后台配置的时候, 可以根据圈选的用户标签预先计算出单个用户需要下发的图标样式并存储在Redis里面，从而提升性能，这里就涉及Redis的批量操作问题，业务流程如下：
 
@@ -110,7 +108,7 @@ public class RedisPipelineTestDemo {
 
 为了提升Redis操作性能，我们决定使用Redis Pipelining机制进行批量执行。
 
-### 4.1 Redis 客户端对比
+### Redis 客户端对比
 
 针对Java技术栈而言，目前Redis使用较多的客户端为Jedis、Lettuce和Redisson。
 
@@ -118,7 +116,7 @@ public class RedisPipelineTestDemo {
 
 目前项目主要是基于SpringBoot开发，针对Redis，其默认的客户端为Lettuce，所以我们基于Lettuce客户端进行分析。
 
-### 4.2 Spring环境下Lettuce客户端对Pipeline的实现
+### Spring环境下Lettuce客户端对Pipeline的实现
 
 在Spring环境下，使用Redis的Pipeline也是很简单的。spring-data-redis提供了StringRedisTemplate简化了对Redis的操作, 只需要调用StringRedisTemplate的executePipelined方法就可以了，但是在参数中提供了两种回调方式：**SessionCallback和RedisCallback**。
 
@@ -183,7 +181,7 @@ public void testSessionCallback() {
 
 
 
-### 4.3 RedisCallBack和SessionCallback之间的比较
+### RedisCallBack和SessionCallback之间的比较
 
 1. RedisCallBack 和 SessionCallback都可以实现回调，通过它们可以在同一条连接中一次执行多个redis命令。
 2. RedisCallback使用的是原生RedisConnection，用起来比较麻烦，比如上面执行set的add操作，key和value需要进行转换，可读性差，但原生api提供的功能比较齐全。
@@ -218,11 +216,11 @@ private static class InsertPipelineExecution implements SessionCallback<Void> {
 
 
 
-### 4.4 源码分析
+### 源码分析
 
 那么为什么使用Pipeline方式会对性能有较大提升呢，我们现在从源码入手着重分析一下：
 
-#### 4.4.1 Pipeline方式下获取连接相关原理分析：
+#### Pipeline方式下获取连接相关原理分析：
 
 ```java
 @Override
@@ -567,7 +565,7 @@ connection -> connection.sAdd(rawKey, rawValues)
 
 
 
-#### 4.4.2 Pipeline方式下执行命令的流程分析:
+#### Pipeline方式下执行命令的流程分析:
 
 ① 接着上面的流程分析，这里的sAdd方法实际调用的是DefaultStringRedisConnection的sAdd方法
 
@@ -623,7 +621,7 @@ public Long sAdd(byte[] key, byte[]... values) {
 1. 普通模式下，每执行一个命令都需要先打开一个连接，命令执行完毕以后又需要关闭这个连接，执行下一个命令时，又需要经过连接打开和关闭的流程；而Pipeline的所有命令的执行只需要经过一次连接打开和关闭。
 2. 普通模式下命令的执行是同步阻塞模式，而Pipeline模式下命令的执行是异步非阻塞模式。
 
-## 五、项目中遇到的坑
+## 项目中遇到的坑
 
 前面介绍了涉及到批量操作，可以使用Redis Pipelining机制，那是不是任何批量操作相关的场景都可以使用呢，比如list类型数据的批量移除操作，我们的代码最开始是这么写的：
 
@@ -671,7 +669,7 @@ public void deleteSet(String updateKey, Set<Integer> deviceIds) {
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270805913.png)
 
-## 六、Redisson 对 Redis Pipeline 特性支持
+## Redisson 对 Redis Pipeline 特性支持
 
 在redisson官方文档中额外特性介绍中有说到批量命令执行这个特性， 也就是多个命令在一次网络调用中集中发送，该特性是RBatch这个类支持的，从这个类的描述来看，主要是为Redis Pipeline这个特性服务的，并且主要是通过队列和异步实现的。
 
@@ -1097,10 +1095,12 @@ public RFuture<BatchResult<?>> executeAsync() {
 
 从上面的分析来看，Redisson客户端对Redis Pipeline的支持也是从多个命令在一次网络通信中执行和异步处理来实现的。
 
-## 七、总结
+## 总结
 
 Redis提供了Pipelining进行批量操作的高级特性，极大地提高了部分数据类型没有批量执行命令导致的执行耗时而引起的性能问题，但是我们在使用的过程中需要考虑Pipeline操作中单个命令执行的耗时问题，否则带来的效果可能适得其反。最后扩展分析了Redisson客户端对Redis Pipeline特性的支持原理，可以与Lettuce客户端对Redis Pipeline支持原理进行比较，加深Pipeline在不同Redis客户端实现方式的理解。
 
+
+来源 [vivo互联网技术](https://zhuanlan.zhihu.com/p/691890536)
  
 
  <!-- @include: @article-footer.snippet.md -->     

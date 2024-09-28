@@ -216,7 +216,7 @@ private static final ScheduledExecutorService SCHEDULER = new ScheduledThreadPoo
 
 ## Redisson
 
-使用Redis + lua方式存在的问题
+使用Redis + lua方式可能存在的问题
 1. 不可重入性。同一个线程无法多次获取同一把锁
 2. 不可重试。获取锁只尝试一次就返回false，没有重试机制
 3. 超时释放。锁超时释放虽然可以避免死锁，但如果是业务执行耗时较长，也会导致锁的释放，存在安全隐患
@@ -233,21 +233,20 @@ RLock是Redisson分布式锁的最核心接口，继承了concurrent包的Lock�
 // waitTime 等待时间，多久时间内都会在这尝试获取锁
 // leaseTime 加锁时是否设置过期时间
 private RFuture<Boolean> tryAcquireOnceAsync(long waitTime, long leaseTime, TimeUnit unit, long threadId) {
-        if (leaseTime != -1L) {
-            return this.tryLockInnerAsync(waitTime, leaseTime, unit, threadId, RedisCommands.EVAL_NULL_BOOLEAN);
-        } else {
-            RFuture<Boolean> ttlRemainingFuture = this.tryLockInnerAsync(waitTime, this.commandExecutor.getConnectionManager().getCfg().getLockWatchdogTimeout(), TimeUnit.MILLISECONDS, threadId, RedisCommands.EVAL_NULL_BOOLEAN);
-            ttlRemainingFuture.onComplete((ttlRemaining, e) -> {
-                if (e == null) {
-                    if (ttlRemaining) {
-                        this.scheduleExpirationRenewal(threadId);
-                    }
-
+    if (leaseTime != -1L) {
+        return this.tryLockInnerAsync(waitTime, leaseTime, unit, threadId, RedisCommands.EVAL_NULL_BOOLEAN);
+    } else {
+        RFuture<Boolean> ttlRemainingFuture = this.tryLockInnerAsync(waitTime, this.commandExecutor.getConnectionManager().getCfg().getLockWatchdogTimeout(), TimeUnit.MILLISECONDS, threadId, RedisCommands.EVAL_NULL_BOOLEAN);
+        ttlRemainingFuture.onComplete((ttlRemaining, e) -> {
+            if (e == null) {
+                if (ttlRemaining) {
+                    this.scheduleExpirationRenewal(threadId);
                 }
-            });
-            return ttlRemainingFuture;
-        }
+            }
+        });
+        return ttlRemainingFuture;
     }
+ }
 ```
 
 此处出现leaseTime时间判断的2个分支，实际上就是加锁时是否设置过期时间，未设置过期时间（-1）时则会有watchDog 的锁续约 （下文），一个注册了加锁事件的续约任务。我们先来看有过期时间tryLockInnerAsync 部分
@@ -255,9 +254,9 @@ private RFuture<Boolean> tryAcquireOnceAsync(long waitTime, long leaseTime, Time
 evalWriteAsync方法是eval命令执行lua的入口
 ```java
 <T> RFuture<T> tryLockInnerAsync(long waitTime, long leaseTime, TimeUnit unit, long threadId, RedisStrictCommand<T> command) {
-        this.internalLockLeaseTime = unit.toMillis(leaseTime);
-        return this.evalWriteAsync(this.getName(), LongCodec.INSTANCE, command, "if (redis.call('exists', KEYS[1]) == 0) then redis.call('hincrby', KEYS[1], ARGV[2], 1); redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then redis.call('hincrby', KEYS[1], ARGV[2], 1); redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; return redis.call('pttl', KEYS[1]);", Collections.singletonList(this.getName()), this.internalLockLeaseTime, this.getLockName(threadId));
-    }
+    this.internalLockLeaseTime = unit.toMillis(leaseTime);
+    return this.evalWriteAsync(this.getName(), LongCodec.INSTANCE, command, "if (redis.call('exists', KEYS[1]) == 0) then redis.call('hincrby', KEYS[1], ARGV[2], 1); redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then redis.call('hincrby', KEYS[1], ARGV[2], 1); redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; return redis.call('pttl', KEYS[1]);", Collections.singletonList(this.getName()), this.internalLockLeaseTime, this.getLockName(threadId));
+}
 ```
 
 eval命令执行Lua脚本的地方，此处将Lua脚本展开
@@ -301,8 +300,8 @@ ARGV[2] = this.getLockName(threadId)
 看unlock方法，同样查找方法名，一路到unlockInnerAsync
 ```java
 protected RFuture<Boolean> unlockInnerAsync(long threadId) {
-        return this.evalWriteAsync(this.getName(), LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, "if (redis.call('hexists', KEYS[1], ARGV[3]) == 0) then return nil;end; local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); if (counter > 0) then redis.call('pexpire', KEYS[1], ARGV[2]); return 0; else redis.call('del', KEYS[1]); redis.call('publish', KEYS[2], ARGV[1]); return 1; end; return nil;", Arrays.asList(this.getName(), this.getChannelName()), LockPubSub.UNLOCK_MESSAGE, this.internalLockLeaseTime, this.getLockName(threadId));
-    }
+    return this.evalWriteAsync(this.getName(), LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, "if (redis.call('hexists', KEYS[1], ARGV[3]) == 0) then return nil;end; local counter = redis.call('hincrby', KEYS[1], ARGV[3], -1); if (counter > 0) then redis.call('pexpire', KEYS[1], ARGV[2]); return 0; else redis.call('del', KEYS[1]); redis.call('publish', KEYS[2], ARGV[1]); return 1; end; return nil;", Arrays.asList(this.getName(), this.getChannelName()), LockPubSub.UNLOCK_MESSAGE, this.internalLockLeaseTime, this.getLockName(threadId));
+}
 ```
 
 将lua脚本展开
@@ -355,125 +354,124 @@ lockName 这里的lockName指的是uuid和threadId组合的唯一值
 需要分析的是锁重试的，所以，在使用lock.tryLock()方法的时候，不能用无参的。
 ```java
 public boolean tryLock(long waitTime, TimeUnit unit) throws InterruptedException {
-        return this.tryLock(waitTime, -1L, unit);
-    }
+    return this.tryLock(waitTime, -1L, unit);
+}
 ```
 
 在调用tryAcquire方法后，返回了一个Long的ttl
 ```java
  public boolean tryLock(long waitTime, long leaseTime, TimeUnit unit) throws InterruptedException {
-        long time = unit.toMillis(waitTime);
-        long current = System.currentTimeMillis();
-        long threadId = Thread.currentThread().getId();
-        Long ttl = this.tryAcquire(waitTime, leaseTime, unit, threadId);
-        if (ttl == null) {
-            return true;
+    long time = unit.toMillis(waitTime);
+    long current = System.currentTimeMillis();
+    long threadId = Thread.currentThread().getId();
+    Long ttl = this.tryAcquire(waitTime, leaseTime, unit, threadId);
+    if (ttl == null) {
+        return true;
+    } else {
+        time -= System.currentTimeMillis() - current;
+        if (time <= 0L) {
+            this.acquireFailed(waitTime, unit, threadId);
+            return false;
         } else {
-            time -= System.currentTimeMillis() - current;
-            if (time <= 0L) {
-                this.acquireFailed(waitTime, unit, threadId);
-                return false;
-            } else {
-			//省略
+		//省略
 ```
 
 继续跟着代码进去查看，最后会发现，调用tryLockInnerAsync方法。这个方法就是获取锁的Lua脚本的。
 ```java
 <T> RFuture<T> tryLockInnerAsync(long waitTime, long leaseTime, TimeUnit unit, long threadId, RedisStrictCommand<T> command) {
-        this.internalLockLeaseTime = unit.toMillis(leaseTime);
-        return this.evalWriteAsync(this.getName(), LongCodec.INSTANCE, command, "if (redis.call('exists', KEYS[1]) == 0) then redis.call('hincrby', KEYS[1], ARGV[2], 1); redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then redis.call('hincrby', KEYS[1], ARGV[2], 1); redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; return redis.call('pttl', KEYS[1]);", Collections.singletonList(this.getName()), this.internalLockLeaseTime, this.getLockName(threadId));
-    }
+    this.internalLockLeaseTime = unit.toMillis(leaseTime);
+    return this.evalWriteAsync(this.getName(), LongCodec.INSTANCE, command, "if (redis.call('exists', KEYS[1]) == 0) then redis.call('hincrby', KEYS[1], ARGV[2], 1); redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then redis.call('hincrby', KEYS[1], ARGV[2], 1); redis.call('pexpire', KEYS[1], ARGV[1]); return nil; end; return redis.call('pttl', KEYS[1]);", Collections.singletonList(this.getName()), this.internalLockLeaseTime, this.getLockName(threadId));
+}
 ```
 这个lua脚本上面提到了。就是 判断，如果获取到锁，返回一个nil.也就是null。如果没有获取到，就调用 pttl，name。其实就是获取当前name锁的剩余有效期。
 
 获取到ttl。如果返回null说获取锁成功，直接返回true.如果返回的不是null，说明需要进行重试操作了。主要是根据时间进行判断的。经过一系列判断后，do,while是真正执行重试相关逻辑的。如下：
 ```java
 public boolean tryLock(long waitTime, long leaseTime, TimeUnit unit) throws InterruptedException {
-        long time = unit.toMillis(waitTime);
-        long current = System.currentTimeMillis();
-        long threadId = Thread.currentThread().getId();
-        Long ttl = this.tryAcquire(waitTime, leaseTime, unit, threadId);
-		//如果返回null,说明获取到了锁，直接返回
-        if (ttl == null) {
-            return true;
+    long time = unit.toMillis(waitTime);
+    long current = System.currentTimeMillis();
+    long threadId = Thread.currentThread().getId();
+    Long ttl = this.tryAcquire(waitTime, leaseTime, unit, threadId);
+	//如果返回null,说明获取到了锁，直接返回
+    if (ttl == null) {
+        return true;
+    } else {
+    	//当前时间与进入方法时的时间进行比较
+		//System.currentTimeMillis() - current表示前面获取锁消耗时间
+        time -= System.currentTimeMillis() - current;////time是重试锁的等待时间，
+        if (time <= 0L) {//剩余等待时间，如果剩余等待时间<=0，设置获取锁失败。
+            this.acquireFailed(waitTime, unit, threadId);
+            return false;
         } else {
-			//当前时间与进入方法时的时间进行比较
-			//System.currentTimeMillis() - current表示前面获取锁消耗时间
-            time -= System.currentTimeMillis() - current;////time是重试锁的等待时间，
-            if (time <= 0L) {//剩余等待时间，如果剩余等待时间<=0，设置获取锁失败。
-                this.acquireFailed(waitTime, unit, threadId);
-                return false;
-            } else {
-				//再次获取当前时间
-                current = System.currentTimeMillis();
-				//刚刚尝试完获取锁失败，如果继续立即尝试一般是获取不到锁的，因此这里选择订阅的方式
-				//订阅当前锁，在unlock释放锁的时候有个：redis.call('publish', KEYS[2], ARGV[1]); 所以这里就订阅了
-                RFuture<RedissonLockEntry> subscribeFuture = this.subscribe(threadId);
-				//进行等待RFuture的结果，等多久？等time的时间
-                if (!subscribeFuture.await(time, TimeUnit.MILLISECONDS)) {
-					//time时间过完了还没有等到锁释放的通知
-                    if (!subscribeFuture.cancel(false)) {
-                        subscribeFuture.onComplete((res, e) -> {
-                            if (e == null) {
-								//如果等待超时，就取消订阅
-                                this.unsubscribe(subscribeFuture, threadId);
-                            }
-
-                        });
-                    }
-
-                    this.acquireFailed(waitTime, unit, threadId);
-					//返回获取锁失败
-                    return false;
-                } else {//到这里表示在tme时间内获得了释放锁的通知
-                    boolean var16;
-                    try {
-						//检查之前订阅等待的消耗时间
-                        time -= System.currentTimeMillis() - current;
-                        if (time <= 0L) {//当前的剩余等待时间
-                            this.acquireFailed(waitTime, unit, threadId);
-                            boolean var20 = false;
-                            return var20;
+			//再次获取当前时间
+            current = System.currentTimeMillis();
+			//刚刚尝试完获取锁失败，如果继续立即尝试一般是获取不到锁的，因此这里选择订阅的方式
+			//订阅当前锁，在unlock释放锁的时候有个：redis.call('publish', KEYS[2], ARGV[1]); 所以这里就订阅了
+            RFuture<RedissonLockEntry> subscribeFuture = this.subscribe(threadId);
+			//进行等待RFuture的结果，等多久？等time的时间
+            if (!subscribeFuture.await(time, TimeUnit.MILLISECONDS)) {
+				//time时间过完了还没有等到锁释放的通知
+                if (!subscribeFuture.cancel(false)) {
+                    subscribeFuture.onComplete((res, e) -> {
+                        if (e == null) {
+							//如果等待超时，就取消订阅
+                            this.unsubscribe(subscribeFuture, threadId);
                         }
-						//这里开始进行重试相关逻辑。主要就是当前时间和进入方法时候的时间进行比较
-                        do {
-                            long currentTime = System.currentTimeMillis();
-							//这里就是第一次重试
-                            ttl = this.tryAcquire(waitTime, leaseTime, unit, threadId);
-                            if (ttl == null) {//null表示获取锁失败
-                                var16 = true;
-                                return var16;
-                            }
-							
-							//再试一次
-                            time -= System.currentTimeMillis() - currentTime;
-                            if (time <= 0L) {
-                                this.acquireFailed(waitTime, unit, threadId);
-                                var16 = false;
-                                return var16;
-                            }
-
-                            currentTime = System.currentTimeMillis();
-                            if (ttl >= 0L && ttl < time) { //也不是一直试，等别人释放
-                               ((RedissonLockEntry)subscribeFuture.getNow()).getLatch().tryAcquire(ttl, TimeUnit.MILLISECONDS);
-                            } else {
-                                ((RedissonLockEntry)subscribeFuture.getNow()).getLatch().tryAcquire(time, TimeUnit.MILLISECONDS);
-                            }
-
-                            time -= System.currentTimeMillis() - currentTime;
-                        } while(time > 0L);//时间还充足，继续等待
-						//时间到期了，还没获取到锁，返回失败
-                        this.acquireFailed(waitTime, unit, threadId);
-                        var16 = false;
-                    } finally {
-                        this.unsubscribe(subscribeFuture, threadId);
-                    }
-
-                    return var16;
+                    });
                 }
+
+                this.acquireFailed(waitTime, unit, threadId);
+				//返回获取锁失败
+                return false;
+            } else {//到这里表示在tme时间内获得了释放锁的通知
+                boolean var16;
+                try {
+					//检查之前订阅等待的消耗时间
+                    time -= System.currentTimeMillis() - current;
+                    if (time <= 0L) {//当前的剩余等待时间
+                        this.acquireFailed(waitTime, unit, threadId);
+                        boolean var20 = false;
+                        return var20;
+                    }
+					//这里开始进行重试相关逻辑。主要就是当前时间和进入方法时候的时间进行比较
+                    do {
+                        long currentTime = System.currentTimeMillis();
+						//这里就是第一次重试
+                        ttl = this.tryAcquire(waitTime, leaseTime, unit, threadId);
+                        if (ttl == null) {//null表示获取锁失败
+                            var16 = true;
+                            return var16;
+                        }
+						
+						//再试一次
+                        time -= System.currentTimeMillis() - currentTime;
+                        if (time <= 0L) {
+                            this.acquireFailed(waitTime, unit, threadId);
+                            var16 = false;
+                            return var16;
+                        }
+
+                        currentTime = System.currentTimeMillis();
+                        if (ttl >= 0L && ttl < time) { //也不是一直试，等别人释放
+                           ((RedissonLockEntry)subscribeFuture.getNow()).getLatch().tryAcquire(ttl, TimeUnit.MILLISECONDS);
+                        } else {
+                            ((RedissonLockEntry)subscribeFuture.getNow()).getLatch().tryAcquire(time, TimeUnit.MILLISECONDS);
+                        }
+
+                        time -= System.currentTimeMillis() - currentTime;
+                    } while(time > 0L);//时间还充足，继续等待
+					//时间到期了，还没获取到锁，返回失败
+                    this.acquireFailed(waitTime, unit, threadId);
+                    var16 = false;
+                } finally {
+                    this.unsubscribe(subscribeFuture, threadId);
+                }
+
+                return var16;
             }
         }
     }
+}
 ```
 主要是do while机制进行锁重试的，while会检查时间是否还充足会继续循环。当然这个循环不是直接while(true)的盲等机制，而是利用信号量和订阅的方式实现的，会等别人释放锁，再进行尝试，这种方式对cpu友好
 
@@ -482,24 +480,24 @@ public boolean tryLock(long waitTime, long leaseTime, TimeUnit unit) throws Inte
 跟随tryLock代码，在RedissonLock类中的tryAcquireOnceAsync方法中，会看到如下代码:
 ```java
 private RFuture<Boolean> tryAcquireOnceAsync(long waitTime, long leaseTime, TimeUnit unit, long threadId) {
-        if (leaseTime != -1L) {//设置了锁过期时间
-            return this.tryLockInnerAsync(waitTime, leaseTime, unit, threadId, RedisCommands.EVAL_NULL_BOOLEAN);
-        } else {
-		//leaseTime = -1时，即没有设置了锁过期时间
-            RFuture<Boolean> ttlRemainingFuture = this.tryLockInnerAsync(waitTime, this.commandExecutor.getConnectionManager().getCfg().getLockWatchdogTimeout(),//，默认30秒
-			TimeUnit.MILLISECONDS, threadId, RedisCommands.EVAL_NULL_BOOLEAN);
-			//ttlRemainingFuture完成以后
-            ttlRemainingFuture.onComplete((ttlRemaining, e) -> {
-                if (e == null) {//没有抛异常
-                    if (ttlRemaining) {//获取锁成功
-                        this.scheduleExpirationRenewal(threadId);//自动更新续期时间的任务调度
-                    }
-
+    if (leaseTime != -1L) {//设置了锁过期时间
+        return this.tryLockInnerAsync(waitTime, leaseTime, unit, threadId, RedisCommands.EVAL_NULL_BOOLEAN);
+    } else {
+	//leaseTime = -1时，即没有设置了锁过期时间
+        RFuture<Boolean> ttlRemainingFuture = this.tryLockInnerAsync(waitTime, this.commandExecutor.getConnectionManager().getCfg().getLockWatchdogTimeout(),//，默认30秒
+		TimeUnit.MILLISECONDS, threadId, RedisCommands.EVAL_NULL_BOOLEAN);
+		//ttlRemainingFuture完成以后
+        ttlRemainingFuture.onComplete((ttlRemaining, e) -> {
+            if (e == null) {//没有抛异常
+                if (ttlRemaining) {//获取锁成功
+                    this.scheduleExpirationRenewal(threadId);//自动更新续期时间的任务调度
                 }
-            });
-            return ttlRemainingFuture;
-        }
+
+            }
+        });
+        return ttlRemainingFuture;
     }
+}
 ```
 
 1. 在使用trylock的时候，如果设置了锁过期时间，就不会执行续命相关逻辑了。
@@ -507,18 +505,18 @@ private RFuture<Boolean> tryAcquireOnceAsync(long waitTime, long leaseTime, Time
 
 ```java
 private void scheduleExpirationRenewal(long threadId) {
-        RedissonLock.ExpirationEntry entry = new RedissonLock.ExpirationEntry();
-		//获取一个entry,将entry放到map里，getEntryName()就是当前锁名称。
-		//放到map里，即一个锁对应一个entry
-        RedissonLock.ExpirationEntry oldEntry = (RedissonLock.ExpirationEntry)EXPIRATION_RENEWAL_MAP.putIfAbsent(this.getEntryName(), entry);
-        if (oldEntry != null) {//表示重入的，第二次放
-            oldEntry.addThreadId(threadId);
-        } else {//表示第一次放
-            entry.addThreadId(threadId);
-            this.renewExpiration();//第一次放，进行续约
-        }
-
+    RedissonLock.ExpirationEntry entry = new RedissonLock.ExpirationEntry();
+	//获取一个entry,将entry放到map里，getEntryName()就是当前锁名称。
+	//放到map里，即一个锁对应一个entry
+    RedissonLock.ExpirationEntry oldEntry = (RedissonLock.ExpirationEntry)EXPIRATION_RENEWAL_MAP.putIfAbsent(this.getEntryName(), entry);
+    if (oldEntry != null) {//表示重入的，第二次放
+        oldEntry.addThreadId(threadId);
+    } else {//表示第一次放
+        entry.addThreadId(threadId);
+        this.renewExpiration();//第一次放，进行续约
     }
+
+}
 ```
 
 看门狗机制：在获取锁成功以后，开启一个定时任务，每隔一段时间就会去重置锁的超时时间，以**确保锁是在程序执行完unlock手动释放的，不会发生因为业务阻塞，key超时而自动释放的情况**。
@@ -526,42 +524,42 @@ private void scheduleExpirationRenewal(long threadId) {
 到期续约方法：
 ```java
 private void renewExpiration() {
-        RedissonLock.ExpirationEntry ee = (RedissonLock.ExpirationEntry)EXPIRATION_RENEWAL_MAP.get(this.getEntryName());
-        if (ee != null) {　　　　　　　//Timeout定时任务，或者叫周期任务
-            Timeout task = this.commandExecutor.getConnectionManager().newTimeout(new TimerTask() {
-                public void run(Timeout timeout) throws Exception {
-                    RedissonLock.ExpirationEntry ent = (RedissonLock.ExpirationEntry)RedissonLock.EXPIRATION_RENEWAL_MAP.get(RedissonLock.this.getEntryName());
-                    if (ent != null) {
-                        Long threadId = ent.getFirstThreadId();
-                        if (threadId != null) {
-							//执行续命的操作
-                            RFuture<Boolean> future = RedissonLock.this.renewExpirationAsync(threadId);
-                            future.onComplete((res, e) -> {
-                                if (e != null) {
-                                    RedissonLock.log.error("Can't update lock " + RedissonLock.this.getName() + " expiration", e);
-                                } else {
-                                    if (res) {
-                                        RedissonLock.this.renewExpiration();//再次调用
-                                    }
-
+    RedissonLock.ExpirationEntry ee = (RedissonLock.ExpirationEntry)EXPIRATION_RENEWAL_MAP.get(this.getEntryName());
+    if (ee != null) {　　　　　　　//Timeout定时任务，或者叫周期任务
+        Timeout task = this.commandExecutor.getConnectionManager().newTimeout(new TimerTask() {
+            public void run(Timeout timeout) throws Exception {
+                RedissonLock.ExpirationEntry ent = (RedissonLock.ExpirationEntry)RedissonLock.EXPIRATION_RENEWAL_MAP.get(RedissonLock.this.getEntryName());
+                if (ent != null) {
+                    Long threadId = ent.getFirstThreadId();
+                    if (threadId != null) {
+						//执行续命的操作
+                        RFuture<Boolean> future = RedissonLock.this.renewExpirationAsync(threadId);
+                        future.onComplete((res, e) -> {
+                            if (e != null) {
+                                RedissonLock.log.error("Can't update lock " + RedissonLock.this.getName() + " expiration", e);
+                            } else {
+                                if (res) {
+                                    RedissonLock.this.renewExpiration();//再次调用
                                 }
-                            });
-                        }
+
+                            }
+                        });
                     }
                 }
-				//刷新周期， this.internalLockLeaseTime / 3L， 默认释放时间是30秒，除以3就是每10秒更新一次
-			//续命时间为1/3的过期时间，设置续命单位是秒
-			},this.internalLockLeaseTime / 3L, TimeUnit.MILLISECONDS); 
-			ee.setTimeout(task);
-		}
+            }
+			//刷新周期， this.internalLockLeaseTime / 3L， 默认释放时间是30秒，除以3就是每10秒更新一次
+		//续命时间为1/3的过期时间，设置续命单位是秒
+		},this.internalLockLeaseTime / 3L, TimeUnit.MILLISECONDS); 
+		ee.setTimeout(task);
 	}
+}
 ```
 
 查看renewExpirationAsync方法源码，其调用了Lua脚本执行续命操作的。
 ```java
 protected RFuture<Boolean> renewExpirationAsync(long threadId) {
-        return this.evalWriteAsync(this.getName(), LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, "if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then redis.call('pexpire', KEYS[1], ARGV[1]); return 1; end; return 0;", Collections.singletonList(this.getName()), this.internalLockLeaseTime, this.getLockName(threadId));
-    }
+    return this.evalWriteAsync(this.getName(), LongCodec.INSTANCE, RedisCommands.EVAL_BOOLEAN, "if (redis.call('hexists', KEYS[1], ARGV[2]) == 1) then redis.call('pexpire', KEYS[1], ARGV[1]); return 1; end; return 0;", Collections.singletonList(this.getName()), this.internalLockLeaseTime, this.getLockName(threadId));
+}
 ```
 pexpire重置锁的有效期。
 
@@ -573,22 +571,22 @@ pexpire重置锁的有效期。
 那么什么时候取消这个续约的任务呢？在释放锁unlock时
 ```java
  public RFuture<Void> unlockAsync(long threadId) {
-        RPromise<Void> result = new RedissonPromise();
-        RFuture<Boolean> future = this.unlockInnerAsync(threadId);
-        future.onComplete((opStatus, e) -> {
-			//取消这个任务
-            this.cancelExpirationRenewal(threadId);
-            if (e != null) {
-                result.tryFailure(e);
-            } else if (opStatus == null) {
-                IllegalMonitorStateException cause = new IllegalMonitorStateException("attempt to unlock lock, not locked by current thread by node id: " + this.id + " thread-id: " + threadId);
-                result.tryFailure(cause);
-            } else {
-                result.trySuccess((Object)null);
-            }
-        });
-        return result;
-    }
+    RPromise<Void> result = new RedissonPromise();
+    RFuture<Boolean> future = this.unlockInnerAsync(threadId);
+    future.onComplete((opStatus, e) -> {
+		//取消这个任务
+        this.cancelExpirationRenewal(threadId);
+        if (e != null) {
+            result.tryFailure(e);
+        } else if (opStatus == null) {
+            IllegalMonitorStateException cause = new IllegalMonitorStateException("attempt to unlock lock, not locked by current thread by node id: " + this.id + " thread-id: " + threadId);
+            result.tryFailure(cause);
+        } else {
+            result.trySuccess((Object)null);
+        }
+    });
+    return result;
+}
 ```
 
 ### multilock解决主从一致性问题
