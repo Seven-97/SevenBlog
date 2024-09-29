@@ -5,7 +5,6 @@ tag:
  - 操作系统
 ---
 
-> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
 
 ## 演进
 
@@ -403,5 +402,12 @@ Reactor 可以理解为「来了事件操作系统通知应用进程，让应用
 因此，真正的大杀器还是 Proactor，它是采用异步 I/O 实现的异步网络模型，感知的是已完成的读写事件，而不需要像 Reactor 感知到事件后，还需要调用 read 来从内核中获取数据。
 
 不过，无论是 Reactor，还是 Proactor，都是一种基于「事件分发」的网络编程模式，区别在于 Reactor 模式是基于「待完成」的 I/O 事件，而 Proactor 模式则是基于「已完成」的 I/O 事件。
+
+
+## 参考链接
+
+> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
+
+
 
 <!-- @include: @article-footer.snippet.md -->     

@@ -5,7 +5,7 @@ tag:
  - 操作系统
 ---
 
-> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
+
 
 ## CPU Cache 的数据写入
 
@@ -112,5 +112,9 @@ CPU 在读写数据的时候，都是在 CPU Cache 读写数据的，原因是 C
 基于总线嗅探机制的 MESI 协议，就满足上面了这两点，因此它是保障缓存一致性的协议。
 - MESI 协议，是已修改、独占、共享、已失效这四个状态的英文缩写的组合。整个 MESI 状态的变更，则是根据来自本地 CPU 核心的请求，或者来自其他 CPU 核心通过总线传输过来的请求，从而构成一个流动的状态机。另外，对于在「已修改」或者「独占」状态的 Cache Line，修改更新其数据不需要发送广播给其他 CPU 核心
 
+
+## 参考链接
+
+> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
 
 <!-- @include: @article-footer.snippet.md -->     
