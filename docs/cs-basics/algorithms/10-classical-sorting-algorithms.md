@@ -5,13 +5,10 @@ tag:
   - 算法
 ---
 
-> 本文转自：<http://www.guoyaohua.com/sorting.html>，Seven对其做了补充完善。
 
 ## 引言
 
 所谓排序，就是使一串记录，按照其中的某个或某些关键字的大小，递增或递减的排列起来的操作。排序算法，就是如何使得记录按照要求排列的方法。排序算法在很多领域得到相当地重视，尤其是在大量数据的处理方面。一个优秀的算法可以节省大量的资源。在各个领域中考虑到数据的各种限制和规范，要得到一个符合实际的优秀算法，得经过大量的推理和分析。
-
-两年前，我曾在[博客园](https://www.cnblogs.com/guoyaohua/)发布过一篇[《十大经典排序算法最强总结（含 JAVA 代码实现）》](https://www.cnblogs.com/guoyaohua/p/8600214.html)博文，简要介绍了比较经典的十大排序算法，不过在之前的博文中，仅给出了 Java 版本的代码实现，并且有一些细节上的错误。所以，今天重新写一篇文章，深入了解下十大经典排序算法的原理及实现。
 
 ## 简介
 
@@ -195,7 +192,7 @@ public static int[] insertionSort(int[] arr) {
 
 - **稳定性**：稳定
 - **时间复杂度**：最佳：$O(n)$ ，最差：$O(n^2)$， 平均：$O(n2)$
-- **空间复杂度**：O(1)$
+- **空间复杂度**：$O(1)$
 - **排序方式**：In-place
 
 ## 希尔排序 (Shell Sort)
@@ -365,16 +362,12 @@ public static int partition(int[] array, int low, int high) {
     int pointer = low;
     for (int i = low; i < high; i++) {
         if (array[i] <= pivot) {
-            int temp = array[i];
-            array[i] = array[pointer];
-            array[pointer] = temp;
+	        swap(array, i, pointer);
             pointer++;
         }
         System.out.println(Arrays.toString(array));
     }
-    int temp = array[pointer];
-    array[pointer] = array[high];
-    array[high] = temp;
+    swap(array, pointer, high);
     return pointer;
 }
 public static void quickSort(int[] array, int low, int high) {
@@ -384,13 +377,32 @@ public static void quickSort(int[] array, int low, int high) {
         quickSort(array, position + 1, high);
     }
 }
+
+private static void swap(int[] arr, int i, int j) { 
+	int temp = arr[i]; 
+	arr[i] = arr[j]; 
+	arr[j] = temp; 
+}
+
+// 洗牌算法，将输入的数组随机打乱 
+private static void shuffle(int[] nums) { 
+	Random rand = new Random(); 
+	int n = nums.length; 
+	for (int i = 0 ; i < n; i++) { 
+		// 生成 [i, n - 1] 的随机数 
+		int r = i + rand.nextInt(n - i); 
+		swap(nums, i, r); 
+	} 
+}
 ```
 
 ### 算法分析
 
 - **稳定性**：不稳定
-- **时间复杂度**：最佳：$O(nlogn)$， 最差：$O(nlogn)$，平均：$O(nlogn)$
+- **时间复杂度**：最佳：$O(nlogn)$， 最差：$O(n^2)$，平均：$O(nlogn)$
 - **空间复杂度**：$O(logn)$
+
+由于可能在数组已经有序或基本有序的情况下，最差的时间复杂度。为了避免最坏情况发生，可以通过随机选择基准元素或者使用三数取中法等策略来提高快速排序的性能；或者可以先使用洗牌算法，将数据打乱。
 
 ## 堆排序 (Heap Sort)
 
@@ -719,5 +731,10 @@ public static int[] radixSort(int[] arr) {
 - 基数排序：根据键值的每位数字来分配桶
 - 计数排序：每个桶只存储单一键值
 - 桶排序：每个桶存储一定范围的数值
+
+
+## 参考链接
+
+> 本文转自：<http://www.guoyaohua.com/sorting.html>，Seven对其做了补充完善。
 
 <!-- @include: @article-footer.snippet.md -->     

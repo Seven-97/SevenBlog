@@ -5,7 +5,7 @@ tag:
   - 数据结构
 ---
 
-来源：[树 | JavaGuide](https://javaguide.cn/cs-basics/data-structure/tree.html)，Seven对其做了补充完善
+
 
 
 
@@ -313,6 +313,11 @@ public void postOrder(TreeNode root){
     }
 ```
 
+
+
+## 参考链接
+
+来源：[树 | JavaGuide](https://javaguide.cn/cs-basics/data-structure/tree.html)，Seven对其做了补充完善
 
 
 <!-- @include: @article-footer.snippet.md -->     

@@ -5,7 +5,7 @@ tag:
   - 数据结构
 ---
 
-来源：([图 | JavaGuide](https://javaguide.cn/cs-basics/data-structure/graph.html)，Seven对其做了补充完善
+
 
 ## 概述
 
@@ -1350,6 +1350,9 @@ IDA\* 算法对这一空间增长问题进行了优化，关于 IDA\* 算法，�
 
 如果是多个目标找最近目标（特别是潜在目标数量很多的时候），可以考虑 Dijkstra ，BFS 或者 Floyd。
 
+## 参考链接
+
+来源：([图 | JavaGuide](https://javaguide.cn/cs-basics/data-structure/graph.html)，Seven对其做了补充完善
 
 
 <!-- @include: @article-footer.snippet.md -->     
