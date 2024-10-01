@@ -2,7 +2,7 @@
 title: JDBC 底层原理
 category: 常用框架
 tag:
-  - Mybatis
+  - JDBC
 ---
 
 

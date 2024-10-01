@@ -1,9 +1,9 @@
 ---
-title: Mybatis - 事务管理机制
+title: MyBatis - 事务管理机制
 category: 常用框架
 tag:
   - ORM框架
-  - Mybatis
+  - MyBatis
 ---
 
 

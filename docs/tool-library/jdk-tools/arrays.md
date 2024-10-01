@@ -2,7 +2,7 @@
 title: 数组工具类 - Arrays
 category: 工具类库
 tag:
-  - Java
+  - Java工具类
   - 集合
 ---
 

@@ -1,9 +1,9 @@
 ---
-title: Mybatis - 初始化过程
+title: MyBatis - 初始化过程
 category: 常用框架
 tag:
   - ORM框架
-  - Mybatis
+  - MyBatis
 ---
 
 

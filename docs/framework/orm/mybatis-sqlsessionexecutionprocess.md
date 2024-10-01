@@ -1,9 +1,9 @@
 ---
-title: Mybatis - sqlSession执行流程
+title: MyBatis - sqlSession执行流程
 category: 常用框架
 tag:
   - ORM框架
-  - Mybatis
+  - MyBatis
 ---
 
 

@@ -1,9 +1,9 @@
 ---
-title: Mybatis - 配置解析过程
+title: MyBatis - 配置解析过程
 category: 常用框架
 tag:
   - ORM框架
-  - Mybatis
+  - MyBatis
 ---
 
 ## 配置解析主体方法

@@ -1,9 +1,9 @@
 ---
-title: Mybatis - 缓存时间机制
+title: MyBatis - 缓存时间机制
 category: 常用框架
 tag:
   - ORM框架
-  - Mybatis 
+  - MyBatis 
 ---
 
 
