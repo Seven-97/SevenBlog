@@ -4,11 +4,18 @@ category: 数据库
 tag:
  - Mysql
  - 锁
+head:
+  - - meta
+    - name: keywords
+      content: mysql,mysql数据库,死锁,当前读
+  - - meta
+    - name: description
+      content: 全网最全的的Mysql知识点总结，让天下没有难学的八股文！
 ---
 
 
 
-一般来说，事务越大，拿到的所就越多，因此死锁的可能性就越大。
+一般来说，事务越大，拿到的锁就越多，因此死锁的可能性就越大。
 
 ## Delete同一行记录造成的死锁
 

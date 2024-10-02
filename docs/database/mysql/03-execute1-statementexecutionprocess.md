@@ -3,6 +3,13 @@ title: 执行 - Mysql语句执行流程
 category: 数据库
 tag:
  - Mysql
+head:
+  - - meta
+    - name: keywords
+      content: mysql,mysql数据库,执行流程,连接器,server层,存储引擎
+  - - meta
+    - name: description
+      content: 全网最全的的Mysql知识点总结，让天下没有难学的八股文！
 ---
 
 

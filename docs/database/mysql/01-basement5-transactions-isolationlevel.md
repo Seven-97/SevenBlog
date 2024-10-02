@@ -3,6 +3,13 @@ title: 底层原理 - Mysql的事务及隔离级别
 category: 数据库
 tag:
  - Mysql
+head:
+  - - meta
+    - name: keywords
+      content: mysql,mysql数据库,事务隔离级别,ACID,MVCC,快照读,当前读,可重复读,脏读,幻读
+  - - meta
+    - name: description
+      content: 全网最全的的Mysql知识点总结，让天下没有难学的八股文！
 ---
 
 

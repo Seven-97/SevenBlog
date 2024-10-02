@@ -3,6 +3,13 @@ title: 底层原理 - Mysql的三大日志
 category: 数据库
 tag:
  - Mysql
+head:
+  - - meta
+    - name: keywords
+      content: mysql,mysql数据库,mysql日志,undo log,redo log,binlog,两阶段提交
+  - - meta
+    - name: description
+      content: 全网最全的的Mysql知识点总结，让天下没有难学的八股文！
 ---
 
 

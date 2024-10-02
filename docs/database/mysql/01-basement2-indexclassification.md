@@ -3,6 +3,13 @@ title: 底层原理 - Mysql索引分类
 category: 数据库
 tag:
  - Mysql
+head:
+  - - meta
+    - name: keywords
+      content: mysql,mysql数据库,索引,B+树,B树,联合索引,主键索引,唯一索引
+  - - meta
+    - name: description
+      content: 全网最全的的Mysql知识点总结，让天下没有难学的八股文！
 ---
 
 
