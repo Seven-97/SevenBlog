@@ -3,6 +3,14 @@ title: Redis中的事务
 category: 数据库
 tag:
  - Redis
+ - 缓存
+head:
+  - - meta
+    - name: keywords
+      content: redis,事务,没有隔离级别,不保证原子性,WATCH机制
+  - - meta
+    - name: description
+      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 

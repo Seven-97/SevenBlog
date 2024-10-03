@@ -3,6 +3,13 @@ title: 调优 - Mysql优化概述
 category: 数据库
 tag:
  - Mysql
+head:
+  - - meta
+    - name: keywords
+      content: mysql,mysql数据库,sql优化,慢日志,优化索引,最左匹配原则,覆盖索引,分库分表,count
+  - - meta
+    - name: description
+      content: 全网最全的的Mysql知识点总结，让天下没有难学的八股文！
 ---
 
 

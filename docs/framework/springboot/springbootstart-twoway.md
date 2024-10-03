@@ -3,6 +3,13 @@ title: 两种方式启动
 category: 常用框架
 tag:
   - SpringBoot
+head:
+  - - meta
+    - name: keywords
+      content: SpringBoot,Tomcat启动SpringBoot
+  - - meta
+    - name: description
+      content: 全网最全的的SpringBoot知识点总结，让天下没有难学的八股文！
 ---
 
 

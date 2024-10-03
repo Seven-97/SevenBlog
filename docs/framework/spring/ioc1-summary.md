@@ -3,6 +3,13 @@ title: IOC - 概述
 category: 常用框架
 tag:
   - Spring
+head:
+  - - meta
+    - name: keywords
+      content: spring,spring ioc,IOC,依赖注入,构造器注入,@Autowired,Bean的作用域
+  - - meta
+    - name: description
+      content: 全网最全的的Spring知识点总结，让天下没有难学的八股文！
 ---
 
 

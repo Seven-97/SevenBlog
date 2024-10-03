@@ -3,6 +3,14 @@ title: 数据类型及其应用场景
 category: 数据库
 tag:
  - Redis
+ - 缓存
+head:
+  - - meta
+    - name: keywords
+      content: redis,redis数据类型,redis应用场景,string,list,hash,set
+  - - meta
+    - name: description
+      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 

@@ -3,6 +3,14 @@ title: 调优 - 常见延迟问题
 category: 数据库
 tag:
  - Redis
+ - 缓存
+head:
+  - - meta
+    - name: keywords
+      content: redis,redis调优,bigkey,持久化
+  - - meta
+    - name: description
+      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 

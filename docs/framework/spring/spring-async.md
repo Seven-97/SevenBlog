@@ -3,6 +3,13 @@ title: Async注解底层异步线程池原理
 category: 常用框架
 tag:
   - Spring
+head:
+  - - meta
+    - name: keywords
+      content: spring,异步,Async,实现原理,源码阅读
+  - - meta
+    - name: description
+      content: 全网最全的的Spring知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -113,5 +120,4 @@ Async注解默认线程池有下面两个方法实现：
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 

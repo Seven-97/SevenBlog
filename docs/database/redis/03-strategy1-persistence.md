@@ -3,6 +3,14 @@ title: 策略 - 持久化技术
 category: 数据库
 tag:
  - Redis
+ - 缓存
+head:
+  - - meta
+    - name: keywords
+      content: redis,redis持久化,AOP,写回策略,重写机制,写时复制,RDB
+  - - meta
+    - name: description
+      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 

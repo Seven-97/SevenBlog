@@ -4,6 +4,10 @@ category: 系统设计
 tag:
  - Lombok
  - 最佳实践
+head:
+  - - meta
+    - name: keywords
+      content: Lombok,Lombok空指针
 ---
 
 

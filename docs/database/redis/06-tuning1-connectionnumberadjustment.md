@@ -3,6 +3,15 @@ title: 调优 - 连接数调整
 category: 数据库
 tag:
  - Redis
+ - 缓存
+ - 最佳实践
+head:
+  - - meta
+    - name: keywords
+      content: redis,redis连接数调整,资源复用
+  - - meta
+    - name: description
+      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -110,5 +119,4 @@ tag:
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 

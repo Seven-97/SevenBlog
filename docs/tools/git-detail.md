@@ -4,6 +4,13 @@ category: 开发工具
 icon: "git"
 tag:
  - Git
+head:
+  - - meta
+    - name: keywords
+      content: Git,Git命令,Git代码管理规范
+  - - meta
+    - name: description
+      content: 全网最全的的Git知识点总结，让天下没有难学的八股文！
 ---
 
 

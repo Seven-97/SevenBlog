@@ -3,6 +3,13 @@ title: Tomcat - 配置调优
 category: 常用框架
 tag:
   - Tomcat
+head:
+  - - meta
+    - name: keywords
+      content: Tomcat,Tomcat配置调优
+  - - meta
+    - name: description
+      content: 全网最全的的Tomcat知识点总结，让天下没有难学的八股文！
 ---
 
 

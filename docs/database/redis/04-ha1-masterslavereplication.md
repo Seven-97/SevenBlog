@@ -3,13 +3,21 @@ title: HA - 主从复制
 category: 数据库
 tag:
  - Redis
+ - 缓存
+head:
+  - - meta
+    - name: keywords
+      content: redis,主从复制,全量复制,增量复制,积压缓冲区,复制偏移量,高可用
+  - - meta
+    - name: description
+      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 
 
 
 
-## 本地缓存的挑战
+## 本地缓存带来的挑战
 
 分布式缓存相比于本地缓存，在实现层面需要关注的点有哪些不同。梳理如下：
 

@@ -3,6 +3,13 @@ title: IOC - Bean的实例化
 category: 常用框架
 tag:
   - Spring
+head:
+  - - meta
+    - name: keywords
+      content: spring,spring ioc,IOC,Bean的实例化,实现原理,源码阅读
+  - - meta
+    - name: description
+      content: 全网最全的的Spring知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -13,7 +20,7 @@ Spring 容器可以管理 singleton 作用域 Bean 的生命周期，在此作�
 
 而对于 prototype 作用域的 Bean，Spring 只负责创建，当容器创建了 Bean 的实例后，Bean 的实例就交给客户端代码管理，Spring 容器**将不再跟踪其生命周期**。每次客户端请求 prototype 作用域的 Bean 时，Spring 容器都会创建一个新的实例，并且不会管那些被配置成 prototype 作用域的 Bean 的生命周期。
 
-了解 Spring 生命周期的意义就在于，**可以利用 Bean 在其存活期间的指定时刻完成一些相关操作**，即扩展点。这种时刻可能有很多，但一般情况下，会在 Bean 被初始化后和被销毁前执行一些相关操作。具体扩展点的使用可以看[这篇文章](https://www.seven97.top/framework/spring/extentions-use.html)，可以这里两篇文章结合着看。
+了解 Spring 生命周期的意义就在于，**可以利用 Bean 在其存活期间的指定时刻完成一些相关操作**，即扩展点。这种时刻可能有很多，但一般情况下，会在 Bean 被初始化后和被销毁前执行一些相关操作。具体扩展点的使用可以看[这篇文章](https://www.seven97.top/framework/spring/extentions-use.html)，可以这两篇文章结合着看。
 
  
 

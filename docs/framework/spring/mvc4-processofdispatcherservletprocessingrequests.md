@@ -3,6 +3,13 @@ title: MVC - DispatcherServlet处理请求的过程
 category: 常用框架
 tag:
   - SpringMVC
+head:
+  - - meta
+    - name: keywords
+      content: spring,spring mvc,MVC,mvc执行流程,实现原理,源码阅读
+  - - meta
+    - name: description
+      content: 全网最全的的Spring知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -514,7 +521,6 @@ protected void render(ModelAndView mv, HttpServletRequest request, HttpServletRe
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 
 
 

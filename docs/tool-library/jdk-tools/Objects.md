@@ -3,6 +3,13 @@ title: 对象工具类 - Objects&Optional
 category: 工具类库
 tag:
   - Java工具类
+head:
+  - - meta
+    - name: keywords
+      content: JDK工具,对象工具类,Objects,Optional
+  - - meta
+    - name: description
+      content: 全网最全的的JDK工具类知识点总结，让天下没有难学的八股文！
 ---
 
 

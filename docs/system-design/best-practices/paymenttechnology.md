@@ -3,6 +3,10 @@ title: 支付技术
 category: 系统设计
 tag:
   - 支付技术
+head:
+  - - meta
+    - name: keywords
+      content: 支付技术,微信支付,支付宝支付
 ---
 
 

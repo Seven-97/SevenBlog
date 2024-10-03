@@ -4,6 +4,13 @@ category: 工具类库
 tag:
   - Java工具类
   - 集合
+head:
+  - - meta
+    - name: keywords
+      content: JDK工具,数组工具类,Arrays,asList
+  - - meta
+    - name: description
+      content: 全网最全的的JDK工具类知识点总结，让天下没有难学的八股文！
 ---
 
 

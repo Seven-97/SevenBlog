@@ -4,6 +4,13 @@ category: 工具类库
 tag:
  - Guava
  - IO流
+head:
+  - - meta
+    - name: keywords
+      content: Guava,IO,文件读取,字符集,编码,异常处理
+  - - meta
+    - name: description
+      content: 全网最全的的Guava知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -361,5 +368,4 @@ ReadableByteChannel channel = Channels.newChannel(inputStream);
 
 
 <!-- @include: @article-footer.snippet.md -->     
-
 

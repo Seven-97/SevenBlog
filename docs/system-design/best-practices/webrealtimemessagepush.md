@@ -4,6 +4,10 @@ category: 系统设计
 tag:
   - 消息推送
   - MQTT
+head:
+  - - meta
+    - name: keywords
+      content: MQTT,Web 实时消息,消息推送
 ---
 
 > 原文地址：https://juejin.cn/post/7122014462181113887，Seven 对本文进行了完善总结。

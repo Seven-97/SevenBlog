@@ -4,6 +4,14 @@ category: 数据库
 tag:
  - Redis
  - Redisson
+ - 缓存
+head:
+  - - meta
+    - name: keywords
+      content: redis,分布式锁,Redisson,RLock,RedLock,锁重试,超时续约,看门狗机制
+  - - meta
+    - name: description
+      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 

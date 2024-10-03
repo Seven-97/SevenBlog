@@ -4,6 +4,14 @@ category: 常用框架
 tag:
   - ORM框架
   - MyBatis 
+  - 缓存
+head:
+  - - meta
+    - name: keywords
+      content: MyBatis,实现原理,源码阅读,MyBatis一级缓存,MyBats二级缓存
+  - - meta
+    - name: description
+      content: 全网最全的的MyBatis知识点总结，让天下没有难学的八股文！
 ---
 
 

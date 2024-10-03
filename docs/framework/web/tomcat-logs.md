@@ -3,6 +3,13 @@ title: Tomcat - 相关日志
 category: 常用框架
 tag:
   - Tomcat
+head:
+  - - meta
+    - name: keywords
+      content: Tomcat,Tomcat相关日志
+  - - meta
+    - name: description
+      content: 全网最全的的Tomcat知识点总结，让天下没有难学的八股文！
 ---
 
 

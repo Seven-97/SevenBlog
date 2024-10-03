@@ -3,6 +3,13 @@ title: Netty高级特性与源码
 category: 常用框架
 tag:
   - Netty
+head:
+  - - meta
+    - name: keywords
+      content: Netty,网络IO,粘包,半包,Netty源码
+  - - meta
+    - name: description
+      content: 全网最全的的Netty知识点总结，让天下没有难学的八股文！
 ---
 
 

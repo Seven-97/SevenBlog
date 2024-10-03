@@ -3,6 +3,13 @@ title: 基础工具类 - String&Ints
 category: 工具类库
 tag:
  - Guava
+head:
+  - - meta
+    - name: keywords
+      content: Guava,Strings,Joiner,CharMatchers,Splitter,Preconditions,Ints
+  - - meta
+    - name: description
+      content: 全网最全的的Guava知识点总结，让天下没有难学的八股文！
 ---
 
 

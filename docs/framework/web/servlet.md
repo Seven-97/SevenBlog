@@ -3,6 +3,13 @@ title: Servlet介绍和规范
 category: 常用框架
 tag:
   - SpringMVC
+head:
+  - - meta
+    - name: keywords
+      content: Servlet,HttpServlet
+  - - meta
+    - name: description
+      content: 全网最全的的Servlet知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -109,4 +116,3 @@ Spring MVC 相比于 Servlet 的优势：
 
 
 <!-- @include: @article-footer.snippet.md -->     
- 

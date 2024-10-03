@@ -4,6 +4,13 @@ category: 开发工具
 icon: "configuration"
 tag:
  - Maven
+head:
+  - - meta
+    - name: keywords
+      content: Maven,打包命令,Maven标签,依赖管理
+  - - meta
+    - name: description
+      content: 全网最全的的Maven知识点总结，让天下没有难学的八股文！
 ---
 
 

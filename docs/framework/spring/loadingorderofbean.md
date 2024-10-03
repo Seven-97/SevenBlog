@@ -3,6 +3,13 @@ title: 如何控制Bean的加载顺序
 category: 常用框架
 tag:
   - Spring
+head:
+  - - meta
+    - name: keywords
+      content: spring,spring ioc,IOC,依赖注入,Bean的加载顺序
+  - - meta
+    - name: description
+      content: 全网最全的的Spring知识点总结，让天下没有难学的八股文！
 ---
 
 

@@ -3,6 +3,13 @@ title: LSM树
 category: 大数据框架
 tag:
  - 数据结构
+head:
+  - - meta
+    - name: keywords
+      content: 大数据,LSM树
+  - - meta
+    - name: description
+      content: 全网最全的的大数据知识点总结，让天下没有难学的八股文！
 ---
 
 
