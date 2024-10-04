@@ -3,6 +3,13 @@ title: TCP - 流量控制
 category: 计算机基础
 tag:
   - 计算机网络
+head:
+  - - meta
+    - name: keywords
+      content: 计算机网络,tcp流量控制,超时重传,快速重传,滑动窗口,粘包,拥塞控制,慢启动,拥塞避免,拥塞发生,快速恢复
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（计算机网络）知识点总结，让天下没有难学的八股文！
 ---
 
 

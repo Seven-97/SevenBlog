@@ -10,7 +10,7 @@ head:
       content: Java,并发编程,多线程,Thread,AQS,抽象队列同步器,实现原理,底层源码,ReentrantLock,锁
   - - meta
     - name: description
-      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 

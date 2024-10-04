@@ -9,7 +9,7 @@ head:
       content: synchronized,实现原理,底层源码,锁的优化,可重入性,锁粗化,偏向锁
   - - meta
     - name: description
-      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 

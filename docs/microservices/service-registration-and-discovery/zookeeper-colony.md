@@ -3,6 +3,13 @@ title: ZooKeeper - 集群机制
 category: 微服务
 tag:
  - ZooKeeper
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,ZooKeeper,ZooKeeper的集群机制
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 

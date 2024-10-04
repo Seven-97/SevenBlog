@@ -10,7 +10,7 @@ head:
       content: redis,高可用,colony,集群,数据分布,Hash槽,请求重定向,集群扩容,集群故障检测,集群运维
   - - meta
     - name: description
-      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 

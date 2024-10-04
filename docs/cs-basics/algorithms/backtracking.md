@@ -3,6 +3,13 @@ title: 回溯
 category: 计算机基础
 tag:
  - 算法
+head:
+  - - meta
+    - name: keywords
+      content: 数据结构,回溯算法
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（算法）知识点总结，让天下没有难学的八股文！
 ---
 
 

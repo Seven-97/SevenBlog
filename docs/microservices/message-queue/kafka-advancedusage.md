@@ -3,6 +3,14 @@ title: Kafka - 高级使用
 category: 微服务
 tag:
   - Kafka
+  - 消息队列
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,消息队列,Kafka,消息去重,Kafka 副本机制,消息积压,节点服役,节点退役
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 

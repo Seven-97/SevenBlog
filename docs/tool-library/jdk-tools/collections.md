@@ -10,7 +10,7 @@ head:
       content: JDK工具,集合工具类,Collections
   - - meta
     - name: description
-      content: 全网最全的的JDK工具类知识点总结，让天下没有难学的八股文！
+      content: 全网最全的JDK工具类知识点总结，让天下没有难学的八股文！
 ---
 
 

@@ -11,7 +11,7 @@ head:
       content: MyBatis,实现原理,源码阅读,MyBatis一级缓存,MyBats二级缓存
   - - meta
     - name: description
-      content: 全网最全的的MyBatis知识点总结，让天下没有难学的八股文！
+      content: 全网最全的MyBatis知识点总结，让天下没有难学的八股文！
 ---
 
 

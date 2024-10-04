@@ -3,6 +3,14 @@ title: RocketMQ - 高级使用
 category: 微服务
 tag:
   - RocketMQ
+  - 消息队列
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,消息队列,RocketMQ,RocketMQ消息存储,RocketMQ负载均衡,RocketMQ消息重试,RocketMQ消息幂等
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 

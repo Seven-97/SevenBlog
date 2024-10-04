@@ -9,7 +9,7 @@ head:
       content: JDBC,实现原理,源码阅读,JDBC 底层原理
   - - meta
     - name: description
-      content: 全网最全的的JDBC知识点总结，让天下没有难学的八股文！
+      content: 全网最全的JDBC知识点总结，让天下没有难学的八股文！
 ---
 
 

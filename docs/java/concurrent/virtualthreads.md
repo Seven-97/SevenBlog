@@ -9,7 +9,7 @@ head:
       content: 线程,虚拟线程,实现源码,新特性,携带器
   - - meta
     - name: description
-      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 

@@ -9,7 +9,7 @@ head:
       content: Java,版本新特性
   - - meta
     - name: description
-      content: 全网最全的的Java 版本新特性知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java 版本新特性知识点总结，让天下没有难学的八股文！
 ---
 
 

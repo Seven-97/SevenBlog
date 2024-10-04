@@ -3,6 +3,13 @@ title: 位图
 category: 计算机基础
 tag:
  - 数据结构
+head:
+  - - meta
+    - name: keywords
+      content: 数据结构,位图
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（数据结构）知识点总结，让天下没有难学的八股文！
 ---
 
 

@@ -3,6 +3,13 @@ title: TCP & HTTP 长连接
 category: 计算机基础
 tag:
   - 计算机网络
+head:
+  - - meta
+    - name: keywords
+      content: 计算机网络,tcp长连接,http长连接
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（计算机网络）知识点总结，让天下没有难学的八股文！
 ---
 
 

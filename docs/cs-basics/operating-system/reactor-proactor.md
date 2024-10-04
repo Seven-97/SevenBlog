@@ -3,6 +3,13 @@ title: 网络系统 - Reactor & Proactor模型
 category: 计算机基础
 tag:
  - 操作系统
+head:
+  - - meta
+    - name: keywords
+      content: 操作系统,Reactor模型,Proactor模型
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（操作系统）知识点总结，让天下没有难学的八股文！
 ---
 
 

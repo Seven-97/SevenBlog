@@ -9,7 +9,7 @@ head:
       content: Integer缓存,BigDecimal,String,Object,数组,hashcode,equals,哈希冲突,final,static,trancient,值传递,引用传递,序列化和反序列化,LocalDate
   - - meta
     - name: description
-      content: 全网最全的的Java基础知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java知识点总结，让天下没有难学的八股文！
 ---
 
 

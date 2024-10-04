@@ -3,6 +3,13 @@ title: HTTP - HTTPS
 category: 计算机基础
 tag:
   - 计算机网络
+head:
+  - - meta
+    - name: keywords
+      content: 计算机网络,http,https,ssl,RSA算法,ECDHE算法
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（计算机网络）知识点总结，让天下没有难学的八股文！
 ---
 
 ## 概述

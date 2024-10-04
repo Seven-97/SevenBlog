@@ -3,6 +3,14 @@ title: RabbitMQ - 入门
 category: 微服务
 tag:
   - RabbitMQ
+  - 消息队列
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,消息队列,RabbitMQ,SpringAMQP,RabbitMQ交换机
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 > 来源：黑马程序员
@@ -116,8 +124,8 @@ RabbitMQ对应的架构如图：
 将来我们开发业务功能的时候，肯定不会在控制台收发消息，而是应该基于编程的方式。由于`RabbitMQ`采用了AMQP协议，因此它具备跨语言的特性。任何语言只要遵循AMQP协议收发消息，都可以与`RabbitMQ`交互。并且`RabbitMQ`官方也提供了各种不同语言的客户端。
 但是，RabbitMQ官方提供的Java客户端编码相对复杂，一般生产环境下我们更多会结合Spring来使用。而Spring的官方刚好基于RabbitMQ提供了这样一套消息收发的模板工具：SpringAMQP。并且还基于SpringBoot对其实现了自动装配，使用起来非常方便。
 
-SpringAmqp的官方地址：
-[Spring AMQP](https://spring.io/projects/spring-amqp)
+SpringAmqp的官方地址：[Spring AMQP](https://spring.io/projects/spring-amqp)
+
 SpringAMQP提供了三个功能：
 
 - 自动声明队列、交换机及其绑定关系

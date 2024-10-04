@@ -10,7 +10,7 @@ head:
       content: Maven,打包命令,Maven标签,依赖管理
   - - meta
     - name: description
-      content: 全网最全的的Maven知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Maven知识点总结，让天下没有难学的八股文！
 ---
 
 

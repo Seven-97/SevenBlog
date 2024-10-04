@@ -9,7 +9,7 @@ head:
       content: Java,JVM,栈,虚拟机栈,本地方法栈,堆,TLAB,逃逸分析,方法区,元空间,年轻代,永久代
   - - meta
     - name: description
-      content: 全网最全的的Java JVM知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java JVM知识点总结，让天下没有难学的八股文！
 ---
 
 

@@ -3,6 +3,13 @@ title: 请求限流算法
 category: 微服务
 tag:
  - 理论-算法
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,请求限流算法,漏斗限流,令牌桶限流算法
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 

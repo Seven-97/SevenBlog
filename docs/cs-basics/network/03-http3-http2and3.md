@@ -3,6 +3,13 @@ title: HTTP - HTTP2 & 3
 category: 计算机基础
 tag:
   - 计算机网络
+head:
+  - - meta
+    - name: keywords
+      content: 计算机网络,http,http2,http3,队头阻塞,头部压缩,服务器推送
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（计算机网络）知识点总结，让天下没有难学的八股文！
 ---
 
 ## HTTP/1.1的改进和不足

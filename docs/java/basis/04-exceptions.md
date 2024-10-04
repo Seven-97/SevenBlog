@@ -9,7 +9,7 @@ head:
       content: Java,异常,exception,java 异常,java exception
   - - meta
     - name: description
-      content: 全网最全的的Java知识点总结，希望对你有帮助！
+      content: 全网最全的Java知识点总结，让天下没有难学的八股文！
 ---
 
 

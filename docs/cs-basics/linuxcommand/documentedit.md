@@ -3,6 +3,13 @@ title: 文档编辑
 category: 计算机基础
 tag:
   - Linux
+head:
+  - - meta
+    - name: keywords
+      content: Linux命令,文档编辑,cat命令,rm命令,echo命令,grep命令,tail命令,rmdir命令,sed命令
+  - - meta
+    - name: description
+      content: 全网最全的Linux命令总结，让天下没有难学的八股文！
 ---
 
 

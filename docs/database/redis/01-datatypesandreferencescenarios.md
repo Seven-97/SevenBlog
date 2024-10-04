@@ -10,7 +10,7 @@ head:
       content: redis,redis数据类型,redis应用场景,string,list,hash,set
   - - meta
     - name: description
-      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 

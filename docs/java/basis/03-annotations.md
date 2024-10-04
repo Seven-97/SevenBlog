@@ -9,7 +9,7 @@ head:
       content: Java,注解,annotation,java 注解,java annotation
   - - meta
     - name: description
-      content: 全网最全的的Java知识点总结，希望对你有帮助！
+      content: 全网最全的Java知识点总结，让天下没有难学的八股文！
 ---
 
 

@@ -9,7 +9,7 @@ head:
       content: spring,spring的事务,@Transactional,@Transactional的失效场景
   - - meta
     - name: description
-      content: 全网最全的的Spring知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Spring知识点总结，让天下没有难学的八股文！
 ---
 
 

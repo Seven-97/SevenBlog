@@ -3,6 +3,13 @@ title: 文件管理
 category: 计算机基础
 tag:
   - Linux
+head:
+  - - meta
+    - name: keywords
+      content: Linux命令,文件管理,mv命令,ls命令,cp命令,mkdir命令,pwd命令,tar命令,cd命令,chmod命令
+  - - meta
+    - name: description
+      content: 全网最全的Linux命令总结，让天下没有难学的八股文！
 ---
 
 

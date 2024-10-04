@@ -3,11 +3,20 @@ title: Nacos - 交互模型
 category: 微服务
 tag:
   - Nacos
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,Nacos,配置中心,Nacos交互模型,Nacos源码
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 
 
-来源：https://mp.weixin.qq.com/s/94ftESkDoZI9gAGflLiGwg
+>  来源：https://mp.weixin.qq.com/s/94ftESkDoZI9gAGflLiGwg
+
+
 
 Nacos在做配置中心的时候，配置数据的交互模式是服务端推过来还是客户端主动拉的？
 

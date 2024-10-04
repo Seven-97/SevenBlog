@@ -9,7 +9,7 @@ head:
       content: Java,反射,reflection,java 反射,java reflection
   - - meta
     - name: description
-      content: 全网最全的的Java知识点总结，希望对你有帮助！
+      content: 全网最全的Java知识点总结，希望对你有帮助！
 ---
 
 

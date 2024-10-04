@@ -3,6 +3,14 @@ title: dubbo - 3.0新特性
 category: 微服务
 tag:
  - dubbo
+ - RPC
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,dubbo,RPC协议,dubbo3.0新特性
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 ## 注册模型的改变

@@ -9,7 +9,7 @@ head:
       content: 线程状态转换,线程,阻塞,等待,Thread,Daemon,sleep,yield,标志位,interrupted,join,wait,notify,callable,异常
   - - meta
     - name: description
-      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 

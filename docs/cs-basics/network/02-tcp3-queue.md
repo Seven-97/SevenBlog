@@ -3,9 +3,16 @@ title: TCP - 半连接队列和全连接队列
 category: 计算机基础
 tag:
  - 计算机网络
+head:
+  - - meta
+    - name: keywords
+      content: 计算机网络,tcp半连接队列,tcp全连接队列,SYN攻击
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（计算机网络）知识点总结，让天下没有难学的八股文！
 ---
 
-> 来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
+
 
 本文以 Linux 2.6.32 版本的内核作为参考
 
@@ -369,6 +376,13 @@ syncookies 参数主要有以下三个值：
 那么针对 SYN 攻击的场景，我们可以减少 SYN+ACK 的重传次数，以加快处于 SYN_RECV 状态的 TCP 连接断开。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406222012942.png)
+
+
+
+## 参考链接
+
+来源：https://www.xiaolincoding.com/ ，Seven进行了部分补充完善
+
 
 
 <!-- @include: @article-footer.snippet.md -->     

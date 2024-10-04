@@ -9,7 +9,7 @@ head:
       content: Java,SPI,Service Provider Interface,java SPI,Java Service Provider Interface
   - - meta
     - name: description
-      content: SPI 即 Service Provider Interface ，字面意思就是：“服务提供者的接口”，我的理解是：专门提供给服务提供者或者扩展框架功能的开发者去使用的一个接口。SPI 将服务接口和具体的服务实现分离开来，将服务调用方和服务实现者解耦，能够提升程序的扩展性、可维护性。修改或者替换服务实现并不需要修改调用方。
+      content: 全网最全的Java知识点总结，希望对你有帮助！
 ---
 
 

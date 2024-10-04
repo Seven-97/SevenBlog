@@ -3,6 +3,13 @@ title: 硬件结构 - CPU的缓存一致性
 category: 计算机基础
 tag:
  - 操作系统
+head:
+  - - meta
+    - name: keywords
+      content: 操作系统,缓存一致性,MESI协议,写直达,写回,总线嗅探
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（操作系统）知识点总结，让天下没有难学的八股文！
 ---
 
 

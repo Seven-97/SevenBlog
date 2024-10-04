@@ -10,7 +10,7 @@ head:
       content: mysql,mysql数据库,行级锁,记录锁,间隙锁,next-key lock
   - - meta
     - name: description
-      content: 全网最全的的Mysql知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Mysql知识点总结，让天下没有难学的八股文！
 ---
 
 

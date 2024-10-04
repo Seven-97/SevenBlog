@@ -10,7 +10,7 @@ head:
       content: redis,redis数据结构,底层原理,实现源码,SDS,压缩列表,整数集合,跳表
   - - meta
     - name: description
-      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 

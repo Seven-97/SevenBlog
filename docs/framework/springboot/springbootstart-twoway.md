@@ -9,7 +9,7 @@ head:
       content: SpringBoot,Tomcat启动SpringBoot
   - - meta
     - name: description
-      content: 全网最全的的SpringBoot知识点总结，让天下没有难学的八股文！
+      content: 全网最全的SpringBoot知识点总结，让天下没有难学的八股文！
 ---
 
 

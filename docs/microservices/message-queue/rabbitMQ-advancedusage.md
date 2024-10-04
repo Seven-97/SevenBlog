@@ -3,6 +3,14 @@ title: RabbitMQ - 高级使用
 category: 微服务
 tag:
   - RabbitMQ
+  - 消息队列
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,消息队列,RabbitMQ,生产者重试机制,数据持久化,延迟消息
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 

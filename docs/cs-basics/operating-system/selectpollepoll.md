@@ -3,6 +3,14 @@ title: 网络系统 - Unix IO模型
 category: 计算机基础
 tag:
  - 操作系统
+​---
+head:
+  - - meta
+    - name: keywords
+      content: 操作系统,Unix IO模型,BIO,NIO,IO多路复用,select,poll,epoll
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（操作系统）知识点总结，让天下没有难学的八股文！
 ---
 
 

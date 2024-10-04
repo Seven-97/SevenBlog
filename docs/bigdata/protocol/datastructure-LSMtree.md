@@ -9,7 +9,7 @@ head:
       content: 大数据,LSM树
   - - meta
     - name: description
-      content: 全网最全的的大数据知识点总结，让天下没有难学的八股文！
+      content: 全网最全的大数据知识点总结，让天下没有难学的八股文！
 ---
 
 

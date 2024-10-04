@@ -9,7 +9,7 @@ head:
       content: mysql,mysql数据库,Buffer Pool,缓存,脏页,LRU链表,预读失效,缓存污染
   - - meta
     - name: description
-      content: 全网最全的的Mysql知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Mysql知识点总结，让天下没有难学的八股文！
 ---
 
 

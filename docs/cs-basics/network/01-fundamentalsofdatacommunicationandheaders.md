@@ -3,6 +3,13 @@ title: 基础 - 数据通信基础及报头
 category: 计算机基础
 tag:
   - 计算机网络
+head:
+  - - meta
+    - name: keywords
+      content: 计算机网络,tcp报文,udp头,ip头,mac头
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（计算机网络）知识点总结，让天下没有难学的八股文！
 ---
 
 

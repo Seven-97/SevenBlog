@@ -6,10 +6,10 @@ tag:
 head:
   - - meta
     - name: keywords
-      content: Java,版本新特性
+      content: Java,版本新特性,Java21
   - - meta
     - name: description
-      content: 全网最全的的Java 版本新特性知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java 版本新特性知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -456,7 +456,7 @@ public class Test{
 
 
 
-## Unnamed Classes and Instance Main Methods
+## Unnamed Classes and Instance Main Methods（预览）
 
 对于初学者来说，写的第一个HelloWorld代码有太多的概念，为了方便初学者快速编写第一段Java代码，这里提出了无名类和实例main方法，下面代码可以直接运行编译，相当于是少了类的定义，main方法的修饰符和形参也省略掉了
 

@@ -3,6 +3,13 @@ title: Nacos - 实现原理
 category: 微服务
 tag:
   - Nacos
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,Nacos,配置中心,Nacos源码
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -38,7 +45,7 @@ tag:
 
 以下是Nacos的架构图：
 
-![](https://mmbiz.qpic.cn/mmbiz_png/UkT70O7175PL33aBq8mTibG4yjjWAEG5sicb9eM5uUwnQLRPLmiakShejmBoFCgOzvslrCdTdX7vMAVxib0VI31pGw/640?wx_fmt=png&wxfrom=5&wx_lazy=1&wx_co=1&tp=webp)其中分为这么几个模块：
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202410041142045.webp)其中分为这么几个模块：
 
 - **Provider APP**：服务提供者。
 
@@ -74,7 +81,7 @@ tag:
 
 Nacos服务注册和发现的实现原理的图如下：
 
-![](https://mmbiz.qpic.cn/mmbiz_png/UkT70O7175PL33aBq8mTibG4yjjWAEG5siaHapZNTFvYmcS4Z8VTVkDwYtGHIaBjb26emmt3gChDLZaT1bROqVibw/640?wx_fmt=png&wxfrom=5&wx_lazy=1&wx_co=1&tp=webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202410041143101.webp)
 
 
 
@@ -84,7 +91,7 @@ Nacos服务注册和发现的实现原理的图如下：
 
 首先看下一个包：`spring-cloud-commons`
 
-![](https://mmbiz.qpic.cn/mmbiz_png/UkT70O7175PL33aBq8mTibG4yjjWAEG5s3cCf6suBs55Tia1NenIGSibhkTWQYFLgjwZnGeoSWVz8WZhysmic8H0nw/640?wx_fmt=png&wxfrom=5&wx_lazy=1&wx_co=1&tp=webp)**这个ServiceRegistry接口是SpringCloud提供的服务注册的标准，集成到SpringCloud中实现服务注册的组件，都需要实现这个接口。**来看下它的结构：
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202410041143736.webp)**这个ServiceRegistry接口是SpringCloud提供的服务注册的标准，集成到SpringCloud中实现服务注册的组件，都需要实现这个接口。**来看下它的结构：
 
 ```java
 public interface ServiceRegistry<R extends Registration> {
@@ -98,15 +105,15 @@ public interface ServiceRegistry<R extends Registration> {
 
 那么对于Nacos而言，该接口的实现类是`NacosServiceRegistry`，该类在这个pom包下：
 
-![](https://mmbiz.qpic.cn/mmbiz_png/UkT70O7175PL33aBq8mTibG4yjjWAEG5sm05GO5oqPADYBtYthLjMc33VsaEyMj8IXx8uHmtI7UyFiaZ3gMlia2hQ/640?wx_fmt=png&wxfrom=5&wx_lazy=1&wx_co=1&tp=webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202410041143476.webp)
 
 再回过头来看`spring-cloud-commons`包:
 
-![](https://mmbiz.qpic.cn/mmbiz_png/UkT70O7175PL33aBq8mTibG4yjjWAEG5sictXFu9GFo8yoJOWd1rM0ggcrTDoBbibePyia6VBo0kLACIC2KxI2PmZA/640?wx_fmt=png&wxfrom=5&wx_lazy=1&wx_co=1&tp=webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202410041143451.webp)
 
 `spring.factories`**主要是包含了自动装配的配置信息**，如图：
 
-![](https://mmbiz.qpic.cn/mmbiz_png/UkT70O7175PL33aBq8mTibG4yjjWAEG5sNpOK7dgjOhROTyBqHAC31kukayUYjI6mNyFO8lAawibNFpibn62ZYzvw/640?wx_fmt=png&wxfrom=5&wx_lazy=1&wx_co=1&tp=webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202410041143094.webp)
 
 在spring.factories中配置[EnableAutoConfiguration](https://www.seven97.top/framework/springboot/principleofautomaticassembly.html#enableautoconfiguration)的内容后，项目在启动的时候，会导入相应的自动配置类，那么也就允许对该类的相关属性进行一个自动装配。那么显然，在这里导入了`AutoServiceRegistrationAutoConfiguration`这个类，而这个类顾名思义是**服务注册相关的配置类**。
 

@@ -3,6 +3,14 @@ title: Kafka - 入门
 category: 微服务
 tag:
   - Kafka
+  - 消息队列
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,消息队列,Kafka,Kafka安装部署,Kafka基础命令
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 

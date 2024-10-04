@@ -3,6 +3,13 @@ title: 文件系统 - Page Cache
 category: 计算机基础
 tag:
   - 操作系统
+head:
+  - - meta
+    - name: keywords
+      content: 操作系统,文件系统,page cache
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（操作系统）知识点总结，让天下没有难学的八股文！
 ---
 
 

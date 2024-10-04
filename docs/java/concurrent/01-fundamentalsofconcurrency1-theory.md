@@ -9,7 +9,7 @@ head:
       content: JMM,可见性,原子性,有序性,Happens-Before规则,安全发布,逃逸,CAS,阻塞,栈封闭
   - - meta
     - name: description
-      content: 全网最全的的Java并发编程知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
 

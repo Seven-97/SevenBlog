@@ -3,6 +3,13 @@ title: 分布式通信 - Gossip 协议详解
 category: 微服务
 tag:
  - 理论-算法
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,Gossip协议,Gossip协议的消息传播模式
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -177,5 +184,5 @@ Gossip 设计了两种可能的消息传播模式：**反熵（Anti-Entropy）**
 
  
 
- 
+
 <!-- @include: @article-footer.snippet.md -->     

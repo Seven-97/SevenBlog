@@ -3,6 +3,13 @@ title: HTTP - 状态码、头部
 category: 计算机基础
 tag:
   - 计算机网络
+head:
+  - - meta
+    - name: keywords
+      content: 计算机网络,http,http状态码,http头部,强制缓存,协商缓存,http常见方法
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（计算机网络）知识点总结，让天下没有难学的八股文！
 ---
 
 

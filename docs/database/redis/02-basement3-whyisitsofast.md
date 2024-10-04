@@ -10,7 +10,7 @@ head:
       content: redis,redis为什么这么快,redis单线程,redis多线程,线程安全
   - - meta
     - name: description
-      content: 全网最全的的Redis知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Redis知识点总结，让天下没有难学的八股文！
 ---
 
 

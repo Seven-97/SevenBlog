@@ -3,6 +3,13 @@ title: 分布式共识 - Raft 算法详解
 category: 微服务
 tag:
  - 理论-算法
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,Raft算法,拜占庭将军,共识算法
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 

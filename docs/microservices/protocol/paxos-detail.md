@@ -3,6 +3,13 @@ title: 分布式共识 - Paxos 算法详解
 category: 微服务
 tag:
  - 理论-算法
+head:
+  - - meta
+    - name: keywords
+      content: 微服务,分布式,高可用,Paxos算法,Multi Paxos
+  - - meta
+    - name: description
+      content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
 
 
@@ -83,15 +90,14 @@ Basic Paxos 算法的仅能就单个值达成共识，为了能够对一系列�
 
  
 
- 
+
 <!-- @include: @article-footer.snippet.md -->     
 
 
- 
 
- 
 
- 
 
- 
+
+
+
 

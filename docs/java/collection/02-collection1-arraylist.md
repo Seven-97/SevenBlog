@@ -9,7 +9,7 @@ head:
       content: Java,ArrayList,ArrayList源码,源码分析,java arraylist,fail-fast,java foreach 删除元素,删除操作,并发修改异常
   - - meta
     - name: description
-      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
 

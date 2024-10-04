@@ -3,6 +3,13 @@ title: vi/vim命令
 category: 计算机基础
 tag:
   - Linux
+head:
+  - - meta
+    - name: keywords
+      content: Linux命令,vi vim命令
+  - - meta
+    - name: description
+      content: 全网最全的Linux命令总结，让天下没有难学的八股文！
 ---
 
 

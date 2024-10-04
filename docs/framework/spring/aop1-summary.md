@@ -9,7 +9,7 @@ head:
       content: spring,spring aop,AOP,静态代理,动态代理,AspectJ,CGLib,AOP应用场景
   - - meta
     - name: description
-      content: 全网最全的的Spring知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Spring知识点总结，让天下没有难学的八股文！
 ---
 
 

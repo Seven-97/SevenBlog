@@ -9,7 +9,7 @@ head:
       content: Netty,网络IO,Netty使用,ByteBuf
   - - meta
     - name: description
-      content: 全网最全的的Netty知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Netty知识点总结，让天下没有难学的八股文！
 ---
 
 

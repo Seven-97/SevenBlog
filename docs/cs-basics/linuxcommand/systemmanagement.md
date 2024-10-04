@@ -3,6 +3,13 @@ title: 系统管理
 category: 计算机基础
 tag:
   - Linux
+head:
+  - - meta
+    - name: keywords
+      content: Linux命令,系统管理,find命令,rpm命令,ps命令,uname命令,kill命令,top命令,netstat命令,ss命令
+  - - meta
+    - name: description
+      content: 全网最全的Linux命令总结，让天下没有难学的八股文！
 ---
 
 

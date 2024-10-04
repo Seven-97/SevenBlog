@@ -3,15 +3,18 @@ title: 堆
 category: 计算机基础
 tag:
   - 数据结构
+head:
+  - - meta
+    - name: keywords
+      content: 数据结构,堆
+  - - meta
+    - name: description
+      content: 全网最全的计算机基础（数据结构）知识点总结，让天下没有难学的八股文！
 ---
 
 
 
 
-
-来源：[堆 | JavaGuide](https://javaguide.cn/cs-basics/data-structure/heap.html)
-
-# 堆
 
 ## 什么是堆
 
@@ -205,5 +208,17 @@ tag:
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270905366.png)
 
 堆排序完成！
+
+
+
+## 参考链接
+
+来源：[堆 | JavaGuide](https://javaguide.cn/cs-basics/data-structure/heap.html)
+
+
+
+
+
+
 
 <!-- @include: @article-footer.snippet.md -->     

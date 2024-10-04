@@ -9,7 +9,7 @@ head:
       content: Java,HashMap,java hashmap,源码分析,实现原理,hashset,HashSet
   - - meta
     - name: description
-      content: 全网最全的的Java集合知识点总结，让天下没有难学的八股文！
+      content: 全网最全的Java集合知识点总结，让天下没有难学的八股文！
 ---
 
 
