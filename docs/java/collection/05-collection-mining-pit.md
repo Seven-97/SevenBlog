@@ -2,7 +2,7 @@
 title: 集合采坑记录
 category: Java
 tag:
- - 集合
+  - 集合
 head:
   - - meta
     - name: keywords

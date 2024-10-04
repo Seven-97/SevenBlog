@@ -2,7 +2,7 @@
 title: SPI机制
 category: Java
 tag:
- - Java基础
+  - Java基础
 head:
   - - meta
     - name: keywords

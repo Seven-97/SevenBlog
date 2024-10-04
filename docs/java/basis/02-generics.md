@@ -2,7 +2,7 @@
 title: 泛型详解
 category: Java
 tag:
- - Java基础
+  - Java基础
 head:
   - - meta
     - name: keywords
