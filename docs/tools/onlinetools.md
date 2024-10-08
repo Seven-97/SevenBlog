@@ -11,6 +11,7 @@ tag:
     - [开源中国工具箱](https://tool.oschina.net/)
     - [菜鸟工具](https://www.jyshare.com/)
     - [脚本之家工具集](https://tools.jb51.net/)
+    - [文本字符串处理工具集](http://gv99.com/index.html)
 
 - 工具：
     - [变量命名神器CODELF](https://unbug.github.io/codelf/)
@@ -22,6 +23,9 @@ tag:
     - [MD5加密](https://www.toolkk.com/tools/md5-encrypt)
     - [草料二维码生成器](https://cli.im/)
     - [在线文本比较工具](https://tools.wujingquan.com/textdiff/)
+    - [在线文本交集计算工具](https://tool56.com/txt-intersection/)
+    - [在线文本列表差集计算工具](https://tooltt.com/chaji/)
+    - [自定义分隔换行符](https://www.huatools.com/my-split/)
     - [Cron表达式生成器](http://cron.qqe2.com/)
     - [Banner生成](https://patorjk.com/software/taag/#p=display&f=Graffiti&t=Seven%0A)
 

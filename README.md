@@ -15,11 +15,12 @@
 
 懂得越多、不懂的就更多。持续学习中，若有不足，欢迎指出；若有侵权，即删。
 
-版权声明：转载请注明文章出处
+最后，送给大家一句话：“你会累是因为你在走上坡路”，希望我的个人博客网站能够帮助到点开的你，加油！
+
+如果你觉得本站文章对你有帮助，或者有所启发，欢迎start，对我也是一种鼓励~  传送门：[Seven的菜鸟成长之路GitHub](https://github.com/Seven-97/SevenBlog)
 
 ## 联系我
-我的邮箱：415849169@qq.com
 
-或微信搜索：seven97，联系我
+微信搜索：seven97，联系我
 
 <img src="https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172044971.png#pic_center" alt="seven97官方微信公众号" style="zoom:50%;" />

@@ -11,10 +11,23 @@ head:
     - name: description
       content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
+分布式系统中设计分布式 ID 对于确保订单、用户或记录等实体的唯一性至关重要。
+
+## 分布式 ID 的设计需求
+
+- 唯一性：ID 必须在所有服务或系统中全局唯一。
+- 可扩展性：系统应能够在高负载下以高吞吐量生成 ID。
+- 排序性：在某些用例中，ID 需要是有序或大致按时间排序的（例如用于排序）。
+- 避免碰撞：两个 ID 相同的概率应当极小。
+- 去中心化：ID 的生成应不依赖单一的生成器，避免单点故障。
+- 可用性：即使在网络分区时，ID 生成系统也应能正常工作。
+- 紧凑性：ID 的格式应在存储时高效，特别是在数据库或日志中。
+- 透明性：有时 ID 需要嵌入元数据（如时间戳或机器 ID ）以便调试或追踪。
 
 
+## 常见的分布式 ID 解决方案
 
-## UUID
+### UUID
 
 UUID (Universally Unique IDentifier) 通用唯一识别码 ，也称为 GUID (Globally Unique IDentifier) 全球唯一标识符。
 
@@ -57,7 +70,7 @@ public class UuidTest {
 
 
 
-## 数据库自增ID
+### 数据库自增ID
 
 在很多数据库中自增的主键ID，数据库本身是能够保证唯一的。
 
@@ -75,7 +88,7 @@ Oracle中sequence。
 
 
 
-## 数据库号段模式
+### 数据库号段模式
 
 在高并发的系统中，频繁访问数据库，会影响系统的性能。
 
@@ -98,7 +111,7 @@ Oracle中sequence。
 
 
 
-## 数据库的多主模式
+### 数据库的多主模式
 
 为了解决上面单节点岩机问题，我们可以使用数据库的多主模式。
 
@@ -118,7 +131,7 @@ Oracle中sequence。
 
 
 
-## Redis生成ID
+### Redis生成ID
 
 除了使用数据库之外，Redis其实也能产生自增ID。
 
@@ -145,7 +158,7 @@ redis> GET ID_VALUE
 
 
 
-## Zookeeper生成ID
+### Zookeeper生成ID
 
 Zookeeper主要通过其znode数据版本来生成序列号，可以生成32位和64位的数据版本号，客户端可以使用这个版本号来作为唯一的序列号。
 
@@ -157,9 +170,9 @@ Zookeeper主要通过其znode数据版本来生成序列号，可以生成32位�
 
 
 
-## 雪花算法
+### 雪花算法
 
-### 概述
+#### 概述
 
 Snowflake，雪花算法是由Twitter开源的分布式ID生成算法，以划分命名空间的方式将 64-bit位分割成多个部分，每个部分代表不同的含义。而 Java中64bit的整数是Long类型，所以在 Java 中 SnowFlake 算法生成的 ID 就是 long 来存储的。
 
@@ -183,7 +196,7 @@ Snowflake，雪花算法是由Twitter开源的分布式ID生成算法，以划�
 
 
 
-### 代码实现
+#### 代码实现
 
 Snowflake 的Twitter官方原版是用Scala写的，对Scala语言有研究的同学可以去阅读下，以下是 Java 版本的写法
 
@@ -383,7 +396,7 @@ public static void main(String[] args) {
 
 
 
-## Leaf
+### Leaf
 
 Leaf是美团开源的分布式ID生成系统，它提供了两种生成ID的方式：
 
@@ -414,7 +427,7 @@ Leaf-snowflake服务需要从Zookeeper按顺序的获取workId，会缓存到本
 
 
 
-## Tinyid
+### Tinyid
 
 Tinyid是滴滴用Java开发的一款分布式id生成系统，基于数据库号段算法实现。
 
@@ -449,7 +462,7 @@ Tinyid方案主要做了下面这些优化：
 
 
 
-## UidGenerator
+### UidGenerator
 
 百度 UID-Generator 使用 Java 语言，基于雪花算法实现。
 
@@ -489,7 +502,14 @@ RingBuffer填充触发机制:
 如果你想知道百度uid-generator的更多细节，可以看看Github地址：https://github.com/baidu/uid-generator
 
 
+## 选择解决方案的考虑因素
 
+- 吞吐量需求：如果系统需要每秒生成数百万个 ID，Snowflake 或 Redis-based 方案比 UUID 更合适。
+- 有序还是随机：如果 ID 需要按时间排序，可以考虑 Snowflake、KSUID。
+- 存储限制：与 KSUID 相比，Snowflake ID 更小，如果存储大小至关重要，可以选择更紧凑的格式。
+- 元数据：如果需要在ID中包含元数据，Snowflake ID 或自定义哈希方案可以编码时间戳或机器 ID 等信息。
+
+每种解决方案适合不同的用例，具体选择取决于扩展性、排序和存储大小等因素。Snowflake 是现代分布式系统中最常采用的方案。
 
 
  
