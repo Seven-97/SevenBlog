@@ -58,7 +58,7 @@ public interface UserService {
 
 接下来通过直接代码的方式生成一个dubbo服务，并且用另外一个类去调用这个dubbo服务：
 
-#### 引入依赖
+- 引入依赖
 
 核心依赖就两个，一个dubbo的依赖，另外一个上面的公共接口方法，服务提供方和消费者都需要引入这两个依赖
 
@@ -79,7 +79,7 @@ public interface UserService {
 
 
 
-#### 服务提供者
+- 服务提供者
 
 服务提供者主要配置以下几个属性：
 
@@ -119,7 +119,7 @@ public class DubboProvider {
 
 
 
-#### 服务消费者
+- 服务消费者
 
 消费者的实现主要就三步：
 
@@ -146,7 +146,7 @@ public class DubboConsumer {
 
 先启动提供者，再启动消费者，如果user信息打印出来了就说明调用成功。
 
-#### 使用zookeeper作为注册中心
+- 使用zookeeper作为注册中心
 
 上面的Register使用的是直连的方式，也可以使用**注册中心**，这里以zookeeper为例。首先在项目中引入zookeeper相关依赖：
 
@@ -190,30 +190,55 @@ referenceConfig.setInterface(UserService.class);
 
 ### Spring集成dubbo
 
-通过Spring的方式只不过是把上面写在Java中的代码拿到配置文件中去，并把接口注入到Bean容器中，在resource文件夹下新建两个配置文件： provider.xml
+通过Spring的方式只不过是把上面写在Java中的代码拿到配置文件中去，并把接口注入到Bean容器中
+
+- 引入spring相关依赖
+
+在provider和consumer的模块下额外引入spring相关依赖
+```java
+<dependency>  
+    <groupId>org.springframework</groupId>  
+    <artifactId>spring-context</artifactId>  
+    <version>5.3.37</version>  
+</dependency>  
+<dependency>  
+    <groupId>org.springframework</groupId>  
+    <artifactId>spring-core</artifactId>  
+    <version>5.3.37</version>  
+</dependency>  
+<dependency>  
+    <groupId>org.springframework</groupId>  
+    <artifactId>spring-beans</artifactId>  
+    <version>5.3.37</version>  
+</dependency>
+```
+
+- 在resource文件夹下新建两个配置文件
+
+provider.xml
 
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans-4.3.xsd        http://dubbo.apache.org/schema/dubbo        http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
-
-    <!-- 提供方应用信息，用于计算依赖关系 -->
-    <dubbo:application name="sample-provider"  />
-
-    <!-- 使用zookeeper广播注册中心暴露服务地址 -->
-    <dubbo:registry address="zookeeper://192.168.78.128:2181" />
-
-    <!-- 用dubbo协议在20880端口暴露服务 -->
-    <dubbo:protocol name="dubbo" port="20880" />
-
-    <!-- 声明需要暴露的服务接口 -->
-    <dubbo:service interface="com.javayz.client.service.UserService" ref="userService" />
-
-    <!-- 和本地bean一样实现服务 -->
-    <bean id="userService" class="com.javayz.example1.service.impl.UserServiceImpl" />
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"  
+       xsi:schemaLocation="http://www.springframework.org/schema/beans  
+       http://www.springframework.org/schema/beans/spring-beans.xsd       http://dubbo.apache.org/schema/dubbo       http://dubbo.apache.org/schema/dubbo/dubbo.xsd">  
+  
+    <!-- 提供方应用信息，用于计算依赖关系 -->  
+    <dubbo:application name="spring-provider"/>  
+  
+    <!-- 使用zookeeper广播注册中心暴露服务地址 -->  
+    <dubbo:registry address="zookeeper://127.0.0.1:2181"/>  
+  
+    <!-- 用dubbo协议在20880端口暴露服务 -->  
+    <dubbo:protocol name="dubbo" port="20880"/>  
+  
+    <!-- 声明需要暴露的服务接口 -->  
+    <dubbo:service interface="com.seven.springdubbodemo.springdubboapi.service.UserService" ref="userService"/>  
+  
+    <!-- 和本地bean一样实现服务 -->  
+    <bean id="userService" class="com.seven.springdubbodemo.springdubboprovider.impl.UserServiceImpl"/>  
 </beans>
 ```
 
@@ -222,26 +247,31 @@ referenceConfig.setInterface(UserService.class);
 consumer.xml
 
 ```java
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans-4.3.xsd        http://dubbo.apache.org/schema/dubbo        http://dubbo.apache.org/schema/dubbo/dubbo.xsd">
-
-    <dubbo:application name="sample-consumer"  />
-    <dubbo:registry address="zookeeper://192.168.78.128:2181" />
-    <dubbo:reference id="userService" interface="com.javayz.client.service.UserService" />
+<beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"  
+       xsi:schemaLocation="http://www.springframework.org/schema/beans  
+       http://www.springframework.org/schema/beans/spring-beans.xsd       
+       http://dubbo.apache.org/schema/dubbo       
+       http://dubbo.apache.org/schema/dubbo/dubbo.xsd">  
+  
+    <dubbo:application name="spring-consumer"  />  
+    <dubbo:registry address="zookeeper://127.0.0.1:2181" />  
+    <dubbo:reference id="userService" interface="com.seven.springdubbodemo.springdubboapi.service.UserService" />  
 </beans>
 ```
 
 
+- 启动类
 
-这里的配置文件和上方的代码均一一对应。接着是服务的提供者和消费者： SpringDubboProvider
+这里的配置文件和上方的代码均一一对应。服务的提供者和消费者：
+
+SpringDubboProvider：
 
 ```java
 public class SpringDubboProvider {
     public static void main(String[] args) throws IOException {
-        ClassPathXmlApplicationContext context=new ClassPathXmlApplicationContext("provider.xml");
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("provider.xml");
         System.out.println("服务已经暴露");
         System.in.read();
     }
@@ -253,12 +283,15 @@ SpringDubboConsumer
 ```java
 public class SpringDubboConsumer {
     public static void main(String[] args) {
-        ClassPathXmlApplicationContext context=new ClassPathXmlApplicationContext("consumer.xml");
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("consumer.xml");
         UserService bean = context.getBean(UserService.class);
         System.out.println(bean.getUser(1L));
     }
 }
 ```
+
+
+### 纯注解版
 
 
 ### SpringBoot集成dubo
