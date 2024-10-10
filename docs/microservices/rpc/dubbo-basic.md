@@ -293,26 +293,118 @@ public class SpringDubboConsumer {
 
 ### 纯注解版
 
+注解的方式就是不在xml文件中注入bean，xml文件中只需要写包名即可
+
+- provider修改
+provider.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"  
+       xsi:schemaLocation="http://www.springframework.org/schema/beans  
+       http://www.springframework.org/schema/beans/spring-beans.xsd       http://dubbo.apache.org/schema/dubbo       http://dubbo.apache.org/schema/dubbo/dubbo.xsd">  
+  
+    <!-- 提供方应用信息，用于计算依赖关系 -->  
+    <dubbo:application name="anno-provider"/>  
+  
+    <!-- 使用zookeeper广播注册中心暴露服务地址 -->  
+    <dubbo:registry address="zookeeper://127.0.0.1:2181"/>  
+  
+    <!-- 用dubbo协议在20880端口暴露服务 -->  
+    <dubbo:protocol name="dubbo" port="20880"/>  
+  
+    <!-- 注解版 -->  
+    <dubbo:annotation package="com.seven.annotationdubbodemo.annodubboprovider.impl"/>  
+</beans>
+```
+
+UserService实现类
+```java
+import org.apache.dubbo.config.annotation.Service;//dubbo的@Service注解
+@Service  
+public class UserServiceImpl implements UserService {  
+    @Override  
+    public User getUser(Long id) {  
+        User user = new User();  
+        user.setId(id);  
+        user.setName("Seven");  
+        user.setSex("男");  
+        return user;  
+    }  
+}
+```
+
+- consumer修改
+consumer.xml
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo"  
+       xmlns:context="http://www.springframework.org/schema/context"  
+       xsi:schemaLocation="http://www.springframework.org/schema/beans  
+       http://www.springframework.org/schema/beans/spring-beans.xsd       http://dubbo.apache.org/schema/dubbo       http://dubbo.apache.org/schema/dubbo/dubbo.xsd        http://www.springframework.org/schema/context        http://www.springframework.org/schema/context/spring-context.xsd">  
+  
+    <dubbo:application name="anno-consumer"  />  
+    <dubbo:registry address="zookeeper://127.0.0.1:2181" />  
+  
+    <!-- 注解版 -->  
+    <dubbo:annotation package="com.seven.annotationdubbodemo.annodubboapi.service"/>  
+    <context:component-scan base-package="com.seven.annotationdubbodemo.annodubboconsumer.controller"/>  
+  
+</beans>
+```
+
+controller类
+```java
+@Controller  
+public class UserController {  
+
+    @Reference //import org.apache.dubbo.config.annotation.Reference;  
+    private UserService userService;  
+  
+    public User getUser(long id){  
+        return userService.getUser(id);  
+    }  
+  
+}
+```
+
 
 ### SpringBoot集成dubo
 
-新建两个SpringBoot项目，一个是服务提供者，一个是服务消费者，引入dubbo的核心依赖
+引入dubbo和springboot的核心依赖 
 
 ```xml
-<dependency>
-    <groupId>org.apache.dubbo</groupId>
-    <artifactId>dubbo-spring-boot-starter</artifactId>
-    <version>2.7.4.1</version>
+<!-- 引入spring-boot-starter以及dubbo和curator的依赖 -->  
+<dependency>  
+    <groupId>org.apache.dubbo</groupId>  
+    <artifactId>dubbo-spring-boot-starter</artifactId>  
+    <version>2.7.5</version>  
+</dependency>  
+<!-- Spring Boot相关依赖 -->  
+<dependency>  
+    <groupId>org.springframework.boot</groupId>  
+    <artifactId>spring-boot-starter</artifactId>  
+    <version>2.7.5</version>  
 </dependency>
 ```
 
 
-这里的配置都写在application.properties中，首先是服务提供者：
+- 服务提供者provider
+这里的配置都写在application.properties中：
 
 ```yml
-dubbo.application.name=dubbo-provider
-dubbo.registry.address=zookeeper://192.168.78.128:2181
-dubbo.protocol.name=dubbo
+#当前服务/应用的名字  
+dubbo.application.name=springboot-provider  
+  
+#注册中心的协议和地址  
+dubbo.registry.protocol=zookeeper  
+dubbo.registry.address=127.0.0.1:2181  
+  
+#通信规则（通信协议和接口）  
+dubbo.protocol.name=dubbo  
 dubbo.protocol.port=20880
 ```
 
@@ -320,56 +412,76 @@ dubbo.protocol.port=20880
 服务提供者需要写服务的实现类，这里需要注意@Service注解采用的是dubbo包下：
 
 ```java
-import com.javayz.client.entity.User;
-import com.javayz.client.service.UserService;
-import org.apache.dubbo.config.annotation.Service;
-import org.springframework.stereotype.Component;
+import com.seven.springbootdubbodemo.api.entity.User;  
+import com.seven.springbootdubbodemo.api.service.UserService;  
+import org.apache.dubbo.config.annotation.Service;  
 
-@Service
-@Component
-public class UserServiceImpl implements UserService {
-    @Override
-    public User getUser(Long id) {
-        User user=new User();
-        user.setId(id);
-        user.setName("javayz");
-        user.setSex("man");
-        return user;
-    }
+@Service  
+public class UserServiceImpl implements UserService {  
+    @Override  
+    public User getUser(Long id) {  
+        User user = new User();  
+        user.setId(id);  
+        user.setName("Seven");  
+        user.setSex("男");  
+        return user;  
+    }  
 }
 ```
 
 
 接着在启动类上添加一个@EnableDubbo注解即可。
+```java
+@EnableDubbo  
+@SpringBootApplication  
+public class App{  
+  
+    public static void main(String[] args) {  
+        SpringApplication.run(App.class, args);  
+    }  
+}
+```
 
-服务的消费者同样是先写一下配置文件：
+- 服务的消费者consumer
+
+配置文件：
 
 ```yml
-server.port=8081
-dubbo.application.name=dubbo-consumer
-dubbo.registry.address=zookeeper://192.168.78.128:2181
+#避免和provider端口冲突，设为8081端口访问  
+server.port=8081  
+  
+#当前服务/应用的名字  
+dubbo.application.name=springboot-consumer  
+  
+#注册中心的协议和地址  
+dubbo.registry.protocol=zookeeper  
+dubbo.registry.address=127.0.0.1:2181  
+  
+#通信规则（通信协议和接口）  
+dubbo.protocol.name=dubbo  
+dubbo.protocol.port=20880
 ```
 
 
 接着通过@Reference注解将service对象引进来
 
 ```java
-@SpringBootApplication
-public class SpringbootconsumerApplication {
-
-    @Reference
-    UserService userService;
-
-    public static void main(String[] args) {
-        SpringApplication.run(SpringbootconsumerApplication.class, args);
-    }
-
-    @Bean
-    public ApplicationRunner getBean(){
-        return args -> {
-            System.out.println(userService.getUser(1L));
-        };
-    }
+@SpringBootApplication  
+public class App{  
+  
+    @Reference  
+    UserService userService;  
+  
+    public static void main(String[] args) {  
+        SpringApplication.run(App.class, args);  
+    }  
+  
+    @Bean  
+    public ApplicationRunner getBean(){  
+        return args -> {  
+            System.out.println(userService.getUser(1L));  
+        };  
+    }  
 }
 ```
 
@@ -380,10 +492,10 @@ public class SpringbootconsumerApplication {
 <dubbo:application/> 用于配置当前应用信息
 <dubbo:register/> 用于配置连接注册相关信息
 <dubbo:protocol/> 用于配置提供服务的协议信息，提供者指定协议，消费者被动接受
-<dubbo:service/> 用于暴露一个服务，一个服务可以用多个协议暴露，一个服务也可以注册到多个注册中心
-<dubbo:provider/> 当ProtocolConfig和ServiceConfig某属性没有配置时，采用此缺省值
-<dubbo:consumer/> 当ReferenceConfig某属性没有配置时，采用此缺省值
-<dubbo:reference/> 用于创建一个远程服务代理
+
+<dubbo:service/> 用于暴露一个服务，一个服务可以用多个协议暴露，一个服务也可以注册到多个注册中心。provider端配置
+
+<dubbo:reference/> 用于创建一个远程服务代理。consumer端配置
 ```
 
 更加具体的配置信息我在官网中找到了，大家可参考：
@@ -402,7 +514,7 @@ https://dubbo.apache.org/zh/docs/v2.7/user/references/xml/
 
 ## 总结
 
-Dubbo的基本使用就这些，Dubbo毕竟只是一个RPC的工具，我们可以用它很方便地暴露、消费服务。但是两个小时也只是会上手使用，它内部的一些配置，一些理念以及最重要的原理都是需要我们自己去深耕的。
+Dubbo的基本使用就这些，Dubbo毕竟只是一个RPC的工具，我们可以用它很方便地暴露、消费服务。但是以上也只是会上手使用，内部的原理可以继续看其他的文章
 
 
 
