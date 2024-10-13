@@ -1,7 +1,7 @@
 ---
 title: 多线程交替顺序打印ABC的多种方式
 category: Java
-tags:
+tag:
   - 并发编程
 head:
   - - meta

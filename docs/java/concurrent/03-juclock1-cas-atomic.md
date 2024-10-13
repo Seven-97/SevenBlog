@@ -1,7 +1,7 @@
 ---
 title: CAS & 原子类
 category: Java
-tags:
+tag:
   - 并发编程
 head:
   - - meta

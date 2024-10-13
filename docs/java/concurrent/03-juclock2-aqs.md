@@ -1,7 +1,7 @@
 ---
 title: AQS详解（以ReentrantLock为例）
 category: Java
-tags:
+tag:
   - 并发编程
   - JUC
 head:

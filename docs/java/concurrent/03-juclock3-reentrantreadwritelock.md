@@ -1,7 +1,7 @@
 ---
 title: 并发读写锁-ReentrantReadWriteLock详解
 category: Java
-tags:
+tag:
   - 并发编程
   - JUC
 head:

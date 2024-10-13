@@ -1,7 +1,7 @@
 ---
 title: 手写生产者消费者模型
 category: Java
-tags:
+tag:
   - 并发编程
 head:
   - - meta

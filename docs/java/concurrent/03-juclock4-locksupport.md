@@ -1,7 +1,7 @@
 ---
 title: 线程阻塞唤醒类-LockSupport详解
 category: Java
-tags:
+tag:
   - 并发编程
   - JUC
 head:
