@@ -15,7 +15,7 @@ head:
 
 ## 什么是Dubbo
 
-目前来说，Dubbo是最有名的RPC服务调用框架，他是阿里开源的一个SOA服务治理框架，功能较为完善，支持多种传输和序列化方案。Dubbo最常用的应用就是远程调用。
+Dubbo是一个分布式、高性能、透明化的RPC服务框架，提供服务自动注册、自动发现等高效服务治理方案，可以和Spring框架无缝集成。Dubbo最常用的应用就是远程调用。
 
 Dubbo中服务端最核心的对象有四个：
 - **ApplicationConfig**：配置当前应用信息
@@ -28,15 +28,25 @@ Dubbo客户端中核心的对象有两个：
 - **ReferenceConfig**：配置引用的服务信息
 
 
+## Dubbo的主要应用场景
+
+透明化的远程方法调用，就像调用本地方法一样调用远程方法，只需简单配置，没有任何API侵入。
+
+软负载均衡及容错机制，可在内网替代F5等硬件负载均衡器，降低成本，减少单点。（F5负载均衡器我也是百度来的）。
+
+服务自动注册与发现，不再需要写死服务提供方地址，注册中心基于接口名查询服务提供者的IP地址，并且能够平滑添加或删除服务提供者。
+
 ## Dubbo的使用
 
-接下来通过四种方式入门Dubbo。首先会通过代码直接展示dubbo的直连和注册中心实现方式，接着使用Spring、注解和SpringBoot的方式分别展示如何使用Dubbo。
+接下来通过四种方式入门Dubbo。首先会通过原生API直接展示dubbo的直连和注册中心实现方式，接着使用Spring、注解和SpringBoot的方式分别展示如何使用Dubbo。
 
-在写dubbo相关代码前，我们首先要定义一个**公共的api服务**，这个服务里存放的是service接口。服务提供者引入这个工程，写实现类，提供dubbo接口；服务消费者引入这个工程，通过这个工程的service接口调用。
+案例源码[点击这里](https://github.com/Seven-97/SpringBoot-Demo/tree/master/A11-spring-springboot-dubbo)
+
+在写dubbo相关代码前，首先要定义一个**公共的api服务**，这个服务里存放的是service接口。服务提供者引入这个工程，写实现类，提供dubbo接口；服务消费者引入这个工程，通过这个工程的service接口调用。
 
 User类：
 ```java
-@Data
+@Data //RPC调用一般不建议使用lombok注解，容易出很多bug，这里使用是为了方便
 public class User implements Serializable {
     private static final long serialVersionUID = -9206514891359830486L;
     private Long id;
@@ -54,9 +64,9 @@ public interface UserService {
 ```
 
 
-### 直接代码
+### 原生API
 
-接下来通过直接代码的方式生成一个dubbo服务，并且用另外一个类去调用这个dubbo服务：
+通过原生API的方式生成一个dubbo服务，并且用另外一个类去调用这个dubbo服务：
 
 - 引入依赖
 
@@ -172,14 +182,14 @@ public class DubboConsumer {
 //直连的方式，不暴露到注册中心
 //RegistryConfig registryConfig=new RegistryConfig(RegistryConfig.NO_AVAILABLE);
 //通过注册中心暴露dubbo
-RegistryConfig registryConfig = new RegistryConfig("zookeeper://192.168.130.131:2181");
+RegistryConfig registryConfig = new RegistryConfig("zookeeper://127.0.0.1:2181");
 ```
 
 
 消费者同样修改一处位置，将referenceConfig中的setUrl方法替换为zookeeper：
 
 ```java
-RegistryConfig registryConfig = new RegistryConfig("zookeeper://192.168.130.131:2181");
+RegistryConfig registryConfig = new RegistryConfig("zookeeper://127.0.0.1:2181");
 ReferenceConfig referenceConfig = new ReferenceConfig();
 referenceConfig.setRegistry(registryConfig);
 referenceConfig.setApplication(applicationConfig);
@@ -235,7 +245,7 @@ provider.xml
     <dubbo:protocol name="dubbo" port="20880"/>  
   
     <!-- 声明需要暴露的服务接口 -->  
-    <dubbo:service interface="com.seven.springdubbodemo.springdubboapi.service.UserService" ref="userService"/>  
+    <dubbo:service interface="com.seven.springdubbodemo.springdubboapi.service.UserService" ref="userService" loadbalance="roundrobin"/>  
   
     <!-- 和本地bean一样实现服务 -->  
     <bean id="userService" class="com.seven.springdubbodemo.springdubboprovider.impl.UserServiceImpl"/>  
@@ -257,7 +267,7 @@ consumer.xml
   
     <dubbo:application name="spring-consumer"  />  
     <dubbo:registry address="zookeeper://127.0.0.1:2181" />  
-    <dubbo:reference id="userService" interface="com.seven.springdubbodemo.springdubboapi.service.UserService" />  
+    <dubbo:reference id="userService" interface="com.seven.springdubbodemo.springdubboapi.service.UserService" loadbalance="roundrobin"/>  
 </beans>
 ```
 
@@ -322,8 +332,8 @@ provider.xml
 
 UserService实现类
 ```java
-import org.apache.dubbo.config.annotation.Service;//dubbo的@Service注解
-@Service  
+import org.apache.dubbo.config.annotation.Service;
+@Service  //dubbo的@Service注解
 public class UserServiceImpl implements UserService {  
     @Override  
     public User getUser(Long id) {  
@@ -397,15 +407,22 @@ public class UserController {
 
 ```yml
 #当前服务/应用的名字  
-dubbo.application.name=springboot-provider  
+dubbo:
+	application:
+		name: springboot-provider  
   
 #注册中心的协议和地址  
-dubbo.registry.protocol=zookeeper  
-dubbo.registry.address=127.0.0.1:2181  
+	registry:
+		protocol: zookeeper  
+		address: 127.0.0.1:2181  
   
 #通信规则（通信协议和接口）  
-dubbo.protocol.name=dubbo  
-dubbo.protocol.port=20880
+	protocol: 
+		name: dubbo  
+		port: 20880
+# 负载均衡算法
+	provider: 
+		loadbalance: roundrobin
 ```
 
 
@@ -448,18 +465,26 @@ public class App{
 
 ```yml
 #避免和provider端口冲突，设为8081端口访问  
-server.port=8081  
+server:
+	port: 8081  
   
 #当前服务/应用的名字  
-dubbo.application.name=springboot-consumer  
+dubbo:
+	application:
+		name: springboot-consumer
   
 #注册中心的协议和地址  
-dubbo.registry.protocol=zookeeper  
-dubbo.registry.address=127.0.0.1:2181  
+	registry:
+		protocol: zookeeper  
+		address: 127.0.0.1:2181  
   
 #通信规则（通信协议和接口）  
-dubbo.protocol.name=dubbo  
-dubbo.protocol.port=20880
+	protocol: 
+		name: dubbo  
+		port: 20880
+# 负载均衡算法
+	consumer: 
+		loadbalance: roundrobin
 ```
 
 
@@ -488,6 +513,8 @@ public class App{
 
 ## dubbo的常用配置
 
+- xml配置
+
 ```
 <dubbo:application/> 用于配置当前应用信息
 <dubbo:register/> 用于配置连接注册相关信息
@@ -498,36 +525,31 @@ public class App{
 <dubbo:reference/> 用于创建一个远程服务代理。consumer端配置
 ```
 
-更加具体的配置信息我在官网中找到了，大家可参考：
+- springboot配置
 
-https://dubbo.apache.org/zh/docs/v2.7/user/references/xml/
+```yaml
+dubbo:
+  application:
+      name: dubbo-springboot-demo-provider
+  protocol:
+    name: dubbo
+    port: 50052
+  registry:
+    address: zookeeper://127.0.0.1:2181
+```
+
+
+更加具体的配置信息可以参考：[配置项参考手册 | Apache Dubbo](https://cn.dubbo.apache.org/zh-cn/overview/mannual/java-sdk/reference-manual/config/properties/)
 
 ## 企业中如何通过dubbo实现分布式调用
 
 在企业中，如果消费者直接通过RPC去调用提供者，理论上需要把提供者的整个Jar包引入到项目中。但是这样的话服务提供这种的其他无关代码也会被引入其中，导致代码污染。
 
-因此实际开发过程中，**服务提供者和调用者之间会增加一层Client模块**。这个Client中主要写的是Service的接口定义，接口的返回实例对象以及接口的请求实例对象。简单来讲，**所有的定义都在Client中完成**。
+因此实际开发过程中，**服务提供者和调用者之间会增加一层API模块**。这个Client中主要写的是Service的接口定义，接口的返回实例对象以及接口的请求实例对象。简单来讲，**所有的定义都在Client中完成**。
 
-使用时，服务提供者引入这个Client，然后写实现方法，服务消费者引入这个Client，然后通过dubbo直接调用即可。
+使用时，服务提供者引入这个API，然后写实现方法，服务消费者引入这个API，然后通过dubbo直接调用即可。
 
 另外企业开发中，可能会出现多个接口实现，这种情况下可以给Service设定group、version等进行区分。
-
-## 总结
-
-Dubbo的基本使用就这些，Dubbo毕竟只是一个RPC的工具，我们可以用它很方便地暴露、消费服务。但是以上也只是会上手使用，内部的原理可以继续看其他的文章
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

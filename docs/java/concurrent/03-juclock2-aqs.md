@@ -1,9 +1,9 @@
 ---
-title: JUC锁 - AQS详解（以ReentrantLock为例）
+title: AQS详解（以ReentrantLock为例）
 category: Java
-tag:
- - 并发编程
- - JUC
+tags:
+  - 并发编程
+  - JUC
 head:
   - - meta
     - name: keywords
@@ -860,12 +860,101 @@ class Mutex implements Lock, java.io.Serializable {
 除了Mutex，ReentrantLock/CountDownLatch/Semphore这些同步类的实现方式都差不多，不同的地方就在获取-释放资源的方式tryAcquire-tryRelelase。
 
  
+## ReentrantLock 的使用
 
+ReentrantLock 的使用方式与 [synchronized](https://www.seven97.top/java/concurrent/02-keyword1-synchronized.html) 关键字类似，都是通过加锁和释放锁来实现同步的。我们来看看 ReentrantLock 的使用方式，以非公平锁为例：
+
+```java
+public class ReentrantLockTest {
+    private static final ReentrantLock lock = new ReentrantLock();
+    private static int count = 0;
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread thread1 = new Thread(() -> {
+            for (int i = 0; i < 10000; i++) {
+                lock.lock();
+                try {
+                    count++;
+                } finally {
+                    lock.unlock();
+                }
+            }
+        });
+        Thread thread2 = new Thread(() -> {
+            for (int i = 0; i < 10000; i++) {
+                lock.lock();
+                try {
+                    count++;
+                } finally {
+                    lock.unlock();
+                }
+            }
+        });
+        thread1.start();
+        thread2.start();
+        thread1.join();
+        thread2.join();
+        System.out.println(count);
+    }
+}
+```
  
 
- 
+ 代码很简单，两个线程分别对 count 变量进行 10000 次累加操作，最后输出 count 的值。我们来看看运行结果：
 
- 
+```
+20000
+```
+
+可以看到，两个线程对 count 变量进行了 20000 次累加操作，说明 ReentrantLock 是支持重入性的。再来看看公平锁的使用方式，只需要将 ReentrantLock 的构造方法改为公平锁即可：
+
+```java
+private static final ReentrantLock lock = new ReentrantLock(true);
+```
+
+运行结果为：
+
+```
+20000
+```
+
+可以看到，公平锁的运行结果与非公平锁的运行结果一致，这是因为公平锁的实现方式与非公平锁的实现方式基本一致，只是在获取锁时增加了判断当前节点是否有前驱节点的逻辑判断。
+
+- 公平锁: 按照线程请求锁的顺序获取锁，即先到先得。
+- 非公平锁: 线程获取锁的顺序可能与请求锁的顺序不同，可能导致某些线程获取锁的速度较快。
+
+需要注意的是，使用 ReentrantLock 时，锁必须在 try 代码块开始之前获取，并且加锁之前不能有异常抛出，否则在 finally 块中就无法释放锁（ReentrantLock 的锁必须在 finally 中手动释放）。
+
+错误示例：
+
+```java
+Lock lock = new XxxLock();
+// ...
+try {
+    // 如果在此抛出异常，会直接执行 finally 块的代码
+    doSomething();
+    // 不管锁是否成功，finally 块都会执行
+    lock.lock();
+    doOthers();
+
+} finally {
+    lock.unlock();
+}
+```
+
+正确示例：
+
+```java
+Lock lock = new XxxLock();
+// ...
+lock.lock();
+try {
+    doSomething();
+    doOthers();
+} finally {
+    lock.unlock();
+}
+```
 
  
 

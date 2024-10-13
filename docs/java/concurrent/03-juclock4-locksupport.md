@@ -1,9 +1,9 @@
 ---
-title: JUC锁 - LockSupport详解
+title: 线程阻塞唤醒类-LockSupport详解
 category: Java
-tag:
- - 并发编程
- - JUC
+tags:
+  - 并发编程
+  - JUC
 head:
   - - meta
     - name: keywords
@@ -16,12 +16,61 @@ head:
 
 
 
-
-
-
 ## LockSupport简介
 
-LockSupport用来创建锁和其他同步类的基本线程阻塞原语。简而言之，当调用LockSupport.park时，表示当前线程将会等待，直至获得许可，当调用LockSupport.unpark时，必须把等待获得许可的线程作为参数进行传递，好让此线程继续运行。在AQS中大量使用，AQS最终都是使用LockSupport来阻塞线程的
+LockSupprot 用来阻塞和唤醒线程，底层实现依赖于 [Unsafe 类](https://www.seven97.top/java/concurrent/unsafe.html)。
+
+LockSupport用来创建锁和其他同步类的基本线程阻塞原语。简而言之，当调用LockSupport.park时，表示当前线程将会等待，直至获得许可，当调用LockSupport.unpark时，必须把等待获得许可的线程作为参数进行传递，好让此线程继续运行。在AQS中大量使用，AQS最终都是使用LockSupport来阻塞线程的。
+
+该类包含一组用于阻塞和唤醒线程的静态方法，这些方法主要是围绕 park 和 unpark 展开，话不多说，直接来看一个简单的例子吧。
+
+```java
+public class LockSupportDemo1 {
+    public static void main(String[] args) {
+        Thread mainThread = Thread.currentThread();
+
+        // 创建一个线程从1数到1000
+        Thread counterThread = new Thread(() -> {
+            for (int i = 1; i <= 1000; i++) {
+                System.out.println(i);
+                if (i == 500) {
+                    // 当数到500时，唤醒主线程
+                    LockSupport.unpark(mainThread);
+                }
+            }
+        });
+
+        counterThread.start();
+
+        // 主线程调用park
+        LockSupport.park();
+        System.out.println("Main thread was unparked.");
+    }
+}
+```
+
+
+上面的代码中，当 counterThread 数到 500 时，它会唤醒 mainThread。而 mainThread 在调用 park 方法时会被阻塞，直到被 unpark。
+
+LockSupport 中的方法不多，这里将这些方法做一个总结：
+
+### 阻塞线程
+
+1. `void park()`：阻塞当前线程，如果调用 unpark 方法或线程被中断，则该线程将变得可运行。请注意，park 不会抛出 InterruptedException，因此线程必须单独检查其中断状态。
+2. `void park(Object blocker)`：功能同方法 1，入参增加一个 Object 对象，用来记录导致线程阻塞的对象，方便问题排查。
+3. `void parkNanos(long nanos)`：阻塞当前线程一定的纳秒时间，或直到被 unpark 调用，或线程被中断。
+4. `void parkNanos(Object blocker, long nanos)`：功能同方法 3，入参增加一个 Object 对象，用来记录导致线程阻塞的对象，方便问题排查。
+5. `void parkUntil(long deadline)`：阻塞当前线程直到某个指定的截止时间（以毫秒为单位），或直到被 unpark 调用，或线程被中断。
+6. `void parkUntil(Object blocker, long deadline)`：功能同方法 5，入参增加一个 Object 对象，用来记录导致线程阻塞的对象，方便问题排查。
+
+### 唤醒线程
+
+`void unpark(Thread thread)`：唤醒一个由 park 方法阻塞的线程。如果该线程未被阻塞，那么下一次调用 park 时将立即返回。这允许“先发制人”式的唤醒机制。
+
+实际上，LockSupport 阻塞和唤醒线程的功能依赖于 `sun.misc.Unsafe`，这是一个很底层的类，比如 LockSupport 的 park 方法是通过 `unsafe.park()` 方法实现的。
+
+
+
 
 ## LockSupport源码分析
 
@@ -202,6 +251,10 @@ public static void unpark(Thread thread) {
 
 
 ## 更深入的理解
+
+### 与 synchronzed 的区别
+
+[synchronzed](https://www.seven97.top/java/concurrent/02-keyword1-synchronized.html) 会使线程阻塞，线程会进入 BLOCKED 状态，而调用 LockSupprt 方法阻塞线程会使线程进入到 WAITING 状态。
 
 ### Thread.sleep()和Object.wait()的区别
 
