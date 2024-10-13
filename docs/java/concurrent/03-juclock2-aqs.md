@@ -1,5 +1,5 @@
 ---
-title: AQS详解（以ReentrantLock为例）
+title: 抽象队列同步器 - AQS详解（以ReentrantLock为例）
 category: Java
 tag:
   - 并发编程

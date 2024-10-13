@@ -1,5 +1,5 @@
 ---
-title: 线程阻塞唤醒类-LockSupport详解
+title: 线程阻塞唤醒类 - LockSupport详解
 category: Java
 tag:
   - 并发编程

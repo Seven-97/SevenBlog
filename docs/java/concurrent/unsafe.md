@@ -1,5 +1,5 @@
 ---
-title: Unsafe
+title: 魔法类 - Unsafe
 category: Java
 tag:
   - 并发编程
