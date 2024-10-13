@@ -198,7 +198,9 @@ CREATE TABLE `t_orderdetail` (
 ```
 
 ### using where
-查询的列未被索引覆盖，where筛选条件非索引的前导列。对存储引擎返回的结果进行过滤（Post-filter，后过滤），一般发生在MySQL服务器，而不是存储引擎层。
+表示在查询过程中使用了WHERE条件进行数据过滤。当一 个查询中包含WHERE条件时，MySQL会根据该条件过滤出满足条件的数据行，然后再进行后续的操作。这个过程 就被称为"Using Where”。
+
+表示查询的列未被索引覆盖，，且where筛选条件是索引列前导列的一个范围，或者是索引列的非前导列，或者是非索引列。对存储引擎返回的结果进行过滤（Post-filter，后过滤），一般发生在MySQL服务器，而不是存储引擎层，因此需要回表查询数据。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404261827731.png)
 

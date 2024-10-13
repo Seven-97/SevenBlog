@@ -238,7 +238,7 @@ update、delete的where条件列、order by、group by、distinct字段、多表
 在对数据进行，custom_id 排序的情况下，再对 order_date 进行排序。
 
 ```
-SELECT customer_id from orders order by customer_id, order_date
+SELECT customer_id from orders by customer_id, order_date
 ```
 
 耗时 0.669 秒
@@ -248,7 +248,7 @@ SELECT customer_id from orders order by customer_id, order_date
 当调换排序顺序，就无法走索引了，此时针对custom_id的索引排序就是失效了。
 
 ```sql
-SELECT customer_id from orders order by order_date,customer_id
+SELECT customer_id from orders by order_date,customer_id
 ```
 
 耗时 1.645 秒
@@ -257,11 +257,21 @@ SELECT customer_id from orders order by order_date,customer_id
 
 
 
-同时默认情况下，索引是升序的，如果需要降序排序，那么索引也会失效！！！
+order by后跟的排序字段是desc和asc 组合（），不论排序顺序是否和组合索引顺序一致，必然会出现Using filesort
 
 ```
-SELECT` `customer_id ``from` `orders ``order` `by` `customer_id ``desc``, order_date
+SELECT customer_id from orders by customer_id desc, order_date asc
 ```
+
+
+
+**order by索引注意**：
+
+1. 无过滤条件(无where和limit)的order by 必然会出现 Using filesort
+2. 过滤条件中的字段和order by 后跟的字段的顺序不一致，必然会出现 Using filesort，也就是说order by需要遵循最左匹配原则
+3. order by后跟的排序字段是desc和asc 组合，不论排序顺序是否和组合索引顺序一致，必然会出现Using filesort
+4. where条件的值确定(where xx = )，且order by后跟了where条件的排序字段(order by 字段去除定值字段后剩余单字段)，即使order by后跟的字段和组合索引字段顺序不一致，也不会出现 Using filesort
+   
 
 
 
