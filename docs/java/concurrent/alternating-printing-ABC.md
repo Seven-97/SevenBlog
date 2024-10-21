@@ -12,7 +12,7 @@ head:
       content: 全网最全的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
-面试题：有 3 个独立的线程，一个只会输出 A，一个只会输出 B，一个只会输出 C，在三个线程启动的情况下，请用合理的方式让他们按顺序打印 ABCABC。
+面试题：有 3 个独立的线程，一个只会输出 A，一个只会输出 B，一个只会输出 C，在三个线程启动的情况下，请用合理的方式让他们按顺序打印 ABC。
 
 ## 使用lock，Condition
 
@@ -197,6 +197,8 @@ public class ABC2 {
 
 
 ## 使用LockSupprt
+
+[线程阻塞唤醒类-LockSupport详解](https://www.seven97.top/java/concurrent/03-juclock4-locksupport.html)
 
 ```java
 public class ABC3 {

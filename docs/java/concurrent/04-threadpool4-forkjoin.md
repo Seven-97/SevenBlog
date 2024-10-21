@@ -38,7 +38,7 @@ head:
 2. 求解：当子问题划分得足够小时，用较简单的方法解决；
 3. 合并：按原问题的要求，将子问题的解逐层合并构成原问题的解。
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251506519.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202410211122023.png)
 
 Fork/Join对任务的拆分和对结果合并过程也是如此，可以用下面伪代码来表示：
 

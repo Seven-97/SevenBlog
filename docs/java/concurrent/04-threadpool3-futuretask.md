@@ -12,27 +12,22 @@ head:
       content: 全网最全的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
+## 前言
 
+Callable、Future和FutureTask是jdk1.5，java.util.concurrent包提供的异步框架
 
+这里先讲一下什么是异步？异步是指起多个线程，多个线程之间互不干扰，各自执行各自的任务，在代码中可能书写顺序有先有后，但有可能写在后面的线程会比写在前面的线程先执行任务，异步对应并行的概念，常见的异步操作有[线程池](https://www.seven97.top/java/concurrent/04-threadpool1-threadpoolexecutor.html)、Callable、[completeFuture](https://www.seven97.top/java/concurrent/05-concurrenttools7-completablefuture.html)等。
 
+同步是多线程里针对竞争现象的一个处理，竞争是指同一时刻有多个线程访问临界资源，可能会引发程序执行错误的结果，同步就是保证某一时刻仅能有一个线程访问临界资源，同步对应串行的概念，常见的同步操作有[synchronized关键字](https://www.seven97.top/java/concurrent/02-keyword1-synchronized.html)、Lock、线程变量、[Atomic原子类](https://www.seven97.top/java/concurrent/03-juclock1-cas-atomic.html#原子类atomic)等。
 
-## FutureTask简介
+什么时候需要异步？比如要执行一个任务，该任务执行完后会返回一个结果供其他任务使用，但是该任务很耗时，如果我们把程序设计成串行执行，先执行这个耗时任务，等他结束后再把执行结果给下一个任务使用，这样会耗时，且在这个任务执行期间，其他任务都被阻塞了。那么就可以把程序设计成异步，起一个线程执行这个耗时任务，此外主线程做其他事情，等这个耗时任务执行完毕后，主线程再把结果拿到，使用这个结果继续做其他事情，这样在这个耗时任务执行的过程中，主线程可以去做其他事情而不是等他执行完，这样效率会很高，因此异步编程在提高并发量上使用广泛。
 
-FutureTask 为 Future 提供了基础实现，如获取任务执行结果(get)和取消任务(cancel)等。如果任务尚未完成，获取任务执行结果时将会阻塞。一旦执行结束，任务就不能被重启或取消(除非使用runAndReset执行计算)。FutureTask 常用来封装 Callable 和 Runnable，也可以作为一个任务提交到线程池中执行。除了作为一个独立的类之外，此类也提供了一些功能性函数供我们创建自定义 task 类使用。FutureTask 的线程安全由CAS来保证。
-
-## FutureTask类关系
-
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251132262.jpg)
-
-可以看到,FutureTask实现了RunnableFuture接口，则RunnableFuture接口继承了Runnable接口和Future接口，所以FutureTask既能当做一个Runnable直接被Thread执行，也能作为Future用来得到Callable的计算结果。
-
-## 底层源码解析
 
 ### Callable接口
 
-Callable是个泛型接口，泛型V就是要call()方法返回的类型。对比Runnable接口，Runnable不会返回数据也不能抛出异常。
-
+先看Callable接口的源码：
 ```java
+@FunctionalInterface
 public interface Callable<V> {
     /**
      * Computes a result, or throws an exception if unable to do so.
@@ -44,6 +39,46 @@ public interface Callable<V> {
 }
 ```
 
+首先是注解是函数式接口，意味着可以用lambda表达式更简洁地使用它。Callable是个泛型接口，只有一个方法call，该方法返回类型就是传递进来的V类型。call方法还支持抛出异常.
+
+与Callable对应的是Runnable接口，实现了这两个接口的类都可以当做线程任务递交给线程池执行，Runnable接口的源码如下：
+
+```java
+@FunctionalInterface
+public interface Runnable {
+    /**
+     * When an object implementing interface <code>Runnable</code> is used
+     * to create a thread, starting the thread causes the object's
+     * <code>run</code> method to be called in that separately executing
+     * thread.
+     * <p>
+     * The general contract of the method <code>run</code> is that it may
+     * take any action whatsoever.
+     *
+     * @see     java.lang.Thread#run()
+     */
+    public abstract void run();
+}
+```
+
+既然实现了这两个接口的类都可以当做线程任务，那么这两个接口有什么区别呢？
+
+1. Runnable接口是java1.1就有的，Callable接口是java1.5才有的，可以认为Callable接口是升级版的Runnable接口；
+2. Runnable接口里线程任务是在run方法里写的，Callable接口里线程任务是在call方法里写；
+3. Callable接口的任务执行后会有返回值，Runnable接口的任务无返回值（void）；
+4. Callable接口的call方法支持抛出异常，Runnable接口的run方法不可以；
+5. 加入线程池运行，Runnable使用ExecutorService的execute方法，Callable使用ExecutorService的submit方法；
+6. 运行Callable任务可以拿到一个Future对象，表示异步计算的结果。Future对象封装了检查计算是否完成、检索计算的结果的方法，而Runnable接口没有。
+
+Callable使用ExecutorService的submit方法，这里看一下ExecutorService接口里的submit方法的重载情况：
+
+```java
+<T> Future<T> submit(Callable<T> task);
+<T> Future<T> submit(Runnable task, T result);
+Future<?> submit(Runnable task);
+```
+
+常用的是第一个和第三个，这两个方法分别提交实现了Callable接口的类和实现了Runnable接口的类作为线程任务，返回异步计算结果Future，Future里面封装了一些实用方法可以对异步计算结果进行进一步处理。
 
 
 ### Future接口
@@ -61,15 +96,191 @@ public interface Future<V> {
 }
 ```
 
-- cancel():用来取消异步任务的执行。如果异步任务已经完成或者已经被取消，或者由于某些原因不能取消，则会返回false。如果任务还没有被执行，则会返回true并且异步任务不会被执行。如果任务已经开始执行了但是还没有执行完成，若mayInterruptIfRunning为true，则会立即中断执行任务的线程并返回true，若mayInterruptIfRunning为false，则会返回true且不会中断任务执行线程。
+下面对这五个方法介绍：
 
-- isCanceled():判断任务是否被取消，如果任务在结束(正常执行结束或者执行异常结束)前被取消则返回true，否则返回false。
+1. cancel():用来取消异步任务的执行。如果异步任务已经完成或者已经被取消，或者由于某些原因不能取消，则会返回false。如果任务还没有被执行，则会返回true并且异步任务不会被执行。如果任务已经开始执行了但是还没有执行完成，若mayInterruptIfRunning为true，则会立即中断执行任务的线程并返回true，若mayInterruptIfRunning为false，则会返回true且不会中断任务执行线程。
+2. isCanceled():判断任务是否被取消，如果任务在结束(正常执行结束或者执行异常结束)前被取消则返回true，否则返回false。
+3. isDone():判断任务是否已经完成，如果完成则返回true，否则返回false。需要注意的是：任务执行过程中发生异常、任务被取消也属于任务已完成，也会返回true。
+4. get():获取任务执行结果，如果任务还没完成则会**阻塞等待**直到任务执行完成。如果任务被取消则会抛出CancellationException异常，如果任务执行过程发生异常则会抛出ExecutionException异常，如果阻塞等待过程中被中断则会抛出InterruptedException异常。
+5. get(long timeout,Timeunit unit):带超时时间的get()版本，如果阻塞等待过程中超时则会抛出TimeoutException异常。
 
-- isDone():判断任务是否已经完成，如果完成则返回true，否则返回false。需要注意的是：任务执行过程中发生异常、任务被取消也属于任务已完成，也会返回true。
+注意这里两个get方法都会抛出异常。
 
-- get():获取任务执行结果，如果任务还没完成则会**阻塞等待**直到任务执行完成。如果任务被取消则会抛出CancellationException异常，如果任务执行过程发生异常则会抛出ExecutionException异常，如果阻塞等待过程中被中断则会抛出InterruptedException异常。
 
-- get(long timeout,Timeunit unit):带超时时间的get()版本，如果阻塞等待过程中超时则会抛出TimeoutException异常。
+### FutureTask
+
+Future是一个接口，而FutureTask 为 Future 提供了基础实现，如获取任务执行结果(get)和取消任务(cancel)等。如果任务尚未完成，获取任务执行结果时将会阻塞。一旦执行结束，任务就不能被重启或取消(除非使用runAndReset执行计算)。FutureTask 常用来封装 Callable 和 Runnable，也可以作为一个任务提交到线程池中执行。除了作为一个独立的类之外，此类也提供了一些功能性函数供我们创建自定义 task 类使用。FutureTask 的线程安全由CAS来保证。
+
+源码如下：
+
+```java
+public class FutureTask<V> implements RunnableFuture<V> {
+...
+}
+```
+
+FutureTask类实现的是`RunnableFuture <V>`接口，该接口的源码如下：
+
+```java
+public interface RunnableFuture<V> extends Runnable, Future<V> {
+    /**
+     * Sets this Future to the result of its computation
+     * unless it has been cancelled.
+     */
+    void run();
+}
+```
+
+该接口继承了Runnable接口和Future接口，因此FutureTask类既可以当做线程任务递交给线程池执行，又能当Callable任务的计算结果。
+
+### Future VS FutureTask
+
+Future与FutureTask的区别：
+
+1. Future是一个接口，FutureTask是一个实现类；
+2. 使用Future初始化一个异步任务结果一般需要搭配线程池的submit，且submit方法有返回值；而初始化一个FutureTask对象需要传入一个实现了Callable接口的类的对象，直接将FutureTask对象submit给线程池，无返回值；
+3. Future + Callable获取结果需要Future对象的get，而FutureTask获取结果直接用FutureTask对象的get方法即可。
+
+## 使用示例
+
+### Callable + Future
+
+实现Callable接口创建一个异步任务的类，在主线程中起一个线程池执行异步任务，然后在主线程里拿到异步任务的返回结果。
+
+```java
+import java.util.concurrent.*;
+
+public class AsynDemo {
+    public static void main(String[] args) {
+        // 初始化线程池
+        ExecutorService threadPool = Executors.newFixedThreadPool(5);
+
+        // 初始化线程任务
+        MyTask myTask = new MyTask(5);
+
+        // 向线程池递交线程任务
+        Future<Integer> result = threadPool.submit(myTask);
+
+        // 主线程休眠2秒，模拟主线程在做其他的事情
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 主线程获取异步任务的执行结果
+        try {
+            System.out.println("异步线程任务执行结果 " + result.get());
+            System.out.println("检查异步线程任务是否执行完毕 " + result.isDone());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 静态内部类，实现Callable接口的任务类
+    static class MyTask implements Callable<Integer> {
+        private int num;
+
+        public MyTask(int num) {
+            this.num = num;
+        }
+
+        @Override
+        public Integer call() throws Exception {
+            for (int i = 1; i < 10; ++i) {
+                this.num *= i;
+            }
+            return this.num;
+        }
+    }
+}
+```
+
+执行结果如下：
+
+```text
+异步线程任务执行结果 1814400
+检查异步线程任务是否执行完毕 true
+```
+
+### Callable + FutureTask
+
+要做的事情跟4.1一样。
+
+```java
+import java.util.concurrent.*;
+
+public class FutureTaskDemo {
+    public static void main(String[] args) {
+        // 初始化线程池
+        ExecutorService threadPool = Executors.newFixedThreadPool(5);
+
+        // 初始化MyTask实例
+        MyTask myTask = new MyTask(5);
+
+        // 用MyTask的实例对象初始化一个FutureTask对象
+        FutureTask<Integer> myFutureTask = new FutureTask<>(myTask);
+
+        // 向线程池递交线程任务
+        threadPool.submit(myFutureTask);
+
+        // 关闭线程池
+        threadPool.shutdown();
+
+        // 主线程休眠2秒，模拟主线程在做其他的事情
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 主线程获取异步任务的执行结果
+        try {
+            System.out.println("异步线程任务执行结果 " + myFutureTask.get());
+            System.out.println("检查异步线程任务是否执行完毕 " + myFutureTask.isDone());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    // 静态内部类，实现Callable接口的任务类
+    static class MyTask implements Callable<Integer> {
+        private int num;
+
+        public MyTask(int num) {
+            this.num = num;
+        }
+
+        @Override
+        public Integer call() throws Exception {
+            System.out.println(Thread.currentThread().getName() + " 正在执行异步任务");
+            for (int i = 1; i < 10; ++i) {
+                this.num *= i;
+            }
+            return this.num;
+        }
+    }
+}
+```
+
+执行结果与4.1一样。
+
+
+
+
+## 底层源码解析
+
+### FutureTask类关系
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251132262.jpg)
+
+可以看到,FutureTask实现了RunnableFuture接口，则RunnableFuture接口继承了Runnable接口和Future接口，所以FutureTask既能当做一个Runnable直接被Thread执行，也能作为Future用来得到Callable的计算结果。
+
 
 ### 核心属性
 

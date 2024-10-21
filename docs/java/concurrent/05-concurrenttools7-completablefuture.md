@@ -13,13 +13,6 @@ head:
 ---
 
 
-
-
-
-
-
-
-
 ## 前言
 
 CompletableFuture是jdk8的新特性。`CompletableFuture`的实现与使用上，处处体现出了**函数式异步编程**的味道。一个`CompletableFuture`对象可以被一个环节接一个环节的处理、也可以对两个或者多个`CompletableFuture`进行组合处理或者等待结果完成。通过对`CompletableFuture`各种方法的合理使用与组合搭配，可以在很多的场景都可以应付自如。

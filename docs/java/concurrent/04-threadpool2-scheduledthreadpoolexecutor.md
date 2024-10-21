@@ -12,11 +12,25 @@ head:
       content: 全网最全的Java并发编程知识点总结，让天下没有难学的八股文！
 ---
 
+## 前言
+
+项目中经常会遇到一些非分布式的调度任务，需要在未来的某个时刻周期性执行。实现这样的功能，我们有多种方式可以选择：
+
+1. `Timer`类， jdk1.3引入，不推荐。
+
+它所有任务都是串行执行的，同一时间只能有一个任务在执行，而且前一个任务的延迟或异常都将会影响到之后的任务。可能会出现任务执行时间过长而导致任务相互阻塞的情况
+
+2. Spring的`@Scheduled`注解，不是很推荐
+
+这种方式底层虽然是用线程池实现，但是有个最大的问题，所有的任务都使用的同一个线程池，可能会导致长周期的任务运行影响短周期任务运行，造成线程池"饥饿"，更加推荐的做法是同种类型的任务使用同一个线程池。
+
+3. 自定义`ScheduledThreadPoolExecutor`实现调度任务
+
+这也是本文重点讲解的方式，通过自定义`ScheduledThreadPoolExecutor`调度线程池，提交调度任务才是最优解。
 
 
 
-
-## 简介
+### 基本介绍
 
 ScheduledThreadPoolExecutor继承自 ThreadPoolExecutor，为任务提供延迟或周期执行，属于线程池的一种。和 ThreadPoolExecutor 相比，它还具有以下几种特性:
 
@@ -26,7 +40,127 @@ ScheduledThreadPoolExecutor继承自 ThreadPoolExecutor，为任务提供延迟�
 
 - 支持可选的run-after-shutdown参数，在池被关闭(shutdown)之后支持可选的逻辑来决定是否继续运行周期或延迟任务。并且当任务(重新)提交操作与 shutdown 操作重叠时，复查逻辑也不相同。
 
-## 数据结构
+
+### 基本使用
+
+ScheduledThreadPoolExecutor 最常见的应用场景就是实现调度任务，
+
+#### 创建方式
+
+创建`ScheduledThreadPoolExecutor`方式一共有两种，第一种是通过自定义参数，第二种通过`Executors`工厂方法创建。 根据[阿里巴巴代码规范中](https://www.seven97.top/books/software-quality/alibaba-developmentmanual.html#并发处理)的建议，更加推荐使用第一种方式创建。
+
+1. **自定义参数创建**
+```java
+ScheduledThreadPoolExecutor(int corePoolSize,
+                                       ThreadFactory threadFactory,                                       RejectedExecutionHandler handler)
+```
+
+- `corePoolSize`：核心工作的线程数量
+- `threadFactory`：线程工厂，用来创建线程
+- `handler`: 拒绝策略，饱和策略
+
+2. `Executors`**工厂方法创建**
+- `static ScheduledExecutorService newScheduledThreadPool(int corePoolSize)`：根据核心线程数创建调度线程池。
+
+- `static ScheduledExecutorService newScheduledThreadPool(int corePoolSize, ThreadFactory threadFactory)`：根据核心线程数和线程工厂创建调度线程池。
+
+  
+
+#### 核心API
+
+
+1. `schedule(Runnable command, long delay, TimeUnit unit)`：创建并执行在给定延迟后启用的一次性操作
+
+- `command`: 执行的任务
+- `delay`：延迟的时间
+- `unit`: 单位
+
+2. `scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit)`：定时执行周期任务，任务执行完成后，延迟delay时间执行
+
+- `command`: 执行的任务
+- `initialDelay`: 初始延迟的时间
+- `delay`: 上次执行结束，延迟多久执行
+- `unit`：单位
+
+```java
+@Test
+public void testScheduleWithFixedDelay() throws InterruptedException {
+    // 创建调度任务线程池
+    ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
+    // 按照上次执行完成后固定延迟时间调度
+    scheduledExecutorService.scheduleWithFixedDelay(() -> {
+        try {
+            log.info("scheduleWithFixedDelay ...");
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }, 1, 2, TimeUnit.SECONDS);
+    Thread.sleep(10000);
+}
+```
+
+3. `scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit)`：按照固定的评率定时执行周期任务，不受任务运行时间影响。
+
+- `command`: 执行的任务
+- `initialDelay`: 初始延迟的时间
+- `period`: 周期
+- `unit`：单位
+
+```java
+@Test
+public void testScheduleAtFixedRate() throws InterruptedException {
+    // 创建调度任务线程池
+    ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(1);
+    // 按照固定2秒时间执行
+    scheduledExecutorService.scheduleAtFixedRate(() -> {
+        try {
+            log.info("scheduleWithFixedDelay ...");
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }, 1, 2, TimeUnit.SECONDS);
+    Thread.sleep(10000);
+}
+```
+
+#### 综合案例
+
+通过`ScheduledThreadPoolExecutor`实现每周四 18:00:00 定时执行任务。
+
+```java
+// 通过ScheduledThreadPoolExecutor实现每周四 18:00:00 定时执行任务
+@Test
+public void test() {
+    //  获取当前时间
+    LocalDateTime now = LocalDateTime.now();
+    System.out.println(now);
+    // 获取周四时间
+    LocalDateTime time = now.withHour(18).withMinute(0).withSecond(0).withNano(0).with(DayOfWeek.THURSDAY);
+    // 如果 当前时间 > 本周周四，必须找到下周周四
+    if(now.compareTo(time) > 0) {
+        time = time.plusWeeks(1);
+    }
+    System.out.println(time);
+    // initailDelay 代表当前时间和周四的时间差
+    // period 一周的间隔时间
+    long initailDelay = Duration.between(now, time).toMillis();
+    long period = 1000 * 60 * 60 * 24 * 7;
+    ScheduledExecutorService pool = Executors.newScheduledThreadPool(1);
+    pool.scheduleAtFixedRate(() -> {
+        System.out.println("running...");
+    }, initailDelay, period, TimeUnit.MILLISECONDS);
+}
+```
+
+
+
+## 底层源码解析
+
+接下来一起看看 ScheduledThreadPool 的底层源码
+
+### 数据结构
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251124087.jpg)
 
@@ -40,7 +174,6 @@ ScheduledThreadPoolExecutor 内部构造了两个内部类 ScheduledFutureTask �
 
 - DelayedWorkQueue: 这是 ScheduledThreadPoolExecutor 为存储周期或延迟任务专门定义的一个延迟队列，继承了 AbstractQueue，为了契合 ThreadPoolExecutor 也实现了 BlockingQueue 接口。它内部只允许存储 RunnableScheduledFuture 类型的任务。与 DelayQueue 的不同之处就是它只允许存放 RunnableScheduledFuture 对象，并且自己实现了二叉堆(DelayQueue 是利用了 PriorityQueue 的二叉堆结构)。
 
-## 底层源码解析
 
 ### 内部类ScheduledFutureTask
 
@@ -343,15 +476,226 @@ public void shutdown() {
 
 说明: 池关闭方法调用了父类ThreadPoolExecutor的shutdown，具体分析见 ThreadPoolExecutor 篇。这里主要介绍以下在shutdown方法中调用的关闭钩子onShutdown方法，它的主要作用是在关闭线程池后取消并清除由于关闭策略不应该运行的所有任务，这里主要是根据 run-after-shutdown 参数(continueExistingPeriodicTasksAfterShutdown和executeExistingDelayedTasksAfterShutdown)来决定线程池关闭后是否关闭已经存在的任务。
 
-## 使用注意点
 
-- 为什么ThreadPoolExecutor 的调整策略却不适用于 ScheduledThreadPoolExecutor？
+## ScheduledThreadPoolExecutor吞掉异常
+
+如果`ScheduledThreadPoolExecutor`中执行的任务出错抛出异常后，不仅不会打印异常堆栈信息，同时还会取消后面的调度, 直接看例子。
+```java
+@Test
+public void testException() throws InterruptedException {
+    // 创建1个线程的调度任务线程池
+    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    // 创建一个任务
+    Runnable runnable = new Runnable() {
+
+        volatile int num = 0;
+
+        @Override
+        public void run() {
+            num ++;
+            // 模拟执行报错
+            if(num > 5) {
+                throw new RuntimeException("执行错误");
+            }
+            log.info("exec num: [{}].....", num);
+        }
+    };
+
+    // 每隔1秒钟执行一次任务
+    scheduledExecutorService.scheduleAtFixedRate(runnable, 0, 1, TimeUnit.SECONDS);
+    Thread.sleep(10000);
+}
+
+```
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202410211203134.png)
+
+- 只执行了5次后，就不打印，不执行了，因为报错了
+- 任务报错，也没有打印一次堆栈，更导致调度任务取消，后果十分严重。
+
+
+解决方法也非常简单，只要通过try catch捕获异常即可。
+```java
+public void run() {
+    try {
+        num++;
+        // 模拟执行报错
+        if (num > 5) {
+            throw new RuntimeException("执行错误");
+        }
+        log.info("exec num: [{}].....", num);
+    } catch (Exception e) {
+	    e.printStackTrace();
+    }
+}
+```
+
+### 原理探究
+
+那大家有没有想过为什么任务出错会导致异常无法打印，甚至调度都取消了呢？从源码出发，一探究竟。
+
+从上面`delayedExecute`方法可以看到，延迟或周期性任务的主要执行方法， 主要是将任务丢到队列中，后续再由工作线程获取执行。
+
+1. 在任务入队列后，就是执行任务内容了，任务内容其实就是在继承了Runnable类的run方法中。
+```java
+// ScheduledFutureTask#run方法
+public void run() {
+    // 是不是周期性任务
+    boolean periodic = isPeriodic();
+    if (!canRunInCurrentRunState(periodic))
+        cancel(false);
+    // 不是周期性任务的话， 直接调用一次下面的run    
+    else if (!periodic)
+        ScheduledFutureTask.super.run();
+    // 如果是周期性任务，则调用runAndReset方法，如果返回true，继续执行
+    else if (ScheduledFutureTask.super.runAndReset()) {
+        // 设置下次调度时间
+        setNextRunTime();
+        // 重新执行调度任务
+        reExecutePeriodic(outerTask);
+    }
+}
+```
+- 这里的关键就是看`ScheduledFutureTask.super.runAndReset()`方法是否返回true，如果是true的话继续调度。
+
+2. runAndReset方法也很简单，关键就是看报异常如何处理。
+```java
+// FutureTask#runAndReset
+protected boolean runAndReset() {
+    if (state != NEW ||
+        !UNSAFE.compareAndSwapObject(this, runnerOffset,
+                                     null, Thread.currentThread()))
+        return false;
+    // 是否继续下次调度，默认false
+    boolean ran = false;
+    int s = state;
+    try {
+        Callable<V> c = callable;
+        if (c != null && s == NEW) {
+            try {
+                // 执行任务
+                c.call(); 
+                // 执行成功的话，设置为true
+                ran = true;
+
+                // 异常处理，关键点
+            } catch (Throwable ex) {
+                // 不会修改ran的值，最终是false，同时也不打印异常堆栈
+                setException(ex);
+            }
+        }
+    } finally {
+        // runner must be non-null until state is settled to
+        // prevent concurrent calls to run()
+        runner = null;
+        // state must be re-read after nulling runner to prevent
+        // leaked interrupts
+        s = state;
+        if (s >= INTERRUPTING)
+            handlePossibleCancellationInterrupt(s);
+    }
+    // 返回结果
+    return ran && s == NEW;
+}
+```
+
+- 关键点ran变量，最终返回是不是下次继续调度执行
+- 如果抛出异常的话，可以看到不会修改ran为true。
+
+### 小结
+
+Java的ScheduledThreadPoolExecutor定时任务线程池所调度的任务中如果抛出了异常，并且异常没有捕获直接抛到框架中，会导致ScheduledThreadPoolExecutor定时任务不调度了。
+
+
+## 封装包装类，统一调度
+
+在实际项目使用中，可以在自己的项目中封装一个包装类，要求所有的调度都提交通过统一的包装类，从而规范代码，如下代码：
+
+```java
+@Slf4j
+public class RunnableWrapper implements Runnable {
+    // 实际要执行的线程任务
+    private Runnable task;
+    // 线程任务被创建出来的时间
+    private long createTime;
+    // 线程任务被线程池运行的开始时间
+    private long startTime;
+    // 线程任务被线程池运行的结束时间
+    private long endTime;
+    // 线程信息
+    private String taskInfo;
+
+    private boolean showWaitLog;
+
+    /**
+     * 执行间隔时间多久，打印日志
+     */
+    private long durMs = 1000L;
+
+    // 当这个任务被创建出来的时候，就会设置他的创建时间
+    // 但是接下来有可能这个任务提交到线程池后，会进入线程池的队列排队
+    public RunnableWrapper(Runnable task, String taskInfo) {
+        this.task = task;
+        this.taskInfo = taskInfo;
+        this.createTime = System.currentTimeMillis();
+    }
+
+    public void setShowWaitLog(boolean showWaitLog) {
+        this.showWaitLog = showWaitLog;
+    }
+
+    public void setDurMs(long durMs) {
+        this.durMs = durMs;
+    }
+
+    // 当任务在线程池排队的时候，这个run方法是不会被运行的
+    // 但是当任务结束了排队，得到线程池运行机会的时候，这个方法会被调用
+    // 此时就可以设置线程任务的开始运行时间
+    @Override
+    public void run() {
+        this.startTime = System.currentTimeMillis();
+
+        // 此处可以通过调用监控系统的API，实现监控指标上报
+        // 用线程任务的startTime-createTime，其实就是任务排队时间
+        // 这边打印日志输出，也可以输出到监控系统中
+        if(showWaitLog) {
+            log.info("任务信息: [{}], 任务排队时间: [{}]ms", taskInfo, startTime - createTime);
+        }
+
+        // 接着可以调用包装的实际任务的run方法
+        try {
+            task.run();
+        } catch (Exception e) {
+            log.error("run task error", e);
+        }
+
+        // 任务运行完毕以后，会设置任务运行结束的时间
+        this.endTime = System.currentTimeMillis();
+
+        // 此处可以通过调用监控系统的API，实现监控指标上报
+        // 用线程任务的endTime - startTime，其实就是任务运行时间
+        // 这边打印任务执行时间，也可以输出到监控系统中
+        if(endTime - startTime > durMs) {
+            log.info("任务信息: [{}], 任务执行时间: [{}]ms", taskInfo, endTime - startTime);
+        }
+
+    }
+}
+```
+
+当然，也还可以在包装类里面封装各种监控行为，如本例打印日志执行时间等。
+
+
+
+## 其它使用注意点
+
+1. 为什么ThreadPoolExecutor 的调整策略却不适用于 ScheduledThreadPoolExecutor？
 
 由于 ScheduledThreadPoolExecutor 是一个固定核心线程数大小的线程池，并且使用了一个无界队列，所以调整maximumPoolSize对其没有任何影响(所以 ScheduledThreadPoolExecutor 没有提供可以调整最大线程数的构造函数，默认最大线程数固定为Integer.MAX_VALUE)。此外，设置corePoolSize为0或者设置核心线程空闲后清除(allowCoreThreadTimeOut)同样也不是一个好的策略，因为一旦周期任务到达某一次运行周期时，可能导致线程池内没有线程去处理这些任务。
 
  
 
-- Executors 提供了哪几种方法来构造 ScheduledThreadPoolExecutor？
+2. Executors 提供了哪几种方法来构造 ScheduledThreadPoolExecutor？
 
   - newScheduledThreadPool: 可指定核心线程数的线程池。
 
@@ -361,9 +705,9 @@ public void shutdown() {
 
 
 
- 
 
- 
+
+
 
 
 <!-- @include: @article-footer.snippet.md -->     

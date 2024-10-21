@@ -8,15 +8,11 @@ tag:
 
 
 
-> 来源：稀土掘金社区[深入理解缓存原理与实战设计](https://juejin.cn/column/7140852038258147358)，Seven进行了部分补充完善
-
-
-
 ## 介绍
 
 ### 巨人肩膀上的产物
 
-先来回忆下之前创建一个`Guava cache`对象时的代码逻辑：
+回忆下之前创建一个`Guava cache`对象时的代码逻辑：
 
 ```java
 public LoadingCache<String, User> createUserCache() {
@@ -66,7 +62,7 @@ public LoadingCache<String, User> createUserCache() {
 
 #### 贯穿始终的异步策略
 
-Caffeine在请求上的处理流程做了很多的优化，效果比较显著的当属数据淘汰处理执行策略的改进。之前在`Guava Cache`的介绍中，有提过Guava Cache的策略是在请求的时候同时去执行对应的清理操作，也就是**读请求中混杂着写操作**，虽然Guava Cache做了一系列的策略来减少其触发的概率，但一旦触发总归是会对读取操作的性能有一定的影响。
+Caffeine在请求上的处理流程做了很多的优化，效果比较显著的**当属数据淘汰处理执行策略的改进**。之前在`Guava Cache`的介绍中，有提过Guava Cache的策略是在请求的时候同时去执行对应的清理操作，也就是**读请求中混杂着写操作**，虽然Guava Cache做了一系列的策略来减少其触发的概率，但一旦触发总归是会对读取操作的性能有一定的影响。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406062234902.webp)
 
@@ -98,7 +94,7 @@ public static void main(String[] args) throws Exception {
 
 在**JAVA7**以及更早的版本中，ConcurrentHashMap采用的是`分段锁`的策略来实现线程安全的（前面文章中我们讲过Guava Cache采用的也是分段锁的策略），分段锁虽然在一定程度上可以降低锁竞争的冲突，但是在一些极高并发场景下，或者并发请求分布较为集中的时候，仍然会出现较大概率的阻塞等待情况。此外，这些版本中ConcurrentHashMap底层采用的是`数组+链表`的存储形式，这种情况在**Hash冲突**较为明显的情况下，需要频繁的*遍历链表*操作，也会影响整体的处理性能。
 
-具体见[JUC - ConcurrentHashMap详解 | Seven的菜鸟成长之路 (seven97.top)](https://www.seven97.top/java/collection/04-juc2-concurrenthashmap.html)
+具体见[JUC - ConcurrentHashMap详解](https://www.seven97.top/java/collection/04-juc2-concurrenthashmap.html)
 
 
 
@@ -159,9 +155,7 @@ public static void main(String[] args) throws Exception {
 和之前我们聊过的Guava Cache创建缓存对象的操作相似，我们可以通过构造器来方便的创建出一个Caffeine对象。
 
 ```java
-java
-
-复制代码Cache<Integer, String> cache = Caffeine.newBuilder().build();
+Cache<Integer, String> cache = Caffeine.newBuilder().build();
 ```
 
 除了上述这种方式，Caffeine还支持使用不同的构造器方法，构建不同类型的Caffeine对象。对各种构造器方法梳理如下：
@@ -173,19 +167,28 @@ java
 | buildAsync()                 | 构建一个支持异步操作的异步缓存对象                           |
 | buildAsync(CacheLoader)      | 使用给定的CacheLoader对象构建一个支持异步操作的缓存对象      |
 | buildAsync(AsyncCacheLoader) | 与buildAsync(CacheLoader)相似，区别点仅在于传入的参数类型不一样。 |
+##### 手动异步数据加载
 
-为了便于**异步场景**中处理，可以通过`buildAsync()`构建一个手动回源数据加载的缓存对象：
+为了便于**异步场景**中处理，可以通过`buildAsync()`构建一个**手动回源数据加载**的缓存对象：
 
 ```java
 public static void main(String[] args) {
-    AsyncCache<String, User> asyncCache = Caffeine.newBuilder()
-    .buildAsync();
+    AsyncCache<String, User> asyncCache = Caffeine.newBuilder().buildAsync();
     User user = asyncCache.get("123", s -> {
         System.out.println("异步callable thread:" + Thread.currentThread().getId());
+        // 查找缓存元素，如果不存在，则异步数据加载
         return userDao.getUser(s);
     }).join();
 }
 ```
+
+一个`AsyncCache`是 `Cache`的一个变体，`AsyncCache`提供了在 Executor上生成缓存元素并返回 CompletableFuture的能力。这给出了在当前流行的响应式编程模型中利用缓存的能力。
+
+`synchronous()`方法给 `Cache`提供了阻塞直到异步缓存生成完毕的能力。
+
+异步缓存默认的线程池实现是 ForkJoinPool.commonPool() ，你也可以通过覆盖并实现 `Caffeine.executor(Executor)`方法来自定义你的线程池选择。
+
+##### 自动异步数据加载
 
 当然，为了支持异步场景中的自动异步回源，我们可以通过`buildAsync(CacheLoader)`或者`buildAsync(AsyncCacheLoader)`来实现：
 
@@ -193,10 +196,14 @@ public static void main(String[] args) {
 public static void main(String[] args) throws Exception{
     AsyncLoadingCache<String, User> asyncLoadingCache =
             Caffeine.newBuilder().maximumSize(1000L).buildAsync(key -> userDao.getUser(key));
+	
+	// get缓存元素，如果其不存在，将会通过上面方式异步生成
     User user = asyncLoadingCache.get("123").join();
 }
 ```
 
+
+#### 其它常见方法
 在创建缓存对象的同时，可以指定此缓存对象的一些处理策略，比如*容量限制*、比如*过期策略*等等。作为以替换Guava Cache为己任的后继者，Caffeine在缓存容器对象创建时的相关构建API也沿用了与Guava Cache相同的定义，常见的方法及其含义梳理如下：
 
 | 方法              | 含义说明                                                     |
@@ -680,7 +687,7 @@ public interface Cache<K, V> {
 
 ### Caffeine多种数据驱逐机制
 
-上面提到并演示了Caffeine基于整体容量进行的数据驱逐策略。除了基于容量大小之外，Caffeine还支持基于时间与基于引用等方式来进行数据驱逐处理。
+上面提到并演示了Caffeine基于整体容量进行的数据驱逐策略。Caffeine 除了提供了基于容量，基于时间和基于引用三种类型的三种驱逐策略；还提供了手动移除方法和监听器。
 
 #### 基于时间
 
@@ -976,5 +983,84 @@ Exception in thread "main" java.lang.IllegalStateException: Value strength was a
 	at com.github.benmanes.caffeine.cache.Caffeine.softValues(Caffeine.java:572)
 	at com.veezean.skills.cache.caffeine.CaffeineCacheService.main(CaffeineCacheService.java:297)
 ```
+
+#### 手动移除
+
+```java
+Cache<Object, Object> cache =
+                Caffeine.newBuilder()
+                        .expireAfterWrite(Duration.ofMinutes(1))
+                        .recordStats()
+                        .build();
+// 单个删除
+cache.invalidate("a");
+// 批量删除
+Set<String> keys = new HashSet<>();
+keys.add("a");
+keys.add("b");
+cache.invalidateAll(keys);
+
+// 失效所有key
+cache.invalidateAll();
+```
+任何时候都可以手动删除，不用等到驱逐策略生效。
+
+#### 移除监听器
+
+```java
+Cache<Object, Object> cache =
+        Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofMinutes(1))
+                .recordStats()
+                .evictionListener(new RemovalListener<Object, Object>() {
+                    @Override
+                    public void onRemoval(@Nullable Object key, @Nullable Object value, @NonNull RemovalCause cause) {
+                        System.out.println("element evict cause" + cause.name());
+                    }
+                })
+                .removalListener(new RemovalListener<Object, Object>() {
+                    @Override
+                    public void onRemoval(@Nullable Object key, @Nullable Object value, @NonNull RemovalCause cause) {
+                        System.out.println("element removed cause" + cause.name());
+                    }
+                }).build();
+```
+
+你可以为你的缓存通过Caffeine.removalListener(RemovalListener)方法定义一个移除监听器在一个元素被移除的时候进行相应的操作。这些操作是使用Executor异步执行的，其中默认的Executor实现是 ForkJoinPool.commonPool()并且可以通过覆盖Caffeine.executor(Executor)方法自定义线程池的实现。
+
+#### 驱逐原因汇总
+
+- EXPLICIT：如果原因是这个，那么意味着数据被我们手动的remove掉了 
+- REPLACED：就是替换了，也就是put数据的时候旧的数据被覆盖导致的移除 
+- COLLECTED：这个有歧义点，其实就是收集，也就是垃圾回收导致的，一般是用弱引用或者软引用会导致这个情况 
+- EXPIRED：数据过期，无需解释的原因。
+- SIZE：个数超过限制导致的移除
+
+### 缓存统计
+
+Caffeine通过使用Caffeine.recordStats()方法可以打开数据收集功能，可以帮助优化缓存使用。
+
+```java
+// 缓存访问统计
+CacheStats stats = cache.stats();
+System.out.println("stats.hitCount():"+stats.hitCount());//命中次数
+System.out.println("stats.hitRate():"+stats.hitRate());//缓存命中率
+System.out.println("stats.missCount():"+stats.missCount());//未命中次数
+System.out.println("stats.missRate():"+stats.missRate());//未命中率
+System.out.println("stats.loadSuccessCount():"+stats.loadSuccessCount());//加载成功的次数
+System.out.println("stats.loadFailureCount():"+stats.loadFailureCount());//加载失败的次数,返回null
+System.out.println("stats.loadFailureRate():"+stats.loadFailureRate());//加载失败的百分比
+System.out.println("stats.totalLoadTime():"+stats.totalLoadTime());//总加载时间,单位ns
+System.out.println("stats.evictionCount():"+stats.evictionCount());//驱逐次数
+System.out.println("stats.evictionWeight():"+stats.evictionWeight());//驱逐的weight值总和
+System.out.println("stats.requestCount():"+stats.requestCount());//请求次数
+System.out.println("stats.averageLoadPenalty():"+stats.averageLoadPenalty());//单次load平均耗时
+```
+
+## 参考链接
+
+- 稀土掘金社区[深入理解缓存原理与实战设计](https://juejin.cn/column/7140852038258147358)
+- [Caffeine学习笔记](https://mp.weixin.qq.com/s/74XSmwTkXvn-O-pmpj18PA)
+
 
 <!-- @include: @article-footer.snippet.md -->     

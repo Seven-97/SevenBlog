@@ -14,7 +14,132 @@ head:
 ---
 
 
+## CountDownLatch的使用方式
 
+CountDownLatch用于某个线程等待其他线程**执行完任务**再执行，与thread.join()功能类似。常见的应用场景是开启多个线程同时执行某个任务，等到所有任务执行完再执行特定操作，如汇总统计结果。
+
+面试题：如何能够保证T2在T1执行完后执行，T3在T2执行完后执行？
+
+### join方法
+
+可以使用join方法解决这个问题。比如在线程A中，调用线程B的join方法表示的意思就是： **A等待B线程执行完毕后（释放CPU执行权），在继续执行。**
+
+```java
+public class RunnableJob {
+    public static void main(String[] args) throws InterruptedException {
+        Worker runnableJob = new Worker();
+        Thread t1 = new Thread(runnableJob, "T1");
+        Thread t2 = new Thread(runnableJob, "T2");
+        Thread t3 = new Thread(runnableJob, "T3");
+        t1.start();
+        //这里就是在main主线程中，调用t1线程的join方法。
+        //也就是main主线程要等待t1执行完成后才能继续往下执行
+        t1.join();
+        t2.start();
+        t2.join();
+        t3.start();
+        t3.join();
+        System.out.println("主线程执行完毕----");
+    }
+}
+class Worker implements Runnable{
+    public void run() {
+        Thread thread = Thread.currentThread();
+        try {
+            Thread.sleep(1000);
+            System.out.println(thread.getName()+"正在执行");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+//输出
+T1正在执行
+T2正在执行
+T3正在执行
+主线程执行完毕----
+```
+
+
+
+### CountDownLatch
+
+倒计时计数器
+
+CountDownLatch用于某个线程等待其他线程执行完任务再执行，可以被认为是加强版的join()。
+
+```java
+public class CountDownLatchTest {
+    public static void main(String[] args) {
+        final CountDownLatch countDownLatch = new CountDownLatch(3);
+        new Thread("T1"){
+            public void run() {
+                try {
+                    Thread.sleep(3000);
+                    System.out.println(Thread.currentThread().getName()+"正在执行");
+                    countDownLatch.countDown();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            };
+        }.start();
+        new Thread("T2"){
+            public void run() {
+                try {
+                    Thread.sleep(3000);
+                    System.out.println(Thread.currentThread().getName()+"正在执行");
+                    countDownLatch.countDown();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            };
+        }.start();
+        new Thread("T3"){
+            public void run() {
+                try {
+                    Thread.sleep(3000);
+                    System.out.println(Thread.currentThread().getName()+"正在执行");
+                    countDownLatch.countDown();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            };
+        }.start();
+        System.out.println("等待三个线程执行完，主线程才能执行");
+        try {
+            //调用await()方法的线程会被挂起，它会等待直到count值为0才继续执行;
+            //或者等待timeout时间后count值还没变为0的话也会继续执行
+            countDownLatch.await();
+//            countDownLatch.await(20000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("主线程执行完毕");
+    }
+}
+
+//输出
+等待三个线程执行完，主线程才能执行
+T1正在执行
+T3正在执行
+T2正在执行
+主线程执行完毕
+```
+
+调用了await后，主线程被挂起，它会等待直到count值为0才继续执行;因此只影响主线程的执行顺序一定要在T1 T2 T3之后，但T1 T2 T3之间的顺序互不影响
+
+**应用场景:** 开启多个线程同时执行某个任务，等到所有任务执行完再执行特定操作，如汇总统计结果。
+
+
+
+### 两者区别
+
+相同点:都能等待一个或者多个线程执行完成操作,比如等待三个线程执行完毕后,第四个线程才能执行
+
+不同点:join能让线程按我们预想的的顺序执行,比如线程1执行完了,线程2才能执行,线程2执行完,线程3才能执行,但是CountDownLatch就做不到.
+
+当调用CountDownLatch的countDown方法时，N就会减1,CountDownLatch的await方法会阻塞当前线程，直到N变为零(也就是线程都执行完了)，由于countDown方法可以用在任何地方，**所以这里说的N个点，可以是N个线程，也可以是1个线程里的N个执行步骤**。用在多线程时,只需把这个CountDownLatch的引用传递到线程中即可
 
 
 ## CountDownLatch原理
@@ -466,132 +591,6 @@ main continue
 
  
 
-## 应用场景
-
-如何能够保证T2在T1执行完后执行，T3在T2执行完后执行？
-
-### join方法
-
-可以使用join方法解决这个问题。比如在线程A中，调用线程B的join方法表示的意思就是： **A等待B线程执行完毕后（释放CPU执行权），在继续执行。**
-
-```java
-public class RunnableJob {
-    public static void main(String[] args) throws InterruptedException {
-        Worker runnableJob = new Worker();
-        Thread t1 = new Thread(runnableJob, "T1");
-        Thread t2 = new Thread(runnableJob, "T2");
-        Thread t3 = new Thread(runnableJob, "T3");
-        t1.start();
-        //这里就是在main主线程中，调用t1线程的join方法。
-        //也就是main主线程要等待t1执行完成后才能继续往下执行
-        t1.join();
-        t2.start();
-        t2.join();
-        t3.start();
-        t3.join();
-        System.out.println("主线程执行完毕----");
-    }
-}
-class Worker implements Runnable{
-    public void run() {
-        Thread thread = Thread.currentThread();
-        try {
-            Thread.sleep(1000);
-            System.out.println(thread.getName()+"正在执行");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-}
-
-//输出
-T1正在执行
-T2正在执行
-T3正在执行
-主线程执行完毕----
-```
-
-
-
-### CountDownLatch
-
-倒计时计数器
-
-CountDownLatch用于某个线程等待其他线程执行完任务再执行，可以被认为是加强版的join()。
-
-```java
-public class CountDownLatchTest {
-    public static void main(String[] args) {
-        final CountDownLatch countDownLatch = new CountDownLatch(3);
-        new Thread("T1"){
-            public void run() {
-                try {
-                    Thread.sleep(3000);
-                    System.out.println(Thread.currentThread().getName()+"正在执行");
-                    countDownLatch.countDown();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            };
-        }.start();
-        new Thread("T2"){
-            public void run() {
-                try {
-                    Thread.sleep(3000);
-                    System.out.println(Thread.currentThread().getName()+"正在执行");
-                    countDownLatch.countDown();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            };
-        }.start();
-        new Thread("T3"){
-            public void run() {
-                try {
-                    Thread.sleep(3000);
-                    System.out.println(Thread.currentThread().getName()+"正在执行");
-                    countDownLatch.countDown();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            };
-        }.start();
-        System.out.println("等待三个线程执行完，主线程才能执行");
-        try {
-            //调用await()方法的线程会被挂起，它会等待直到count值为0才继续执行;
-            //或者等待timeout时间后count值还没变为0的话也会继续执行
-            countDownLatch.await();
-//            countDownLatch.await(20000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("主线程执行完毕");
-    }
-}
-
-//输出
-等待三个线程执行完，主线程才能执行
-T1正在执行
-T3正在执行
-T2正在执行
-主线程执行完毕
-```
-
-调用了await后，主线程被挂起，它会等待直到count值为0才继续执行;因此只影响主线程的执行顺序一定要在T1 T2 T3之后，但T1 T2 T3之间的顺序互不影响
-
-**应用场景:** 开启多个线程同时执行某个任务，等到所有任务执行完再执行特定操作，如汇总统计结果。
-
-
-
-### 两者区别
-
-相同点:都能等待一个或者多个线程执行完成操作,比如等待三个线程执行完毕后,第四个线程才能执行
-
-不同点:join能让线程按我们预想的的顺序执行,比如线程1执行完了,线程2才能执行,线程2执行完,线程3才能执行,但是CountDownLatch就做不到.
-
-当调用CountDownLatch的countDown方法时，N就会减1,CountDownLatch的await方法会阻塞当前线程，直到N变为零(也就是线程都执行完了)，由于countDown方法可以用在任何地方，**所以这里说的N个点，可以是N个线程，也可以是1个线程里的N个执行步骤**。用在多线程时,只需把这个CountDownLatch的引用传递到线程中即可
-
- 
 
 
 

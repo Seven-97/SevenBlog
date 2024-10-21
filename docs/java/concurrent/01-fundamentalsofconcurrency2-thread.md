@@ -249,6 +249,16 @@ System.out.println(submit.get());
 - 类可能只要求可执行就行，继承整个 Thread 类开销过大。
 
 
+### Runnable VS Callable
+
+1. Runnable接口是java1.1就有的，Callable接口是java1.5才有的，可以认为Callable接口是升级版的Runnable接口；
+2. Runnable接口里线程任务是在run方法里写的，Callable接口里线程任务是在call方法里写；
+3. Callable接口的任务执行后会有返回值，Runnable接口的任务无返回值（void）；
+4. Callable接口的call方法支持抛出异常，Runnable接口的run方法不可以；
+5. 加入线程池运行，Runnable使用ExecutorService的execute方法，Callable使用ExecutorService的submit方法；
+6. 运行Callable任务可以拿到一个Future对象，表示异步计算的结果。Future对象封装了检查计算是否完成、检索计算的结果的方法，而Runnable接口没有。
+
+
 
 ## 基础线程机制
 

@@ -1106,11 +1106,13 @@ private void interruptWorkers() {
 
 ## ExecutorService 线程池实例
 
-但是阿里为什么不推荐使用Executors来创建线程池，这是为了让写的同学更加明确线程池的运行规则，规避资源耗尽的风险。
+但是[阿里巴巴开发手册中](https://www.seven97.top/books/software-quality/alibaba-developmentmanual.html#并发处理)为什么不推荐使用Executors来创建线程池，这是为了让写的同学更加明确线程池的运行规则，规避资源耗尽的风险。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202410211134369.png)
 
 
 
-### FixedThreadPool:
+### FixedThreadPool
 
 固定线程数的线程池。任何时间点，最多只有 nThreads 个线程处于活动状态执行任务。
 
