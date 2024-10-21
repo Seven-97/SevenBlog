@@ -34,11 +34,11 @@ head:
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251622418.gif)
 
-#### 加载
+#### 装载
 
-查找并加载类的二进制数据
+查找并装载类的二进制数据
 
-在加载阶段，虚拟机需要完成以下三件事情:
+在装载阶段，虚拟机需要完成以下三件事情:
 
 - 通过一个类的全限定名来获取其定义的二进制字节流。
 
@@ -410,7 +410,7 @@ public class Demo1 {
 3. sun.misc.Launcher$ExtClassLoader // 1 处，查看已加载的类，结果没有
 4. sun.misc.Launcher$ExtClassLoader // 3 处，没有上级了，则委派 BootstrapClassLoader 查找
 5. BootstrapClassLoader 是在 JAVA_HOME/jre/lib 下找 F 这个类，显然没有，就会捕获异常，但是不处理
-6. sun.misc.Launcher$$ExtClassLoader // 4 处，调用自己的 findClass 方法，是在JAVA_HOME/jre/lib/ext 下找 F 这个类，显然没有，回到 sun.misc.Launcher $AppClassLoader 的 // 2 处
+6. sun.misc.Launcher$ExtClassLoader // 4 处，调用自己的 findClass 方法，是在JAVA_HOME/jre/lib/ext 下找 F 这个类，显然没有，回到 sun.misc.Launcher $AppClassLoader 的 // 2 处
 7. 继续执行到 sun.misc.Launcher$AppClassLoader // 4 处，调用它自己的 findClass 方法，在 classpath 下查找，找到了
 
 #### 双亲委派模型目的：

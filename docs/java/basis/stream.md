@@ -271,20 +271,20 @@ public void testGetTargetUsers() {
 
 顾名思义，通过终止管道操作之后，Stream流将会结束，最后可能会执行某些逻辑处理，或者是按照要求返回某些执行后的结果数据。
 
-| API         | 功能说明                                                     |
-| ----------- | ------------------------------------------------------------ |
-| count()     | 返回stream处理后最终的元素个数。                             |
-| max()       | 返回stream处理后的元素最大值。                               |
-| min()       | 返回stream处理后的元素最小值。                               |
-| findFirst() | 找到第一个符合条件的元素时则终止流处理。                     |
+| API         | 功能说明                                                                    |
+| ----------- | ----------------------------------------------------------------------- |
+| count()     | 返回stream处理后最终的元素个数。                                                     |
+| max()       | 返回stream处理后的元素最大值。                                                      |
+| min()       | 返回stream处理后的元素最小值。                                                      |
+| findFirst() | 找到第一个符合条件的元素时则终止流处理。                                                    |
 | findAny()   | 找到任何一个符合条件的元素时则退出流处理，这个对于串行流时与findFirst相同，对于并行流时比较高效，任何分片中找到都会终止后续计算逻辑。 |
-| anyMatch()  | 返回一个boolean值，类似于isContains(),用于判断是否有符合条件的元素。 |
-| allMatch()  | 返回一个boolean值，用于判断是否所有元素都符合条件。          |
-| noneMatch() | 返回一个boolean值， 用于判断是否所有元素都不符合条件。       |
-| collect()   | 将流转换为指定的类型，通过Collectors进行指定。               |
-| toArray()   | 将流转换为数组。                                             |
-| iterator()  | 将流转换为Iterator对象。                                     |
-| foreach()   | 无返回值，对元素进行逐个遍历，然后执行给定的处理逻辑。       |
+| anyMatch()  | 返回一个boolean值，类似于isContains(),用于判断是否有符合条件的元素。                            |
+| allMatch()  | 返回一个boolean值，用于判断是否所有元素都符合条件。                                           |
+| noneMatch() | 返回一个boolean值， 用于判断是否所有元素都不符合条件。                                         |
+| collect()   | 将流转换为指定的类型，通过Collectors进行指定。                                            |
+| toArray()   | 将流转换为数组。                                                                |
+| iterator()  | 将流转换为Iterator对象。                                                        |
+| foreach()   | 无返回值，对元素进行逐个遍历，然后执行给定的处理逻辑。                                             |
 
 
 
@@ -348,6 +348,50 @@ foreach和peek一样，都可以用于对元素进行遍历然后逐个处理。
    }
    ```
 
+
+#### 对 Stream 流操作认知不完善导致的空指针异常
+
+findFirst()方法需要可能会存在的空指针问题！
+
+例如，如果第一个元素恰好为 `null`，`findFirst()` 将抛出 `NullPointerException`。这是因为 `findFirst()` 返回一个 `Optional`，而 `Optional` 不能包含空值。
+
+```java
+Arrays.asList(null, 1, 2).stream().findFirst();//发生 NullPointerException
+```
+
+`max()`、`min()` 和 `reduce()`，也表现出类似的行为。如果 `null` 是最终结果，则会抛出异常。
+
+```java
+List<Integer> list = Arrays.asList(null, 1, 2);
+var comparator = Comparator.<Integer>nullsLast(Comparator.naturalOrder());
+System.out.println(list.stream().max(comparator));//发生 NullPointerException
+```
+
+再例如：我们在使用 `Stream` 流式编程时，如果流包含 `null`，可以转换为 `toList()` 或 `toSet()`；
+
+然而，`toMap()` 要注意， 不允许空值（允许空Key）：
+
+```java
+Employee employee1 = new Employee("Jack", 10000);
+Employee employee2 = new Employee(null, 10000);
+//toMap的Value不能为空，此处异常
+Map<Integer, String> salaryMap = Arrays.asList(employee1, employee2)
+    .stream()
+    .collect(Collectors.toMap(Employee::getSalary, Employee::getName));
+```
+
+以及：`groupingBy()` 不允许空 Key：
+
+```java
+Employee employee1 = new Employee("Jack", 10000);
+Employee employee2 = new Employee(null, 10000);
+
+//groupingBy的Key不能为空，此处抛异常
+Map<String, List<Employee>> result = Stream.of(employee1, employee2)
+    .collect(Collectors.groupingBy(Employee::getName));
+```
+
+可见在流中使用了空对象存在许多陷阱；所以，要重点关注 Stream 流的数据来源，避免在流中存在 `null`，不确定的话建议用 `filter(Objects::nonNull)` 将它们过滤掉。
 
 
 ## 并行Stream
