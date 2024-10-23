@@ -402,7 +402,7 @@ Map<String, List<Employee>> result = Stream.of(employee1, employee2)
 
 ﻿![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172159067.gif)﻿
 
-可以通过parallelStream的源码发现parallel Stream底层是将任务进行了切分，最终将任务传递给了jdk8自带的“全局”ForkJoinPool线程池。 在Fork-Join中，比如一个拥有4个线程的ForkJoinPool线程池，有一个任务队列，一个大的任务切分出的子任务会提交到线程池的任务队列中，4个线程从任务队列中获取任务执行，哪个线程执行的任务快，哪个线程执行的任务就多，只有队列中没有任务线程才是空闲的，这就是工作窃取。
+可以通过parallelStream的源码发现parallel Stream底层是将任务进行了切分，最终将任务传递给了jdk8自带的“全局”[ForkJoinPool线程池](https://www.seven97.top/java/concurrent/04-threadpool4-forkjoin.html)。 在Fork-Join中，比如一个拥有4个线程的ForkJoinPool线程池，有一个任务队列，一个大的任务切分出的子任务会提交到线程池的任务队列中，4个线程从任务队列中获取任务执行，哪个线程执行的任务快，哪个线程执行的任务就多，只有队列中没有任务线程才是空闲的，这就是工作窃取。
 
 可以通过下图更好的理解这种“分而治之”的思想：
 
@@ -413,7 +413,7 @@ Map<String, List<Employee>> result = Stream.of(employee1, employee2)
 ### 约束与限制
 
 1. parallelStream()中foreach()操作必须保证是线程安全的；
-   很多人在用惯了流式处理之后，很多for循环都会直接使用流式foreach(),实际上这样不一定是合理的，如果只是简单的for循环，确实没有必要使用流式处理，因为流式底层封装了很多流式处理的复杂逻辑，从性能上来讲不占优。
+   很多人在用惯了流式处理之后，很多for循环都会直接使用流式foreach()，实际上这样不一定是合理的，如果只是简单的for循环，确实没有必要使用流式处理，因为流式底层封装了很多流式处理的复杂逻辑，从性能上来讲不占优。
 
 2. parallelStream()中foreach()不要直接使用默认的线程池；
    ```java
