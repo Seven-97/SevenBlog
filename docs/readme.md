@@ -39,6 +39,9 @@ footer: |-
 
 ## 联系我
 
-微信搜索：seven97，联系我
+最新更新会第一时间同步在公众号，推荐关注！微信搜索：seven97，联系我
+
+1. 公众号回复“**八股文**”，获取Java面试题PDF版
+2. 公众号回复“**HR面八股文**”，获取HR面面试题总结
 
 <img src="https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202408172044971.png#pic_center" alt="seven97官方微信公众号" style="zoom:50%;" />
