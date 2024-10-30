@@ -112,7 +112,7 @@ public class LockSupport {
 }
 ```
 
-说明: UNSAFE字段表示sun.misc.Unsafe类，查看其源码，点击在这里，一般程序中不允许直接调用，而long型的表示实例对象相应字段在内存中的偏移地址，可以通过该偏移地址获取或者设置该字段的值。
+说明: UNSAFE字段表示[sun.misc.Unsafe](https://www.seven97.top/java/concurrent/unsafe.html)类，一般程序中不允许直接调用，而long型的表示实例对象相应字段在内存中的偏移地址，可以通过该偏移地址获取或者设置该字段的值。
 
 ### 类的构造函数
 

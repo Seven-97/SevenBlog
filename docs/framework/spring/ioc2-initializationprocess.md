@@ -712,11 +712,11 @@ protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate d
             if (node instanceof Element) {
                 Element ele = (Element) node;
                 if (delegate.isDefaultNamespace(ele)) {
-                    //对Bean的处理
+                    //对默认标签解析
                     parseDefaultElement(ele, delegate);
                 }
                 else {
-                    //对Bean的处理
+                    //对默认自定义标签的解析
                     delegate.parseCustomElement(ele);
                 }
             }
@@ -740,7 +740,7 @@ protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate d
 <tx:annotation-driven/>
 ```
 
-而两种方式的读取及解析差别是非常大的，如果采用Spring默认的配置，Spring当然知道该怎么做，但是如果是自定义的，那么就需要用户实现一些接口及配置了。对于根节点或者子节点如果是默认命名空间的话则采用parseDefaultElement方法进行解析，否则使用delegate.parseCustomElement方法对自定义命名空间进行解析。而判断是否默认命名空间还是自定义命名空间的办法其实是使用node.getNamespaceURI()获取命名空间，并与Spring中固定的命名空间http://www.Springframework.org/schema/beans进行比对。如果一致则认为是默认，否则就认为是自定义。
+而两种方式的读取及解析差别是非常大的，如果采用Spring默认的配置，Spring当然知道该怎么做，但是如果是自定义的，那么就需要用户实现一些接口及配置了。对于根节点或者子节点如果是默认命名空间的话则采用parseDefaultElement方法进行解析，否则使用delegate.parseCustomElement方法对自定义命名空间进行解析。而判断是否默认命名空间还是自定义命名空间的办法其实是使用node.getNamespaceURI()获取命名空间，并与Spring中固定的命名空间`http://www.Springframework.org/schema/beans`进行比对。如果一致则认为是默认，否则就认为是自定义。
 
 
 
@@ -802,8 +802,7 @@ parseBeanDefinitionElement的解析方法 就不一一展开了，无非就是�
 
 ##### 自定义标签的解析
 
-
-
+在实际项目中，较少进行自定义标签，因此这里不展开描述了。
 
 
 ### 解析过后的BeanDefinition在IoC容器中的注册
@@ -928,7 +927,7 @@ public void registerBeanDefinition(String beanName, BeanDefinition beanDefinitio
 }
 ```
 
-至此，Bean定义资源文件中配置的Bean被解析过后，已经注册到IoC容器中，被容器管理起来，真正完成了IoC容器初始化所做的全部工作。现 在IoC容器中已经建立了整个Bean的配置信息，这些 BeanDefinition 信息已经可以使用，并且可以被检索，IoC容器的作用就是对这些注册的Bean定义信息进行处理和维护。这些的注册的Bean定义信息是IoC容器控制反转的基础，正是有了这些注册的数据，容器才可以进行依赖注入。
+至此，Bean定义资源文件中配置的Bean被解析过后，已经注册到IoC容器中，被容器管理起来，真正完成了IoC容器初始化所做的全部工作。现在IoC容器中已经建立了整个Bean的配置信息，这些 BeanDefinition 信息已经可以使用，并且可以被检索，IoC容器的作用就是对这些注册的Bean定义信息进行处理和维护。这些的注册的Bean定义信息是IoC容器控制反转的基础，正是有了这些注册的数据，容器才可以进行依赖注入。
 
 ### 小结
 
@@ -937,7 +936,7 @@ public void registerBeanDefinition(String beanName, BeanDefinition beanDefinitio
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404281053871.png)
 
 - 初始化的入口在容器实现中的 refresh()调用来完成
-- 对 bean 定义载入 IOC 容器使用的方法是 loadBeanDefinition,其中的大致过程如下：
+- 对 bean 定义载入 IOC 容器使用的方法是 loadBeanDefinition，其中的大致过程如下：
   - 通过 ResourceLoader 来完成资源文件位置的定位，DefaultResourceLoader 是默认的实现，同时上下文本身就给出了 ResourceLoader 的实现，可以从类路径，文件系统, URL 等方式来定为资源位置。如果是 XmlBeanFactory作为 IOC 容器，那么需要为它指定 bean 定义的资源，也就是说 bean 定义文件时通过抽象成 Resource 来被 IOC 容器处理的
   - 通过 BeanDefinitionReader来完成定义信息的解析和 Bean 信息的注册, 往往使用的是XmlBeanDefinitionReader 来解析 bean 的 xml 定义文件 — 实际的处理过程是委托给 BeanDefinitionParserDelegate 来完成的，从而得到 bean 的定义信息，这些信息在 Spring 中使用 BeanDefinition 对象来表示
   - 容器解析得到 BeanDefinition 以后，需要把它在 IOC 容器中注册，这由 IOC 实现 BeanDefinitionRegistry 接口来实现。注册过程就是在 IOC 容器内部维护的一个HashMap 来保存得到的 BeanDefinition 的过程。这个 HashMap 是 IoC 容器持有 bean 信息的场所，以后对 bean 的操作都是围绕这个HashMap 来实现的.

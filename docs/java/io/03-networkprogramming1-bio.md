@@ -60,7 +60,6 @@ BIO 其实就是 [Reactor的 单reactor 单进程/线程模型](https://www.seve
 
 BIO的问题关键不在于是否使用了多线程(包括线程池)处理这次请求，而在于accept()、read()的操作点都是被阻塞。要测试这个问题，也很简单。这里模拟了20个客户端(用20根线程模拟)，利用JAVA的同步计数器CountDownLatch，保证这20个客户都初始化完成后然后同时向服务器发送请求，然后观察一下Server这边接受信息的情况。
 
-以下案例[源码点击这里](https://github.com/Seven-97/IODemo/tree/master/01-bio-demo)
 
 ### 服务器端使用单线程
 
