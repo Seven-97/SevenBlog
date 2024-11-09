@@ -69,7 +69,7 @@ struct dictEntry {//具体的对象
 
 ```
 
-void * key 和 void * value 指针指向的就是 Redis 对象。Redis中有全局hash表，key是String,value是不同类型的对象，如果是Java，那可以直接用Map\<String,Object>来通用表示。而Redis直接由C语言实现，因此具体的每个对象都由 redisObject 结构表示，用type来表示具体类型，如下：
+void \*key 和 void \*value 指针指向的就是 Redis 对象。Redis中有全局hash表，key是String,value是不同类型的对象，如果是Java，那可以直接用Map\<String,Object>来通用表示。而Redis直接由C语言实现，因此具体的每个对象都由 redisObject 结构表示，用type来表示具体类型，如下：
 ```c
 typedef struct redisObject {
     unsigned type: 4;        // 对象类型
@@ -107,10 +107,10 @@ Simple Dynamic String，简单动态字符串
 
 ### C语言中的缺陷
 
-**获取字符串长度复杂度为O（n）**  
+**获取字符串长度复杂度为O(n)**  
 
 在 C 语言里，字符数组的结尾位置用“\0”表示，意思是指字符串的结束。  
-因此c语言获取字符串长度的函数 strlen，就是遍历字符数组中的每一个字符，遇到字符为 “\0” 后，就会停止遍历，然后返回已经统计到的字符个数，即为字符串长度，因此复杂度为O（n）
+因此c语言获取字符串长度的函数 strlen，就是遍历字符数组中的每一个字符，遇到字符为 “\0” 后，就会停止遍历，然后返回已经统计到的字符个数，即为字符串长度，因此复杂度为O(n)
 
 **字符串只能保存文本数据**  
 
