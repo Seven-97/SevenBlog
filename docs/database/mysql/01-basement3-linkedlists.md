@@ -1,8 +1,8 @@
 ---
-title: 底层原理 - Buffer Pool的三个链表
+title: 底层原理 - Buffer Pool中的三大链表
 category: 数据库
-tag:
- - Mysql
+tags:
+  - Mysql
 head:
   - - meta
     - name: keywords
