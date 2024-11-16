@@ -23,7 +23,7 @@ head:
 
 分布式锁是可以跨越多个实例，多个进程的锁
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270808907.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411161136614.png)
 
 分布式锁具备的条件：
 - 互斥性：任意时刻，只能有一个客户端持有锁
@@ -71,7 +71,7 @@ SET lock_key unique_value NX PX 10000
 
 解决办法就是让线程只能删除自己的锁，即给每个线程上的锁添加唯一标识（这里UUID实现，基本不会出现重复），删除锁时判断这个标识：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270808281.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411161136669.png)
 
 但上述红框中由于判定和释放锁不是原子的，极端情况下，可能判定可以释放锁，在执行删除锁操作前刚好时间到了，其他线程获取锁执行，前者线程删除锁删除的依然是别的线程的锁，所以要让删除锁具有原子性，可以利用redis事务或**lua脚本实现原子操作判断+删除**
 
@@ -637,6 +637,5 @@ Redisson分布式锁解决前三个问题原理
 
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270809998.png)
-
 
 <!-- @include: @article-footer.snippet.md -->     

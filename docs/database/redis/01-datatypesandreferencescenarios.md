@@ -491,6 +491,31 @@ PFCOUNT page1:uv
 ## GEO（3.2 版新增）
 存储地理位置信息的场景
 
+Redis GEO 操作方法有：
+
+- geoadd：添加地理位置的坐标。
+- geopos：获取地理位置的坐标。
+- geodist：计算两个位置之间的距离。
+- georadius：根据用户给定的经纬度坐标来获取指定范围内的地理位置集合。
+- georadiusbymember：根据储存在位置集合里面的某个地点获取指定范围内的地理位置集合。
+- georadius：以给定的经纬度为中心， 返回键包含的位置元素当中， 与中心的距离不超过给定最大距离的所有位置元素。
+
+
+GEORADIUS方法参数：
+```
+GEORADIUS key longitude latitude radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STOREDIST key]
+```
+参数说明：
+- m ：米，默认单位。
+- km ：千米。
+- mi ：英里。
+- ft ：英尺。
+- WITHDIST: 在返回位置元素的同时， 将位置元素与中心之间的距离也一并返回。
+- WITHCOORD: 将位置元素的经度和维度也一并返回。
+- WITHHASH: 以 52 位有符号整数的形式， 返回位置元素经过原始 geohash 编码的有序集合分值。这个选项主要用于底层应用或者调试， 实际中的作用并不大。
+- COUNT 限定返回的记录数。
+- ASC: 查找结果根据距离从近到远排序。
+- DESC: 查找结果根据从远到近排序。
 
 ### 滴滴叫车
 假设车辆 ID 是 33，经纬度位置是（116.034579，39.030452），可以用一个 GEO 集合保存所有车辆的经纬度，集合 key 是 cars:locations。
@@ -503,6 +528,41 @@ GEOADD cars:locations 116.034579 39.030452 33
 ```
 GEORADIUS cars:locations 116.054579 39.030452 5 km ASC COUNT 10
 ```
+
+### 附近的人
+
+nearbyPeople 是一个总的 key，user_1 和 user_2 是相当于 nearbyPeople 里面的两个元素以及他们对应的经纬度，这个例子就是把 user_1 和 user_2 的经纬度存在了 nearbyPeople 这个 key 中
+```
+redis> GEOADD nearbyPeople 13.36 38.11 "user_1" 15.08 37.50 "user_2"  
+(integer) 2
+```
+
+获取 nearbyPeople 中的元素 user_1 和 user_2 这两个元素的经纬度，当然如果之前没有 geoadd 相对应元素的经纬度的话，会返回 nil
+```
+redis> GEOPOS nearbyPeople user_1 user_21) 1) "13.36138933897018433"   2) "38.11555639549629859"2) 1) "15.08726745843887329"   2) "37.50266842333162032"
+```
+
+获取 nearbyPeople 中 user_1 和 user_2 这两个节点之间的距离，距离单位可以指定，如下所示：
+- m ：米，默认单位。
+- km ：千米。
+- mi ：英里。
+- ft ：英尺。
+```
+redis> GEODIST nearbyPeople user_1 user_2"166274.1516"redis> GEODIST nearbyPeople user_1 user_2 km"166.2742"redis> GEODIST nearbyPeople user_1 user_2 mi"103.3182"
+```
+
+把 nearbyPeople 中的 距离经纬度(15,37)200km 以内的元素都找出来，而且带上距离：
+```
+redis>GEORADIUS nearbyPeople 15 37 200 km WITHDIST  
+1) 1) "user_1"  
+   2) "190.4424"  
+2) 1) "user_2"  
+   2) "56.4413"
+```
+
+
+
+
 
 ## Stream（5.0 版新增）
 

@@ -482,7 +482,389 @@ typedef struct quicklistNode {
 ```
 
 ## BitMap
-详情请看 [位图](https://www.seven97.top/cs-basics/data-structure/bitmap.html "位图")
+详情请看 [位图](https://www.seven97.top/cs-basics/data-structure/bitmap.html "位图")，源码部分就不多做介绍了
+
+
+## HyperLogLog
+
+HyperLogLog算法是一种非常巧妙的近似统计海量去重元素数量的算法。它内部维护了 16384 个桶（bucket）来记录各自桶的元素数量。当一个元素到来时，它会散列到其中一个桶，以一定的概率影响这个桶的计数值。因为是概率算法，所以单个桶的计数值并不准确，但是将所有的桶计数值进行调合均值累加起来，结果就会非常接近真实的计数值。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411161703490.png)
+
+为了便于理解HyperLogLog算法，我们先简化它的计数逻辑。因为是去重计数，如果是准确的去重，肯定需要用到 set 集合，使用集合来记录所有的元素，然后使用 scard 指令来获取集合大小就可以得到总的计数。因为元素特别多，单个集合会特别大，所以将集合打散成 16384 个小集合。当元素到来时，通过 hash 算法将这个元素分派到其中的一个小集合存储，同样的元素总是会散列到同样的小集合。这样总的计数就是所有小集合大小的总和。使用这种方式精确计数除了可以增加元素外，还可以减少元素。
+
+集合打散并没有什么明显好处，因为总的内存占用并没有减少。HyperLogLog肯定不是这个算法，它需要对这个小集合进行优化，压缩它的存储空间，让它的内存变得非常微小。HyperLogLog算法中每个桶所占用的空间实际上只有 6 个 bit，这 6 个 bit 自然是无法容纳桶中所有元素的，它记录的是桶中元素数量的对数值。
+
+为了说明这个对数值具体是个什么东西，我们先来考虑一个小问题。一个随机的整数值，这个整数的尾部有一个 0 的概率是 50%，要么是 0 要么是 1。同样，尾部有两个 0 的概率是 25%，有三个零的概率是 12.5%，以此类推，有 k 个 0 的概率是 2^(-k)。如果我们随机出了很多整数，整数的数量我们并不知道，但是我们记录了整数尾部连续 0 的最大数量 K。我们就可以通过这个 K 来近似推断出整数的数量，这个数量就是 2^K。
+
+当然结果是非常不准确的，因为可能接下来你随机了非常多的整数，但是末尾连续零的最大数量 K 没有变化，但是估计值还是 2^K。你也许会想到要是这个 K 是个浮点数就好了，每次随机一个新元素，它都可以稍微往上涨一点点，那么估计值应该会准确很多。
+
+HyperLogLog通过分配 16384 个桶，然后对所有的桶的最大数量 K 进行调合平均来得到一个平均的末尾零最大数量 K# ，K# 是一个浮点数，使用平均后的 2^K# 来估计元素的总量相对而言就会准确很多。不过这只是简化算法，真实的算法还有很多修正因子，因为涉及到的数学理论知识过于繁多，这里就不再精确描述。
+
+下面我们看看Redis HyperLogLog 算法的具体实现。我们知道一个HyperLogLog实际占用的空间大约是 13684 * 6bit / 8 = 12k 字节。但是在计数比较小的时候，大多数桶的计数值都是零。如果 12k 字节里面太多的字节都是零，那么这个空间是可以适当节约一下的。Redis 在计数值比较小的情况下采用了稀疏存储，稀疏存储的空间占用远远小于 12k 字节。相对于稀疏存储的就是密集存储，密集存储会恒定占用 12k 字节。
+
+### 密集存储结构
+
+不论是稀疏存储还是密集存储，Redis 内部都是使用字符串位图来存储 HyperLogLog 所有桶的计数值。密集存储的结构非常简单，就是连续 16384 个 6bit 串成的字符串位图。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411161752159.png)
+
+那么给定一个桶编号，如何获取它的 6bit 计数值呢？这 6bit 可能在一个字节内部，也可能会跨越字节边界。我们需要对这一个或者两个字节进行适当的移位拼接才可以得到计数值。
+
+假设桶的编号为idx，这个 6bit 计数值的起始字节位置偏移用 offset_bytes表示，它在这个字节的起始比特位置偏移用 offset_bits 表示。我们有
+
+```c++
+offset_bytes = (idx * 6) / 8
+offset_bits = (idx * 6) % 8
+```
+
+前者是商，后者是余数。比如 bucket 2 的字节偏移是 1，也就是第 2 个字节。它的位偏移是4，也就是第 2 个字节的第 5 个位开始是 bucket 2 的计数值。需要注意的是字节位序是左边低位右边高位，而通常我们使用的字节都是左边高位右边低位，我们需要在脑海中进行倒置。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411161752294.png)
+
+如果 offset_bits 小于等于 2，那么这 6bit 在一个字节内部，可以直接使用下面的表达式得到计数值 val
+
+![](https://pic4.zhimg.com/v2-0f5b4ceed3604ada3e4a6e03a8c26d93_1440w.jpg)
+
+```c
+val = buffer[offset_bytes] >> offset_bits  # 向右移位
+```
+
+如果 offset_bits 大于 2，那么就会跨越字节边界，这时需要拼接两个字节的位片段。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411161752267.png)
+
+```c
+# 低位值
+low_val = buffer[offset_bytes] >> offset_bits
+# 低位个数
+low_bits = 8 - offset_bits
+# 拼接，保留低6位
+val = (high_val << low_bits | low_val) & 0b111111
+```
+
+不过下面 Redis 的源码要晦涩一点，看形式它似乎只考虑了跨越字节边界的情况。这是因为如果 6bit 在单个字节内，上面代码中的 high_val 的值是零，所以这一份代码可以同时照顾单字节和双字节。
+
+```c
+// 获取指定桶的计数值
+#define HLL_DENSE_GET_REGISTER(target,p,regnum) do { \
+    uint8_t *_p = (uint8_t*) p; \
+    unsigned long _byte = regnum*HLL_BITS/8; \ 
+    unsigned long _fb = regnum*HLL_BITS&7; \  # %8 = &7
+    unsigned long _fb8 = 8 - _fb; \
+    unsigned long b0 = _p[_byte]; \
+    unsigned long b1 = _p[_byte+1]; \
+    target = ((b0 >> _fb) | (b1 << _fb8)) & HLL_REGISTER_MAX; \
+} while(0)
+
+// 设置指定桶的计数值
+#define HLL_DENSE_SET_REGISTER(p,regnum,val) do { \
+    uint8_t *_p = (uint8_t*) p; \
+    unsigned long _byte = regnum*HLL_BITS/8; \
+    unsigned long _fb = regnum*HLL_BITS&7; \
+    unsigned long _fb8 = 8 - _fb; \
+    unsigned long _v = val; \
+    _p[_byte] &= ~(HLL_REGISTER_MAX << _fb); \
+    _p[_byte] |= _v << _fb; \
+    _p[_byte+1] &= ~(HLL_REGISTER_MAX >> _fb8); \
+    _p[_byte+1] |= _v >> _fb8; \
+} while(0)
+```
+
+### 稀疏存储结构
+
+稀疏存储适用于很多计数值都是零的情况。下图表示了一般稀疏存储计数值的状态。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411161752220.png)
+
+当多个连续桶的计数值都是零时，Redis 使用了一个字节来表示接下来有多少个桶的计数值都是零：00xxxxxx。前缀两个零表示接下来的 6bit 整数值加 1 就是零值计数器的数量，注意这里要加 1 是因为数量如果为零是没有意义的。比如 00010101表示连续 22 个零值计数器。6bit 最多只能表示连续 64 个零值计数器，所以 Redis 又设计了连续多个多于 64 个的连续零值计数器，它使用两个字节来表示：01xxxxxx yyyyyyyy，后面的 14bit 可以表示最多连续 16384 个零值计数器。这意味着 HyperLogLog 数据结构中 16384 个桶的初始状态，所有的计数器都是零值，可以直接使用 2 个字节来表示。
+
+如果连续几个桶的计数值非零，那就使用形如 1vvvvvxx 这样的一个字节来表示。中间 5bit 表示计数值，尾部 2bit 表示连续几个桶。它的意思是连续 （xx +1） 个计数值都是 （vvvvv + 1）。比如 10101011 表示连续 4 个计数值都是 11。注意这两个值都需要加 1，因为任意一个是零都意味着这个计数值为零，那就应该使用零计数值的形式来表示。注意计数值最大只能表示到32，而 HyperLogLog 的密集存储单个计数值用 6bit 表示，最大可以表示到 63。当稀疏存储的某个计数值需要调整到大于 32 时，Redis 就会立即转换 HyperLogLog 的存储结构，将稀疏存储转换成密集存储。
+
+![img](https://pic4.zhimg.com/v2-6d48cee7de92c59ffd1c34d6bd195877_1440w.jpg)
+
+Redis 为了方便表达稀疏存储，它将上面三种字节表示形式分别赋予了一条指令。
+
+1. ZERO:len 单个字节表示 `00[len-1]`，连续最多64个零计数值
+2. VAL:value,len 单个字节表示 `1[value-1][len-1]`，连续 len 个值为 value 的计数值
+3. XZERO:len 双字节表示 `01[len-1]`，连续最多16384个零计数值
+
+```c
+#define HLL_SPARSE_XZERO_BIT 0x40 /* 01xxxxxx */
+#define HLL_SPARSE_VAL_BIT 0x80 /* 1vvvvvxx */
+#define HLL_SPARSE_IS_ZERO(p) (((*(p)) & 0xc0) == 0) /* 00xxxxxx */
+#define HLL_SPARSE_IS_XZERO(p) (((*(p)) & 0xc0) == HLL_SPARSE_XZERO_BIT)
+#define HLL_SPARSE_IS_VAL(p) ((*(p)) & HLL_SPARSE_VAL_BIT)
+#define HLL_SPARSE_ZERO_LEN(p) (((*(p)) & 0x3f)+1)
+#define HLL_SPARSE_XZERO_LEN(p) (((((*(p)) & 0x3f) << 8) | (*((p)+1)))+1)
+#define HLL_SPARSE_VAL_VALUE(p) ((((*(p)) >> 2) & 0x1f)+1)
+#define HLL_SPARSE_VAL_LEN(p) (((*(p)) & 0x3)+1)
+#define HLL_SPARSE_VAL_MAX_VALUE 32
+#define HLL_SPARSE_VAL_MAX_LEN 4
+#define HLL_SPARSE_ZERO_MAX_LEN 64
+#define HLL_SPARSE_XZERO_MAX_LEN 16384
+```
+
+上图可以使用指令形式表示如下
+
+![](https://pic4.zhimg.com/v2-ff171dce09bd9f975c7df952a92c6ec1_1440w.jpg)
+
+Redis从稀疏存储转换到密集存储的条件是：
+
+1. 任意一个计数值从 32 变成 33，因为VAL指令已经无法容纳，它能表示的计数值最大为 32
+2. 稀疏存储占用的总字节数超过 3000 字节，这个阈值可以通过 hll_sparse_max_bytes 参数进行调整。
+
+### 计数缓存
+
+前面提到 HyperLogLog 表示的总计数值是由 16384 个桶的计数值进行调和平均后再基于因子修正公式计算得出来的。它需要遍历所有的桶进行计算才可以得到这个值，中间还涉及到很多浮点运算。这个计算量相对来说还是比较大的。
+
+所以 Redis 使用了一个额外的字段来缓存总计数值，这个字段有 64bit，最高位如果为 1 表示该值是否已经过期，如果为 0， 那么剩下的 63bit 就是计数值。
+
+当 HyperLogLog 中任意一个桶的计数值发生变化时，就会将计数缓存设为过期，但是不会立即触发计算。而是要等到用户显示调用 pfcount 指令时才会触发重新计算刷新缓存。缓存刷新在密集存储时需要遍历 16384 个桶的计数值进行调和平均，但是稀疏存储时没有这么大的计算量。也就是说只有当计数值比较大时才可能产生较大的计算量。另一方面如果计数值比较大，那么大部分 pfadd 操作根本不会导致桶中的计数值发生变化。
+
+这意味着在一个极具变化的 HLL 计数器中频繁调用 pfcount 指令可能会有少许性能问题。关于这个性能方面的担忧在 Redis 作者 antirez 的博客中也提到了。不过作者做了仔细的压力的测试，发现这是无需担心的，pfcount 指令的平均时间复杂度就是 O(1)。
+
+> After this change even trying to add elements at maximum speed using a pipeline of 32 elements with 50 simultaneous clients, PFCOUNT was able to perform as well as any other O(1) command with very small constant times.
+
+### 源码解析
+
+接下来通过源码来看一下pfadd和pfcount两个命令的具体流程。在这之前我们首先要了解的是HyperLogLog的头结构体和创建一个HyperLogLog对象的步骤。
+
+#### HyperLogLog头结构体
+
+```c
+struct hllhdr {
+    char magic[4];      /* "HYLL" */
+    uint8_t encoding;   /* HLL_DENSE or HLL_SPARSE. */
+    uint8_t notused[3]; /* Reserved for future use, must be zero. */
+    uint8_t card[8];    /* Cached cardinality, little endian. */
+    uint8_t registers[]; /* Data bytes. */
+};
+```
+
+#### 创建HyperLogLog对象
+
+```c
+#define HLL_P 14 /* The greater is P, the smaller the error. */
+#define HLL_REGISTERS (1<<HLL_P) /* With P=14, 16384 registers. */
+#define HLL_SPARSE_XZERO_MAX_LEN 16384
+
+
+#define HLL_SPARSE_XZERO_SET(p,len) do { \
+    int _l = (len)-1; \
+    *(p) = (_l>>8) | HLL_SPARSE_XZERO_BIT; \
+    *((p)+1) = (_l&0xff); \
+} while(0)
+
+/* Create an HLL object. We always create the HLL using sparse encoding.
+ * This will be upgraded to the dense representation as needed. */
+robj *createHLLObject(void) {
+    robj *o;
+    struct hllhdr *hdr;
+    sds s;
+    uint8_t *p;
+    int sparselen = HLL_HDR_SIZE +
+                    (((HLL_REGISTERS+(HLL_SPARSE_XZERO_MAX_LEN-1)) /
+                     HLL_SPARSE_XZERO_MAX_LEN)*2);
+    int aux;
+
+    /* Populate the sparse representation with as many XZERO opcodes as
+     * needed to represent all the registers. */
+    aux = HLL_REGISTERS;
+    s = sdsnewlen(NULL,sparselen);
+    p = (uint8_t*)s + HLL_HDR_SIZE;
+    while(aux) {
+        int xzero = HLL_SPARSE_XZERO_MAX_LEN;
+        if (xzero > aux) xzero = aux;
+        HLL_SPARSE_XZERO_SET(p,xzero);
+        p += 2;
+        aux -= xzero;
+    }
+    serverAssert((p-(uint8_t*)s) == sparselen);
+
+    /* Create the actual object. */
+    o = createObject(OBJ_STRING,s);
+    hdr = o->ptr;
+    memcpy(hdr->magic,"HYLL",4);
+    hdr->encoding = HLL_SPARSE;
+    return o;
+}
+```
+
+这里sparselen=HLL_HDR_SIZE+2，因为初始化时默认所有桶的计数值都是0。其他过程不难理解，用的存储方式是我们前面提到过的稀疏存储，创建的对象实质上是一个字符串对象，这也是字符串命令可以操作HyperLogLog对象的原因。
+
+#### PFADD命令
+
+```c
+/* PFADD var ele ele ele ... ele => :0 or :1 */
+void pfaddCommand(client *c) {
+    robj *o = lookupKeyWrite(c->db,c->argv[1]);
+    struct hllhdr *hdr;
+    int updated = 0, j;
+
+    if (o == NULL) {
+        /* Create the key with a string value of the exact length to
+         * hold our HLL data structure. sdsnewlen() when NULL is passed
+         * is guaranteed to return bytes initialized to zero. */
+        o = createHLLObject();
+        dbAdd(c->db,c->argv[1],o);
+        updated++;
+    } else {
+        if (isHLLObjectOrReply(c,o) != C_OK) return;
+        o = dbUnshareStringValue(c->db,c->argv[1],o);
+    }
+    /* Perform the low level ADD operation for every element. */
+    for (j = 2; j < c->argc; j++) {
+        int retval = hllAdd(o, (unsigned char*)c->argv[j]->ptr,
+                               sdslen(c->argv[j]->ptr));
+        switch(retval) {
+        case 1:
+            updated++;
+            break;
+        case -1:
+            addReplySds(c,sdsnew(invalid_hll_err));
+            return;
+        }
+    }
+    hdr = o->ptr;
+    if (updated) {
+        signalModifiedKey(c->db,c->argv[1]);
+        notifyKeyspaceEvent(NOTIFY_STRING,"pfadd",c->argv[1],c->db->id);
+        server.dirty++;
+        HLL_INVALIDATE_CACHE(hdr);
+    }
+    addReply(c, updated ? shared.cone : shared.czero);
+}
+```
+
+PFADD命令会先判断key是否存在，如果不存在，则创建一个新的HyperLogLog对象；如果存在，会调用isHLLObjectOrReply()函数检查这个对象是不是HyperLogLog对象，检查方法主要是检查魔数是否正确，存储结构是否正确以及头结构体的长度是否正确等。
+
+一切就绪后，才可以调用hllAdd()函数添加元素。hllAdd函数很简单，只是根据存储结构判断需要调用hllDenseAdd()函数还是hllSparseAdd()函数。
+
+密集存储结构只是比较新旧计数值，如果新计数值大于就计数值，就将其替代。
+
+而稀疏存储结构要复杂一些：
+
+1. 判断是否需要调整为密集存储结构，如果不需要则继续进行，否则就先调整为密集存储结构，然后执行添加操作
+2. 我们需要先定位要修改的字节段，通过循环计算每一段表示的桶的范围是否包括要修改的桶
+3. 定位到桶后，如果这个桶已经是VAL，并且计数值大于当前要添加的计数值，则返回0，如果小于当前计数值，就进行更新
+4. 如果是ZERO，并且长度为1，那么可以直接把它替换为VAL，并且设置计数值
+5. 如果不是上述两种情况，则需要对现有的存储进行拆分
+
+#### PFCOUNT命令
+
+```c
+/* PFCOUNT var -> approximated cardinality of set. */
+void pfcountCommand(client *c) {
+    robj *o;
+    struct hllhdr *hdr;
+    uint64_t card;
+
+    /* Case 1: multi-key keys, cardinality of the union.
+     *
+     * When multiple keys are specified, PFCOUNT actually computes
+     * the cardinality of the merge of the N HLLs specified. */
+    if (c->argc > 2) {
+        uint8_t max[HLL_HDR_SIZE+HLL_REGISTERS], *registers;
+        int j;
+
+        /* Compute an HLL with M[i] = MAX(M[i]_j). */
+        memset(max,0,sizeof(max));
+        hdr = (struct hllhdr*) max;
+        hdr->encoding = HLL_RAW; /* Special internal-only encoding. */
+        registers = max + HLL_HDR_SIZE;
+        for (j = 1; j < c->argc; j++) {
+            /* Check type and size. */
+            robj *o = lookupKeyRead(c->db,c->argv[j]);
+            if (o == NULL) continue; /* Assume empty HLL for non existing var.*/
+            if (isHLLObjectOrReply(c,o) != C_OK) return;
+
+            /* Merge with this HLL with our 'max' HHL by setting max[i]
+             * to MAX(max[i],hll[i]). */
+            if (hllMerge(registers,o) == C_ERR) {
+                addReplySds(c,sdsnew(invalid_hll_err));
+                return;
+            }
+        }
+
+        /* Compute cardinality of the resulting set. */
+        addReplyLongLong(c,hllCount(hdr,NULL));
+        return;
+    }
+
+    /* Case 2: cardinality of the single HLL.
+     *
+     * The user specified a single key. Either return the cached value
+     * or compute one and update the cache. */
+    o = lookupKeyWrite(c->db,c->argv[1]);
+    if (o == NULL) {
+        /* No key? Cardinality is zero since no element was added, otherwise
+         * we would have a key as HLLADD creates it as a side effect. */
+        addReply(c,shared.czero);
+    } else {
+        if (isHLLObjectOrReply(c,o) != C_OK) return;
+        o = dbUnshareStringValue(c->db,c->argv[1],o);
+
+        /* Check if the cached cardinality is valid. */
+        hdr = o->ptr;
+        if (HLL_VALID_CACHE(hdr)) {
+            /* Just return the cached value. */
+            card = (uint64_t)hdr->card[0];
+            card |= (uint64_t)hdr->card[1] << 8;
+            card |= (uint64_t)hdr->card[2] << 16;
+            card |= (uint64_t)hdr->card[3] << 24;
+            card |= (uint64_t)hdr->card[4] << 32;
+            card |= (uint64_t)hdr->card[5] << 40;
+            card |= (uint64_t)hdr->card[6] << 48;
+            card |= (uint64_t)hdr->card[7] << 56;
+        } else {
+            int invalid = 0;
+            /* Recompute it and update the cached value. */
+            card = hllCount(hdr,&invalid);
+            if (invalid) {
+                addReplySds(c,sdsnew(invalid_hll_err));
+                return;
+            }
+            hdr->card[0] = card & 0xff;
+            hdr->card[1] = (card >> 8) & 0xff;
+            hdr->card[2] = (card >> 16) & 0xff;
+            hdr->card[3] = (card >> 24) & 0xff;
+            hdr->card[4] = (card >> 32) & 0xff;
+            hdr->card[5] = (card >> 40) & 0xff;
+            hdr->card[6] = (card >> 48) & 0xff;
+            hdr->card[7] = (card >> 56) & 0xff;
+            /* This is not considered a read-only command even if the
+             * data structure is not modified, since the cached value
+             * may be modified and given that the HLL is a Redis string
+             * we need to propagate the change. */
+            signalModifiedKey(c->db,c->argv[1]);
+            server.dirty++;
+        }
+        addReplyLongLong(c,card);
+    }
+}
+```
+
+如果要计算多个HyperLogLog的基数，则需要将多个HyperLogLog对象合并，这里合并方法是将所有的HyperLogLog对象合并到一个名为max的对象中，max采用的是密集存储结构，如果被合并的对象也是密集存储结构，则循环比较每一个计数值，将大的那个存入max。如果被合并的是稀疏存储，则只需要比较VAL即可。
+
+如果计算单个HyperLogLog对象的基数，则先判断对象头结构体中的基数缓存是否有效，如果有效，可直接返回。如果已经失效，则需要重新计算基数，并修改原有缓存，这也是PFCOUNT命令不被当做只读命令的原因。
+
+### 推荐工具
+
+给大家推荐一个帮助理解HyperLogLog原理的工具：[http://content.research.neustar.biz/blog/hll.html](https://link.zhihu.com/?target=http%3A//content.research.neustar.biz/blog/hll.html)，有兴趣的话可以去学习一下。
+
+
+
+## GEO
+
+
+
+
+
+
+
+
+
 
 
 <!-- @include: @article-footer.snippet.md -->     
