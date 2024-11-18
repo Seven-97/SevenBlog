@@ -258,7 +258,7 @@ explain select user_id, order_id, order_status from t_order where user_id > 1 an
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404261827717.png)
 
 ### using join buffer
-Block Nested Loop，需要进行嵌套循环计算。两个关联表join，关联字段均未建立索引，就会出现这种情况。比如内层和外层的type均为ALL，rows均为4，需要循环进行4*4次计算。常见的优化方案是，在关联字段上添加索引，避免每次嵌套循环计算。
+Block Nested Loop，需要进行嵌套循环计算。两个关联表join，关联字段均未建立索引，就会出现这种情况。比如内层和外层的type均为ALL，rows均为4，需要循环进行`4*4`次计算。常见的优化方案是，在关联字段上添加索引，避免每次嵌套循环计算。
 
 
 
