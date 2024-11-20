@@ -857,10 +857,188 @@ void pfcountCommand(client *c) {
 
 ## GEO
 
+特点：
+
+- geo底层用的其实就是zset，根据经纬度编码后的值作为set元素的score
+- 总的来说：将三维转为二维，再转为一维
+- Redis 采用了业界广泛使用的 GeoHash 编码方法，这 个方法的基本原理就是“二分区间，区间编码”。
+- 通过将经度和纬度分别放在奇数位和偶数位，可以使得 zset 中相邻的 geohash 编码在地理空间上也是相邻的
+  
+
+### 和zset的相似之处
+
+GEO的key里面需要保存各个member和经纬度，而且经纬度还必须得能够排序，所以这个结构其实和redis的zset结构其实挺像的，唯一的区别可能在于zset只有一个score，而GEO有经度和纬度，所以能用一个score来保存经度和纬度就可以解决问题了。其实redis的确也是这么做的，而且GEO的底层其实就是在zset的结果上做了一层封装，所以按照严格意义上讲GEO并不是redis的一种新的数据类型。
 
 
 
+### GEO的hash编码方式
 
+为了能高效地对经纬度进行比较，Redis 采用了业界广泛使用的 GeoHash 编码方法，这 个方法的基本原理就是“二分区间，区间编码”。GeoHash是一种地理位置编码方法。 由Gustavo Niemeyer 和 G.M. Morton于2008年发明，它将地理位置编码为一串简短的字母和数字。它是一种分层的空间数据结构，将空间细分为网格形状的桶，这是所谓的z顺序曲线的众多应用之一，通常是空间填充曲线。
+
+当要对一组经纬度进行 GeoHash 编码时，要先对经度和纬度分别编码，然后再把经纬度各自的编码组合成一个最终编码。
+
+首先，来看下经度和纬度的单独编码过程。以经纬度 116.37，39.86为例，首先看经度  116.37
+
+- 第一次二分区操作，把经度区间[-180,180]分成了左分区[-180,0) 和右分区 [0,180]，此时，经度值 116.37 是属于右分区[0,180]，所以，用 1 表示第一次二分区 后的编码值。
+- 把经度值 116.37 所属的[0,180]区间，分成[0,90) 和[90, 180]。此时，经度值 116.37 还是属于右分区[90,180]，所以，第二次分区后的编码值仍然 为 1。等到第三次对[90,180]进行二分区，经度值 116.37 落在了分区后的左分区[90, 135) 中，所以，第三次分区后的编码值就是 0。
+- 按照这种方法，做完 5 次分区后，把经度值 116.37 定位在[112.5, 123.75]这个区 间，并且得到了经度值的 5 位编码值，即 11010。这个编码过程如下表所示:
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411192330606.png)
+
+对纬度的编码方式，和对经度的一样，只是纬度的范围是[-90，90]，下面这张表显示了对 纬度值 39.86 的编码过程。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411192330613.png)
+
+刚刚计算的经纬度(116.37，39.86)的各自编码值是 11010 和 10111，进行交叉组合，偶数位是经度，奇数位是纬度，组合之后， 第 0 位是经度的第 0 位 1，第 1 位是纬度的第 0 位 1，第 2 位是经度的第 1 位 1，第 3 位是纬度的第 1 位 0，以此类推，就能得到最终编码值 1110011101，如下图所示
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411192330673.png)
+
+用了 GeoHash 编码后，原来无法用一个权重分数表示的一组经纬度(116.37，39.86)就 可以用 1110011101 这一个值来表示，就可以保存为 Sorted Set 的权重分数了。最后根据上述得到的二进制值，以5位为一组，进行base32编码
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411192330665.png)
+
+最后获得的结果就是一组经纬度的geohash值。
+
+### 地理位置二维转一维
+
+上文讲了GeoHash的计算步骤，仅仅说明是什么而没有说明为什么？为什么分别给经度和维度编码？为什么需要将经纬度两串编码交叉组合成一串编码？本节试图回答这一问题。
+
+如下图所示，将二进制编码的结果填写到空间中，当将空间划分为四块时候，编码的顺序分别是左下角00，左上角01，右下脚10，右上角11，也就是类似于Z的曲线，当我们递归的将各个块分解成更小的子块时，编码的顺序是自相似的（分形），每一个子块也形成Z曲线，这种类型的曲线被称为Peano空间填充曲线。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411192330732.png)
+
+这种类型的空间填充曲线的优点是将二维空间转换成一维曲线（事实上是分形维），对大部分而言，编码相似的距离也相近， 但Peano空间填充曲线最大的缺点就是突变性，有些编码相邻但距离却相差很远，比如0111与1000，编码是相邻的，但距离相差很大。
+
+![img](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411192330738.png)
+
+所以，为了避免查询不准确问题，我们可以同时查询给定经纬度所在的方格周围的 4 个或 8 个方格。
+
+
+
+### 源码
+
+本质上redis中的geo就是对geohash的封装，具体geohash相关的代码就不给大家列了(可自行查阅)，就给大家介绍下redis geo里的大体流程。
+
+- geoadd命令查看geohash在redis中是怎么存储的
+
+```c
+/* GEOADD key [CH] [NX|XX] long lat name [long2 lat2 name2 ... longN latN nameN] */
+void geoaddCommand(client *c) {
+    int xx = 0, nx = 0, longidx = 2;
+    int i;
+    /* 解析可选参数 */
+    while (longidx &lt; c-&gt;argc) {
+        char *opt = c-&gt;argv[longidx]-&gt;ptr;
+        if (!strcasecmp(opt,&quot;nx&quot;)) nx = 1;
+        else if (!strcasecmp(opt,&quot;xx&quot;)) xx = 1;
+        else if (!strcasecmp(opt,&quot;ch&quot;)) {}
+        else break;
+        longidx++;
+    }
+    if ((c-&gt;argc - longidx) % 3 || (xx &amp;&amp; nx)) {
+        /* 解析所有的经纬度值和member，并对其个数做校验 */
+            addReplyErrorObject(c,shared.syntaxerr);
+        return;
+    }
+    /* 构建zadd的参数数组 */
+    int elements = (c-&gt;argc - longidx) / 3;
+    int argc = longidx+elements*2; /* ZADD key [CH] [NX|XX] score ele ... */
+    robj **argv = zcalloc(argc*sizeof(robj*));
+    argv[0] = createRawStringObject(&quot;zadd&quot;,4);
+    for (i = 1; i &lt; longidx; i++) {
+        argv[i] = c-&gt;argv[i];
+        incrRefCount(argv[i]);
+    }
+    /* 以3个参数为一组，将所有的经纬度和member信息从参数列表里解析出来，并放到zadd的参数数组中 */
+    for (i = 0; i &lt; elements; i++) {
+        double xy[2];
+        if (extractLongLatOrReply(c, (c-&gt;argv+longidx)+(i*3),xy) == C_ERR) {
+            for (i = 0; i &lt; argc; i++)
+                if (argv[i]) decrRefCount(argv[i]);
+            zfree(argv);
+            return;
+        }
+        /* 将经纬度坐标转化成score信息 */
+        GeoHashBits hash;
+        geohashEncodeWGS84(xy[0], xy[1], GEO_STEP_MAX, &amp;hash);
+        GeoHashFix52Bits bits = geohashAlign52Bits(hash);
+        robj *score = createObject(OBJ_STRING, sdsfromlonglong(bits));
+        robj *val = c-&gt;argv[longidx + i * 3 + 2];
+        argv[longidx+i*2] = score;
+        argv[longidx+1+i*2] = val;
+        incrRefCount(val);
+    }
+    /* 转化成zadd命令所需要的参数格式*/
+    replaceClientCommandVector(c,argc,argv);
+    zaddCommand(c);
+}
+```
+
+geo的存储只是zset包了一层，zet底层就是跳表，具体可以看上面跳表内容。
+
+- georadius的大体执行流程(删除大量细节代码)
+
+```c
+void georadiusGeneric(client *c, int srcKeyIndex, int flags) {
+    robj *storekey = NULL;
+    int storedist = 0; /* 0 for STORE, 1 for STOREDIST. */
+    /* 根据key找找到对应的zojb */
+    robj *zobj = NULL;
+    if ((zobj = lookupKeyReadOrReply(c, c-&gt;argv[srcKeyIndex], shared.emptyarray)) == NULL ||
+        checkType(c, zobj, OBJ_ZSET)) {
+        return;
+    }
+    /* 解析请求中的经纬度值 */
+    int base_args;
+    GeoShape shape = {0};
+    if (flags &amp; RADIUS_COORDS) {
+    /*
+     * 各种必选参数的解析，省略细节代码，主要是解析坐标点信息和半径   
+     */ 
+    }
+    /* 解析所有的可选参数. */
+    int withdist = 0, withhash = 0, withcoords = 0;
+    int frommember = 0, fromloc = 0, byradius = 0, bybox = 0;
+    int sort = SORT_NONE;
+    int any = 0; /* any=1 means a limited search, stop as soon as enough results were found. */
+    long long count = 0;  /* Max number of results to return. 0 means unlimited. */
+    if (c-&gt;argc &gt; base_args) {
+    /*
+     * 各种可选参数的解析，省略细节代码   
+     */ 
+    }
+    /* Get all neighbor geohash boxes for our radius search
+     * 获取到要查找范围内所有的9个geo邻域 */
+    GeoHashRadius georadius = geohashCalculateAreasByShapeWGS84(&amp;shape);
+    /* 创建geoArray存储结果列表 */
+    geoArray *ga = geoArrayCreate();
+    /* 扫描9个区域中是否有满足条的点，有就放到geoArray中 */
+    membersOfAllNeighbors(zobj, georadius, &amp;shape, ga, any ? count : 0);
+    /* 如果没有匹配结果，返回空对象 */
+    if (ga-&gt;used == 0 &amp;&amp; storekey == NULL) {
+        addReply(c,shared.emptyarray);
+        geoArrayFree(ga);
+        return;
+    }
+    long result_length = ga-&gt;used;
+    long returned_items = (count == 0 || result_length &lt; count) ?
+                          result_length : count;
+    long option_length = 0;
+    /* 
+     * 后续一些参数逻辑，比如处理排序，存储……
+     */
+    // 释放geoArray占用的空间 
+    geoArrayFree(ga);
+}
+```
+
+上述代码删减了大量细节，有兴趣的同学可以自行查阅(redis中的src/geo.c)。不过可以看出georadius的整体流程非常清晰：
+
+1. 解析请求参数。
+2. 计算目标坐标所在的geohash和8个邻居。
+3. 在zset中查找这9个区域中满足距离限制的所有点集。
+4. 处理排序等后续逻辑。
+5. 清理临时存储空间。
 
 
 
