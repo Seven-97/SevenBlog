@@ -410,15 +410,15 @@ insert into 表名 values (字段列表);
 
 
 
-批量插入添加记录
+##### 批量插入添加记录
 
-##### 循环插入
+1. 循环插入
 
 这个也是最普通的方式，如果数据量不是很大，可以使用，但是用for循环进行单条插入时，每次都是在获取连接(Connection)、释放连接和资源关闭等操作上，（如果数据量大的情况下）极其消耗资源，导致时间长。
 
 
 
-##### 拼接一条sql
+2. 拼接一条sql
 
 ```sql
  INSERT INTO tablename ('username','password') values ('xxx','xxx'),('xxx','xxx'),('xxx','xxx'),('xxx','xxx')
@@ -426,7 +426,7 @@ insert into 表名 values (字段列表);
 
 
 
-##### 使用存储过程
+3. 使用存储过程
 
 ```sql
 1、修改 mysql 的界定符（语句结束符）
@@ -450,9 +450,7 @@ CALL 过程名称();
 
 
 
-
-
-##### 使用MYSQL LOCAL_INFILE
+4. 使用MYSQL LOCAL_INFILE
 
 LOAD DATA INFILE语句是MySQL中实现大数据批量插入的一种高效方式。该语句可以通过将文本文件中的数据加载到数据库表中，从而达到批量插入的目的。该语句的语法如下：
 
@@ -476,8 +474,24 @@ INTO TABLE mytable FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' (col1, col2
 ```
 
 
+##### 插入语句的骚操作
 
+1. `INSERT IGNORE INTO` 用于在将数据插入表中时忽略可能导致错误的冲突。当插入的数据违反唯一索引或主键约束时，使用 `INSERT IGNORE` 将忽略该行的插入，并不会引发错误。
 
+假设有一个表 `users`，该表的主键是 `id`，且表中已经有id为1的数据，则以下语句会被忽略
+```sql
+INSERT IGNORE INTO users (id, name) VALUES (1, 'seven'); -- 这个操作会被忽略，而不会产生错误。
+```
+
+2. 当使用 `ON DUPLICATE KEY UPDATE` 插入数据时，如果插入的数据导致唯一索引或主键冲突，SQL 引擎不会报错或忽略该操作，而是会执行指定的更新操作。
+
+假设有一个表 `users`，该表的主键是 `id`，且表中已经有id为1的数据，则以下语句会把name更新为seven2
+```java
+INSERT INTO users (id, name)
+VALUES (1, 'seven2')
+ON DUPLICATE KEY UPDATE
+name = 'seven2';
+```
 
 #### 更新数据
 
