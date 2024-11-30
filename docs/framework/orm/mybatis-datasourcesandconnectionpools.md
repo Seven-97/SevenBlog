@@ -23,7 +23,7 @@ MyBatis把数据源DataSource分为三种：
 
 相应地，MyBatis内部分别定义了实现了java.sql.DataSource接口的UnpooledDataSource，PooledDataSource类来表示UNPOOLED、POOLED类型的数据源。
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291755231.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301327658.png)
 
 对于JNDI类型的数据源DataSource，则是通过JNDI上下文中取值。
 
@@ -151,7 +151,7 @@ public interface DataSourceFactory {
 
 其类图如下所示：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291755085.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301327671.png)
 
 MyBatis创建了DataSource实例后，会将其放到Configuration对象内的Environment对象中，供以后使用。
 
@@ -244,7 +244,7 @@ private Connection doGetConnection(Properties properties) throws SQLException
 
 上述的序列图如下所示：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291756027.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301327313.png)
 
 总结：从上述的代码中可以看到，我们每调用一次getConnection()方法，都会通过DriverManager.getConnection()返回新的java.sql.Connection实例。
 
@@ -255,8 +255,7 @@ private Connection doGetConnection(Properties properties) throws SQLException
 首先让我们来看一下创建一个java.sql.Connection对象的资源消耗。我们通过连接Oracle数据库，创建创建Connection对象，来看创建一个Connection对象、执行SQL语句各消耗多长时间。代码如下：
 
 ```java
-public static void main(String[] args) throws Exception  
-{  
+public static void main(String[] args) throws Exception  {  
  
    String sql = "select * from hr.employees where employee_id < ? and employee_id >= ?";  
    PreparedStatement st = null;  
@@ -319,7 +318,7 @@ PooledDataSource将java.sql.Connection对象包裹成PooledConnection对象放�
 
 **PoolState连接池的大致结构**如下所示：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291756918.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301328874.png)
 
 - **获取java.sql.Connection对象的过程**
 
@@ -491,7 +490,7 @@ private PooledConnection popConnection(String username, String password) throws 
 
 对应的处理流程图如下所示：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291756590.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301328722.png)
 
 如上所示,对于PooledDataSource的getConnection()方法内，先是调用类PooledDataSource的popConnection()方法返回了一个PooledConnection对象，然后调用了PooledConnection的getProxyConnection()来返回Connection对象。
 

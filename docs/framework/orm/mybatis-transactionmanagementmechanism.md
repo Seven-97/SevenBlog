@@ -19,7 +19,7 @@ head:
 
 对数据库的事务而言，应该具有以下几点：创建（create）、提交（commit）、回滚（rollback）、关闭（close）。对应地，MyBatis将事务抽象成了Transaction接口：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291752456.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301324984.png)
 
 MyBatis的事务管理分为两种形式：
 
@@ -28,7 +28,7 @@ MyBatis的事务管理分为两种形式：
 
 这两者的类图如下所示：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291752023.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301324045.png)
 
 ## 官网关于事务配置的内容
 
@@ -77,7 +77,7 @@ public interface Transaction {
 
 我们在使用MyBatis时，一般会在MyBatisXML配置文件中定义类似如下的信息：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291753632.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301324511.png)
 
 `<environment>`节点定义了连接某个数据库的信息，其子节点`<transactionManager>` 的type 会决定我们用什么类型的事务管理机制。
 
@@ -150,7 +150,7 @@ Environment表示着一个数据库的连接，生成后的Environment对象会�
 
 事务工厂Transaction定义了创建Transaction的两个方法：一个是通过指定的Connection对象创建Transaction，另外是通过数据源DataSource来创建Transaction。与JDBC 和MANAGED两种Transaction相对应，TransactionFactory有两个对应的实现的子类：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291754554.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301325563.png)
 
 ### 事务Transaction的创建
 

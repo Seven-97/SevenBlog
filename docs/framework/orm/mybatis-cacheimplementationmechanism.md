@@ -397,7 +397,7 @@ MyBatis定义了大量的Cache的装饰器来增强Cache缓存的功能，如下
 
 > MyBatis二级缓存的一个重要特点：即松散的Cache缓存管理和维护
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291825922.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301326512.png)
 
 一个Mapper中定义的增删改查操作只能影响到自己关联的Cache对象。如上图所示的Mapper namespace1中定义的若干CRUD语句，产生的缓存只会被放置到相应关联的Cache1中，即Mapper namespace2,namespace3,namespace4 中的CRUD的语句不会影响到Cache1。
 

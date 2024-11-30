@@ -19,7 +19,7 @@ head:
 
 主要构件：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291756027.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301329940.png)
 
 
 
@@ -80,7 +80,7 @@ SqlSessionFactoryBuilder根据传入的数据流生成Configuration对象，然�
 
 初始化的基本过程如下序列图所示：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291756460.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301329741.png)
 
 由上图所示，mybatis初始化要经过简单的以下几步：
 
@@ -141,7 +141,9 @@ public SqlSessionFactory build(Configuration config) {
 
 而XML配置定义文件DTD转换成XMLMapperEntityResolver对象，然后将二者封装到XpathParser对象中，XpathParser的作用是提供根据Xpath表达式获取基本的DOM节点Node信息的操作。如下图所示：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291756078.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301330119.png)
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301330294.png)
 
 - **之后XMLConfigBuilder调用parse()方法**
 
@@ -253,7 +255,7 @@ private boolean isSpecifiedEnvironment(String id)
 
 将上述的MyBatis初始化基本过程的序列图细化：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291756526.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301330019.png)
 
 ## 基于Java API
 

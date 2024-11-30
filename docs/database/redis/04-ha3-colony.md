@@ -38,7 +38,7 @@ Redis提供了去中心化的**集群部署**模式，集群内所有Redis节点
 
 一个典型的Redis集群部署场景如下图所示：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406122359313.webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301318769.png)
 
 在Redis集群里面，又会划分出`分区`的概念，一个集群中可有多个分区。分区有几个特点：
 
@@ -62,7 +62,7 @@ Redis提供了去中心化的**集群部署**模式，集群内所有Redis节点
 
 - 集群扩容的时候，会导致请求被分发到错误节点上，导致缓存*命中率降低*。
 
-![img](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406130001852.webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301318343.png)
 
 如果需要解决这个问题，就需要对原先扩容前已经存储的数据重新进行一次hash计算和取模操作，将全部的数据重新分发到新的正确节点上进行存储。这个操作被称为`重新Sharding`，重新sharding期间服务不可用，可能会对业务造成影响。
 
@@ -78,7 +78,7 @@ Redis提供了去中心化的**集群部署**模式，集群内所有Redis节点
 
 何为Hash槽？Hash槽的原理与HashMap有点相似，Redis集群中有16384个哈希槽（槽的范围是 0 -16383，哈希槽），将不同的哈希槽分布在不同的Redis节点上面进行管理，也就是说每个Redis节点只负责一部分的哈希槽。在对数据进行操作的时候，集群会对使用CRC16算法对key进行计算并对16384取模（slot = CRC16(key)%16383），得到的结果就是 Key-Value 所放入的槽，通过这个值，去找到对应的槽所对应的Redis节点，然后直接到这个对应的节点上进行存取操作。
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406130005738.webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301318133.png)
 
 使用哈希槽的好处就在于可以方便的添加或者移除节点，并且无论是添加删除或者修改某一个节点，都不会造成集群不可用的状态。
 
@@ -250,15 +250,13 @@ clusterNode数据结构的slots属性和numslot属性记录了节点负责处理
 
 slots属性是一个二进制位数组(bit array)，这个数组的长度为16384/8=2048个字节，共包含16384个二进制位。Master节点用bit来标识对于某个槽自己是否拥有，时间复杂度为O(1)
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406152046845.png)
-
 
 
 ### 集群所有槽的指派信息
 
 当收到集群中其他节点发送的信息时，通过将节点槽的指派信息保存在本地的clusterState.slots数组里面，程序要检查槽i是否已经被指派，又或者取得负责处理槽i的节点，只需要访问clusterState.slots[i]的值即可，时间复杂度仅为O(1)
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406152046908.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202411301317804.png)
 
 如上图所示，ClusterState 中保存的 Slots 数组中每个下标对应一个槽，每个槽信息中对应一个 clusterNode 也就是缓存的节点。这些节点会对应一个实际存在的 Redis 缓存服务，包括 IP 和 Port 的信息。Redis Cluster 的通讯机制实际上保证了每个节点都有其他节点和槽数据的对应关系。无论Redis 的客户端访问集群中的哪个节点都可以路由到对应的节点上，因为每个节点都有一份 ClusterState，它记录了所有槽和节点的对应关系。
 
