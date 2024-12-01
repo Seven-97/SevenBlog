@@ -57,16 +57,16 @@ MySQL 以[页作为数据的基本存储单位](https://www.seven97.top/database
 
 通过仔细分析业务代码和服务日志，我们迅速验证了这一假设。现在，导致死锁的具体原因已经非常明显。为了帮助大家更好地理解三个事务的执行顺序，我们制定了一个事务执行时序的设想表格。
 
-| 事务 A                                                       | 事务 B                                                       | 事务 C                                                       |
-| :----------------------------------------------------------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
-|                                                              |                                                              | 1. delete from t_order_extra_item_15 WHERE (order_id = xxx and extra_key = xxx ) ) **获取记录锁成功（\*lock_mode X locks rec but not gap\*）** |
-|                                                              | 2. delete from t_order_extra_item_15 WHERE (order_id = xxx and extra_key = xxx ) ) **等待获取记录锁（ \*lock_mode X locks rec but not gap waiting\*）** |                                                              |
-| 3. delete from t_order_extra_item_15 WHERE (order_id = xxx and extra_key = xxx ) ) **等待获取记录锁（ \*lock_mode X locks rec but not gap waiting\*）** |                                                              |                                                              |
-|                                                              |                                                              | 4. delete mark 设置记录头删除标识位 **delete_flag=1**        |
-|                                                              |                                                              | 5. 事务提交                                                  |
-|                                                              | 6. 获取记录锁成功 **记录状态变更重新获取临键锁（\*lock_mode X\*）** |                                                              |
-| 7. 发现死锁，回滚该事务 ***WE ROLL BACK TRANSACTION***       |                                                              |                                                              |
-|                                                              | 8. 事务提交                                                  |                                                              |
+| 事务 A                                                                                                                                               | 事务 B                                                                                                                                               | 事务 C                                                                                                                                      |
+| :------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+|                                                                                                                                                    |                                                                                                                                                    | 1. delete from t_order_extra_item_15 WHERE (order_id = xxx and extra_key = xxx ) ) <br>**获取记录锁成功（\*lock_mode X locks rec but not gap\*）** |
+|                                                                                                                                                    | 2. delete from t_order_extra_item_15 WHERE (order_id = xxx and extra_key = xxx ) ) <br>**等待获取记录锁（ \*lock_mode X locks rec but not gap waiting\*）** |                                                                                                                                           |
+| 3. delete from t_order_extra_item_15 WHERE (order_id = xxx and extra_key = xxx ) ) <br>**等待获取记录锁（ \*lock_mode X locks rec but not gap waiting\*）** |                                                                                                                                                    |                                                                                                                                           |
+|                                                                                                                                                    |                                                                                                                                                    | 4. delete mark 设置记录头删除标识位 **delete_flag=1**                                                                                               |
+|                                                                                                                                                    |                                                                                                                                                    | 5. 事务提交                                                                                                                                   |
+|                                                                                                                                                    | 6. 获取记录锁成功<br> **记录状态变更重新获取临键锁（\*lock_mode X\*）**                                                                                                  |                                                                                                                                           |
+| 7. 发现死锁，回滚该事务 <br>WE ROLL BACK TRANSACTION                                                                                                         |                                                                                                                                                    |                                                                                                                                           |
+|                                                                                                                                                    | 8. 事务提交                                                                                                                                            |                                                                                                                                           |
 
 在执行流程的第 6 步中，事务 B 尝试重新获取临键锁，这时与事务 A 发生了相互等待的状况，导致死锁的发生。为解决这一问题，数据库管理系统自动回滚了事务 A，以打破死锁状态。
 
@@ -74,14 +74,14 @@ MySQL 以[页作为数据的基本存储单位](https://www.seven97.top/database
 
 因为在同一行记录上过去已经有事务在等待获取锁了，为了避免锁饥饿现象的发生，先前请求加锁的事务在锁释放后将获得优先权。分别执行 `DELETE FROM t_lock where uniq = 5;` 语句，实际操作结果如下；
 
-| 事务 A                                                       | 事务 B                                                       |
-| :----------------------------------------------------------- | :----------------------------------------------------------- |
-| 1. delete from t_lock WHERE uniq = 5; **获取记录锁成功（\*lock_mode X locks rec but not gap\*）** |                                                              |
-| 2. delete mark 设置记录头删除标识位 **delete_flag=1**        |                                                              |
-|                                                              | 3. delete from t_lock WHERE uniq = 5; **等待获取临键锁（ \*lock_mode X waiting\*）** |
-| 4. delete from t_lock WHERE uniq = 5; **获取临键锁成功（\*lock_mode X\*）** |                                                              |
-|                                                              | 5. 发现死锁，回滚该事务 ***WE ROLL BACK TRANSACTION***       |
-| 6. 事务提交                                                  |                                                              |
+| 事务 A                                                                                         | 事务 B                                                                            |
+| :------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
+| 1. delete from t_lock WHERE uniq = 5; <br>**获取记录锁成功（\*lock_mode X locks rec but not gap\*）** |                                                                                 |
+| 2. delete mark 设置记录头删除标识位 **delete_flag=1**                                                  |                                                                                 |
+|                                                                                              | 3. delete from t_lock WHERE uniq = 5; <br>**等待获取临键锁（ \*lock_mode X waiting\*）** |
+| 4. delete from t_lock WHERE uniq = 5; <br>**获取临键锁成功（\*lock_mode X\*）**                       |                                                                                 |
+|                                                                                              | 5. 发现死锁，回滚该事务 <br>***WE ROLL BACK TRANSACTION***                                |
+| 6. 事务提交                                                                                      |                                                                                 |
 
 在操作流程的第四步中，事务 A 尝试请求对 `uniq = 5` 的临键锁，发现事务 B 已经先行一步请求了同一行记录上的临键锁。然而，事务 B 的这一请求由于事务 A 持有的记录锁而被阻塞，从而相互等待造成了死锁现象。
 
