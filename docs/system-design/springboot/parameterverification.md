@@ -785,5 +785,36 @@ Set<ConstraintViolation<T>> violationSet = FastValidatorUtils.validate(bean);
  ```
 
 
+## Validation的基本校验注解
+
+
+| 注解                                                    | 描述                                                                             |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| @Null                                                 | 验证对象是否为null                                                                    |
+| @NotNull                                              | 验证对象是否不为null，无法检查长度为0的字符串                                                      |
+| @NotBlank                                             | 检查约束字符串是否为null，且被Trim后的长度是否大于0，只适用于字符串，会去掉前后空格                                 |
+| @NotEmpty                                             | 检查约束元素是否为NULL或者是EMPTY                                                          |
+| @AssertTrue                                           | 验证Boolean对象是否为true                                                             |
+| @AssertFalse                                          | 验证Boolean对象是否为false                                                            |
+| @Size(min=, max=)                                     | 验证对象（Array、Collection、Map、String）长度是否在给定的范围之内                                  |
+| @Length(min=, max=)                                   | 验证注解的元素值长度是否在min和max区间内                                                        |
+| @Past                                                 | 验证Date和Calendar对象是否在当前时间之前                                                     |
+| @Future                                               | 验证Date和Calendar对象是否在当前时间之后                                                     |
+| @Pattern                                              | 验证String对象是否符合正则表达式的规则                                                         |
+| @Min                                                  | 验证Number和String对象是否大等于指定的值                                                     |
+| @Max                                                  | 验证Number和String对象是否小等于指定的值                                                     |
+| @DecimalMax                                           | 被标注的值必须不大于约束中指定的最大值，参数为通过BigDecimal定义的最大值的字符串表示，小数存在精度                         |
+| @DecimalMin                                           | 被标注的值必须不小于约束中指定的最小值，参数为通过BigDecimal定义的最小值的字符串表示，小数存在精度                         |
+| @Digits                                               | 验证Number和String的构成是否合法                                                         |
+| @Digits(integer=,fraction=)                           | 验证字符串是否符合指定格式的数字，integer指定整数精度，fraction指定小数精度                                  |
+| @Range(min=, max=)                                    | 验证注解的元素值在最小值和最大值之间                                                             |
+| @Range(min=10000,max=50000,message="range.bean.wage") | 验证注解的元素值在最小值10000和最大值50000之间，自定义错误信息为"range.bean.wage"                         |
+| @Valid                                                | 写在方法参数前，递归地对该对象进行校验，如果关联对象是集合或数组，则对其中的元素进行递归校验；如果是一个map，则对其中的值部分进行校验（是否进行递归验证） |
+| @CreditCardNumber                                     | 信用卡验证                                                                          |
+| @Email                                                | 验证是否是邮件地址，如果为null，不进行验证，算通过验证                                                  |
+| @ScriptAssert(lang= ,script=, alias=)                 | 自定义脚本验证                                                                        |
+| @URL(protocol=,host=, port=,regexp=, flags=)          | 验证URL的格式是否正确，可以指定协议                                                            |
+
+
 
 <!-- @include: @article-footer.snippet.md -->     
