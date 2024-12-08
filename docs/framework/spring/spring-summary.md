@@ -151,62 +151,6 @@ Spring 旨在简化 J2EE 企业应用程序开发。Spring Boot 旨在简化 Spr
 Spring Boot 只是简化了配置，如果你需要构建 MVC 架构的 Web 程序，你还是需要使用 Spring MVC 作为 MVC 框架，只是说 Spring Boot 帮你简化了 Spring MVC 的很多配置，真正做到开箱即用！
 
 
-
-## Spring 用到的设计模式
-
-1. **简单工厂模式**：`BeanFactory`就是简单工厂模式的体现，根据传入一个唯一标识来获得 Bean 对象。
-
-   ```java
-   @Override
-   public Object getBean(String name) throws BeansException {
-       assertBeanFactoryActive();
-       return getBeanFactory().getBean(name);
-   }
-   ```
-
-2. **工厂方法模式**：`FactoryBean`就是典型的工厂方法模式。spring在使用`getBean()`调用获得该bean时，会自动调用该bean的`getObject()`方法。每个 Bean 都会对应一个 `FactoryBean`，如 `SqlSessionFactory` 对应 `SqlSessionFactoryBean`。
-
-3. **单例模式**：一个类仅有一个实例，提供一个访问它的全局访问点。Spring 创建 Bean 实例默认是单例的。
-
-4. **适配器模式**：SpringMVC中的适配器`HandlerAdatper`。由于应用会有多个Controller实现，如果需要直接调用Controller方法，那么需要先判断是由哪一个Controller处理请求，然后调用相应的方法。当增加新的 Controller，需要修改原来的逻辑，违反了开闭原则（对修改关闭，对扩展开放）。
-   为此，Spring提供了一个适配器接口，每一种 Controller 对应一种 `HandlerAdapter` 实现类，当请求过来，SpringMVC会调用`getHandler()`获取相应的Controller，然后获取该Controller对应的 `HandlerAdapter`，最后调用`HandlerAdapter`的`handle()`方法处理请求，实际上调用的是Controller的`handleRequest()`。每次添加新的 Controller 时，只需要增加一个适配器类就可以，无需修改原有的逻辑。
-   常用的处理器适配器：`SimpleControllerHandlerAdapter`，`HttpRequestHandlerAdapter`，`AnnotationMethodHandlerAdapter`。
-
-   ```java
-   // Determine handler for the current request.
-   mappedHandler = getHandler(processedRequest);
-   
-   HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
-   
-   // Actually invoke the handler.
-   mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
-   
-   public class HttpRequestHandlerAdapter implements HandlerAdapter {
-   
-       @Override
-       public boolean supports(Object handler) {//handler是被适配的对象，这里使用的是对象的适配器模式
-           return (handler instanceof HttpRequestHandler);
-       }
-   
-       @Override
-       @Nullable
-       public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
-           throws Exception {
-   
-           ((HttpRequestHandler) handler).handleRequest(request, response);
-           return null;
-       }
-   }
-   ```
-
-5. **代理模式**：spring 的 aop 使用了动态代理，有两种方式`JdkDynamicAopProxy`和`Cglib2AopProxy`。
-
-6. **观察者模式**：spring 中 observer 模式常用的地方是 listener 的实现，如`ApplicationListener`。
-
-7. **模板模式**： Spring 中 `jdbcTemplate`、`hibernateTemplate` 等，就使用到了模板模式。
-
-
-
 ## HelloWorld-xml
 
 > 这里只是表示这是Spring第一个项目，以HelloWorld作为标注。实际需求是获取 用户列表信息，并打印执行日志
