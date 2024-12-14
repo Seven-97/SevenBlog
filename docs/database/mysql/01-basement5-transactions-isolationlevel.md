@@ -138,7 +138,7 @@ readView是MVCC多版本并发控制的一种实现手段。这个也叫快照�
 在创建 Read View 后，可以将记录中的 trx_id 划分这三种情况：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404261856176.png)
 
-### 每条记录中的两个隐藏列
+### undolog中每条记录的两个隐藏列
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404261856242.png)
 
 - trx_id，当一个事务对某条聚簇索引记录进行改动时，就会把该事务的事务 id 记录在 trx_id 隐藏列里；
@@ -153,6 +153,8 @@ readView是MVCC多版本并发控制的一种实现手段。这个也叫快照�
 	- 如果记录的 trx_id 不在 m_ids列表中，表示生成该版本记录的活跃事务已经被提交，所以该版本的记录对当前事务可见。
 
 ### MVCC整体操作流程 
+
+MVCC的实现方式：Read View + undolog
 
 1. 首先获取事务自己的事务 ID；
 2. 获取 ReadView；
