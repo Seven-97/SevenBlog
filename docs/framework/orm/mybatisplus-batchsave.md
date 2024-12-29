@@ -304,3 +304,5 @@ public CompletableFuture<Void> saveBatchAsync(List<Question> questionList) {
 - **事务一致性**：每个异步任务均拥有自身的事务，以此确保数据的一致性。
 - **资源合理利用**：避免因过多的并发线程而致使系统资源被耗尽，进而影响整体性能表现。
 
+
+<!-- @include: @article-footer.snippet.md -->     

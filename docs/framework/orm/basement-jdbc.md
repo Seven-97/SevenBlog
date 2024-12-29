@@ -258,7 +258,7 @@ protected Socket createSocket(PropertySet props) {
 
 ## 总结
 
-数据库驱动依赖SPI类加载机制
+数据库驱动依赖[SPI类加载机制](https://www.seven97.top/java/basis/06-SPI.html)
 
 获取连接是通过socket与数据库取得连接的
 
