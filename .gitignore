@@ -12,6 +12,7 @@ media/
 **/.vuepress/
 **/.obsidian/
 **/interview/
+**/about/
 # VuePress Output
 dist/
 # Build files
