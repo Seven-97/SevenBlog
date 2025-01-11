@@ -488,10 +488,11 @@ Work模型的使用：
 - **Topic**：通配符订阅，与Direct类似，只不过RoutingKey可以使用通配符
 - **Headers**：头匹配，基于MQ的消息头匹配，用的较少。
 
-课堂中，我们讲解前面的三种交换机模式。
+这里主要讲解前面的三种交换机模式。
 
-### Fanout交换机
+#### Fanout交换机
 Fanout，英文翻译是扇出，我觉得在MQ中叫广播更合适。
+
 在广播模式下，消息发送流程是这样的：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405181730342.png)
 
@@ -507,7 +508,7 @@ Fanout，英文翻译是扇出，我觉得在MQ中叫广播更合适。
 - 创建一个名为` hmall.fanout`的交换机，类型是`Fanout`
 - 创建两个队列`fanout.queue1`和`fanout.queue2`，绑定到交换机`hmall.fanout`
 
-#### 声明队列和交换机
+##### 声明队列和交换机
 在控制台创建队列`fanout.queue1`:
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405181730019.png)
 在创建一个队列`fanout.queue2`：
@@ -519,7 +520,7 @@ Fanout，英文翻译是扇出，我觉得在MQ中叫广播更合适。
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405181730237.png)
 
 
-#### 消息发送
+##### 消息发送
 在publisher服务的SpringAmqpTest类中添加测试方法：
 ```java
 @Test
@@ -532,7 +533,7 @@ public void testFanoutExchange() {
 }
 ```
 
-#### 消息接收
+##### 消息接收
 在consumer服务的SpringRabbitListener中添加两个方法，作为消费者：
 ```java
 @RabbitListener(queues = "fanout.queue1")
@@ -546,7 +547,7 @@ public void listenFanoutQueue2(String msg) {
 }
 ```
 
-#### 总结
+##### 总结
 交换机的作用是什么？
 
 - 接收publisher发送的消息
@@ -555,7 +556,7 @@ public void listenFanoutQueue2(String msg) {
 - FanoutExchange的会将消息路由到每个绑定的队列
 
 
-### Direct交换机
+#### Direct交换机
 在Fanout模式中，一条消息，会被所有订阅的队列都消费。但是，在某些场景下，我们希望不同的消息被不同的队列消费。这时就要用到Direct类型的Exchange。
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405181730102.png)
 在Direct模型下：
@@ -574,7 +575,7 @@ public void listenFanoutQueue2(String msg) {
 5.  在publisher中编写测试方法，向`hmall.direct`发送消息 
 
 
-#### 声明队列和交换机
+##### 声明队列和交换机
 首先在控制台声明两个队列`direct.queue1`和`direct.queue2`，这里不再展示过程：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405181731363.png)
 然后声明一个direct类型的交换机，命名为`hmall.direct`:
@@ -586,7 +587,7 @@ public void listenFanoutQueue2(String msg) {
 同理，使用`red`和`yellow`作为key，绑定`direct.queue2`到`hmall.direct`，步骤略，最终结果：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405181731224.png)
 
-#### 消息接收
+##### 消息接收
 在consumer服务的SpringRabbitListener中添加方法：
 ```java
 @RabbitListener(queues = "direct.queue1")
@@ -601,7 +602,7 @@ public void listenDirectQueue2(String msg) {
 ```
 
 
-#### 消息发送
+##### 消息发送
 在publisher服务的SpringAmqpTest类中添加测试方法：
 ```java
 @Test
@@ -632,7 +633,7 @@ public void testSendDirectExchange() {
 你会发现，只有消费者1收到了消息：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405181731238.png)
 
-#### 总结
+##### 总结
 描述下Direct交换机与Fanout交换机的差异？
 
 - Fanout交换机将消息路由给每一个与之绑定的队列
@@ -640,8 +641,8 @@ public void testSendDirectExchange() {
 - 如果多个队列具有相同的RoutingKey，则与Fanout功能类似
 
 
-### Topic交换机
-#### 说明
+#### Topic交换机
+##### 说明
 `Topic`类型的`Exchange`与`Direct`相比，都是可以根据`RoutingKey`把消息路由到不同的队列。
 只不过`Topic`类型`Exchange`可以让队列在绑定`BindingKey` 的时候使用通配符！
 
@@ -679,7 +680,7 @@ public void testSendDirectExchange() {
 首先，在控制台按照图示例子创建队列、交换机，并利用通配符绑定队列和交换机。此处步骤略。最终结果如下：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405181732051.png)
 
-#### 消息发送
+##### 消息发送
 在publisher服务的SpringAmqpTest类中添加测试方法：
 ```java
 /**
@@ -696,7 +697,7 @@ public void testSendTopicExchange() {
 }
 ```
 
-#### 消息接收
+##### 消息接收
 在consumer服务的SpringRabbitListener中添加方法：
 ```java
 @RabbitListener(queues = "topic.queue1")
@@ -710,7 +711,7 @@ public void listenTopicQueue2(String msg){
 }
 ```
 
-#### 总结
+##### 总结
 
 描述下Direct交换机与Topic交换机的差异？
 
@@ -999,5 +1000,19 @@ public void listenSimpleQueueMessage(Map<String, Object> msg) throws Interrupted
     System.out.println("消费者接收到object.queue消息：【" + msg + "】");
 }
 ```
+
+## 常用的 RabbitMQ 插件
+
+RabbitMQ 支持许多插件，这些插件可以扩展 RabbitMQ 的功能和特性。以下是一些常用的 RabbitMQ 插件：  
+
+- Management Plugin：  RabbitMQ 管理插件提供了一个 Web 管理界面，用于监控和管理 RabbitMQ 服务器。可以查看队列、交换机、连接、通道等的状态，并进行配置和操作。  
+- Shovel Plugin：  Shovel 插件用于将消息从一个 RabbitMQ 服务器传递到另一个 RabbitMQ 服务器，实现消息复制和跨集群通信。它可以用于实现数据复制、故障恢复、数据中心间同步等。  
+- Federation Plugin：  Federation 插件允许不同 RabbitMQ 集群之间建立联合，实现消息的跨集群传递。这对于构建分布式系统、将消息从一个地理位置传递到另一个地理位置非常有用。  
+- STOMP Plugin：  STOMP插件允许使用 STOMP 协议与 RabbitMQ 进行通信。这对于使用非 AMQP 协议的客户端与 RabbitMQ 交互非常有用，例如使用 WebSocket 的 Web 应用程序。  
+- Prometheus Plugin：  Prometheus 插件用于将 RabbitMQ 的性能指标导出到 Prometheus 监控系统，以便进行性能监控和警报。  
+- Delayed Message Plugin：  延迟消息插件允许发布延迟交付的消息，使你能够在稍后的时间点将消息传递给消费者。这对于实现定时任务、延迟重试等场景非常有用。  
+
+
+
 
 <!-- @include: @article-footer.snippet.md -->     
