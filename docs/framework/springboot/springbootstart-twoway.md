@@ -20,7 +20,7 @@ head:
 
 #### 启动方式
 
-1. IDEA中main函数启动，[Main函数启动SpringBoot源码点击这里](https://github.com/Seven-97/SpringBoot-Demo/tree/master/01-helloworld-main)
+1. IDEA中main函数启动
 
 2. mvn springboot-run
 
