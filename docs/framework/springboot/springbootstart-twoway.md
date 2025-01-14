@@ -531,7 +531,7 @@ tomcat不会主动去启动springboot应用 ，， 所以tomcat启动的时候�
 
 - @HandlesTypes传入的类为ServletContainerInitializer感兴趣的
 - 容器会自动在classpath中找到 WebApplicationInitializer，会传入到onStartup方法的webAppInitializerClasses中
-- Set<Class<?>> webAppInitializerClasses这里面也包括之前定义的TomcatStartSpringBoot
+- `Set<Class<?>> webAppInitializerClasses`这里面也包括之前定义的TomcatStartSpringBoot
 
 ```java
 @HandlesTypes(WebApplicationInitializer.class)

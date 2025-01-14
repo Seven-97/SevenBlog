@@ -958,7 +958,7 @@ kafka-run-class.sh kafka.tools.DumpLogSegments --files ./00000000000000000000.lo
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191047057.png)
 
-`时间戳索引文件`，它的作用是可以查询某一个时间段内的消息，它的数据结构是：时间戳（8byte）+ 相对offset（4byte），如果要使用这个索引文件，先要通过时间范围找到对应的offset，然后再去找对应的index文件找到position信息，最后在遍历log文件，这个过程也是需要用到index索引文件的。
+时间戳索引文件，它的作用是可以查询某一个时间段内的消息，它的数据结构是：时间戳（8byte）+ 相对offset（4byte），如果要使用这个索引文件，先要通过时间范围找到对应的offset，然后再去找对应的index文件找到position信息，最后在遍历log文件，这个过程也是需要用到index索引文件的。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405191047667.png)
 
