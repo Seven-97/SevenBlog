@@ -16,7 +16,7 @@ head:
 
 ## 背景
 
-Paxos 算法是 Leslie Lamport（[莱斯利·兰伯特open in new window](https://zh.wikipedia.org/wiki/莱斯利·兰伯特)）在 **1990** 年提出了一种分布式系统 **共识** 算法。这也是第一个被证明完备的共识算法（前提是不存在拜占庭将军问题，也就是没有恶意节点）。
+Paxos 算法是 Leslie Lamport（[莱斯利·兰伯特](https://zh.wikipedia.org/wiki/莱斯利·兰伯特)）在 **1990** 年提出了一种分布式系统 **共识** 算法。这也是第一个被证明完备的共识算法（前提是不存在拜占庭将军问题，也就是没有恶意节点）。
 
 为了介绍 Paxos 算法，兰伯特专门写了一篇幽默风趣的论文。在这篇论文中，他虚拟了一个叫做 Paxos 的希腊城邦来更形象化地介绍 Paxos 算法。
 
@@ -24,15 +24,11 @@ Paxos 算法是 Leslie Lamport（[莱斯利·兰伯特open in new window](https:
 
 于是乎，提出 Paxos 算法的那篇论文在当时并没有被成功发表。
 
-直到 1998 年，系统研究中心 (Systems Research Center，SRC）的两个技术研究员需要找一些合适的分布式算法来服务他们正在构建的分布式系统，Paxos 算法刚好可以解决他们的部分需求。因此，兰伯特就把论文发给了他们。在看了论文之后，这俩大佬觉得论文还是挺不错的。于是，兰伯特在 **1998** 年重新发表论文 [《The Part-Time Parliament》open in new window](http://lamport.azurewebsites.net/pubs/lamport-paxos.pdf)。
+直到 1998 年，系统研究中心 (Systems Research Center，SRC）的两个技术研究员需要找一些合适的分布式算法来服务他们正在构建的分布式系统，Paxos 算法刚好可以解决他们的部分需求。因此，兰伯特就把论文发给了他们。在看了论文之后，这俩大佬觉得论文还是挺不错的。于是，兰伯特在 **1998** 年重新发表论文 [《The Part-Time Parliament》](http://lamport.azurewebsites.net/pubs/lamport-paxos.pdf)。
 
-论文发表之后，各路学者直呼看不懂，言语中还略显调侃之意。这谁忍得了，在 **2001** 年的时候，兰伯特专门又写了一篇 [《Paxos Made Simple》open in new window](http://lamport.azurewebsites.net/pubs/paxos-simple.pdf) 的论文来简化对 Paxos 的介绍，主要讲述两阶段共识协议部分，顺便还不忘嘲讽一下这群学者。
+论文发表之后，各路学者直呼看不懂，言语中还略显调侃之意。这谁忍得了，在 **2001** 年的时候，兰伯特专门又写了一篇 [《Paxos Made Simple》](http://lamport.azurewebsites.net/pubs/paxos-simple.pdf) 的论文来简化对 Paxos 的介绍，主要讲述两阶段共识协议部分，顺便还不忘嘲讽一下这群学者。
 
-《Paxos Made Simple》这篇论文就 14 页，相比于 《The Part-Time Parliament》的 33 页精简了不少。最关键的是这篇论文的摘要就一句话：
-
-![image.png](file:///C:/Users/HUAWEI%20MateBook%20Xpro/AppData/Local/Packages/oice_16_974fa576_32c1d314_3b83/AC/Temp/msohtmlclip1/01/clip_image002.jpg)
-
-The Paxos algorithm, when presented in plain English, is very simple.
+《Paxos Made Simple》这篇论文就 14 页，相比于 《The Part-Time Parliament》的 33 页精简了不少。最关键的是这篇论文的摘要就一句话：The Paxos algorithm, when presented in plain English, is very simple.
 
 翻译过来的意思大概就是：当我用无修饰的英文来描述时，Paxos 算法真心简单！
 
@@ -46,11 +42,10 @@ Paxos 算法是第一个被证明完备的分布式系统共识算法。共识�
 
 兰伯特当时提出的 Paxos 算法主要包含 2 个部分:
 
-l Basic Paxos 算法：描述的是多节点之间如何就某个值(提案 Value)达成共识。
+- Basic Paxos 算法：描述的是多节点之间如何就某个值(提案 Value)达成共识。
+- Multi-Paxos 思想：描述的是执行多个 Basic Paxos 实例，就一系列值达成共识。Multi-Paxos 说白了就是执行多次 Basic Paxos ，核心还是 Basic Paxos 。
 
-l Multi-Paxos 思想：描述的是执行多个 Basic Paxos 实例，就一系列值达成共识。Multi-Paxos 说白了就是执行多次 Basic Paxos ，核心还是 Basic Paxos 。
-
-由于 Paxos 算法在国际上被公认的非常难以理解和实现，因此不断有人尝试简化这一算法。到了 2013 年才诞生了一个比 Paxos 算法更易理解和实现的共识算法—[Raft 算法open in new window](https://javaguide.cn/distributed-system/theorem&algorithm&protocol/raft-algorithm.html) 。更具体点来说，Raft 是 Multi-Paxos 的一个变种，其简化了 Multi-Paxos 的思想，变得更容易被理解以及工程实现。
+由于 Paxos 算法在国际上被公认的非常难以理解和实现，因此不断有人尝试简化这一算法。到了 2013 年才诞生了一个比 Paxos 算法更易理解和实现的共识算法—[Raft 算法](https://javaguide.cn/distributed-system/theorem&algorithm&protocol/raft-algorithm.html) 。更具体点来说，Raft 是 Multi-Paxos 的一个变种，其简化了 Multi-Paxos 的思想，变得更容易被理解以及工程实现。
 
 针对没有恶意节点的情况，除了 Raft 算法之外，当前最常用的一些共识算法比如 **ZAB 协议**、 **Fast Paxos** 算法都是基于 Paxos 算法改进的。
 
@@ -60,11 +55,9 @@ l Multi-Paxos 思想：描述的是执行多个 Basic Paxos 实例，就一系�
 
 下面我们来对 Paxos 算法的定义做一个总结：
 
-l Paxos 算法是兰伯特在 **1990** 年提出了一种分布式系统共识算法。
-
-l 兰伯特当时提出的 Paxos 算法主要包含 2 个部分: Basic Paxos 算法和 Multi-Paxos 思想。
-
-l Raft 算法、ZAB 协议、 Fast Paxos 算法都是基于 Paxos 算法改进而来。
+- Paxos 算法是兰伯特在 **1990** 年提出了一种分布式系统共识算法。
+- 兰伯特当时提出的 Paxos 算法主要包含 2 个部分: Basic Paxos 算法和 Multi-Paxos 思想。
+- Raft 算法、ZAB 协议、 Fast Paxos 算法都是基于 Paxos 算法改进而来。
 
 ## Basic Paxos 算法
 
@@ -74,7 +67,7 @@ Basic Paxos 中存在 3 个重要的角色：
 2. 接受者（Acceptor）：也可以叫做投票员（voter），负责对提议者的提案进行投票，同时需要记住自己的投票历史；
 3. 学习者（Learner）：如果有超过半数接受者就某个提议达成了共识，那么学习者就需要接受这个提议，并就该提议作出运算，然后将运算结果返回给客户端。
 
-![stickPicture.png](file:///C:/Users/HUAWEI%20MateBook%20Xpro/AppData/Local/Packages/oice_16_974fa576_32c1d314_3b83/AC/Temp/msohtmlclip1/01/clip_image004.gif)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202501152154475.png)
 
 为了减少实现该算法所需的节点数，一个节点可以身兼多个角色。并且，一个提案被选定需要被半数以上的 Acceptor 接受。这样的话，Basic Paxos 算法还具备容错性，在少于一半的节点出现故障时，集群仍能正常工作。
 
