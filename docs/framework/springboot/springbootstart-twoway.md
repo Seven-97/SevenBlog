@@ -536,6 +536,7 @@ tomcat不会主动去启动springboot应用 ，， 所以tomcat启动的时候�
 ```java
 @HandlesTypes(WebApplicationInitializer.class)
 public class SpringServletContainerInitializer implements ServletContainerInitializer {
+}
 ```
 
 ```java

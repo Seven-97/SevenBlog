@@ -6,6 +6,11 @@ tag:
   - EasyExcel
 ---
 
+11月6日消息，阿里巴巴旗下的Java Excel工具库EasyExcel近日宣布，将停止更新，未来将逐步进入维护模式，将继续修复Bug，但不再主动新增功能。
+
+EasyExcel 是一款知名的 Java Excel 工具库，由阿里巴巴开源，作者是玉箫，在 GitHub 上有 30k+ stars、7.5k forks。  据了解，EasyExcel作者玉箫去年已经从阿里离职，开始创业，也是开源数据库客户端 Chat2DB 的作者。
+
+尽管 EasyExcel 已经不再维护，但其也不失为一个强大且优秀的工具框架，这里我们就一起看一下如何使用 EasyExcel实现百万数据的导入导出。
 
 
 ## 简介
@@ -811,8 +816,150 @@ EasyExcelUtil.read(inputStream, TaskImportDTO.class, taskImportDTOEasyExcelListe
 
 若还有其它导入需求，只需new EasyExcelListener 方法，并自定义自己的校验和处理逻辑即可，从而完成代码复用！
 
+## 替代产品
+
+有个好消息就是，EasyExcel的作者创建了新项目：FastExcel。
+
+开源地址：`https://github.com/CodePhiliaX/fastexcel`
+
+作者选择为它起名为 FastExcel，以突出这个框架在处理 Excel 文件时的高性能表现，而不仅仅是简单易用。
+
+FastExcel 将始终坚持免费开源，并采用最开放的 MIT 协议，使其适用于任何商业化场景。这为开发者和企业提供了极大的自由度和灵活性。FastExcel 的一些显著特点包括：
+
+- 完全兼容原 EasyExcel 的所有功能和特性，这使得用户可以无缝过渡。
+- 从 EasyExcel 迁移到 FastExcel 只需简单地更换包名和 Maven 依赖即可完成升级。
+- 在功能上，比 EasyExcel 提供更多创新和改进。
+- FastExcel 1.0.0 版本新增了读取 Excel 指定行数和将 Excel 转换为 PDF 的功能。
+
+他们计划在未来推出更多新特性，以不断提升用户体验和工具实用性。FastExcel 致力于成为处理 Excel 文件的最佳选择。
+
+主要特性：
+- **高性能读写：** FastExcel 专注于性能优化，能够高效处理大规模的 Excel 数据。相比一些传统的 Excel 处理库，它能显著降低内存占用。
+- **简单易用：** 该库提供了简洁直观的 API，使得开发者可以轻松集成到项目中，无论是简单的 Excel 操作还是复杂的数据处理都能快速上手。
+- **流式操作：** FastExcel 支持流式读取，将一次性加载大量数据的问题降到最低。这种设计方式在处理数十万甚至上百万行的数据时尤为重要。
 
 
+当前 FastExcel 底层使用 poi 作为基础包，如果项目中已经有 poi 相关组件，需要手动排除 poi 的相关 jar 包。
+
+如果使用 Maven 进行项目构建，请在 pom.xml 文件中引入以下配置：
+
+```xml
+<dependency>    
+	<groupId>cn.idev.excel</groupId>    
+	<artifactId>fastexcel</artifactId>    
+	<version>1.0.0</version>
+</dependency>
+```
+
+
+
+EasyExcel 与 FastExcel 的区别：
+- FastExcel 支持所有 EasyExcel 的功能，但是 FastExcel 的性能更好，更稳定。
+- FastExcel 与 EasyExcel 的 API 完全一致，可以无缝切换。
+- FastExcel 会持续的更新，修复 bug，优化性能，增加新功能。EasyExcel 如何升级到 FastExcel
+
+### 修改依赖
+
+将 EasyExcel 的依赖替换为 FastExcel 的依赖，如下：
+
+```xml
+<!-- easyexcel 依赖 -->
+<dependency>    
+	<groupId>com.alibaba</groupId>    
+	<artifactId>easyexcel</artifactId>    
+	<version>xxxx</version>
+</dependency>
+```
+
+依赖替换为
+
+```xml
+<dependency>    
+	<groupId>cn.idev.excel</groupId>    
+	<artifactId>fastexcel</artifactId>    
+	<version>1.0.0</version>
+</dependency>
+```
+
+### 修改代码
+
+将 EasyExcel 的包名替换为 FastExcel 的包名，如下：
+
+```java
+import com.alibaba.excel.**;
+```
+
+替换为
+
+```java
+import cn.idev.excel.**;
+```
+
+### 不修改代码直接依赖 FastExcel
+
+如果由于种种原因不想修改代码，可以直接依赖 FastExcel ，然后在 pom.xml 文件中直接依赖 FastExcel。EasyExcel 与 FastExcel 可以共存，但是长期建议替换为 FastExcel。
+
+###  建议以后使用 FastExcel 类
+
+为了兼容性考虑保留了 EasyExcel 类，但是建议以后使用 FastExcel 类，FastExcel 类是FastExcel 的入口类，功能包含了 EasyExcel 类的所有功能，以后新特性仅在 FastExcel 类中添加。
+
+简单示例：读取 Excel 文件 下面是读取 Excel 文档的例子：
+
+```java
+// 实现 ReadListener 接口，设置读取数据的操作  
+public class DemoDataListener implements ReadListener<DemoData> {  
+    @Override  
+    public void invoke(DemoData data, AnalysisContext context) {  
+        System.out.println("解析到一条数据" + JSON.toJSONString(data));  
+    }  
+  
+    @Override  
+    public void doAfterAllAnalysed(AnalysisContext context) {  
+        System.out.println("所有数据解析完成！");  
+    }  
+}  
+  
+public static void main(String[] args) {  
+    String fileName = "demo.xlsx";  
+    // 读取 Excel 文件  
+    FastExcel.read(fileName, DemoData.class, new DemoDataListener()).sheet().doRead();  
+}
+```
+
+简单示例：创建 Excel 文件 下面是一个创建 Excel 文档的简单例子：
+
+```java
+// 示例数据类  
+public class DemoData {  
+    @ExcelProperty("字符串标题")  
+    private String string;  
+    @ExcelProperty("日期标题")  
+    private Date date;  
+    @ExcelProperty("数字标题")  
+    private Double doubleData;  
+    @ExcelIgnore  
+    private String ignore;  
+}  
+  
+// 填充要写入的数据  
+private static List<DemoData> data() {  
+    List<DemoData> list = new ArrayList<>();  
+    for (int i = 0; i < 10; i++) {  
+        DemoData data = new DemoData();  
+        data.setString("字符串" + i);  
+        data.setDate(new Date());  
+        data.setDoubleData(0.56);  
+        list.add(data);  
+    }  
+    return list;  
+}  
+  
+public static void main(String[] args) {  
+    String fileName = "demo.xlsx";  
+    // 创建一个名为“模板”的 sheet 页，并写入数据  
+    FastExcel.write(fileName, DemoData.class).sheet("模板").doWrite(data());
+}
+```
 
 
 

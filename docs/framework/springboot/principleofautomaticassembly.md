@@ -172,7 +172,9 @@ static class Registrar implements ImportBeanDefinitionRegistrar, DeterminableImp
 
 看看注解@Import(AutoConfigurationImportSelector.class)，@Import注解就是给Spring容器中导入一些组件，这里传入了一个组件的选择器:AutoConfigurationImportSelector。
 
-![图片](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405051211647.webp)可以从图中看出AutoConfigurationImportSelector 继承了 DeferredImportSelector 继承了 ImportSelector，ImportSelector有一个方法为：selectImports。将所有需要导入的组件以全类名的方式返回，这些组件就会被添加到容器中。
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405051211647.webp)
+
+可以从图中看出AutoConfigurationImportSelector 继承了 DeferredImportSelector 继承了 ImportSelector，ImportSelector有一个方法为：selectImports。将所有需要导入的组件以全类名的方式返回，这些组件就会被添加到容器中。
 
 ```java
 public String[] selectImports(AnnotationMetadata annotationMetadata) {
@@ -191,7 +193,7 @@ public String[] selectImports(AnnotationMetadata annotationMetadata) {
 
 这里会给容器中导入 自动配置类（xxxAutoConfiguration），也就是给容器中导入这个场景需要的所有组件，并配置好这些组件。
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405051212550.webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202501191149125.jpg)
 
 有了自动配置类，就免去了手动编写配置注入功能组件等的工作。
 
@@ -518,7 +520,7 @@ public interface ServletWebServerFactory {
 
 可以看到 它是一个接口，为什么会是接口。因为不止是Tomcat一种web容器，可以看到还有Jetty
 
-![图片](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405051212127.webp)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405051212127.webp)
 
 
 
