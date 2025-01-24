@@ -1,7 +1,7 @@
 ---
-title: 数据库连接池配置推荐
+title: 调优 - 数据库连接池配置推荐
 category: 数据库
-tag:
+tags:
   - 最佳实践
   - Mysql
 head:
