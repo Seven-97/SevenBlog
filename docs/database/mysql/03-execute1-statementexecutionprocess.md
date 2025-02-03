@@ -29,7 +29,7 @@ MySQL 的架构可以大致划分为四个层次：连接层、服务层、存�
 
 也可以将其简单的分成两层：Server 层和存储引擎层，如图
 
-![](https:\seven97-blog.oss-cn-hangzhou.aliyuncs.com\imgs\202404261822009.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com\imgs\202404261822009.png)
 
 - Server 层：**负责建立连接、分析和执行SQL**。主要包括连接器、查询缓存、分析器、优化器、执行器等。这些组件包含了MySQL的大部分主要功能。
 - 存储引擎层：**负责数据的存储和提取**。
