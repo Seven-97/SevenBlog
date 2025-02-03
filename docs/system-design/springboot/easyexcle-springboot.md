@@ -6,7 +6,7 @@ tag:
   - EasyExcel
 ---
 
-24年11月6日消息，阿里巴巴旗下的Java Excel工具库EasyExcel近日宣布，将停止更新，未来将逐步进入维护模式，将继续修复Bug，但不再主动新增功能。
+24年11月6日，阿里巴巴旗下的Java Excel工具库EasyExcel宣布，将停止更新，未来将逐步进入维护模式，将继续修复Bug，但不再主动新增功能。
 
 EasyExcel 是一款知名的 Java Excel 工具库，由阿里巴巴开源，作者是玉箫，在 GitHub 上有 30k+ stars、7.5k forks。  据了解，EasyExcel作者玉箫去年已经从阿里离职，开始创业，也是开源数据库客户端 Chat2DB 的作者。
 

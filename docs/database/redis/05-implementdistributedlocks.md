@@ -599,7 +599,12 @@ pexpire重置锁的有效期。
 ```
 
 ### multilock解决主从一致性问题
-如果Redis是主从集群，主从同步存在延迟，当主机宕机时，从成为了主，但可能存在从此时还未完成同步，因此从上就没有锁标识，此时会出现并发安全问题。
+
+Redis分布式锁会有个缺陷，就是在Redis哨兵模式下:  
+- 客户端1对某个master节点写入了redisson锁，此时会异步复制给对应的slave节点。但是这个过程中一旦发生master节点宕机，主备切换，slave节点从变为了master节点。  
+- 客户端2来尝试加锁的时候，在新的master节点上也能加锁，此时就会导致多个客户端对同一个分布式锁完成了加锁。  
+- 系统在业务语义上一定会出现问题，导致各种脏数据的产生。  
+这个缺陷导致在哨兵模式或者主从模式下，如果master实例宕机的时候，可能导致多个客户端同时完成加锁。
 
 因此redisson提出来了MutiLock锁，使用这把锁就不使用主从了，每个节点的地位都是一样的， 这把锁加锁的逻辑需要写入到每一个主丛节点上，只有所有的服务器都写入成功，此时才是加锁成功，假设现在某个节点挂了，那么他去获得锁的时候，只要有一个节点拿不到，都不能算是加锁成功，就保证了加锁的可靠性。
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270809473.png)
@@ -617,6 +622,7 @@ private RedissonClient3 redissonClient3;
 RLock lock = redissonClient.getMultilock(lock1,lock2,lock3)
 ```
 
+
 ### 总结Redisson
 Redisson分布式锁解决前三个问题原理
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270809485.png)
@@ -625,7 +631,7 @@ Redisson分布式锁解决前三个问题原理
 - 可重入：利用hash结构记录线程id和重入次数
 - 可重试：利用信号量和PubSub功能来实现等待、唤醒，获取锁失败的重试机制
 - 超时续约：利用watchDog，开启一个定时任务，每隔一段时间(releaseTime/3)，重置超时时间。
-- 使用multilock: 多个独立的redis节点，必须在所有节点都获取重入锁,才算获取成功;
+- 使用multilock: 多个独立的redis节点，必须在所有节点都获取重入锁，才算获取成功;
 
 ## redLock
 不管是redLock，还是redissonLock，两者底层都是通过相同的lua脚本来加锁、释放锁的，所以，两者只是外部形态的不同，底层是一样的。redLock是继承了redissonMultiLock，大部分的逻辑，都是在redissonMultiLock中去实现的，所以源码部分，大部分都是RedissonMultiLock
