@@ -1,8 +1,8 @@
 ---
-title: 分布式ID
+title: 分布式ID实现方案
 category: 微服务
-tag:
- - 分布式
+tags:
+  - 分布式
 head:
   - - meta
     - name: keywords
