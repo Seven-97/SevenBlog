@@ -1,5 +1,5 @@
 ---
-title: 支付技术
+title: 支付技术流程
 category: 系统设计
 tag:
   - 支付技术
