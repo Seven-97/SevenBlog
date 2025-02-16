@@ -1,7 +1,7 @@
 ---
-title: 并发读写锁 - ReentrantReadWriteLock详解
+title: ReentrantReadWriteLock：解锁高性能读写并发编程的关键技术
 category: Java
-tag:
+tags:
   - 并发编程
   - JUC
 head:

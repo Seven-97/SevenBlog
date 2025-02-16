@@ -1,7 +1,7 @@
 ---
-title: CAS & 原子类
+title: CAS与原子类详解：无锁并发编程的实现原理
 category: Java
-tag:
+tags:
   - 并发编程
 head:
   - - meta

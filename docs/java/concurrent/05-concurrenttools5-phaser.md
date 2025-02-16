@@ -1,9 +1,9 @@
 ---
-title: 并发工具 - Phaser详解
+title: Phaser深度解析：多阶段任务协调实现机制
 category: Java
-tag:
- - 并发编程
- - JUC
+tags:
+  - 并发编程
+  - JUC
 head:
   - - meta
     - name: keywords

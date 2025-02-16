@@ -1,5 +1,5 @@
 ---
-title: 关键字 - volatile详解
+title: 深入理解volatile：从内存可⻅性到指令重排序的全面解析
 category: Java
 tags:
   - 并发编程

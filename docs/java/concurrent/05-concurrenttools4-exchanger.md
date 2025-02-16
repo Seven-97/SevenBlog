@@ -1,9 +1,9 @@
 ---
-title: 并发工具 - Exchanger详解
+title: Exchanger：多线程数据交换与任务协调的实现原理
 category: Java
-tag:
- - 并发编程
- - JUC
+tags:
+  - 并发编程
+  - JUC
 head:
   - - meta
     - name: keywords

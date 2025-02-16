@@ -1,8 +1,8 @@
 ---
-title: 线程池 - Fork Join框架详解
+title: Fork Join框架详解：从任务拆分到结果合并的高效并发实现
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

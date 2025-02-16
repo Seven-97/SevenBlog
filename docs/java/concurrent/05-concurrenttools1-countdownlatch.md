@@ -1,9 +1,9 @@
 ---
-title: 并发工具 - CountDownLatch详解
+title: CountDownLatch：解锁多线程任务同步的终极技术
 category: Java
-tag:
- - 并发编程
- - JUC
+tags:
+  - 并发编程
+  - JUC
 head:
   - - meta
     - name: keywords

@@ -1,8 +1,8 @@
 ---
-title: 线程池 - FutureTask详解
+title: FutureTask深度解析：异步任务的实现原理
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

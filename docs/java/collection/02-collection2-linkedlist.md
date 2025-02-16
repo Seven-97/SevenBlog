@@ -1,7 +1,7 @@
 ---
-title: Collection - LinkedList详解
+title: LinkedList深度剖析：源码解读与核心机制
 category: Java
-tag:
+tags:
   - 集合
 head:
   - - meta

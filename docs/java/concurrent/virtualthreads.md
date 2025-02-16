@@ -1,8 +1,8 @@
 ---
-title: 虚拟线程
+title: 虚拟线程深度解析：轻量并发编程的未来趋势
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

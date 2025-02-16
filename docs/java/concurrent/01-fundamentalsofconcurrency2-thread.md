@@ -1,8 +1,8 @@
 ---
-title: 线程基础
+title: 线程基础的全景图：Java开发者必须掌握的核心知识点
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

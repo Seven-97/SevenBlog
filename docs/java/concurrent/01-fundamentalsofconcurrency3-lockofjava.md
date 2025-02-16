@@ -1,8 +1,8 @@
 ---
-title: Java中的锁
+title: Java中到底有哪些锁？
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

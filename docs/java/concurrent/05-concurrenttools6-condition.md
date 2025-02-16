@@ -1,9 +1,9 @@
 ---
-title: 并发工具 - Condition详解
+title: Condition底层机制剖析：多线程等待与通知机制
 category: Java
-tag:
- - 并发编程
- - JUC
+tags:
+  - 并发编程
+  - JUC
 head:
   - - meta
     - name: keywords

@@ -1,9 +1,9 @@
 ---
-title: 并发工具 - Semaphore详解
+title: Semaphore：多线程资源控制与并发管理的实现原理
 category: Java
-tag:
- - 并发编程
- - JUC
+tags:
+  - 并发编程
+  - JUC
 head:
   - - meta
     - name: keywords

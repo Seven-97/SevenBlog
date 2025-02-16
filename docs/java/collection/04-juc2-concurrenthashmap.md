@@ -1,7 +1,7 @@
 ---
-title: JUC - ConcurrentHashMap详解
+title: ConcurrentHashMap：高并发与安全设计思想的完美结合
 category: Java
-tag:
+tags:
   - 集合
   - JUC
   - 并发编程

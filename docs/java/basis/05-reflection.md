@@ -1,7 +1,7 @@
 ---
-title: 反射详解
+title: 反射：动态代码的魔法与应用
 category: Java
-tag:
+tags:
   - Java基础
 head:
   - - meta

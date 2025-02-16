@@ -1,7 +1,7 @@
 ---
-title: Map - WeakHashMap详解
+title: " WeakHashMap：弱引用与高效内存管理的结合"
 category: Java
-tag:
+tags:
   - 集合
 head:
   - - meta

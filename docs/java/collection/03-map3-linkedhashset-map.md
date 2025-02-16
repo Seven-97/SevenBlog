@@ -1,7 +1,7 @@
 ---
-title: Map - LinkedHashSet & Map详解
+title: LinkedHashSet & LinkedHashMap：链表与哈希表的协同工作原理
 category: Java
-tag:
+tags:
   - 集合
 head:
   - - meta

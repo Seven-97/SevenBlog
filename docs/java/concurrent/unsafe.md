@@ -1,7 +1,7 @@
 ---
-title: 魔法类 - Unsafe
+title: Unsafe魔法类深度解析：Java底层操作的终极指南
 category: Java
-tag:
+tags:
   - 并发编程
 head:
   - - meta

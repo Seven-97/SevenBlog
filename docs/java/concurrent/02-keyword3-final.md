@@ -1,8 +1,8 @@
 ---
-title: 关键字 - final详解
+title: final关键字在并发编程中的威力：不可变性的安全之道
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

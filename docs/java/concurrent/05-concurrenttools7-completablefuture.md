@@ -1,8 +1,8 @@
 ---
-title: 并发工具 - CompletableFuture详解
+title: CompletableFuture深度解析：异步编程与任务编排的实现
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

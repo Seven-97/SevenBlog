@@ -1,8 +1,8 @@
 ---
-title: 理论基础
+title: 并发编程理论基础：JMM内存模型、Happens-Before规则与线程安全实现的全面指南
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

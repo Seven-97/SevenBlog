@@ -1,7 +1,7 @@
 ---
-title: 泛型详解
+title: 泛型：类型参数化的艺术与科学
 category: Java
-tag:
+tags:
   - Java基础
 head:
   - - meta

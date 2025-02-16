@@ -1,9 +1,9 @@
 ---
-title: 并发工具 - CyclicBarrier详解
+title: CyclicBarrier深度解析：多线程同步与复杂任务协调的实现原理
 category: Java
-tag:
- - 并发编程
- - JUC
+tags:
+  - 并发编程
+  - JUC
 head:
   - - meta
     - name: keywords

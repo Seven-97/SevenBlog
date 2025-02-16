@@ -1,8 +1,8 @@
 ---
-title: 线程池 - ThreadPoolExecutor详解
+title: ThreadPoolExecutor详解：从核心参数到实现原理详解
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

@@ -1,7 +1,7 @@
 ---
-title: SPI机制
+title: SPI机制：服务扩展的核心技术
 category: Java
-tag:
+tags:
   - Java基础
 head:
   - - meta

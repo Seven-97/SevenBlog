@@ -1,7 +1,7 @@
 ---
-title: JUC - CopyOnWriteArrayList详解
+title: CopyOnWriteArrayList：写时复制机制与高效并发访问
 category: Java
-tag:
+tags:
   - 集合
   - JUC
   - 并发编程

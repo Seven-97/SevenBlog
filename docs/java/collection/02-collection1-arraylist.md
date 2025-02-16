@@ -1,7 +1,7 @@
 ---
-title: Collection - ArrayList详解
+title: ArrayList深度剖析：源码解读与性能优化
 category: Java
-tag:
+tags:
   - 集合
 head:
   - - meta

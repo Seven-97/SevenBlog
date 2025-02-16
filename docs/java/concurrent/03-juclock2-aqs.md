@@ -1,7 +1,7 @@
 ---
-title: 抽象队列同步器 - AQS详解（以ReentrantLock为例）
+title: AQS深度探索：以ReentrantLock看Java并发编程的高效实现
 category: Java
-tag:
+tags:
   - 并发编程
   - JUC
 head:

@@ -1,8 +1,8 @@
 ---
-title: 线程池 - Tomcat线程池详解
+title: Tomcat线程池：SpringBoot 应用可以同时并发处理多少请求？
 category: Java
-tag:
- - Tomcat
+tags:
+  - Tomcat
 head:
   - - meta
     - name: keywords

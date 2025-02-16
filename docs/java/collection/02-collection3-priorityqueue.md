@@ -1,7 +1,7 @@
 ---
-title: Collection - PriorityQueue详解
+title: PriorityQueue的秘密：堆结构的高效应用与实现原理
 category: Java
-tag:
+tags:
   - 集合
 head:
   - - meta

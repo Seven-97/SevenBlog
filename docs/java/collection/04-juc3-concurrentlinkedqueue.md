@@ -1,7 +1,7 @@
 ---
-title: JUC - ConcurrentLinkedQueue详解
+title: ConcurrentLinkedQueue：无锁队列的高效设计
 category: Java
-tag:
+tags:
   - 集合
   - JUC
   - 并发编程

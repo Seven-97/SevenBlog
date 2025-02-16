@@ -1,8 +1,8 @@
 ---
-title: ThreadLocal底层原理
+title: ThreadLocal：线程私有变量的存储与访问机制
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

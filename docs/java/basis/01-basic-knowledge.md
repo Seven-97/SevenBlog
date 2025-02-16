@@ -1,5 +1,5 @@
 ---
-title: 基础知识点
+title: Java基础核心要点
 category: Java
 tags:
   - Java基础

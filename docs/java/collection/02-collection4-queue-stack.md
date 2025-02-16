@@ -1,12 +1,12 @@
 ---
-title: Collection - Queue & Stack详解
+title: Queue & Stack：实现机制与使用场景深度分析
 category: Java
-tag:
+tags:
   - 集合
 head:
   - - meta
     - name: keywords
-      content:  Java,ArrayDeque,堆,队列,java 双端队列,java ArrayDeque,源码分析,实现原理,栈,stack,queue
+      content: Java,ArrayDeque,堆,队列,java 双端队列,java ArrayDeque,源码分析,实现原理,栈,stack,queue
   - - meta
     - name: description
       content: 全网最全的Java集合知识点总结，让天下没有难学的八股文！

@@ -1,8 +1,8 @@
 ---
-title: 线程池 - ScheduledThreadPoolExecutor详解
+title: 定时线程池全解析：从ScheduledThreadPoolExecutor看高并发任务调度
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

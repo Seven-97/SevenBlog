@@ -1,7 +1,7 @@
 ---
-title: Collection概述
+title: Collection揭秘：从零到一的收藏之旅
 category: Java
-tag:
+tags:
   - 集合
 head:
   - - meta

@@ -1,7 +1,7 @@
 ---
-title: JUC - BlockingQueue详解
+title: BlockingQueue：阻塞操作与条件队列的高效结合
 category: Java
-tag:
+tags:
   - 集合
   - JUC
   - 并发编程

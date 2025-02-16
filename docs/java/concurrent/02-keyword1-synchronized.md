@@ -1,8 +1,8 @@
 ---
-title: 关键字 - synchronized详解
+title: synchronized底层机制剖析：从字节码到JVM的运作原理
 category: Java
-tag:
- - 并发编程
+tags:
+  - 并发编程
 head:
   - - meta
     - name: keywords

@@ -1,8 +1,8 @@
 ---
-title: 分布式基础 - CAP & BASE理论
+title: CAP与BASE：分布式系统设计的灵魂与妥协
 category: 微服务
-tag:
- - 理论-算法
+tags:
+  - 理论-算法
 head:
   - - meta
     - name: keywords

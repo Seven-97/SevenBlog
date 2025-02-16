@@ -1,7 +1,7 @@
 ---
-title: Map - HashSet & HashMap详解
+title: HashSet & HashMap：Java开发者的高效数据结构选择
 category: Java
-tag:
+tags:
   - 集合
 head:
   - - meta

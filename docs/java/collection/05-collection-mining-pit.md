@@ -1,7 +1,7 @@
 ---
-title: 集合采坑记录
+title: Java集合避坑指南
 category: Java
-tag:
+tags:
   - 集合
 head:
   - - meta

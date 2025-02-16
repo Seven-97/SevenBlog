@@ -1,7 +1,7 @@
 ---
-title: 线程阻塞唤醒类 - LockSupport详解
+title: LockSupport深度解析：线程阻塞与唤醒的底层实现原理
 category: Java
-tag:
+tags:
   - 并发编程
   - JUC
 head:

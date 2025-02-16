@@ -1,7 +1,7 @@
 ---
-title: 枚举详解
+title: 枚举：掌握常量管理的终极指南
 category: Java
-tag:
+tags:
   - Java基础
 head:
   - - meta
