@@ -1,8 +1,8 @@
 ---
-title: 网络编程 - BIO详解
+title: BIO详解：解锁阻塞IO的使用方式
 category: Java
-tag:
- - IO流
+tags:
+  - IO流
 head:
   - - meta
     - name: keywords

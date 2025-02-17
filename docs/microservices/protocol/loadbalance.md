@@ -1,8 +1,8 @@
 ---
-title: 负载均衡算法
+title: 负载均衡算法：轮询、加权、Hash等算法的全面解析
 category: 微服务
-tag:
- - 理论-算法
+tags:
+  - 理论-算法
 head:
   - - meta
     - name: keywords

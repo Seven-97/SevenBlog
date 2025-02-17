@@ -1,7 +1,7 @@
 ---
-title: 幂等性
+title: 幂等性：如何通过设计避免重复操作的影响？
 category: 微服务
-tag:
+tags:
   - 幂等性
 head:
   - - meta

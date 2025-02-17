@@ -1,8 +1,8 @@
 ---
-title: 请求限流算法
+title: 深入理解请求限流算法的实现细节
 category: 微服务
-tag:
- - 理论-算法
+tags:
+  - 理论-算法
 head:
   - - meta
     - name: keywords

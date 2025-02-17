@@ -1,8 +1,8 @@
 ---
-title: JVM基础 - 类加载机制
+title: 解密类加载机制：深入理解JVM如何加载你的代码
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

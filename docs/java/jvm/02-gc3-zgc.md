@@ -1,8 +1,8 @@
 ---
-title: GC - ZGC详解
+title: ZGC详解：下一代低延迟垃圾回收器的革命性突破
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

@@ -1,7 +1,7 @@
 ---
-title: 分布式存储 - 一致性Hash算法
+title: 一致性Hash算法：如何实现分布式系统中的高效数据分片？
 category: 微服务
-tag:
+tags:
   - 理论-算法
 head:
   - - meta

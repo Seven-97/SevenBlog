@@ -1,8 +1,8 @@
 ---
-title: 分布式共识 - Paxos 算法详解
+title: Paxos算法：如何解决分布式系统中的共识问题？
 category: 微服务
-tag:
- - 理论-算法
+tags:
+  - 理论-算法
 head:
   - - meta
     - name: keywords
@@ -16,7 +16,7 @@ head:
 
 ## 背景
 
-Paxos 算法是 Leslie Lamport（[莱斯利·兰伯特](https://zh.wikipedia.org/wiki/莱斯利·兰伯特）在 **1990** 年提出了一种分布式系统 **共识** 算法。这也是第一个被证明完备的共识算法（前提是不存在拜占庭将军问题，也就是没有恶意节点）。
+Paxos 算法是 Leslie Lamport[莱斯利·兰伯特](https://zh.wikipedia.org/wiki/莱斯利·兰伯特)在 **1990** 年提出了一种分布式系统 **共识** 算法。这也是第一个被证明完备的共识算法（前提是不存在拜占庭将军问题，也就是没有恶意节点）。
 
 为了介绍 Paxos 算法，兰伯特专门写了一篇幽默风趣的论文。在这篇论文中，他虚拟了一个叫做 Paxos 的希腊城邦来更形象化地介绍 Paxos 算法。
 
@@ -45,7 +45,7 @@ Paxos 算法是第一个被证明完备的分布式系统共识算法。共识�
 - Basic Paxos 算法：描述的是多节点之间如何就某个值(提案 Value)达成共识。
 - Multi-Paxos 思想：描述的是执行多个 Basic Paxos 实例，就一系列值达成共识。Multi-Paxos 说白了就是执行多次 Basic Paxos ，核心还是 Basic Paxos 。
 
-由于 Paxos 算法在国际上被公认的非常难以理解和实现，因此不断有人尝试简化这一算法。到了 2013 年才诞生了一个比 Paxos 算法更易理解和实现的共识算法—[Raft 算法](https://javaguide.cn/distributed-system/theorem&algorithm&protocol/raft-algorithm.html) 。更具体点来说，Raft 是 Multi-Paxos 的一个变种，其简化了 Multi-Paxos 的思想，变得更容易被理解以及工程实现。
+由于 Paxos 算法在国际上被公认的非常难以理解和实现，因此不断有人尝试简化这一算法。到了 2013 年才诞生了一个比 Paxos 算法更易理解和实现的共识算法—[Raft 算法](https://www.seven97.top/microservices/protocol/raft-detail.html) 。更具体点来说，Raft 是 Multi-Paxos 的一个变种，其简化了 Multi-Paxos 的思想，变得更容易被理解以及工程实现。
 
 针对没有恶意节点的情况，除了 Raft 算法之外，当前最常用的一些共识算法比如 **ZAB 协议**、 **Fast Paxos** 算法都是基于 Paxos 算法改进的。
 

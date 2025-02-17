@@ -1,8 +1,8 @@
 ---
-title: JVM基础 - JVM内存结构
+title: JVM内存结构：揭秘Java程序运行的底层基石
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

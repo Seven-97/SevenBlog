@@ -1,8 +1,8 @@
 ---
-title: 分布式通信 - Gossip 协议详解
+title: 解密Gossip协议：分布式系统中的信息同步利器
 category: 微服务
-tag:
- - 理论-算法
+tags:
+  - 理论-算法
 head:
   - - meta
     - name: keywords

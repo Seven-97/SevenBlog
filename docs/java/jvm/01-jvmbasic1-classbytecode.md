@@ -1,8 +1,8 @@
 ---
-title: JVM基础 - 类字节码
+title: 类字节码：揭开Java虚拟机运行机制的神秘面纱
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

@@ -1,8 +1,8 @@
 ---
-title: JVM基础 - Java对象头
+title: Java对象头：深入理解对象存储的核心机制
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

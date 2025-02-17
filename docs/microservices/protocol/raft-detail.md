@@ -1,8 +1,8 @@
 ---
-title: 分布式共识 - Raft 算法详解
+title: 为什么Raft算法是分布式系统的首选？
 category: 微服务
-tag:
- - 理论-算法
+tags:
+  - 理论-算法
 head:
   - - meta
     - name: keywords

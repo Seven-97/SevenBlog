@@ -1,8 +1,8 @@
 ---
-title: GC - 理论基础
+title: 垃圾回收理论基础：从存活判断到高效回收的完整指南
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

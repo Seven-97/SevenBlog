@@ -1,8 +1,8 @@
 ---
-title: 分布式共识 - ZAB协议
+title: 解密ZAB协议：Zookeeper一致性的核心实现
 category: 微服务
-tag:
- - 理论-算法
+tags:
+  - 理论-算法
 head:
   - - meta
     - name: keywords

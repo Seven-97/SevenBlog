@@ -1,8 +1,8 @@
 ---
-title: Java 19新特性
+title: Java 19 新特性
 category: Java
-tag:
- - 版本新特性
+tags:
+  - 版本新特性
 head:
   - - meta
     - name: keywords
