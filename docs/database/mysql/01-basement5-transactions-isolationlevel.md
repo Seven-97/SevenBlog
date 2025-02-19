@@ -1,8 +1,8 @@
 ---
-title: 底层原理 - Mysql的事务及隔离级别
+title: MySQL事务原理：从ACID到隔离级别的全解析
 category: 数据库
-tag:
- - Mysql
+tags:
+  - Mysql
 head:
   - - meta
     - name: keywords

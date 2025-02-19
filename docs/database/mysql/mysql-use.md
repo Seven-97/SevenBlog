@@ -1,8 +1,8 @@
 ---
-title: Mysql使用篇
+title: MySQL使用全攻略：从命令大全到规范的最佳实践
 category: 数据库
-tag:
- - Mysql
+tags:
+  - Mysql
 head:
   - - meta
     - name: keywords

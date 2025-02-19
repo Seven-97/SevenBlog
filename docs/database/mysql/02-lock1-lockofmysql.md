@@ -1,9 +1,9 @@
 ---
-title: 锁 - Mysql的锁
+title: MySQL锁机制：从全局锁到行级锁的深度解读
 category: 数据库
-tag:
- - Mysql
- - 锁
+tags:
+  - Mysql
+  - 锁
 head:
   - - meta
     - name: keywords

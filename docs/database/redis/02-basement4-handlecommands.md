@@ -1,9 +1,9 @@
 ---
-title: 底层 - Redis是如何建立连接和处理命令的
+title: Redis命令处理机制源码探究
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

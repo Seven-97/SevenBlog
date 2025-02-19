@@ -1,9 +1,9 @@
 ---
-title: 底层 - Redis为什么这么快？
+title: Redis究竟为什么这么快？
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

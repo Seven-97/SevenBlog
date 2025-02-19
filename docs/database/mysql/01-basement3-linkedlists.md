@@ -1,5 +1,5 @@
 ---
-title: 底层原理 - Buffer Pool中的三大链表
+title: MySQL性能背后的秘密武器：Buffer Pool与三大链表的奥秘
 category: 数据库
 tags:
   - Mysql

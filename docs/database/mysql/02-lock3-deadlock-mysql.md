@@ -1,9 +1,9 @@
 ---
-title: 锁 - Mysql中的死锁问题
+title: MySQL死锁问题：事务冲突背后的真相
 category: 数据库
-tag:
- - Mysql
- - 锁
+tags:
+  - Mysql
+  - 锁
 head:
   - - meta
     - name: keywords

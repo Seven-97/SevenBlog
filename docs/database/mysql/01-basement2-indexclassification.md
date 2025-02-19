@@ -1,8 +1,8 @@
 ---
-title: 底层原理 - Mysql索引分类
+title: 揭秘MySQL索引分类
 category: 数据库
-tag:
- - Mysql
+tags:
+  - Mysql
 head:
   - - meta
     - name: keywords

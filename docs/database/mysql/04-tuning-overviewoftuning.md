@@ -1,8 +1,8 @@
 ---
-title: 调优 - Mysql优化概述
+title: MySQL优化全攻略：索引、SQL与分库分表的最佳实践
 category: 数据库
-tag:
- - Mysql
+tags:
+  - Mysql
 head:
   - - meta
     - name: keywords

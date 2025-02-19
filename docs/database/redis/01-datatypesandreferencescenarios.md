@@ -1,9 +1,9 @@
 ---
-title: 数据类型及其应用场景
+title: Redis数据类型全攻略：String、List、Hash、Set的实战应用
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

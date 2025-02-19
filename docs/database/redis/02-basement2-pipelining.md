@@ -1,9 +1,9 @@
 ---
-title: 底层 - Pipelining原理
+title: Pipelining原理：批量命令背后的秘密
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

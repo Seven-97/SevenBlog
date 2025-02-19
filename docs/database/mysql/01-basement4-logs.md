@@ -1,8 +1,8 @@
 ---
-title: 底层原理 - Mysql的三大日志
+title: MySQL底层真相：三大日志如何掌控数据库命运？
 category: 数据库
-tag:
- - Mysql
+tags:
+  - Mysql
 head:
   - - meta
     - name: keywords

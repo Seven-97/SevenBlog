@@ -1,8 +1,8 @@
 ---
-title: 底层原理 - InnoDB的存储结构
+title: InnoDB存储结构全解析：行页区段与单表2000W行的关系
 category: 数据库
-tag:
- - Mysql
+tags:
+  - Mysql
 head:
   - - meta
     - name: keywords

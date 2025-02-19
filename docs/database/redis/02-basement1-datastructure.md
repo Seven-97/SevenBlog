@@ -1,9 +1,9 @@
 ---
-title: 底层 - 数据结构
+title: Redis是如何高效存储与访问数据？
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

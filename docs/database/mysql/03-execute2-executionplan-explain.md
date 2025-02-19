@@ -1,8 +1,8 @@
 ---
-title: 执行 - Mysql语句执行计划(explain)
+title: 如何读懂执行计划explain的12个关键字段？
 category: 数据库
-tag:
- - Mysql
+tags:
+  - Mysql
 head:
   - - meta
     - name: keywords

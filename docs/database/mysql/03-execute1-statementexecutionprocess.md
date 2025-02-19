@@ -1,8 +1,8 @@
 ---
-title: 执行 - Mysql语句执行流程
+title: MySQL语句执行深度剖析：从连接到执行的全过程
 category: 数据库
-tag:
- - Mysql
+tags:
+  - Mysql
 head:
   - - meta
     - name: keywords
