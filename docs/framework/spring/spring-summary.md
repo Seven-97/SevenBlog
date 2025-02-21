@@ -14,7 +14,7 @@ head:
 
 
 
-> Spring框架系列文章建议阅读顺序：[全网最详细的Spring入门教程](https://www.seven97.top/framework/spring/spring-summary.html) -》[Spring框架IoC核心详解](https://www.seven97.top/framework/spring/ioc1-summary.html) -》 [Spring_ AOP基础、快速入门](https://www.seven97.top/framework/spring/aop1-summary.html) -》 [](https://www.seven97.top/framework/spring/mvc1-summary.html)；而后再阅读其它文章详细内容
+> Spring框架系列文章建议阅读顺序：[全网最详细的Spring入门教程](https://www.seven97.top/framework/spring/spring-summary.html) -》[Spring框架IoC核心详解](https://www.seven97.top/framework/spring/ioc1-summary.html) -》 [Spring AOP基础、快速入门](https://www.seven97.top/framework/spring/aop1-summary.html) -》 [MVC快速入门](https://www.seven97.top/framework/spring/mvc1-summary.html)；而后再阅读其它文章详细内容
 
 ## 为什么用Spring
 
