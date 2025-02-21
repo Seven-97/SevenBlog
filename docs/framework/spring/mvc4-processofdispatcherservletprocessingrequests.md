@@ -1,7 +1,7 @@
 ---
-title: MVC - DispatcherServlet处理请求的过程
+title: MVC中DispatcherServlet处理请求的完整流程
 category: 常用框架
-tag:
+tags:
   - SpringMVC
 head:
   - - meta

@@ -1,5 +1,5 @@
 ---
-title: MyBatis - 缓存实现机制
+title: MyBatis中一级缓存与二级缓存的幕后真相
 category: 常用框架
 tags:
   - ORM框架

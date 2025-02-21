@@ -1,7 +1,7 @@
 ---
-title: IOC - 循环依赖问题
+title: Spring中的循环依赖是怎么个事？
 category: 常用框架
-tag:
+tags:
   - Spring
 head:
   - - meta

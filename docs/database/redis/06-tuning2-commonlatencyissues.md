@@ -1,9 +1,9 @@
 ---
-title: 调优 - 常见延迟问题
+title: Redis中的常见延迟问题
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

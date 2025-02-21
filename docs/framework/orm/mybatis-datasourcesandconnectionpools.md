@@ -1,7 +1,7 @@
 ---
-title: MyBatis - 数据源与连接池详解
+title: MyBatis数据源与连接池的全解析
 category: 常用框架
-tag:
+tags:
   - ORM框架
   - MyBatis
 head:

@@ -1,9 +1,9 @@
 ---
-title: HA - 哨兵机制
+title: Redis哨兵机制是如何优化主从切换流程的？
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

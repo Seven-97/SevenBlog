@@ -1,9 +1,9 @@
 ---
-title: Git详解
+title: Git指南：从入门到精通
 category: 开发工具
-icon: "git"
-tag:
- - Git
+icon: git
+tags:
+  - Git
 head:
   - - meta
     - name: keywords

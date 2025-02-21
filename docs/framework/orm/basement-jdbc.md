@@ -1,7 +1,7 @@
 ---
-title: JDBC 底层原理
+title: JDBC连接数据库的核心原理
 category: 常用框架
-tag:
+tags:
   - JDBC
 head:
   - - meta

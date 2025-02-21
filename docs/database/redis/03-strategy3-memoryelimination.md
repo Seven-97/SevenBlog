@@ -1,9 +1,9 @@
 ---
-title: 策略 - 内存淘汰策略
+title: Redis内存淘汰策略：如何高效管理有限内存？
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

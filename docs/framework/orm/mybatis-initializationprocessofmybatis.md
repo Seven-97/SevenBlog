@@ -1,7 +1,7 @@
 ---
-title: MyBatis - 初始化过程
+title: MyBatis源码视角下的初始化过程
 category: 常用框架
-tag:
+tags:
   - ORM框架
   - MyBatis
 head:

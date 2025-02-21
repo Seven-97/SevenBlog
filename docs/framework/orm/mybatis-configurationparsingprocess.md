@@ -1,7 +1,7 @@
 ---
-title: MyBatis - 配置解析过程
+title: MyBatis如何高效加载配置文件？
 category: 常用框架
-tag:
+tags:
   - ORM框架
   - MyBatis
 head:

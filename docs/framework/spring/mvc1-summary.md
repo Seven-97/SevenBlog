@@ -1,7 +1,7 @@
 ---
-title: MVC - 概述
+title: MVC快速入门
 category: 常用框架
-tag:
+tags:
   - SpringMVC
 head:
   - - meta

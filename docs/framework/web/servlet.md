@@ -1,7 +1,7 @@
 ---
-title: Servlet介绍和规范
+title: 一文带你了解什么是Servlet
 category: 常用框架
-tag:
+tags:
   - SpringMVC
 head:
   - - meta

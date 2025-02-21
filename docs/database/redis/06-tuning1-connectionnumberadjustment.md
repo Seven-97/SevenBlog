@@ -1,10 +1,10 @@
 ---
-title: 调优 - 连接数调整
+title: Redis连接数调整
 category: 数据库
-tag:
- - Redis
- - 缓存
- - 最佳实践
+tags:
+  - Redis
+  - 缓存
+  - 最佳实践
 head:
   - - meta
     - name: keywords

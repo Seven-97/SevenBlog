@@ -1,9 +1,9 @@
 ---
-title: 调优 - 内存碎片问题
+title: Redis的内存碎片问题
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

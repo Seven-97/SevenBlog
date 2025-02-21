@@ -1,7 +1,7 @@
 ---
-title: Tomcat - 相关日志
+title: Tomcat相关日志介绍
 category: 常用框架
-tag:
+tags:
   - Tomcat
 head:
   - - meta

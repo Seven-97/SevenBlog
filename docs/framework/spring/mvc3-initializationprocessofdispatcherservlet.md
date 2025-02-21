@@ -1,7 +1,7 @@
 ---
-title: MVC - DispatcherServlet的初始化过程
+title: MVC中DispatcherServlet初始化的深度探索
 category: 常用框架
-tag:
+tags:
   - SpringMVC
 head:
   - - meta

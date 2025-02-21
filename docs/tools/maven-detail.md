@@ -1,9 +1,9 @@
 ---
-title: Maven详解
+title: Maven入门，读完这篇就够了
 category: 开发工具
-icon: "configuration"
-tag:
- - Maven
+icon: configuration
+tags:
+  - Maven
 head:
   - - meta
     - name: keywords

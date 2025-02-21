@@ -1,7 +1,7 @@
 ---
-title: MyBatis - sqlSession执行流程
+title: MyBatis中SqlSession背后的秘密
 category: 常用框架
-tag:
+tags:
   - ORM框架
   - MyBatis
 head:

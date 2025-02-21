@@ -1,9 +1,9 @@
 ---
-title: 策略 - 持久化技术
+title: Redis持久化：从AOF到RDB，如何实现数据不丢失？
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

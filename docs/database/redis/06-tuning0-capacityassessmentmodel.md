@@ -1,9 +1,9 @@
 ---
-title: 调优 - Redis容量评估模型
+title: Redis容量评估模型
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

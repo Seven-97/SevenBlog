@@ -1,10 +1,10 @@
 ---
-title: Redis实现分布式锁
+title: Redis分布式锁：从SETNX到Redisson的演进
 category: 数据库
-tag:
- - Redis
- - Redisson
- - 缓存
+tags:
+  - Redis
+  - Redisson
+  - 缓存
 head:
   - - meta
     - name: keywords

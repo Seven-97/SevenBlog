@@ -1,7 +1,7 @@
 ---
-title: 如何控制Bean的加载顺序
+title: 一文带你了解如何控制Bean的加载顺序？
 category: 常用框架
-tag:
+tags:
   - Spring
 head:
   - - meta

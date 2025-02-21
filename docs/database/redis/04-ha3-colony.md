@@ -1,9 +1,9 @@
 ---
-title: HA - 集群
+title: Redis集群机制深度剖析
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

@@ -1,7 +1,7 @@
 ---
-title: MyBatisPlus - 批量插入原理
+title: MyBatis-Plus批量插入的实现原理
 category: 常用框架
-tag:
+tags:
   - ORM框架
   - MyBatis
   - MyBatisPlus
@@ -13,11 +13,6 @@ head:
     - name: description
       content: 全网最全的MyBatis知识点总结，让天下没有难学的八股文
 ---
-
-
-
-## 批量插入的性能挑战
-
 
 
 ## 前言：批量插入的性能挑战

@@ -1,7 +1,7 @@
 ---
-title: MyBatis - 插件机制&分页机制原理
+title: MyBatis源码视角下的插件机制与分页原理
 category: 常用框架
-tag:
+tags:
   - ORM框架
   - MyBatis
 head:
@@ -14,8 +14,6 @@ head:
 ---
 
 
-
-## 源码分析
 
 ## 插件机制
 
@@ -152,7 +150,7 @@ public Executor newExecutor(Transaction transaction, ExecutorType executorType, 
 }
 ```
 
-以上4个方法都是Configuration的方法。这些方法在MyBatis的一个操作(新增，删除，修改，查询)中都会被执行到，执行的先后顺序是Executor，ParameterHandler，ResultSetHandler，StatementHandler(其中ParameterHandler和ResultSetHandler的创建是在创建StatementHandler[3个可用的实现类CallableStatementHandler,PreparedStatementHandler,SimpleStatementHandler]的时候，其构造函数调用的[这3个实现类的构造函数其实都调用了父类BaseStatementHandler的构造函数])。
+以上4个方法都是Configuration的方法。这些方法在MyBatis的一个操作(新增，删除，修改，查询)中都会被执行到，执行的先后顺序是Executor，ParameterHandler，ResultSetHandler，StatementHandler(其中ParameterHandler和ResultSetHandler的创建是在创建StatementHandler 3个可用的实现类CallableStatementHandler,PreparedStatementHandler,SimpleStatementHandler的时候，其构造函数调用的这3个实现类的构造函数其实都调用了父类BaseStatementHandler的构造函数)。
 
 这4个方法实例化了对应的对象之后，都会调用interceptorChain的pluginAll方法，InterceptorChain的pluginAll刚才已经介绍过了，就是遍历所有的拦截器，然后调用各个拦截器的plugin方法。注意：拦截器的plugin方法的返回值会直接被赋值给原先的对象。
 

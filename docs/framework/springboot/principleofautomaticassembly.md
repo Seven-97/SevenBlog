@@ -1,7 +1,7 @@
 ---
-title: 自动装配原理
+title: 深度揭秘SpringBoot自动装配的实现原理
 category: 常用框架
-tag:
+tags:
   - SpringBoot
 head:
   - - meta

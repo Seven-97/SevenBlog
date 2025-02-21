@@ -1,7 +1,7 @@
 ---
-title: Tomcat - 配置调优
+title: Tomcat的配置调优
 category: 常用框架
-tag:
+tags:
   - Tomcat
 head:
   - - meta

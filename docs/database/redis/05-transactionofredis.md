@@ -1,9 +1,9 @@
 ---
-title: Redis中的事务
+title: Redis中的事务有何不同？
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

@@ -1,9 +1,9 @@
 ---
-title: HA - 主从复制
+title: Redis主从复制是如何保障数据一致性的？
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

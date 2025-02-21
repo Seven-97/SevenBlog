@@ -1,7 +1,7 @@
 ---
-title: MyBatis - 事务管理机制
+title: 如何通过源码理解MyBatis的事务管理机制
 category: 常用框架
-tag:
+tags:
   - ORM框架
   - MyBatis
 head:

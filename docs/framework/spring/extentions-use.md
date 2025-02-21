@@ -1,7 +1,7 @@
 ---
-title: Spring中的扩展点
+title: 万字长文带你窥探Spring中所有的扩展点
 category: 常用框架
-tag:
+tags:
   - Spring
 head:
   - - meta

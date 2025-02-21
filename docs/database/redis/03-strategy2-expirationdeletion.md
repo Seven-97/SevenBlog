@@ -1,9 +1,9 @@
 ---
-title: 策略 - 过期删除策略
+title: Redis缓存管理：过期删除策略的深度剖析
 category: 数据库
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 head:
   - - meta
     - name: keywords

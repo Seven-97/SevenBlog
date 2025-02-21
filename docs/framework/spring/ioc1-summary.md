@@ -1,7 +1,7 @@
 ---
-title: IOC - 概述
+title: Spring框架IoC核心详解
 category: 常用框架
-tag:
+tags:
   - Spring
 head:
   - - meta

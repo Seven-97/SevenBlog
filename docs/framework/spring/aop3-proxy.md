@@ -1,7 +1,7 @@
 ---
-title: AOP - AOP代理
+title: AOP中动态代理详解
 category: 常用框架
-tag:
+tags:
   - Spring
 head:
   - - meta

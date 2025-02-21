@@ -1,7 +1,7 @@
 ---
-title: MyBatis - 动态SQL原理
+title: MyBatis动态SQL是如何突破传统SQL的限制的？
 category: 常用框架
-tag:
+tags:
   - ORM框架
   - MyBatis
 head:
