@@ -372,6 +372,7 @@ public static int partition(int[] array, int low, int high) {
 	        swap(array, i, pointer);
             pointer++;
         }
+        //每次打印排序后结果
         System.out.println(Arrays.toString(array));
     }
     swap(array, pointer, high);
