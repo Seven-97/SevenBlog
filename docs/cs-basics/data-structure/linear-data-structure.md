@@ -11,22 +11,133 @@ head:
     - name: description
       content: 全网最全的计算机基础（数据结构）知识点总结，让天下没有难学的八股文！
 ---
+线性表示最常⽤⽽且最为简单的⼀种数据结构，⼀个线性表示 n 个数据元素的有限序列，有以下特点：
+- 存在唯⼀的第⼀个的数据元素
+- 存在唯⼀被称为最后⼀个的数据元素
+- 除了第⼀个以外，集合中每⼀个元素均有⼀个前驱
+- 除了最后⼀个元素之外，集合中的每⼀个数据元素都有⼀个后继元素
 
+线性表包括下⾯⼏种：
+- 数组：查询 / 更新快，查找/删除慢
+- 链表
+- 队列
+- 栈
 
 ## 数组
 
+### 数组简介
+
 **数组（Array）** 是一种很常见的数据结构。它由相同类型的元素（element）组成，并且是使用一块连续的内存来存储。
 
-我们直接可以利用元素的索引（index）可以计算出该元素对应的存储地址。
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221308273.png)
 
-数组的特点是：**提供随机访问** 并且容量有限。
+在Java 中表示为：
 
 ```java
-假如数组的长度为 n。
-访问：O（1）//访问特定位置的元素
-插入：O（n ）//最坏的情况发生在插入发生在数组的首部并需要移动所有元素时
-删除：O（n）//最坏的情况发生在删除数组的开头发生并需要移动第一元素后面所有的元素时
+int[] nums = new int[100];
+int[] nums = {1,2,3,4,5};
+Object[] Objects = new Object[100];
 ```
+
+数组是⼀种线性的结构，⼀般在底层是连续的空间，存储相同类型的数据，由于连续紧凑结构以及天然索引⽀持，查询数据效率⾼。
+
+假设我们知道数组a 的第 1 个值是 地址是 296，⾥⾯的数据类型占 2 个 单位，那么我们如果期望得到第 5 个： 296+（5-1）*2 = 304 , O(1) 的时间复杂度就可以获取到。更新的本质也是查找，先查找到该元素，就可以动⼿更新了：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221310223.png)
+
+但是如果期望插⼊数据的话，需要移动后⾯的数据，⽐如下⾯的数组，插⼊元素6 ，最差的是移动所有的元素，时间复杂度为O(n)
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221310820.png)
+
+⽽删除元素则需要把后⾯的数据移动到前⾯，最差的时间复杂度同样为O(n)
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221310800.png)
+
+总结：数组的特点是：**提供随机访问** 并且容量有限。
+
+### 时间复杂度
+
+假如数组的长度为 n。
+
+- 访问：O（1）//访问特定位置的元素
+- 插入：O（n ）//最坏的情况发生在插入发生在数组的首部并需要移动所有元素时
+- 删除：O（n）//最坏的情况发生在删除数组的开头发生并需要移动第一元素后面所有的元素时
+
+### 数组的增删改查实现
+
+```java
+import java.util.Arrays;
+public class MyArray {
+    private int[] data;
+    private int elementCount;
+    private int length;
+    
+    public MyArray(int max) {
+        length = max;
+        data = new int[max];
+        elementCount = 0;
+    }
+    
+    public void add(int value) {
+        if (elementCount == length) {
+            length = 2 * length;
+            data = Arrays.copyOf(data, length);
+        }
+        data[elementCount] = value;
+        elementCount++;
+    }
+    
+    public int find(int searchKey) {
+        int i;
+        for (i = 0; i < elementCount; i++) {
+            if (data[i] == searchKey)
+            break;
+        }
+        if (i == elementCount) {
+            return -1;
+        }
+        return i;
+    }
+    
+    public boolean delete(int value) {
+        int i = find(value);
+        if (i == -1) {
+        	return false;
+        }
+        for (int j = i; j < elementCount - 1; j++) {
+        	data[j] = data[j + 1];
+        }
+        elementCount--;
+        return true;
+    }
+    
+    public boolean update(int oldValue, int newValue) {
+        int i = find(oldValue);
+        if (i == -1) {
+        	return false;
+        }
+        data[i] = newValue;
+        return true;
+    }
+}
+
+// 测试类
+public class Test {
+    public static void main(String[] args) {
+        MyArray myArray = new MyArray(2);
+        myArray.add(1);
+        myArray.add(2);
+        myArray.add(3);
+        myArray.delete(2);
+        System.out.println(myArray);
+    }
+}
+```
+
+
+
+
+
 
 
 ## 链表
@@ -35,30 +146,55 @@ head:
 
 **链表（LinkedList）** 虽然是一种线性表，但是并不会按线性的顺序存储数据，使用的不是连续的内存空间来存储数据。
 
+我们可以看到数组是需要连续的空间，这⾥⾯如果空间⼤⼩只有 2 ，放到第 3 个元素的时候，就不得不扩容，不仅如此，还得拷⻉元素。⼀些删除，插⼊操作会引起较多的数据移动的操作。
+
+链表，也就是链式数据结构，由于它不要求逻辑上相邻的数据元素在物理位置上也相邻，所以它没有顺序存储结构所具有的缺点，但是同时也失去了通过索引下标直接查找元素的优点。
+
 链表的插入和删除操作的复杂度为 O(1) ，只需要知道目标位置元素的上一个元素即可。但是，在查找一个节点或者访问特定位置的节点的时候复杂度为 O(n) 。
 
 使用链表结构可以克服数组需要预先知道数据大小的缺点，链表结构可以充分利用计算机内存空间,实现灵活的内存动态管理。但链表不会节省空间，相比于数组会占用更多的空间，因为链表中每个节点存放的还有指向其他节点的指针。除此之外，链表不具有数组随机读取的优点。
+
+### 时间复杂度
+
+- 查询： O(n)，需要遍历链表
+- 插⼊： O(1) ，修改前后指针即可
+- 删除： O(1) ，同样是修改前后指针即可
+- 修改：不需要查询则为O(1) ，需要查询则为O(n)
 
 ### 链表分类
 
 **常见链表分类：**
 
-1. 单链表
-2. 双向链表
-3. 循环链表
-4. 双向循环链表
+1. 单链表：链表中的每⼀个结点，都有且只有⼀个指针指向下⼀个结点，并且最后⼀个节点指向空。
+2. 双向链表：每个节点都有两个指针（为⽅便，我们称之为前指针，后指针），分别指向上⼀个节点和下⼀个节点，第⼀个节点的前指针指向NULL ，最后⼀个节点的后指针指向NULL
+3. 循环链表：每⼀个节点的指针指向下⼀个节点，并且最后⼀个节点的指针指向第⼀个节点（虽然是循环链表，但是必要的时候还需要标识头结点或者尾节点，避免死循环）
+4. 双向循环链表：同时满足双向链表和循环链表的能力
 
-```java
-假如链表中有n个元素。
-访问：O（n）//访问特定位置的元素
-插入删除：O（1）//必须要要知道插入元素的位置
-```
+
 
 #### 单链表
 
 **单链表** 单向链表只有一个方向，结点只有一个后继指针 next 指向后面的节点。因此，链表这种数据结构通常在物理内存上是不连续的。我们习惯性地把第一个结点叫作头结点，链表通常有一个不保存任何值的 head 节点(头结点)，通过头结点我们可以遍历整个链表。尾结点通常指向 null。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270907398.png)
+
+单向链表的查找更新⽐较简单，我们看看插⼊新节点的具体过程（这⾥只展示中间位置的插⼊，头尾插⼊⽐较简单）：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221329234.png)
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221330355.png)
+
+那如何删除⼀个中间的节点呢？下⾯是具体的过程：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221330623.png)
+
+或许你会好奇， a5 节点只是指针没有了，那它去哪⾥了？
+
+如果是Java 程序，垃圾回收器会收集这种没有被引⽤的节点，帮我们回收掉了这部分内存，但是为了加快垃圾回收的速度，⼀般不需要的节点我们会置空，⽐如 node = null , 如果在C++ 程序中，那么就需要⼿动回收了，否则容易造成内存泄漏等问题。
+
+
+
+
 
 #### 循环链表
 
@@ -84,25 +220,162 @@ head:
 - 如果需要存储的数据元素的个数不确定，并且需要经常添加和删除数据的话，使用链表比较合适。
 - 如果需要存储的数据元素的个数确定，并且不需要经常添加和删除数据的话，使用数组比较合适。
 
-### 2.4. 数组 vs 链表
+### 数组 vs 链表
 
 - 数组支持随机访问，而链表不支持。
 - 数组使用的是连续内存空间对 CPU 的缓存机制友好，链表则相反。
 - 数组的大小固定，而链表则天然支持动态扩容。如果声明的数组过小，需要另外申请一个更大的内存空间存放数组元素，然后将原数组拷贝进去，这个操作是比较耗时的！
 
+### 单向链表的增删改查实现
+
+```java
+public class ListNode {
+    int val;
+    ListNode next = null;
+    ListNode(int val) {
+    	this.val = val;
+    }
+}
+```
+
+```java
+public class MyList<T> {
+    private ListNode<T> head;
+    private ListNode<T> tail;
+    private int size;
+    
+    public MyList() {
+        this.head = null;
+        this.tail = null;
+        this.size = 0;
+    }
+    
+    public void add(T element) {
+    	add(size, element);
+    }
+    
+    public void add(int index, T element) {
+        if (index < 0 || index > size) {
+        	throw new IndexOutOfBoundsException("超出链表⻓度范围");
+        }
+        ListNode current = new ListNode(element);
+        if (index == 0) {
+        	if (head == null) {
+            	head = current;
+        		tail = current;
+        	} else {
+                current.next = head;
+                head = current;
+            }
+        } else if (index == size) {
+            tail.next = current;
+            tail = current;
+        } else {
+            ListNode preNode = get(index - 1);
+            current.next = preNode.next;
+            preNode.next = current;
+        }
+        size++;
+    }
+    
+    public ListNode get(int index) {
+        if (index < 0 || index >= size) {
+        	throw new IndexOutOfBoundsException("超出链表⻓度");
+        }
+        ListNode temp = head;
+        for (int i = 0; i < index; i++) {
+        	temp = temp.next;
+        }
+        return temp;
+    }
+    
+    public ListNode delete(int index) {
+        if (index < 0 || index >= size) {
+        	throw new IndexOutOfBoundsException("超出链表节点范围");
+        }
+        ListNode node = null;
+        if (index == 0) {
+            node = head;
+            head = head.next;
+        } else if (index == size - 1) {
+            ListNode preNode = get(index - 1);
+            node = tail;
+            preNode.next = null;
+            tail = preNode;
+        } else {
+            ListNode pre = get(index - 1);
+            pre.next = pre.next.next;
+            node = pre.next;
+        }
+        size--;
+        return node;
+    }
+    
+    public void update(int index, T element) {
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException("超出链表节点范围");
+        }
+        ListNode node = get(index);
+        node.val = element;
+    }
+    
+    public void display() {
+        ListNode temp = head;
+        while (temp != null) {
+            System.out.print(temp.val + " -> ");
+            temp = temp.next;
+        }
+        System.out.println("");
+    }
+}
+```
+
+
+
+### 扩展：跳表
+
+链表如果搜索，是很麻烦的，如果这个节点在最后，需要遍历所有的节点，才能找到，查找效率实在太低，有没有什么好的办法呢？
+
+办法总⽐问题多，但是想要绝对的” 多快好省“是不存在的，有舍有得，计算机的世界⾥，充满哲学的味道。既然搜索效率有问题，那么我们不如给链表排个序。排序后的链表，还是只能知道头尾节点，知道中间的范围，但是要找到中间的节点，还是得⾛遍历的⽼路。如果我们把中间节点存储起来呢？存起来，确实我们就知道数据在前⼀半，还是在后⼀半。⽐如找7 ，肯定就从中间节点开始找。如果查找4 ,就得从头开始找，最差到中间节点，就停⽌查找。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221734573.png)
+
+但是如此，还是没有彻底解决问题，因为链表很⻓的情况，只能通过前后两部分查找。不如回到原则：空间和时间，我们选择时间，那就要舍弃⼀部分空间,我们每个节点再加⼀个指针，现在有 2 层指针（注意：节点只有⼀份，都是同⼀个节点，只是为了好看，弄了两份，实际上是同⼀个节点，有两个指针，⽐如 1 ，既指向2，也指向5）：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221734640.png)
+
+两层指针，问题依然存在，那就不断加层，⽐如每两个节点，就加⼀层：
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221734571.png)
+
+这就是跳表了，跳表的定义如下：
+
+跳表(SkipList，全称跳跃表)是⽤于有序元素序列快速搜索查找的⼀个数据结构，跳表是⼀个随机化的数据结构，实质就是⼀种可以进⾏⼆分查找的有序链表。跳表在原有的有序链表上⾯增加了多级索引，通过索引来实现快速查找。跳表不仅能提⾼搜索性能，同时也可以提⾼插⼊和删除操作的性能。它在性能上和红⿊树，AVL树不相上下，但是跳表的原理⾮常简单，实现也⽐红⿊树简单很多。
+
+主要的原理是⽤空间换时间，可以实现近乎⼆分查找的效率，实际上消耗的空间，假设每两个加⼀层，1 + 2 + 4 + ... + n = 2n-1 ,多出了差不多⼀倍的空间。你看它像不像书的⽬录，⼀级⽬录，⼆级，三级 ...
+
+如果我们不断往跳表中插⼊数据，可能出现某⼀段节点会特别多的情况，这个时候就需要动态更新索引，除了插⼊数据，还要插⼊到上⼀层的链表中，保证查询效率。redis 中使⽤了[跳表来实现zset](https://www.seven97.top/database/redis/02-basement1-datastructure.html#跳表) , redis 中使⽤⼀个随机算法来计算层级，计算出每个节点到底多少层索引，虽然不能绝对保证⽐较平衡，但是基本保证了效率，实现起来⽐那些平衡树，红⿊树的算法简单⼀点。
+
+
+
 ## 栈
 
 ### 栈简介
 
-**栈 (Stack)** 只允许在有序的线性数据集合的一端（称为栈顶 top）进行加入数据（push）和移除数据（pop）。因而按照 **后进先出（LIFO, Last In First Out）** 的原理运作。**在栈中，push 和 pop 的操作都发生在栈顶。**
+**栈 (Stack)** 只允许在有序的线性数据集合的一端（称为栈顶 top）进行加入数据（push）和移除数据（pop）。因而按照 **后进先出（LIFO, Last In First Out）** 的原理运作。**在栈中，push 和 pop 的操作都发生在栈顶。**就像是⼀个桶，只能不断的放在上⾯，取出来的时候，也只能不断的取出最上⾯的数据。要想取出底层的数据，只有等到上⾯的数据都取出来，才能做到。当然，如果有这种需求，我们⼀般会使⽤双向队列。
 
-栈常用一维数组或链表来实现，用数组实现的栈叫作 **顺序栈** ，用链表实现的栈叫作 **链式栈** 。
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221735195.png)
 
-```java
+栈常用一维数组或链表来实现，用数组实现的栈叫作 **顺序栈** ，用链表实现的栈叫作 **链式栈** 。[JDK 底层的栈，是⽤数组实现的](https://www.seven97.top/java/collection/02-collection4-queue-stack.html)，封装之后，通过API 操作的永远都只能是最后⼀个元素，栈经常⽤来实现递归的功能。
+
+元素加⼊称之为⼊栈（压栈），取出元素，称之为出栈，栈顶元素则是最后⼀次放进去的元素。使⽤数组实现简单的栈(注意仅供参考测试，实际会有线程安全等问题)
+
+### 时间复杂度
+
 假设堆栈中有n个元素。
-访问：O（n）//最坏情况
-插入删除：O（1）//顶端插入和删除元素
-```
+
+- 访问：O（n）//最坏情况
+- 插入删除：O（1）//顶端插入和删除元素
 
 
 
@@ -116,7 +389,7 @@ head:
 
 
 
-#### 3.2.2. 检查符号是否成对出现
+#### 检查符号是否成对出现
 
 > 给定一个只包括 `'('`，`')'`，`'{'`，`'}'`，`'['`，`']'` 的字符串，判断该字符串是否有效。
 >
@@ -274,11 +547,16 @@ myStack.pop();//报错：java.lang.IllegalArgumentException: Stack is empty.
 
 队列的操作方式和堆栈类似，唯一的区别在于队列只允许新数据在后端进行添加。
 
-```java
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202502221738698.png)
+
+⼀般只要说到先进先出（ FIFO ）,全称First In First Out ,就会想到队列，但是如果你想拥有队列即可以从队头取出元素，⼜可以从队尾取出元素，那就需要⽤到特殊的队列（双向队列），双向队列⼀般使⽤双向链表实现会简单⼀点。
+
+### 时间复杂度
+
 假设队列中有n个元素。
-访问：O（n）//最坏情况
-插入删除：O（1）//后端插入前端删除元素
-```
+
+- 访问：O（n）//最坏情况
+- 插入删除：O（1）//后端插入前端删除元素
 
 
 
@@ -336,6 +614,66 @@ myStack.pop();//报错：java.lang.IllegalArgumentException: Stack is empty.
 - 现实生活中的派对，播放器上的播放列表;
 - 消息队列
 - 等等……
+
+### 单向队列的实现
+
+```java
+class Node<T> {
+    public T data;
+    public Node next;
+    
+    public Node(T data) {
+    	this.data = data;
+    }
+}
+
+public class MyQueue<T> {
+    private Node<T> head;
+    private Node<T> rear;
+    private int size;
+    
+    public MyQueue() {
+    	size = 0;
+    }
+    
+    public void pushBack(T element) {
+        Node newNode = new Node(element);
+        if (isEmpty()) {
+        	head = newNode;
+        } else {
+        	rear.next = newNode;
+        }
+        rear = newNode;
+        size++;
+    }
+    
+    public boolean isEmpty() {
+    	return head == null;
+    }
+    
+    public T popFront() {
+        if (isEmpty()) {
+        	throw new NullPointerException("队列没有数据");
+        } else {
+            Node<T> node = head;
+            head = head.next;
+            size--;
+            return node.data;
+    	}
+	}
+    
+    public void dispaly() {
+        Node temp = head;
+        while (temp != null) {
+            System.out.print(temp.data +" -> ");
+            temp = temp.next;
+        }
+        System.out.println("");
+    }
+}
+```
+
+
 
 
 

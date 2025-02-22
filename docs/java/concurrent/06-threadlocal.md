@@ -117,7 +117,7 @@ public Connection getConnection() {
 
 - 它没有public的方法, 最多有一个default的构造方法, 因为这个ThreadLocalMap的方法仅仅在ThreadLocal类中调用, 属于静态内部类
 
-- ThreadLocalMap的Entry实现继承了WeakReference<ThreadLocal<?>>
+- ThreadLocalMap的Entry实现继承了WeakReference<ThreadLocal\<?>>
 
 - 该方法仅仅用了一个Entry数组来存储Key, Value; Entry并不是链表形式, 而是每个bucket里面仅仅放一个Entry;
 

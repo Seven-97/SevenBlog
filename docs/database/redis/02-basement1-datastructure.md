@@ -259,7 +259,7 @@ struct dictEntry {
 ```
 dictEntry 结构里不仅包含指向键和值的指针，还包含了指向下一个哈希表节点的指针，这个指针可以将多个哈希值相同的键值对链接起来，以此来解决哈希冲突的问题，这就是链式哈希。
 
-关于解决hash冲突问题可以看这篇文章：[解决哈希冲突的三种方法](https://www.seven97.top/java/basis/01-basic-knowledge.html#扩展-解决哈希冲突的三种方法)
+关于解决hash冲突问题可以看这篇文章：[解决哈希冲突的三种方法](https://www.seven97.top/cs-basics/data-structure/hash-table.html#解决哈希冲突的三种方法)
 
 而redis是**先通过拉链法**解决，**再通过rehash**来解决hash冲突问题的，即再hash法
 
