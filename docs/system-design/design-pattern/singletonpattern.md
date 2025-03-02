@@ -1,6 +1,6 @@
 ---
 title: 单例模式
-category: 算法题
+category: 系统设计
 tags:
  - 设计模式
 ---
