@@ -1,8 +1,8 @@
 ---
-title: 单例模式
+title: 单例模式深度解析：从实现到破解的全方位解读
 category: 系统设计
 tags:
- - 设计模式
+  - 设计模式
 ---
 
 
@@ -46,8 +46,8 @@ class User{
     }
 }
 //结果是一样的，即同一个对象
-com.gupao.singleton.User@6d6f6e28
-com.gupao.singleton.User@6d6f6e28 
+com.seven.singleton.User@6d6f6e28
+com.seven.singleton.User@6d6f6e28 
 ```
 
 static变量在类加载的时候初始化，此时不会涉及到多个线程对象访问该对象的问题，虚拟机保证只会装载一次该类，肯定不会发生并发问题，无需使用synchronized 关键字
