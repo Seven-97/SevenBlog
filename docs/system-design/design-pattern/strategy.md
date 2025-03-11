@@ -1,8 +1,8 @@
 ---
-title: 策略模式
+title: 告别冗长if-else语句：使用策略模式优化代码结构
 category: 系统设计
 tags:
- - 设计模式
+  - 设计模式
 ---
 
 

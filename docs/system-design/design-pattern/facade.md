@@ -1,8 +1,8 @@
 ---
-title: 外观模式
+title: 从智能音箱到软件设计：探索外观模式的实际应用案例
 category: 系统设计
 tags:
- - 设计模式
+  - 设计模式
 ---
 
 
@@ -15,7 +15,7 @@ tags:
 
 **定义：**又名门面模式，是一种通过为多个复杂的子系统提供一个一致的接口，而使这些子系统更加容易被访问的模式。该模式对外有一个统一接口，外部应用程序不用关心内部子系统的具体的细节，这样会大大降低应用程序的复杂度，提高了程序的可维护性。
 
-外观（Facade）模式是“迪米特法则”的典型应用
+外观（Facade）模式是“[迪米特法则](https://www.seven97.top/system-design/design-pattern/overviewofdesignpatterns.html#迪米特法则)”的典型应用
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404271757261.png)
 

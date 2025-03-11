@@ -506,7 +506,7 @@ public void exportExcel4(HttpServletResponse response) throws IOException, Inter
 
 
 
-## 模板方法设计模式简化EasyExcel的读取
+## [模板方法设计模式](https://www.seven97.top/system-design/design-pattern/templatemethod.html)简化EasyExcel的读取
 
 看 [官方文档](https://easyexcel.opensource.alibaba.com/docs/current/quickstart/read) 上读取Excel挺简单的，只需要一行代码
 
@@ -630,7 +630,7 @@ public class DemoDataListener implements ReadListener<DemoData> {
 
 
 
-**最后想到了可以用Function(数据校验) + Consumer(数据存储) + 模板方法设计模式，创建一个共用的EasyExcel读取监听器，从而不在监听器中对数据进行处理，把处理都前置**。
+**最后想到了可以用Function(数据校验) + Consumer(数据存储) + [模板方法设计模式](https://www.seven97.top/system-design/design-pattern/templatemethod.html)，创建一个共用的EasyExcel读取监听器，从而不在监听器中对数据进行处理，把处理都前置**。
 
 > EasyExcel 的监听器类 Listener 已经定义了每一步会做什么，如通过 invokeHead 方法一行一行读取表头数据，通过invoke 方法一行一行读取真实数据。
 >
