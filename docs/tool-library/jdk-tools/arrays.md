@@ -1,7 +1,7 @@
 ---
-title: 数组工具类 - Arrays
+title: Arrays工具类教你优雅地管理数组数据
 category: 工具类库
-tag:
+tags:
   - Java工具类
   - 集合
 head:
@@ -157,10 +157,10 @@ public static String toString(Object[] a) {
 
 ## sort() 和 parallelSort()
 
-- 功能：都是将数组排序（默认升序，支持lambda，泛型），默认的排序算法是 Dual-Pivot [Quicksort](https://www.seven97.top/cs-basics/algorithms/10-classical-sorting-algorithms.html#快速排序-quick-sort)
+- 功能：都是将数组排序（默认升序，支持lambda，泛型），默认的排序算法是 Dual-Pivot [Quicksort](https://www.seven97.top/cs-basics/data-structure/10-classical-sorting-algorithms.html#快速排序-quick-sort)
 - 参数：
-  sort(Object[] a[, int fromIndex, int toIndex]) 或者 sort(T[] a[, int fromIndex, int toIndex,] Comparator<? super T> c)
-  parallelSort(Object[] a[, int fromIndex, int toIndex]) 或者 parallelSort(T[] a[, int fromIndex, int toIndex,] Comparator<? super T> c)
+  `sort(Object[] a[, int fromIndex, int toIndex]) 或者 sort(T[] a[, int fromIndex, int toIndex,] Comparator<? super T> c)`
+  `parallelSort(Object[] a[, int fromIndex, int toIndex]) 或者 parallelSort(T[] a[, int fromIndex, int toIndex,] Comparator<? super T> c)`
 
 
 
@@ -454,7 +454,7 @@ private static void binarySort(Object[] a, int lo, int hi, int start) {
 
 #### 小结
 
-JDK中的Arrays.sort实际上采用的是设计模式中的[模板模式](https://www.seven97.top/system-design/design-pattern/behavioralpattern.html#模板方法模式)，将排序算法的步骤封装了起来，而将如何比较两个数组元素交给了程序员来实现。
+JDK中的Arrays.sort实际上采用的是设计模式中的[模板模式](https://www.seven97.top/system-design/design-pattern/templatemethod.html)，将排序算法的步骤封装了起来，而将如何比较两个数组元素交给了程序员来实现。
 当排序自定义类时，可以让这个类实现Comparable接口，并重写其compareTo方法。也可以创建一个实现了Comparator接口的类，重写其compare方法。具体如何比较两个数组元素的逻辑就写在了需要重写的这两个方法中。
 
 比较两个数组元素o1与o2的大小无非三种结果：o1>o2，o1=o2，o1<o2。因此compareTo方法和compare方法的返回值有三种情况，这是针对默认升序设计的：
@@ -563,11 +563,11 @@ private static int binarySearch0(int[] a, int fromIndex, int toIndex, int key) {
 
 - **功能**：复制填充数组
 - **参数**：
-  copyOf(int[] original, int newLength)
-  copyOf(T[] original, int newLength)
-  copyOfRange(int[] original, int from, int to）
-  copyOfRange(T[] original, int from, int to)
-  copyOfRange(U[] original, int from, int to, 类<? extends T[]> newType)
+  `copyOf(int[] original, int newLength)`
+  `copyOf(T[] original, int newLength)`
+  `copyOfRange(int[] original, int from, int to）`
+  `copyOfRange(T[] original, int from, int to)`
+  `copyOfRange(U[] original, int from, int to, class <? extends T[]> newType)`
 - **返回值**：复制填充后的数组
 - **区别**：
   copyOf()是从原数组0位置开始拷贝指定长度到新数组；

@@ -849,9 +849,7 @@ ribbon:
 
 此时我们对consumer的服务调用做降级处理
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202501011204251.png)
-
-####  
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202501011204251.png) 
 
 #### 实现案例
 
@@ -880,7 +878,6 @@ server.port=9091
 
 # 设置服务注册中心地址 执行Eureka服务端 如果有多个注册地址 那么用逗号连接
 eureka.client.service-url.defaultZone=http://seven:123456@192.168.100.120:8761/eureka/,http://seven:123456@192.168.100.121:8761/eureka/
-
 ```
 
 
@@ -1048,7 +1045,6 @@ spring.redis.pool.max-idle=200
 spring.redis.pool.min-idle=50
 #连接超时时间（毫秒）
 spring.redis.pool.timeout=600
-
 ```
 
 
@@ -2316,7 +2312,7 @@ public class AuthorizeFilter implements GlobalFilter {
 
 可以在浏览器控制台看到下面的错误：
 
-![image-20210714215832675](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202501011231045.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202501011231045.png)
 
 
 
