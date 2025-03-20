@@ -1,5 +1,5 @@
 ---
-title: Arrays工具类教你优雅地管理数组数据
+title: 数组工具类 - Arrays
 category: 工具类库
 tags:
   - Java工具类

@@ -1,5 +1,5 @@
 ---
-title: 从火车站卖票看代理模式的实际应用
+title: 代理模式
 category: 系统设计
 tags:
   - 设计模式

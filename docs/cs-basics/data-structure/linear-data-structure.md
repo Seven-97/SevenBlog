@@ -681,18 +681,31 @@ public class MyQueue<T> {
 
 ### 栈实现队列
 
-使用两个栈 `s1, s2` 就能实现一个队列的功能（这样放置栈可能更容易理解）：
+- 栈的特性是先进后出
+- 队列的特性是先进先出
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270935051.png)
+有两个栈 stack1 , stack2 ；
 
-当调用 `push` 让元素入队时，只要把元素压入 `s1` 即可，比如说 `push` 进 3 个元素分别是 1,2,3，那么底层结构就是这样：
+- 如果有新的数据进⼊，那么我们可以直接 push 到 stack1 ；
+- 如果需要取出数据，那么我们优先取出 stack2 的数据，如果 stack2 ⾥⾯数据是空的，那么我们需要把所有的 stack1 的数据倒⼊ stack2 。再从 stack2 取数据。
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270935838.png)
+例如：
 
-那么如果这时候使用 `peek` 查看队头的元素怎么办呢？按道理队头元素应该是 1，但是在 `s1` 中 1 被压在栈底，现在就要轮到 `s2` 起到一个中转的作用了：当 `s2` 为空时，可以把 `s1` 的所有元素取出再添加进 `s2`，**这时候 `s2` 中元素就是先进先出顺序了**。
+1. push 1 --> push 2
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270936936.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202503161709874.png)
 
+2. pop 1
+
+![image-20250316170844217](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202503161709866.png)
+
+3. push 3 --> push 4
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202503161709847.png)
+
+4. pop 2
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202503161709761.png)
 
 
 算法实现如下：

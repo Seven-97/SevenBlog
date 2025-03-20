@@ -1,5 +1,5 @@
 ---
-title: 从零开始，用原型模式简化你的Java对象创建过程！
+title: 原型模式
 category: 系统设计
 tags:
   - 设计模式

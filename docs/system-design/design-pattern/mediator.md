@@ -1,5 +1,5 @@
 ---
-title: 使用中介者模式实现松耦合设计
+title: 中介者模式
 category: 系统设计
 tags:
   - 设计模式
