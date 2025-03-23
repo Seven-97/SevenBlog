@@ -258,7 +258,7 @@ head:
 - [集合工具类 - Collections](https://www.seven97.top/tool-library/jdk-tools/collections.html)
 
 ### Guava工具类
-- [基础工具类 - String&Ints](https://www.seven97.top/tool-library/guava/guava-string-ints.html)
+- [基础工具类 - Strings&Ints](https://www.seven97.top/tool-library/guava/guava-string-ints.html)
 - [集合 - Immutable&Lists&Maps&Sets](https://www.seven97.top/tool-library/guava/guava-collections.html)
 - [新集合 - BiMap&Multimap&Multiset](https://www.seven97.top/tool-library/guava/guava-newcollections.html)
 - [集合工具 - Collections2](https://www.seven97.top/tool-library/guava/guava-collection-tool.html)

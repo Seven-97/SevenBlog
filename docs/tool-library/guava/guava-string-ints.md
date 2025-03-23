@@ -1,8 +1,8 @@
 ---
-title: 基础工具类 - String&Ints
+title: 基础工具类 - Strings&Ints
 category: 工具类库
-tag:
- - Guava
+tags:
+  - Guava
 head:
   - - meta
     - name: keywords
