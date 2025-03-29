@@ -41,7 +41,7 @@ category: 计算机书籍
 
 Builder 的建造者模式：使用必须的参数调用构造器，得到一个 Builder 对象，再在 builder 对象上调用类似 setter 的方法设置各个可选参数，最后调用无参的 build 方法生成不可变对象，new Instance.Builder(必须参数).setter(可选参数).build()。
 
-[建造者模式详解](https://www.seven97.top/system-design/design-pattern/creationalpattern.html#%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F)
+[建造者模式详解](https://www.seven97.top/system-design/design-pattern/builder.html)
 
 Builder 模式让类的创建和表示分离，使得相同的创建过程可以创建不同的表示。
 
@@ -808,7 +808,7 @@ class Square extends Rectangle {
 
 嵌套类共有四种：静态成员类、非静态成员类、匿名类和局部类。它们各自有不同的适用场合。判断方法见如下流程图：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202405022252621.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202503242346267.png)
 
  
 
@@ -930,7 +930,7 @@ list.add(o);
 
 然后运行程序时，会在将strings.get(0)` 的结果强制转换为字符串的地方抛出一个 ClassCastException。
 
-如果你想使用泛型，但不知道或不关心实际的类型参数是什么，那么可以使用问号代替。例如，泛型集合 Set&lt;E> 的无界通配符类型是 Set<?>。它是最通用的参数化集合类型，能够容纳任何集合：
+如果你想使用泛型，但不知道或不关心实际的类型参数是什么，那么可以使用问号代替。例如，泛型集合 `Set<E>` 的无界通配符类型是 `Set<?>`。它是最通用的参数化集合类型，能够容纳任何集合：
 
 ```java
 // Uses unbounded wildcard type - typesafe and flexible
@@ -953,19 +953,19 @@ CAP#1 extends Object from capture of ?
 
 为便于参考，本条目中介绍的术语（以及后面将要介绍的一些术语）总结如下：
 
-| 术语           | 例子                                    | 条目           |
-| -------------- | --------------------------------------- | -------------- |
-| 参数化类型     | List&lt;String>                         | 第26条         |
-| 实际的类型参数 | String                                  | 第26条         |
-| 泛型类型       | List&lt;E>                              | 第26条、第29条 |
-| 形式化类型参数 | E                                       | 第26条         |
-| 无界泛型表达式 | List<?>                                 | 第26条         |
-| 原始类型       | List                                    | 第26条         |
-| 有界类型参数   | &lt;E  extends Number>                  | 第29条         |
-| 递归类型限制   | <T  extends Comparable&lt;T>>           | 第30条         |
-| 有界泛型表达式 | List<?  extends Number>                 | 第31条         |
-| 泛型方法       | static  &lt;E> List&lt;E> asList(E[] a) | 第30条         |
-| 类型记号       | String.class                            | 第33条         |
+| 术语      | 例子                                  | 条目        |
+| ------- | ----------------------------------- | --------- |
+| 参数化类型   | `List<String>`                      | 第26条      |
+| 实际的类型参数 | String                              | 第26条      |
+| 泛型类型    | `List<E>`                           | 第26条、第29条 |
+| 形式化类型参数 | E                                   | 第26条      |
+| 无界泛型表达式 | `List<?>`                           | 第26条      |
+| 原始类型    | List                                | 第26条      |
+| 有界类型参数  | `<E  extends Number>`               | 第29条      |
+| 递归类型限制  | `<T  extends Comparable<T>>`        | 第30条      |
+| 有界泛型表达式 | `List<?  extends Number>`           | 第31条      |
+| 泛型方法    | `static  <E> List<E> asList(E[] a)` | 第30条      |
+| 类型记号    | String.class                        | 第33条      |
 
  
 

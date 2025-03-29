@@ -402,7 +402,7 @@ public enum EnumSingleton {
 
 输出：true
 ```
-**原因：** 枚举类的 writeObject 方法仅仅是将 Enum.name 写到文件中，反序列化时，根据 readObject 方法的源码定位到 Enum 的 valueOf 方法，他会根据名称返回原来的对象。
+**原因：** 枚举类的 writeObject 方法仅仅是将 `Enum.name` 写到文件中，反序列化时，根据 readObject 方法的源码定位到 Enum 的 valueOf 方法，他会根据名称返回原来的对象。
 
 ### 克隆
 实现 Cloneable 接口重写 clone 方法，但是 Enum 类中 clone 的方法是 final 类型，无法重写，也就不能通过克隆破坏单例。
