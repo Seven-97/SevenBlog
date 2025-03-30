@@ -102,6 +102,7 @@ head:
 - [Java 19 新特性](https://www.seven97.top/java/new-features/java19.html)
 - [Java 21 新特性](https://www.seven97.top/java/new-features/java21.html)
 - [Java 22~23 新特性](https://www.seven97.top/java/new-features/java22-23.html)
+- [Java 24 新特性](https://www.seven97.top/java/new-features/java24.html)
 - [升级重要特性 - Java11升Java17](https://www.seven97.top/java/new-features/upgrade-java11tojava17.html)
 - [升级重要特性 - Java8升Java11](https://www.seven97.top/java/new-features/upgrade-java8tojava11.html)
 
