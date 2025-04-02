@@ -59,6 +59,86 @@ head:
 
 - Dubbo 提供重试机制来避免类似问题的发生。通过 retries  属性来设置重试次数。默认为 2 次。
 
+#### 多粒度超时时间
+
+dubbo 支持多粒度配置 rpc 调用的超时时间：
+
+优先级从高到低依次为  方法级别配置>服务级别配置 >全局配置 >默认值。
+
+
+1. 配置全局默认超时时间为5s (不配置的情况下，所有服务的默认超时时间是 1s)
+
+```java
+dubbo:
+  provider:
+    timeout: 5000
+```
+
+2. 在消费端，指定 DemoService 服务调用的超时时间为 5s
+
+```java
+@DubboReference(timeout=5000)
+private DemoService demoService;
+```
+
+
+3. 在提供端，指定 DemoService 服务调用的超时时间为 5s(可作为所有消费端的默认值，如果消费端有指定则优先级更高)
+
+```java
+@DubboService(timeout=5000)
+public class DemoServiceImpl implements DemoService{}
+```
+
+
+4. 在消费端，指定 DemoService sayHello 方法调用的超时时间为 5s
+
+```java
+@DubboReference(methods = {@Method(name = "sayHello", timeout = 5000)})
+private DemoService demoService;
+```
+
+
+5. 在提供端，指定 DemoService sayHello 方法调用的超时时间为 5s(可作为所有消费端的默认值，如果消费端有指定则优先级更高)
+```java
+@DubboService(methods = {@Method(name = "sayHello", timeout = 5000)})
+public class DemoServiceImpl implements DemoService{}
+```
+
+#### Deadline 机制
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202504022142929.png)
+
+我们来分析一下以上调用链路以及可能出现的超时情况：
+
+A 调用 B 设置了超时时间 5s，因此 B -> C -> D 总计耗时不应该超过 5s，否则 A 就会收到超时异常
+
+在任何情形下，只要 A 等待 5s 没有收到响应，整个调用链路就可以被终止了（如果此时 C 正在运行，则 C -> D 就没有发起的意义了）
+
+理论上 B -> C、C -> D 都有自己独立的超时时间设置，超时计时也是独立计算的，它们不知道 A 作为调用发起方是否超时
+
+在 Dubbo 框架中，A -> B 的调用就像一个开关，一旦启动，在任何情形下整个 A -> B -> C -> D 调用链路都会被完整执行下去，即便调用方 A 已经超时，后续的调用动作仍会继续。这在一些场景下是没有意义的，尤其是链路较长的情况下会带来不必要的资源消耗，deadline 就是设计用来解决这个问题，通过在调用链路中传递 deadline（deadline初始值等于超时时间，随着时间流逝而减少）可以确保调用链路只在有效期内执行，deadline 消耗殆尽之后，调用链路中其他尚未执行的任务将被取消。
+
+因此 deadline 机制就是将 B -> C -> D 当作一个整体看待，这一系列动作必须在 5s 之内完成。随着时间流逝 deadline 会从 5s 逐步扣减，后续每一次调用实际可用的超时时间即是当前 deadline 值，比如 C 收到请求时已经过去了 3s，则 C -> D 的超时时间只剩下 2s。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202504022142726.png)
+
+deadline 机制默认是关闭的，如果要启用 deadline 机制，需要配置以下参数：
+
+```yml
+dubbo:
+  provider:
+    timeout: 5000
+    parameters.enable-timeout-countdown: true
+```
+
+也可以指定某个服务调用开启 deadline 机制：
+
+```java
+@DubboReference(timeout=5000, parameters={"enable-timeout-countdown", "true"})
+private DemoService demoService;
+```
+
+
 
 
 ### 多版本

@@ -16,6 +16,7 @@ footer: |-
   <a href="https://beian.miit.gov.cn/" target="_blank">闽ICP备2022017393号</a> | 主题: <a href="https://vuepress-theme-hope.github.io/v2/" target="_blank">VuePress Theme Hope</a>
 ---
 
+请认准官方网站地址：www.seven97.top
 
 ## 关于作者
 
