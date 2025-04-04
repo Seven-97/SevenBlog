@@ -12,7 +12,7 @@ head:
     - name: description
       content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
-
+> 来源：尚硅谷，Seven对其进行了补充完善
 
 
 ## Kafka基础架构

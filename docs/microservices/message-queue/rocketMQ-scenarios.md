@@ -12,7 +12,7 @@ head:
     - name: description
       content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
-
+> 来源：稀土掘金社区
 
 
 ## RocketMQ的基本原理

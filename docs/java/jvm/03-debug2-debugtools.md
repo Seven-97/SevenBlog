@@ -168,19 +168,57 @@ help：打印帮助信息
 J<flag>：指定传递给运行jmap的JVM的参数
 ```
 
-更多请参考：[jvm 性能调优工具之 jmap](https://www.jianshu.com/p/a4ad53179df3) 和 [jmap - Memory Map](https://docs.oracle.com/javase/1.5.0/docs/tooldocs/share/jmap.html)
 
+
+
+更多请参考：[jvm 性能调优工具之 jmap](https://www.jianshu.com/p/a4ad53179df3) 和 [jmap - Memory Map](https://docs.oracle.com/javase/1.5.0/docs/tooldocs/share/jmap.html)
 
 
 #### jstat
 
+它是 JDK 自带的工县，用于监控JVM 各种运行时信息
+
 jstat参数众多，但是使用一个就够了
 
 ```java
-jstat -gcutil 2815 1000 
+jstat -gc <pid> 1000 10
 ```
 
+- gc选项：显示垃圾收集信息(也可以用 gcutil，gcutil以百分比形式显示内存的使用情况，gc显示的是内存占用的字节数，以KB 的形式输出堆内存的使用情况)
+- pid：Java 进程的 PID。
+- 1000：每 1000 毫秒采样一次。
+- 10：采样 10 次。
 
+示例输出
+
+```java
+ S0C    S1C    S0U    S1U      EC       EU        OC         OU       MC       MU       CCSC    CCSU     YGC     YGCT     FGC    FGCT     GCT
+1536.0 1536.0  0.0    0.0    30720.0   1024.0  708608.0    2048.0   44800.0  43712.6   4864.0  4096.0      4    0.072   1      0.015    0.087
+1536.0 1536.0  0.0    0.0    30720.0   2048.0  708608.0    2048.0   44800.0  43712.6   4864.0  4096.0      4    0.072   1      0.015    0.087
+1536.0 1536.0  0.0    0.0    30720.0   3072.0  708608.0    2048.0   44800.0  43712.6   4864.0  4096.0      4    0.072   1      0.015    0.087
+```
+
+字段含义：
+
+- S0C(Survivor Space 0 Capacity):第一个 Survivor 区域的容量(字节数).
+- S1C(Survivor Space 1 Capacity):第二个 Survivor 区域的容量(字节数)。
+- S0U(Survivor Space 0 Utilization):第一个 Survivor 区域的使用量(字节数)
+- S1U(Survivor Space 1 Utilization):第二个 Survivor 区域的使用量(字节数)。
+- EC(Eden Space Capacity): Eden 区域的容量(字节数)。
+- EU(Eden Space Utilization): Eden 区域的使用量(字节数)
+- OC(Old Generation Capacity): 老年代的容量(字节数)
+- OU(Old Generation Utilization): 老年代的使用量(字节数)
+- MC(Metaspace Capacity):方法区(Metaspace)的容量(字节数)
+- MU (Metaspace Utilization):方法区的使用量(字节数)。
+- CCSC(Compressed Class Space Capacity): 压缩类空间的容量(字节数)
+- CCSU(Compressed Class Space Utilization): 压缩类空间的使用量(字节数)
+- YGC (Young Generation GC Count):年轻代垃圾回收的次数
+- YGCT (Young Generation GC Time):年轻代垃圾回收的总时间(秒)。
+- FGC (Full GC Count): full gc 的次数。
+- FGCT(Full GC Time): full gc 的总时间(秒)。
+- GCT(Garbage Collection Time): 总的垃圾回收时间(秒)。
+
+注意:如果 FGC 变化频率很高，则说明系统性能和吞吐量将下降，或者可能出现内存溢出。
 
 #### jdb
 
