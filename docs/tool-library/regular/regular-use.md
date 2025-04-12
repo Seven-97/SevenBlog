@@ -1,8 +1,8 @@
 ---
-title: 正则表达式的规则
+title: 正则表达式规则详解
 category: 工具类库
-tag:
- - 正则
+tags:
+  - 正则
 head:
   - - meta
     - name: keywords

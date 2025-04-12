@@ -73,7 +73,7 @@ OK
 (integer) 2
 ```
 
-
+[Redis实现高并发场景下的计数器设计](https://www.seven97.top/database/redis/07-practice-addone)
 
 ### [分布式锁](https://www.seven97.top/database/redis/05-implementdistributedlocks.html)
 

@@ -520,42 +520,42 @@ printf (“test2″);
 以下是合并master分支到你的当前分支的基本步骤：
 
 1. 确保在正确的分支上：首先，确保当前所在的分支是想要合并master分支到的地方。例如，如果想要将master合并到feature-branch，需要先切换到feature-branch：
-   ```shell
-   git checkout feature-branch
-   ```
+```shell
+git checkout feature-branch
+```
 
 2. 更新分支：在合并之前，最好先更新分支，以确保它是最新的。可以通过拉取master分支的最新更改来实现这一点：
 
-   ```shell
-   git pull origin master
-   ```
+```shell
+git pull origin master
+```
 
    这会从远程仓库的master分支拉取最新的更改，并尝试将它们合并到你的当前分支。如果master分支有新的提交，这可能会导致合并冲突。
 
 3. 合并master分支：一旦分支是最新的，可以开始合并过程。使用git merge命令来合并master分支：
 
-   ```shell
-   git merge master
-   ```
+```shell
+git merge master
+```
 
    这会将master分支的更改合并到当前分支。如果两个分支之间没有冲突，合并将自动完成。如果有冲突，Git会告诉你哪些文件有冲突，此时就需要手动解决这些冲突。
 
 4. 解决冲突（如果有）：如果合并过程中出现冲突，Git会暂停合并并告诉你哪些文件需要手动解决冲突。你需要打开这些文件，找到并解决冲突。解决冲突后，使用以下命令标记冲突已解决：
-   ```shell
-   git add <冲突文件>
-   ```
+```shell
+git add <冲突文件>
+```
 
    然后继续合并：
-   ```shell
-   git commit
-   ```
+```shell
+git commit
+```
 
    这将创建一个新的合并提交，包含所有解决的冲突。
 
 5. 推送更改：一旦合并完成并且所有冲突都已解决，你可以将更改推送到远程仓库：
-   ```shell
-   git push origin feature-branch
-   ```
+```shell
+git push origin feature-branch
+```
 
    确保替换feature-branch为你的分支名称。
 

@@ -543,7 +543,7 @@ public static void main(String[] args) {
 
 上面代码中，没有设置数据的过期时间，理论上数据是长期有效、不会被过期删除。为了便于测试，我们设定缓存最大容量为2条记录，然后往缓存容器中插入3条记录，观察下输出结果如下：
 
-```arduino
+```text
 put放入key1
 put放入key2
 put放入key3

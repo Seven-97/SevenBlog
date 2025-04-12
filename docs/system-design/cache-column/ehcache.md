@@ -104,7 +104,7 @@ ResourcePoolsBuilder.newResourcePoolsBuilder()
 
 需要注意这里磁盘的容量设定一定要**大于**前面的`heap`以及`offHeap`的大小，否则会报错：
 
-```arduino
+```java
 Exception in thread "main" java.lang.IllegalArgumentException: Tiering Inversion: 'Pool {100 MB offheap}' is not smaller than 'Pool {20 MB disk}'
 	at org.ehcache.impl.config.ResourcePoolsImpl.validateResourcePools(ResourcePoolsImpl.java:137)
 	at org.ehcache.config.builders.ResourcePoolsBuilder.<init>(ResourcePoolsBuilder.java:53)

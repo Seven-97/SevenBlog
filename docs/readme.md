@@ -4,6 +4,7 @@ icon: home
 title: 主页
 heroImage: /logo.svg
 heroText: Seven
+article: false
 tagline: 记录Seven的菜鸟成长之路
 actions:
   - text: 开始打怪升级

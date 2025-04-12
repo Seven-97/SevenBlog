@@ -467,7 +467,7 @@ public static void main(String[] args) {
 
 执行结果如下：
 
-```arduino
+```text
 main thread:1
 同步callable thread:1
 异步callable thread:15

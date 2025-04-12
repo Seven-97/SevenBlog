@@ -295,7 +295,7 @@ public void registerService(String serviceName, String groupName, Instance insta
 
 
 
-### 服务注册小结：
+### 服务注册小结
 
 通过问答的形式来进行总结
 
@@ -324,8 +324,6 @@ public void registerService(String serviceName, String groupName, Instance insta
 1. 第一件事情：引入一个Spring监听器，当容器初始化后，执行Nacos服务的注册。
 2. 第二件事情：而Nacos服务注册的方法的实现，其需要实现的接口来自于该包下的`ServiceRegistry`接口。
 
-------
-
 
 
 接下来就对Nacos注册的流程进行一个总结：
@@ -346,7 +344,7 @@ public void registerService(String serviceName, String groupName, Instance insta
 
 举个例子：
 
-```
+```java
 @FeignClient("test-application")
 public interface MyFeignService {
     @RequestMapping("getInfoById")
@@ -356,7 +354,7 @@ public interface MyFeignService {
 
 接下来直接开始讲重点，Nacos在进行服务发现的时候，会调用`NacosServerList`类下的`getServers()`方法：
 
-```
+```java
 public class NacosServerList extends AbstractServerList<NacosServer> {
  private List<NacosServer> getServers() {
         try {
@@ -374,7 +372,7 @@ public class NacosServerList extends AbstractServerList<NacosServer> {
 
 接下来来看一下`NacosNamingService.selectInstances（）`方法：
 
-```
+```java
 public List<Instance> selectInstances(String serviceName, String groupName, boolean healthy) throws NacosException {
    return this.selectInstances(serviceName, groupName, healthy, true);
 }
@@ -382,7 +380,7 @@ public List<Instance> selectInstances(String serviceName, String groupName, bool
 
 该方法最终会调用到其**重载方法**：
 
-```
+```java
 public List<Instance> selectInstances(String serviceName, String groupName, List<String> clusters, 
   boolean healthy, boolean subscribe) throws NacosException {
  // 保存服务实例信息的对象
@@ -401,7 +399,7 @@ public List<Instance> selectInstances(String serviceName, String groupName, List
 
 这里应该重点关注`this.hostReactor`这个对象，它里面比较重要的是几个Map类型的存储结构：
 
-```
+```java
 public class HostReactor {
     private static final long DEFAULT_DELAY = 1000L;
     private static final long UPDATE_HOLD_INTERVAL = 5000L;
@@ -419,7 +417,7 @@ public class HostReactor {
 
 再看一看它的`getServiceInfo（）`方法：
 
-```
+```java
 public ServiceInfo getServiceInfo(String serviceName, String clusters) {
     LogUtils.NAMING_LOGGER.debug("failover-mode: " + this.failoverReactor.isFailoverSwitch());
     String key = ServiceInfo.getKey(serviceName, clusters);
@@ -456,7 +454,7 @@ public ServiceInfo getServiceInfo(String serviceName, String clusters) {
 
 来看下`scheduleUpdateIfAbsent（）`方法：
 
-```
+```java
 // 通过心跳的方式，每10秒去更新一次数据，并不是只有在调用服务的时候才会进行更新，而是通过定时任务来异步进行。
 public void scheduleUpdateIfAbsent(String serviceName, String clusters) {
     if (this.futureMap.get(ServiceInfo.getKey(serviceName, clusters)) == null) {

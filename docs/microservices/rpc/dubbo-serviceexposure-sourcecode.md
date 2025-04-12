@@ -1025,7 +1025,7 @@ public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
 
 **然后来到了ProtocolListenerWrapper类**
 
-```jaav
+```java
 public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
     if (Constants.REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
         // 如果invoke的协议是registry类型

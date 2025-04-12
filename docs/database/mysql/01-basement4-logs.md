@@ -201,7 +201,7 @@ binlog 有 3 种格式类型，分别是 STATEMENT（默认格式）、ROW、 MI
 - MIXED：包含了 STATEMENT 和 ROW 模式，它会根据不同的情况自动使用 ROW 模式和 STATEMENT 模式；
 
 
-> 注意：不同的日志类型在主从复制下除了有动态函数的问题，同样对对更新时间也有影响。一般来说，数据库中的update_time都会设置成ON UPDATE CURRENT_TIMESTAMP，即自动更新时间戳列。在主从复制下，
+> 注意：不同的日志类型在主从复制下除了有动态函数的问题，同样对对更新时间也有影响。一般来说，数据库中的update_time都会设置成ON UPDATE CURRENT_TIMESTAMP，即自动更新时间戳列。在主从复制下：
 > 如果日志格式类型是STATEMENT，由于记录的是sql语句，在salve端是进行语句重放，那么更新时间也是重放时的时间，此时slave会有时间延迟的问题；
 > 如果日志格式类型是ROW，这是记录行数据最终被修改成什么样了，这种从库的数据是与主服务器完全一致的。
 

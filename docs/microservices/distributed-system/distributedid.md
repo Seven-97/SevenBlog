@@ -44,10 +44,6 @@ UUID是基于时间戳、MAC地址、随机数等多种因素生成，理论上�
 ```java
 import java.util.UUID;
 
-/**
- * @author 苏三
- * @date 2024/9/13 上午10:38
- */
 public class UuidTest {
     public static void main(String[] args) {
         String uuid = UUID.randomUUID().toString();

@@ -257,9 +257,9 @@ ps 的参数非常多, 在此仅列出几个常用的参数并大略介绍含义
 
   au(x) ：输出格式 :
 
-  ```shell
-  USER PID %CPU %MEM VSZ RSS TTY STAT START TIME CMD
-  ```
+```shell
+USER PID %CPU %MEM VSZ RSS TTY STAT START TIME CMD
+```
 
   - USER: 进程拥有者
   - PID: pid，进程ID

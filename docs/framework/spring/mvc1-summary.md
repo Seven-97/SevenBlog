@@ -314,7 +314,7 @@ web.xml中配置初始化参数contextConfigLocation，路径是classpath:spring
 
 创建userList.jsp
 
-```jsp
+```java
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>

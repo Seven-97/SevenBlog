@@ -763,17 +763,17 @@ kafka-reassign-partitions.sh --bootstrap-server 192.168.181.131:9092 --topics-to
 
 2. 首选副本选举策略（Preferred Replica Election）：首选副本选举策略也是 Kafka 默认的选举策略。在这种策略下，每个分区都有一个首选副本（Preferred Replica），通常是副本集合中的第一个副本。当触发选举时，控制器会优先选择该首选副本作为新的 Leader Replica，只有在首选副本不可用的情况下，才会考虑其他副本。当然，也可以使用命令手动指定每个分区的首选副本：
 
-   ```shell
-   bin/kafka-topics.sh --zookeeper localhost:2181 --topic my-topic-name --replica-assignment 0:1,1:2,2:0 --partitions 3
-   //意思是：my-topic-name有3个partition，partition0的首选副本是Broker1，partition1首选副本是Broker2，partition2的首选副本是Broker0
-   ```
+```shell
+bin/kafka-topics.sh --zookeeper localhost:2181 --topic my-topic-name --replica-assignment 0:1,1:2,2:0 --partitions 3
+//意思是：my-topic-name有3个partition，partition0的首选副本是Broker1，partition1首选副本是Broker2，partition2的首选副本是Broker0
+```
 
 3. 不干净副本选举策略（Unclean Leader Election）：在某些情况下，ISR 选举策略可能会失败，例如当所有 ISR 副本都不可用时。在这种情况下，可以使用 Unclean Leader 选举策略。Unclean Leader 选举策略会从所有副本中（包含OSR集合）选择一个副本作为新的 Leader 副本，即使这个副本与当前 Leader 副本不同步。这种选举策略可能会导致数据丢失，因此只应在紧急情况下使用。
    修改下面的配置，可以开启 Unclean Leader 选举策略，默认关闭。
 
-   ```shell
-   unclean.leader.election.enable=true
-   ```
+```shell
+unclean.leader.election.enable=true
+```
 
    
 

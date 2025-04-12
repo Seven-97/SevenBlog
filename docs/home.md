@@ -1,6 +1,7 @@
 ---
 icon: creative
 title: 打怪升级大目录
+article: false
 head:
   - - meta
     - name: keywords
@@ -143,6 +144,8 @@ head:
 - [Redis连接数调整](https://www.seven97.top/database/redis/06-tuning1-connectionnumberadjustment.html)
 - [Redis中的常见延迟问题](https://www.seven97.top/database/redis/06-tuning2-commonlatencyissues.html)
 - [Redis的内存碎片问题](https://www.seven97.top/database/redis/06-tuning3-memoryfragmentationissue.html)
+- [Redis实现高并发场景下的计数器设计](https://www.seven97.top/database/redis/07-practice-addone)
+- [Redis实现分页+多条件模糊查询组合方案](07-practice-redis-pagination-multi-condition-fuzzy-query)
 
 ## 常用框架
 
@@ -397,7 +400,6 @@ head:
 ### 编程实践
 - [支付技术流程](https://www.seven97.top/system-design/best-practices/paymenttechnology.html)
 - [Lombok注解引发的空指针问题分析](https://www.seven97.top/system-design/best-practices/lombok-nullpointerproblem.html)
-- [Redis实现分页+多条件模糊查询组合方案](https://www.seven97.top/system-design/best-practices/redis-pagination-multi-condition-fuzzy-query.html)
 
 
 

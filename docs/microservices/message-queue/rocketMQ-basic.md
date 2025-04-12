@@ -1903,7 +1903,7 @@ java -jar rocketmq-console-ng-1.0.0.jar
 
 * 消息发送者步骤分析r
 
-```tex
+```text
 1.创建消息生产者producer，并制定生产者组名
 2.指定Nameserver地址
 3.启动producer
@@ -1914,7 +1914,7 @@ java -jar rocketmq-console-ng-1.0.0.jar
 
 * 消息消费者步骤分析
 
-```tex
+```text
 1.创建消费者Consumer，制定消费者组名
 2.指定Nameserver地址
 3.订阅主题Topic和Tag
@@ -2443,7 +2443,7 @@ consumer.subscribe("TOPIC", "TAGA || TAGB || TAGC");
 
 消费者将接收包含TAGA或TAGB或TAGC的消息。但是限制是一个消息只能有一个标签，这对于复杂的场景可能不起作用。在这种情况下，可以使用SQL表达式筛选消息。SQL特性可以通过发送消息时的属性来进行计算。在RocketMQ定义的语法下，可以实现一些简单的逻辑。下面是一个例子：
 
-```te
+```text
 ------------
 | message  |
 |----------|  a > 5 AND b = 'abc'
