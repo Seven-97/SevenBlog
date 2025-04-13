@@ -1656,8 +1656,7 @@ public class AppConfig {
 1. 初始化资源：可以在 Bean 初始化后自动启动一些资源，如数据库连接、文件读取等。
 
 ```java
-public class NormalBeanA implements InitializingBean{
-    @Overrideimport org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
 @Component
