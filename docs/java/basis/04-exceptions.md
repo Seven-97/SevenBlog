@@ -645,9 +645,18 @@ public class ExceptionTest {
 
 建立一个异常对象，是建立一个普通Object耗时的约20倍（实际上差距会比这个数字更大一些，因为循环也占用了时间，追求精确的读者可以再测一下空循环的耗时然后在对比前减掉这部分），而抛出、接住一个异常对象，所花费时间大约是建立异常对象的4倍。
 
-为什么耗时？待更新，参考https://blog.csdn.net/zhangyiqian/article/details/83980484
+为什么耗时？参考https://blog.csdn.net/zhangyiqian/article/details/83980484
 
- 
+### JVM 的 Fast Throw 优化
+
+总的来说，异常处理对 **CPU 和存储**都有影响
+- CPU：每次抛出异常时，JVM 需要生成完整的堆栈跟踪（stack trace），需遍历线程栈帧、获取方法名、类名、行号等信息，消耗 CPU 资源
+- 异常对象本身和堆栈信息会占用堆内存，大量异常可能导致频繁 GC，甚至触发OOM
+
+当然，JVM对大量相同异常也是有优化的，当同一异常在相同位置多次抛出（约数千次），JVM 会跳过堆栈生成逻辑，直接复用预分配的“空堆栈异常对象”。这种情况造成的副作用就是  高频异常的堆栈信息被隐去，日志中仅显示 `NullPointerException` 等基础信息，也就无法定位具体出现异常的代码行。这个就是JVM 的 Fast Throw 优化
+
+如果要禁用 Fast Throw 优化，则在 JVM 启动参数中添加 `-XX:-OmitStackTraceInFastThrow`，强制保留完整堆栈信息
+
 
 ## try catch 应该在 for 循环里面还是外面？
 
