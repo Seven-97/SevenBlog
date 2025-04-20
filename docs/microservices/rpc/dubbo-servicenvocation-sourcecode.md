@@ -12,7 +12,7 @@ head:
     - name: description
       content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
-
+>本文图片全挂了，待更新
 ## 调用过程
 
 dubbo的服务调用方是在xml配置了类似于 <dubbo:reference interface="com.jwfy.dubbo.product.ProductService" id="productService" />的配置，意味着后续在spring中通过 getBean('productService') 就可以获取到远程代理对象。dubbo:reference 本身映射成为的bean是ReferenceBean，其会存储整个dubbo需要的各种信息，例如控制中心的注册地址，服务端的具体IO和端口等。
@@ -164,10 +164,6 @@ public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
 ```
 
 
-
- 
-
-![image.png](file:///C:/Users/HUAWEI%20MateBook%20Xpro/AppData/Local/Packages/oice_16_974fa576_32c1d314_38f6/AC/Temp/msohtmlclip1/01/clip_image004.jpg)
 
  
 
@@ -388,7 +384,7 @@ public void register(URL url) {
 
 如下图，在调用doRegister前后zk注册中心节点的情况，很明显已经注册成功
 
-![image.png](file:///C:/Users/HUAWEI%20MateBook%20Xpro/AppData/Local/Packages/oice_16_974fa576_32c1d314_38f6/AC/Temp/msohtmlclip1/01/clip_image006.jpg)
+
 
 ### 订阅服务
 

@@ -771,7 +771,7 @@ private void exportLocal(URL url) {
 }
 ```
 
-现在应该是来到了真正服务暴露的入口了，Exporter<?> exporter = protocol.export(proxyFactory.getInvoker(ref, (Class) interfaceClass, local));
+现在应该是来到了真正服务暴露的入口了，`Exporter<?> exporter = protocol.export(proxyFactory.getInvoker(ref, (Class) interfaceClass, local))`;
 
 ### protocol & proxyFactory
 
