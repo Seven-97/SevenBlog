@@ -105,7 +105,7 @@ System.out.println(Integer.parseInt("128") == Integer.valueOf(128));//4.true
 >
 > - 赋值操作（装箱或拆箱）
 >- 进行加减乘除混合运算 （拆箱）
-> - 进行>,<,>=,<=,==比较运算（拆箱）
+> - 进行>,<,>=,<=,== 比较运算（拆箱）
 >- 调用equals进行比较（装箱）
 > - ArrayList、HashMap等集合类添加基础类型数据时（装箱）
 
@@ -737,7 +737,7 @@ public String(char value[], int offset, int count) {
 
 
 
-### String, StringBuffer 和 StringBuilder
+### String, StringBuffer 和 StringBuilder的区别
 
 1. 可变性
 
@@ -768,7 +768,7 @@ public synchronized StringBuffer append(Object obj) {
 
 
 
-### 拼接字符串建议StringBuilder
+### 循环拼接字符串建议StringBuilder
 
 #### JDK 8下的字符串拼接实现
 
