@@ -52,7 +52,7 @@ System.out.println(list);
 
 ### 无限制类型擦除
 
-当在类的定义时没有进行任何限制，那么在类型擦除后将会被替换成Object，例如&lt;T&gt;、<?> 都会被替换成Object。
+当在类的定义时没有进行任何限制，那么在类型擦除后将会被替换成Object，例如`<T>`、`<?>` 都会被替换成Object。
 
  
 
@@ -60,7 +60,7 @@ System.out.println(list);
 
 当类定义中的参数类型存在上下限（上下界），那么在类型擦除后就会被替换成类型参数所定义的上界或者下界，
 
-- 例如<? extend Person>会被替换成Person，而<? super Person> 则会被替换成Object。
+- 例如`<? extend Person>`会被替换成Person，而`<? super Person>` 则会被替换成Object。
 
  
 
@@ -156,7 +156,7 @@ public static void main(String[] args) throws ClassNotFoundException {
 
 ### 为什么这样？
 
-原因是这样的，传入父类的泛型类型是Date，Pair&lt;Date&gt;，本意是将泛型类变为如下：
+原因是这样的，传入父类的泛型类型是Date，`Pair<Date>`，本意是将泛型类变为如下：
 
 ```java
 class Pair {  
