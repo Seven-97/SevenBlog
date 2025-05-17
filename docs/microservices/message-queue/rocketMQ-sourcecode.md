@@ -828,109 +828,109 @@ public RemotingCommand getRouteInfoByTopic(ChannelHandlerContext ctx,
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291956183.png)
 
-* ```java
+```java
   //创建主题
   void createTopic(final String key, final String newTopic, final int queueNum) throws MQClientException;
-  ```
+```
 
-* ```java
+```java
   //根据时间戳从队列中查找消息偏移量
   long searchOffset(final MessageQueue mq, final long timestamp)
   ```
 
-* ```java
+```java
   //查找消息队列中最大的偏移量
   long maxOffset(final MessageQueue mq) throws MQClientException;
   ```
 
-* ```java
+```java
   //查找消息队列中最小的偏移量
   long minOffset(final MessageQueue mq) 
   ```
 
-* ```java
+```java
   //根据偏移量查找消息
   MessageExt viewMessage(final String offsetMsgId) throws RemotingException, MQBrokerException,
           InterruptedException, MQClientException;
   ```
 
-* ```java
+```java
   //根据条件查找消息
   QueryResult queryMessage(final String topic, final String key, final int maxNum, final long begin,
           final long end) throws MQClientException, InterruptedException;
   ```
 
-* ```java
+```java
   //根据消息ID和主题查找消息
   MessageExt viewMessage(String topic,String msgId) throws RemotingException, MQBrokerException, InterruptedException, MQClientException;
   ```
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291956897.png)
 
-* ```java
+```java
   //启动
   void start() throws MQClientException;
   ```
 
-* ```java
+```java
   //关闭
   void shutdown();
   ```
 
-* ```java
+```java
   //查找该主题下所有消息
   List<MessageQueue> fetchPublishMessageQueues(final String topic) throws MQClientException;
   ```
 
-* ```java
+```java
   //同步发送消息
   SendResult send(final Message msg) throws MQClientException, RemotingException, MQBrokerException,
           InterruptedException;
   ```
 
-* ```java
+```java
   //同步超时发送消息
   SendResult send(final Message msg, final long timeout) throws MQClientException,
           RemotingException, MQBrokerException, InterruptedException;
   ```
 
-* ```java
+```java
   //异步发送消息
   void send(final Message msg, final SendCallback sendCallback) throws MQClientException,
           RemotingException, InterruptedException;
   ```
 
-* ```java
+```java
   //异步超时发送消息
   void send(final Message msg, final SendCallback sendCallback, final long timeout)
       throws MQClientException, RemotingException, InterruptedException;
   ```
 
-* ```java
+```java
   //发送单向消息
   void sendOneway(final Message msg) throws MQClientException, RemotingException,
       InterruptedException;
   ```
 
-* ```java
+```java
   //选择指定队列同步发送消息
   SendResult send(final Message msg, final MessageQueue mq) throws MQClientException,
       RemotingException, MQBrokerException, InterruptedException;
   ```
 
-* ```java
+```java
   //选择指定队列异步发送消息
   void send(final Message msg, final MessageQueue mq, final SendCallback sendCallback)
       throws MQClientException, RemotingException, InterruptedException;
   ```
 
-* ```java
+```java
   //选择指定队列单项发送消息
   void sendOneway(final Message msg, final MessageQueue mq) throws MQClientException,
       RemotingException, InterruptedException;
   ```
 
-* ```java
+```java
   //批量发送消息
   SendResult send(final Collection<Message> msgs) throws MQClientException, RemotingException, MQBrokerException,InterruptedException;
   ```

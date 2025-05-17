@@ -42,6 +42,6 @@ footer: |-
 
 ## 联系我
 
-最新更新会第一时间同步在公众号，推荐关注！微信搜索：seven97，联系我
+最新更新会第一时间同步在公众号，推荐关注！微信搜索：SevenCoding，联系我
 
 <!-- @include: @article-footer.snippet.md -->    
