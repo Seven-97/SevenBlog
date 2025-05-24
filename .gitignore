@@ -26,7 +26,7 @@ lintmd-config.json
 .nojekyll
 .prettierignore
 .gitattributes
-dist.zip
+dist*
 index.html
 package.json
 pnpm-lock.yaml
