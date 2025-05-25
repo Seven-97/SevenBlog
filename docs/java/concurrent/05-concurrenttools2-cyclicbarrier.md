@@ -27,7 +27,92 @@ head:
 
 这个屏障之所以用循环修饰，是因为在所有的线程释放彼此之后，这个屏障是可以重新使用的（reset()方法重置屏障点）。这一点与CountDownLatch不同。
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251539577.gif)
+### 基本概念
+
+- 屏障(Barrier)：一个线程在调用 await()方法时会被阻塞，直到所有参与的线程都到达屏障点。屏障点可以是一个特定的任务步骤。
+- 线程数量: cyclicBarrier 需要的线程数量是预设的，当所有线程都到达屏障时，屏障被释放，所有线程可以继续执行。
+- 重用性: cyclicBarrier 可以被重用，允许在多个阶段中同步线程。例如，在每个阶段的同步点上都可以使用 cyclicBarrier 。
+
+构造函数
+cyclicBarrier(int parties)：初始化一个 cyclicBarrier 对象，设置需要等待的线程数量
+cyclicBarrier(int parties,Runnable barrierAction):除了设置线程数量外，还可以指定一个 Runnable 回调，在所有线程到达屏障后执行。
+
+### 工作原理
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202505251601285.png)
+
+它实际上是基于 ReentrantLock 和 Condition 的封装来实现这一功能的。
+
+cyclicearier 内部维护了一个计数器，即达到屏障的线程数量，当线程调用 await 的时候计数器会减一，如果计数器减一不等于0的时候，线程会调用 condition.await 进行阻塞等待。
+
+如果计数器减一的值等于0，说明最后一个线程也到达了屏違，于是如果有 barrierAction就执行 barrierAction，然后调用condition.signalAl唤醒之前等待的线程，并且重置计数器，然后开启下一代，所以它可以循环使用。
+
+### 使用示例
+
+参数parties指让多少个线程或者任务等待至某个状态；参数barrierAction为当这些线程都达到某个状态时会执行的内容。
+
+```java
+public class CyclicBarrierTest {
+    // 请求的数量
+    private static final int threadCount = 10;
+    // 需要同步的线程数量
+    private static final CyclicBarrier cyclicBarrier = new CyclicBarrier(5);
+
+    public static void main(String[] args) throws InterruptedException {
+        // 创建线程池
+        ExecutorService threadPool = Executors.newFixedThreadPool(10);
+
+        for (int i = 0; i < threadCount; i++) {
+            final int threadNum = i;
+            Thread.sleep(1000);
+            threadPool.execute(() -> {
+                try {
+                    test(threadNum);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (BrokenBarrierException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            });
+        }
+        threadPool.shutdown();
+    }
+
+    public static void test(int threadnum) throws InterruptedException, BrokenBarrierException {
+        System.out.println("threadnum:" + threadnum + "is ready");
+        try {
+            /**等待60秒，保证子线程完全执行结束*/
+            cyclicBarrier.await(60, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            System.out.println("-----CyclicBarrierException------");
+        }
+        System.out.println("threadnum:" + threadnum + "is finish");
+    }
+
+}
+```
+
+运行结果如下，可以看出CyclicBarrier是可以重用的：
+
+```java
+threadnum:0is ready
+threadnum:1is ready
+threadnum:2is ready
+threadnum:3is ready
+threadnum:4is ready
+threadnum:4is finish
+threadnum:3is finish
+threadnum:2is finish
+threadnum:1is finish
+threadnum:0is finish
+threadnum:5is ready
+threadnum:6is ready
+...
+```
+
+当四个线程都到达barrier状态后，会从四个线程中选择一个线程去执行Runnable。
 
 ## CyclicBarrier源码分析
 
@@ -330,7 +415,7 @@ private void breakBarrier() {
 
 说明: 可以看到，此函数也调用了AQS的signalAll函数，由signal函数提供支持
 
-## CyclicBarrier示例
+## CyclicBarrier原理示例
 
 下面通过一个例子来详解CyclicBarrier的使用和内部工作机制，源代码如下
 

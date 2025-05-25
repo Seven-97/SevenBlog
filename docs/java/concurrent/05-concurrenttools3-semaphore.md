@@ -25,7 +25,102 @@ Semaphore类似于锁，它用于控制同时访问特定资源的线程数量�
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251545639.gif)
 
+
+
+```java
+public class SemaphoreDemo {
+    public static void main(String[] args) {
+        final int N = 7;
+        Semaphore s = new Semaphore(3);
+        for(int i = 0; i < N; i++) {
+            new Worker(s, i).start();
+        }
+    }
+
+    static class Worker extends Thread {
+        private Semaphore s;
+        private int num;
+        public Worker(Semaphore s, int num) {
+            this.s = s;
+            this.num = num;
+        }
+
+        @Override
+        public void run() {
+            try {
+                s.acquire();
+                System.out.println("worker" + num +  " using the machine");
+                Thread.sleep(1000);
+                System.out.println("worker" + num +  " finished the task");
+                s.release();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+运行结果如下，可以看出并非按照线程访问顺序获取资源的锁，即
+
+```java
+worker0 using the machine
+worker1 using the machine
+worker2 using the machine
+worker2 finished the task
+worker0 finished the task
+worker3 using the machine
+worker4 using the machine
+worker1 finished the task
+worker6 using the machine
+worker4 finished the task
+worker3 finished the task
+worker6 finished the task
+worker5 using the machine
+worker5 finished the task
+```
+
 **应用场景**：Semaphore可以用于做流量控制，特别是公共资源有限的应用场景，比如数据库连接。假如有一个需求要读取几万个文件的数据，因为都是IO密集型任务，可以启动几十个线程并发地读取，读到内存中后，还需要存储到数据库中，而数据库的连接数只有10个，那么就可以控制这几十个线程只有10个线程同时获取数据库连接来保存数据。这个时候，就可以使用Semaphore来做流量控制。
+
+### 基本概念
+- 许可(Permits)：表示可以访问资源的线程数量。semaphore 对象内部维护了一个许可计数器，线程在访问资源时需要获取许可，访问完成后需要释放许可。
+- 获取许可(Acquire)：线程通过acquire()方法尝试获取许可。如果没有足够的许可，线程将被阻塞直到有许可可用。
+- 释放许可(Release)：线程在完成对共享资源的访问后，通过 release()方法释放许可，使其他等待的线程可以获取许可。
+
+它支持公平与非公平策略:
+- 公平(Fair)：在公平模式下，线程按照请求许可的顺序获取许可，防止线程饥饿。但公平模式可能会导致性能下降。
+- 非公平(Unfair)：非公平模式下，线程不保证按照请求许可的顺序获取许可，可以提高性能，但可能会导致某些线程长时间无法获取许可,
+
+### 常见用法
+
+限制访问数量：例如，限制数据库连接池中最大连接数。
+```java
+Semaphore semaphore = new Semaphore(10);  // 允许最多10个线程访问
+semaphore.acquire();
+try {
+    // 访问共享资源
+} finally {
+    semaphore.release();
+}
+```
+
+控制并发执行：例如，限制同时执行的任务数量
+```java
+Semaphore semaphore = new Semaphore(5);  // 允许最多5个线程同时执行任务
+for (int i = 0; i < 10; i++) {
+    new Thread(() -> {
+        try {
+            semaphore.acquire();
+            // 执行任务
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            semaphore.release();
+        }
+    }).start();
+}
+```
+
 
 ## Semaphore源码分析
 
