@@ -42,3 +42,8 @@ tags:
   - [Navicat - 数据库管理客户端](https://www.navicat.com.cn/download/navicat-premium)
   - [MobaXterm - SSH客户端](https://mobaxterm.mobatek.net/)
   - [MQTTBox](http://workswithweb.com/mqttbox.html)：可用于测试 MQTT 的即时通讯功能
+
+
+- 开源项目推荐：
+	- [最大最全免费API列表](https://github.com/public-apis/public-apis)
+

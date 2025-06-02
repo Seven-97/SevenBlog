@@ -26,6 +26,7 @@ lintmd-config.json
 .nojekyll
 .prettierignore
 .gitattributes
+.idea
 dist*
 index.html
 package.json
