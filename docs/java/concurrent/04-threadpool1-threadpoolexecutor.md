@@ -311,7 +311,7 @@ new RejectedExecutionHandler() {
 
 #### execute()执行流程图
 
- ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251118470.png)
+ ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202506071547349.png)
 
 
 
@@ -1069,13 +1069,13 @@ private void interruptWorkers() {
 一般来说，线程池的优雅关闭需要结合 `shutdown()` 和 `awaitTermination()` 的正确使用，二者作用不同但需配合使用
 
 `shutdown()` 的作用与局限：​
-- ​**功能**​： 调用 `shutdown()` 会将线程池状态设为 `SHUTDOWN`，不再接受新任务，但已提交的任务（包括正在执行和队列中的任务）会继续执行直到完成
-- ​**局限**​： `shutdown()` ​**不会阻塞当前线程**，主线程调用后会立即返回，无法直接确保所有任务已完成。例如：如果主线程在调用 `shutdown()` 后直接退出，可能导致程序终止时仍有任务未完成
+- **功能**​： 调用 `shutdown()` 会将线程池状态设为 `SHUTDOWN`，不再接受新任务，但已提交的任务（包括正在执行和队列中的任务）会继续执行直到完成
+- **局限**​： `shutdown()` ​**不会阻塞当前线程**，主线程调用后会立即返回，无法直接确保所有任务已完成。例如：如果主线程在调用 `shutdown()` 后直接退出，可能导致程序终止时仍有任务未完成
 
 
 `awaitTermination()` 的作用与必要性：​
-- ​**功能**​： `awaitTermination(timeout, unit)` 会阻塞当前线程，等待线程池中的任务完成或超时。返回 `true` 表示所有任务已完成，`false` 表示超时仍有任务未完成
-- ​**必要性**​： 单独使用 `shutdown()` 无法保证任务完成，必须通过 `awaitTermination()` 的阻塞等待机制来确保任务执行完毕。
+- **功能**​： `awaitTermination(timeout, unit)` 会阻塞当前线程，等待线程池中的任务完成或超时。返回 `true` 表示所有任务已完成，`false` 表示超时仍有任务未完成
+- **必要性**​： 单独使用 `shutdown()` 无法保证任务完成，必须通过 `awaitTermination()` 的阻塞等待机制来确保任务执行完毕。
 
 ```java
 executor.shutdown();
@@ -1085,14 +1085,14 @@ if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
 ```
 
 为什么不能直接依赖 `shutdown()` 确保任务完成？​​
-- ​**异步性**​： `shutdown()` 仅触发关闭流程，但主线程不会等待任务完成。若后续代码依赖任务结果，必须通过 `awaitTermination()` 或类似机制同步等待
-- ​**潜在风险**​： 若任务执行时间过长或死锁，仅调用 `shutdown()` 会导致线程池无法关闭，资源无法释放
+- **异步性**​： `shutdown()` 仅触发关闭流程，但主线程不会等待任务完成。若后续代码依赖任务结果，必须通过 `awaitTermination()` 或类似机制同步等待
+- **潜在风险**​： 若任务执行时间过长或死锁，仅调用 `shutdown()` 会导致线程池无法关闭，资源无法释放
 
 优雅关闭的最佳实践​
-1. ​调用 `shutdown()`​：停止接收新任务，允许已提交任务继续执行
-2. ​**使用 `awaitTermination()` 等待**​：设置合理超时时间（如 5-30 秒），等待任务自然完成
-3. ​**超时后强制关闭**​：若超时仍未完成，调用 `shutdownNow()` 中断任务并返回未执行任务列表
-4. ​**处理中断异常**​：在任务代码中响应 `InterruptedException`，确保中断信号能被正确处理
+1. 调用 `shutdown()`​：停止接收新任务，允许已提交任务继续执行
+2. **使用 `awaitTermination()` 等待**​：设置合理超时时间（如 5-30 秒），等待任务自然完成
+3. **超时后强制关闭**​：若超时仍未完成，调用 `shutdownNow()` 中断任务并返回未执行任务列表
+4. **处理中断异常**​：在任务代码中响应 `InterruptedException`，确保中断信号能被正确处理
 
 
 

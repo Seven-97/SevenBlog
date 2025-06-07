@@ -306,7 +306,7 @@ ReWOO 架构主要包括三个部分：
 - Worker接收Task List，循环执行完成task；
 - Woker将所有任务的执行结果同步给Solver，Solver将所有的计划和执行结果整合起来，形成最终的答案输出给用户。
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202506022031009.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202506071607669.jpg)
 
 详细对比一下ReAct和REWOO，如下图所示。
 
@@ -314,7 +314,7 @@ ReWOO 架构主要包括三个部分：
 
 右侧ReWOO的方法，计划器Planner把任务进行分解，分解的依据是它们内部哪些用同类Tool，就把它分成同一类。在最开始，依旧是User输入Task，模型把上下文Context和Examplar进行输入。这里与先前有所不同的是，输入到Planner中，进行分解，然后调用各自的工具Tool。在得到了所有的Tool的输出后，生成计划结果Plan和线索，放到Solver进行总结，然后生成回答。这个过程只调用了两次LLM。
 
-
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202506071609740.jpg)
 
 
 
