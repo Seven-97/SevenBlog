@@ -3,7 +3,7 @@ home: true
 icon: home
 title: 主页
 heroImage: /logo.svg
-heroText: Seven
+heroText: SevenCoding
 article: false
 tagline: 记录Seven的菜鸟成长之路
 actions:
