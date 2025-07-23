@@ -3,7 +3,7 @@ home: true
 icon: home
 title: 主页
 heroImage: /logo.svg
-heroText: SevenCoding
+heroText: 程序员Seven
 article: false
 tagline: 记录Seven的菜鸟成长之路
 actions:
@@ -21,7 +21,7 @@ footer: |-
 
 ## 关于作者
 
-我是Seven，一名Java爱好者，技术一般，经历平平，但是也一直渴望进步，为了人生不留遗憾，希望能够一直做着自己喜欢的事情。
+我是程序员Seven，一名Java爱好者，技术一般，经历平平，但是也一直渴望进步，为了人生不留遗憾，希望能够一直做着自己喜欢的事情。
 
 普通学校出身，自学Java，秋招斩获 10+ offer，目前于北京某互联网厂从事一线开发。
 

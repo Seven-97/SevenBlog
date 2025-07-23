@@ -322,7 +322,7 @@ zset 结构体里有两个数据结构：一个是跳表，一个是哈希表。
 ### 排行榜
 
 五篇博文，分别获得赞为 200、40、100、50、150。
-```
+```c
 # arcticle:1 文章获得了200个赞
 > ZADD user:seven:ranking 200 arcticle:1
 (integer) 1
@@ -450,7 +450,6 @@ SETBIT uid:sign:100:202304 2 1
 
 # 统计这个月首次打卡时间；BITPOS key bitValue [start] [end]，start end 表示要检测的范围
 BITPOS uid:sign:100:202206 1
-
 ```
 
 ### 判断用户登陆状态
