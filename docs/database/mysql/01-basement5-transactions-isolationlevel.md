@@ -68,7 +68,7 @@ head:
 ### InnoDB可重复读可以尽量避免幻读
 MySQL InnoDB 引擎的默认隔离级别虽然是可重复读，但是它很大程度上避免幻读现象（但并不是完全解决了），解决的方案有两种：
 1. 针对快照读（普通 select 语句），是通过 MVCC 方式解决了幻读，因为可重复读隔离级别下，事务执行过程中看到的数据，一直跟这个事务启动时看到的数据是一致的，即使中途有其他事务插入了一条数据，是查询不出来这条数据的，所以就很好了避免幻读问题。
-3. 针对当前读（select ... for update 等语句），是通过 next-key lock（记录锁+间隙锁）（详情请看[Mysql的锁](https://www.seven97.top/blog/54 "Mysql的锁")）方式解决了幻读，因为当执行 select ... for update 语句的时候，会加上 next-key lock，如果有其他事务在 next-key lock 锁范围内插入了一条记录，那么这个**插入语句就会被阻塞**，无法成功插入，所以就很好了避免幻读问题。
+2. 针对当前读（select ... for update 等语句），是通过 next-key lock（记录锁+间隙锁）（详情请看[Mysql的锁](https://www.seven97.top/database/mysql/02-lock2-howtoaddrowlocks.html)）方式解决了幻读，因为当执行 select ... for update 语句的时候，会加上 next-key lock，如果有其他事务在 next-key lock 锁范围内插入了一条记录，那么这个**插入语句就会被阻塞**，无法成功插入，所以就很好了避免幻读问题。
 
 > 快照读：普通的查询select就是快照读。  
 >

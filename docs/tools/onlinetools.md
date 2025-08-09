@@ -46,4 +46,5 @@ tags:
 
 - 开源项目推荐：
 	- [最大最全免费API列表](https://github.com/public-apis/public-apis)
+	- [Spring中文文档](https://www.spring-doc.cn/)
 
