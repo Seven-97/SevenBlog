@@ -67,10 +67,10 @@ Redis数据类型对应的底层数据结构
 OK
 #阅读量+1
 > INCR aritcle:readcount:1001
-(integer) 1
+(integer) 1  #返回的是最终incr后的值
 #阅读量+1
 > INCR aritcle:readcount:1001
-(integer) 2
+(integer) 2  #返回的是最终incr后的值
 ```
 
 [Redis实现高并发场景下的计数器设计](https://www.seven97.top/database/redis/07-practice-addone)
@@ -203,6 +203,10 @@ SET lock_key unique_value NX PX 10000
 # uid:1 用户对文章 article:1 点赞
 > SADD article:1 uid:1
 (integer) 1
+# 第二次使用同一个value：uid:1 用户对文章 article:1 点赞。返回的是0
+> SADD article:1 uid:1
+(integer) 0
+
 # uid:2 用户对文章 article:1 点赞
 > SADD article:1 uid:2
 (integer) 1
@@ -221,7 +225,7 @@ SET lock_key unique_value NX PX 10000
 
 # 获取 article:1 文章的点赞用户数量：
 > SCARD article:1
-(integer) 2
+(integer) 2  #不重复value数量
 ```
 
 ### 共同关注

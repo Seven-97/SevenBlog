@@ -374,6 +374,100 @@ Thu Jul 24 10:08:46 CST 2014
 ```
 
 
+## tail命令 - 查看文件尾部内容
+
+tail命令的功能是查看文件尾部内容，例如默认会在终端界面上显示指定文件的末尾10行，如果指定了多个文件，则会在显示的每个文件内容前面加上文件名来加以区分。高阶玩法的-f参数的作用是持续显示文件的尾部最新内容，类似于机场候机厅的大屏幕，总会把最新的消息展示给用户，对阅读日志文件尤为适合，再也不需要手动刷新了。 
+
+
+
+### 语法格式
+
+```shell
+tail [参数] [文件]  
+```
+
+
+
+常用参数：
+
+- -f： 循环读取
+- -q ：不显示处理信息
+- -v ：显示详细的处理信息
+- -c<数目> ：显示的字节数
+- -n<行数> ：显示文件的尾部 n 行内容
+- --pid=PID ：与-f合用,表示在进程ID,PID死掉之后结束
+- -q, --quiet, --silent ：从不输出给出文件名的首部
+- -s, --sleep-interval=S ：与-f合用,表示在每次反复的间隔休眠S秒
+
+
+
+### 实例
+
+要显示 notes.log 文件的最后 10 行，请输入以下命令：
+
+```shell
+tail notes.log         # 默认显示最后 10 行
+```
+
+
+
+要跟踪名为 notes.log 的文件的增长情况，请输入以下命令：
+
+```shell
+tail -f notes.log
+```
+
+此命令显示 notes.log 文件的最后 10 行。当将某些行添加至 notes.log 文件时，tail 命令会继续显示这些行。 显示一直继续，直到您按下（Ctrl-C）组合键停止显示。
+
+
+
+显示文件 notes.log 的内容，从第 20 行至文件末尾:
+
+```shell
+tail -n +20 notes.log
+```
+
+
+
+显示文件 notes.log 的最后 10 个字符:
+
+```shell
+tail -c 10 notes.log
+```
+
+
+
+## rmdir命令 - 删除空目录文件
+
+rmdir命令来自英文词组remove directory的缩写，其功能是删除空目录文件。rmdir命令仅能删除空内容的目录文件，如需删除非空目录时，需要使用带有-R参数的rm命令进行操作。而rmdir命令的递归删除操作（-p参数使用）并不意味着能删除目录中已有的文件，而是要求每个子目录都必须是空的。 
+
+
+
+### 语法格式
+
+```shell
+rmdir [-p] dirName
+```
+
+- -p 是当子目录被删除后使它也成为空目录的话，则顺便一并删除。
+
+
+
+### 实例
+
+将工作目录下，名为 AAA 的子目录删除 :
+
+```shell
+rmdir AAA
+```
+
+
+
+在工作目录下的 BBB 目录中，删除名为 Test 的子目录。若 Test 删除后，BBB 目录成为空目录，则 BBB 亦予删除。
+
+```shell
+rmdir -p BBB/Test
+```
 
 ## grep命令 - 强大的文本搜索工具
 
@@ -521,104 +615,6 @@ testfile_1:THIS IS A LINUX TESTFILE!
 testfile_2:HELLO LINUX!  
 testfile_2:Linux is a free unix-type opterating system.  
 ```
-
-
-
-## tail命令 - 查看文件尾部内容
-
-tail命令的功能是查看文件尾部内容，例如默认会在终端界面上显示指定文件的末尾10行，如果指定了多个文件，则会在显示的每个文件内容前面加上文件名来加以区分。高阶玩法的-f参数的作用是持续显示文件的尾部最新内容，类似于机场候机厅的大屏幕，总会把最新的消息展示给用户，对阅读日志文件尤为适合，再也不需要手动刷新了。 
-
-
-
-### 语法格式
-
-```shell
-tail [参数] [文件]  
-```
-
-
-
-常用参数：
-
-- -f： 循环读取
-- -q ：不显示处理信息
-- -v ：显示详细的处理信息
-- -c<数目> ：显示的字节数
-- -n<行数> ：显示文件的尾部 n 行内容
-- --pid=PID ：与-f合用,表示在进程ID,PID死掉之后结束
-- -q, --quiet, --silent ：从不输出给出文件名的首部
-- -s, --sleep-interval=S ：与-f合用,表示在每次反复的间隔休眠S秒
-
-
-
-### 实例
-
-要显示 notes.log 文件的最后 10 行，请输入以下命令：
-
-```shell
-tail notes.log         # 默认显示最后 10 行
-```
-
-
-
-要跟踪名为 notes.log 的文件的增长情况，请输入以下命令：
-
-```shell
-tail -f notes.log
-```
-
-此命令显示 notes.log 文件的最后 10 行。当将某些行添加至 notes.log 文件时，tail 命令会继续显示这些行。 显示一直继续，直到您按下（Ctrl-C）组合键停止显示。
-
-
-
-显示文件 notes.log 的内容，从第 20 行至文件末尾:
-
-```shell
-tail -n +20 notes.log
-```
-
-
-
-显示文件 notes.log 的最后 10 个字符:
-
-```shell
-tail -c 10 notes.log
-```
-
-
-
-## rmdir命令 - 删除空目录文件
-
-rmdir命令来自英文词组remove directory的缩写，其功能是删除空目录文件。rmdir命令仅能删除空内容的目录文件，如需删除非空目录时，需要使用带有-R参数的rm命令进行操作。而rmdir命令的递归删除操作（-p参数使用）并不意味着能删除目录中已有的文件，而是要求每个子目录都必须是空的。 
-
-
-
-### 语法格式
-
-```shell
-rmdir [-p] dirName
-```
-
-- -p 是当子目录被删除后使它也成为空目录的话，则顺便一并删除。
-
-
-
-### 实例
-
-将工作目录下，名为 AAA 的子目录删除 :
-
-```shell
-rmdir AAA
-```
-
-
-
-在工作目录下的 BBB 目录中，删除名为 Test 的子目录。若 Test 删除后，BBB 目录成为空目录，则 BBB 亦予删除。
-
-```shell
-rmdir -p BBB/Test
-```
-
 
 
 ## sed命令 - 批量编辑文本文件
@@ -1018,6 +1014,104 @@ weibo-
 
 sed 的 **-i** 选项可以直接修改文件内容，这功能非常有帮助！举例来说，如果你有一个 100 万行的文件，你要在第 100 行加某些文字，此时使用 vim 可能会疯掉！因为文件太大了！那怎办？就利用 sed 啊！透过 sed 直接修改/取代的功能，甚至不需要使用 vim 去修订！
 
+
+## awk命令 - 强大的文本分析工具
+
+awk命名源自于它的三大作者名字的首字母，分别是Alfred Aho、Brian Kernighan、Peter Weinberger。awk是一个强大的文本分析工具，相当于grep的查找和sed的编辑功能，根据分隔符对每行数据切片，切开的部分在进行各种分析处理，处理的数据可以来自标准输入、一个或多个文件，或其它命令的输出。常用作脚本使用
+
+### 语法格式
+
+```shell
+awk [options] 'BEGIN{ print "start" } ‘pattern{ commands }’ END{ print "end" }' file
+```
+
+BEGIN、END是AWK的关键字部，因此必须大写，属于可选部分。BEGIN命令快是处理每行数据之前执行的操作。END命令是处理完每行数据之后执行的操作，常用于打印输出统计结果等。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202508161245449.png)
+
+
+```shell
+awk [options] 'pattern{action}' {filenames}
+```
+
+- pattern：匹配模式，表示AWK在数据中查找的内容
+- action：找到匹配内容时所执行的一系列命令
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202508161246120.png)
+
+awk常用参数
+
+- -F：指定分隔符，默认使用空格进行分隔
+- -V：赋值一个用户定义变量
+
+awk命令中常用的内置变量
+
+- n：比如1 23，取第几列信息
+- NF：浏览记录的域的个数, 根据分隔符分割后的列数
+- $NF: 取最后一列
+- $(NF-n): 取倒数第几列
+- $0: 取所有列的信息
+- FILENAME：awk浏览的文件名
+- NR：行号
+- RS：行分隔符，默认是换行；
+- FS：列分隔符，默认是空格和制表符；
+- OFS：输出列分隔符，用于打印时分割字段，默认为空格
+- ORS：输出行分隔符，用于打印时分割记录，默认为换行符
+
+### 实例
+
+1. 打印第一列
+```shell
+awk -F ':' '{print $1}' /etc/passwd
+```
+
+2. 打印第二行的内容
+
+```shell
+awk -F ':' 'NR==2{print $0}' /etc/passwd
+```
+
+3. 打印第5行到第10行的第1列
+
+```shell
+awk -F: '{if(NR>=5 && NR<=10) print $1}' /etc/passwd
+```
+
+4. 指定多个分隔符
+
+```shell
+echo "abc:def/linux" | awk -F '[:/]' '{print $1","$2","$3}'
+```
+
+5. 统计passwd文件每行的行号、列数、行内容
+
+```shell
+awk -F ':' '{print "行号:" NR ",列数:" NF ",行内容:"$0}' /etc/passwd
+```
+
+6. 打印以mysql开头的行
+
+```shell
+awk '/^mysql/' /etc/passwd
+```
+
+7. 过滤IP
+
+```shell
+ifconfig | awk '/broadcast/{print}' | awk -F " " '{print $2}'
+```
+
+8. 打印字符串长度大于3的单词
+
+```shell
+echo "I am a teacher" |awk '{for(i=1;i<=NF;i++) if(length($i)>3) print $i}'
+```
+
+9. 以字符串`diffres:`作为字段分隔符(`-F`)，提取每行中该分隔符后的第二部分内容；对`awk`提取的内容按字典序升序排序，使相同内容相邻排列，为后续`uniq`去重做准备；对`uniq`的统计结果按数值（`-n`）降序（`-r`）排序，最终显示频率从高到低的结果
+
+```shell
+awk -F 'diffres:' '{print $2}' | sort | uniq -c | sort -nr
+```
 
 
 <!-- @include: @article-footer.snippet.md -->     
