@@ -133,7 +133,7 @@ tags:
 
 
 
-## 常见的 HTTP 请求类型
+## 常见的 HTTP 请求
 
 5 种常见的请求类型:
 
@@ -164,6 +164,40 @@ tags:
 @RequestMapping：可进行 GET、POST、PUT、DELETE 等请求方法；@GetMapping 是@RequestMapping 的GET请求方法的特例
 
 
+### @RequestHeader 注解
+
+@RequestHeader 注解用于提取 HTTP请求头中的值，并将其注入到控制器方法的参数中。例如访间 Accept、Content-Type、User-Agent 等请求头信息
+
+```java
+@GetMapping("/header-info")
+public String getHeaderInfo(@RequestHeader("User-Agent") String userAgent) {
+    // 使用 userAgent 进行业务处理
+    return "headerInfoView";
+}
+```
+
+### @CookieValue 注解
+
+@CookieValue 注解用于从 HTTP 请求的 Cookie 中提取值，并将其注入到控制器方法的参数中。
+
+```java
+@GetMapping("/cookie-info")
+public String getCookieInfo(@CookieValue("sessionId") String sessionId) {
+    // 使用 sessionId 进行业务处理
+    return "cookieInfoView";
+}
+```
+
+### @SessionAttribute 
+@SessionAttribute 是 Spring MVC中的注解，用于从当前 HTTP会话(Session)中获取属性值并将其绑定到控制器方法的参数上，而无需手动从 Httpsession 获取
+
+```java
+@GetMapping("/profile")
+public String getUserProfile(@SessionAttribute("loggedInUser") User user) {
+    return "User Profile: " + user.getName();
+}
+```
+在这个例子中，Spring 从会话中提取名为"loggedInUser”的属性值，并将其绑定到 user 对象中，传递给控制器方法。
 
 ## 前后端传值
 
@@ -199,6 +233,21 @@ public ResponseEntity signUp(@RequestBody @Valid UserRegisterRequest userRegiste
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407251044267.png)
 
 
+### @ResponseBody
+将控制器方法的返回结果直接写入 HTTP 响应体中。通常用于返回 JSON 或 XML 格式的数据，而不是视图页面。Spring 会将返回的 Java对象转换为 JSON 或 XML 格式，并写入响应体。
+
+```java
+@RestController
+public class UserController {
+
+    @GetMapping("/users/{id}")
+    @ResponseBody
+    public User getUser(@PathVariable Long id) {
+        // 模拟从数据库中获取用户数据
+        return new User(id, "mianshiya", 18);
+    }
+}
+```
 
 ## 读取配置信息
 
@@ -272,7 +321,7 @@ public class PersonController {
 
 
 
-## 验证请求参数(Path Variables 和 Request Parameters)
+### 验证请求参数(Path Variables 和 Request Parameters)
 
 要在类上加上 @Validated 注解，这个参数可以告诉 Spring 去校验方法参数。
 
