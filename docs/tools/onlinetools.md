@@ -13,7 +13,7 @@ tags:
     - [脚本之家工具集](https://tools.jb51.net/)
     - [文本字符串处理工具集](http://gv99.com/index.html)
 
-- 工具：
+- 开发者工具：
     - [变量命名神器CODELF](https://unbug.github.io/codelf/)
     - [JSON在线解析及格式化验证](https://www.json.cn/)
     - [Base64 编码/解码](https://www.jyshare.com/front-end/693/)
@@ -47,4 +47,10 @@ tags:
 - 开源项目推荐：
 	- [最大最全免费API列表](https://github.com/public-apis/public-apis)
 	- [Spring中文文档](https://www.spring-doc.cn/)
+
+
+Java工具：
+- Jeandle：JVM JIT 编译器。基于 OpenJDK Hotspot JVM 的全新 Just-In-Time（简称 JIT，即时）编译器，利用 LLVM 进行编译优化与代码生成，**将 LLVM 的性能优势和生态优势引入 JVM 中**。
+	- [JDK](https://github.com/jeandle/jeandle-jdk)
+	- [JVM](https://github.com/jeandle/jeandle-llvm)
 

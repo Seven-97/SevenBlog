@@ -779,7 +779,11 @@ chmod 771 file
 | `find path/ -type d -exec chmod a+x {} \;` | 允许所有用户浏览或通过目录path/                              |
 
 
+## 文件传输
 
+python -m SimpleHTTPServer 9088，这个命令可以快速启动一个简单的HTTP服务器，它会将当前目录作为根目录，并在指定的端口（在这个例子中是9088）上提供服务。
+
+scp命令：可以将文件传至对应服务器：scp agent.tar.gz sevencoding@www.seven97.top/home/seven:~/
 
 
 
