@@ -29,29 +29,59 @@ Redis数据类型对应的底层数据结构
 
 ### 常用命令
 
-- 存放键值：set key value [EX seconds] [PX milliseconds] [NX|XX]
+- set key value [EX seconds] [PX milliseconds] [NX|XX]：存放键值
+	- [EX seconds]：单位是秒
+	- [PX milliseconds]：单位是毫秒
+	-  [NX|XX] : 也可以直接使用setnx/setex命令
+	    - nx：如果key不存在则建立；如果key已存在则无返回值，不做任何动作
+	    - xx：如果key存在则修改其值
+- get key：获取指定key的字符串值
+	- 若key存在且为字符串类型，返回对应值
+	- 若key不存在或非字符串类型，返回`nil`
 
-  - [NX|XX] :
+可以对获取的值进行判断，是否为空(别的命令的获取值的方法都可以用这个)：
+```java
 
-    - nx：如果key不存在则建立
+private static final String NIL = "nil";
+private static final String NULL = "null";
+ /**
+ * 检查redis返回的结果是否是空数据
+ *
+ * @param result redis返回结果
+ * @return 是否是空
+ */
+public static boolean isRedisReturnEmpty(String result) {
+ return Strings.isNullOrEmpty(result)
+ || StringUtils.equalsIgnoreCase(NULL, result)
+ || StringUtils.equalsIgnoreCase(NIL, result);
+}
+```
 
-    - xx：如果key存在则修改其值，也可以直接使用setnx/setex命令
+- incr key：将key存储的整数值增加1（原子操作）
+	- 若key不存在，自动初始化为`0`后再执行操作
+	- 若值非整数，返回`ERR value is not an integer`错误
+	- 一次想递增N用incrby命令，如果是浮点型数据可以用incrbyfloat命令递增。
+	- 同样，递减使用decr、decrby命令。
+- mset key value [key value ...]：原子性设置多个key-value对（覆盖已存在值）。
+	- 始终返回`OK`
+	- 覆盖所有已存在的key，无视类型（如将列表类型覆盖为字符串）
+- mget key [key ...]：批量获取多个key的值（按输入顺序返回）。
+	- 返回值：列表（不存在的key返回`nil`）
 
-- 获取键值：get key
+> mget，mset 只有1次网络请求；使原子性的
+> 单机Redis下就是1个命令，集群中则可能键分布在不同的节点，导致拆分成多个请求(客户端仍视为一次调用)，因此集群模式下需确保所有key在同一哈希槽
 
-- 值递增/递减：incr key
-  - 如果字符串中的值是数字类型的，可以使用incr命令每次递增，不是数字类型则报错。
-  - 一次想递增N用incrby命令，如果是浮点型数据可以用incrbyfloat命令递增。
-  - 同样，递减使用decr、decrby命令。
-
-- 批量存放键值：mset key value [key value ...]
-
-- 批量获取键值：mget key [key ...]
-- 获取值长度：strlen key
-- 追加内容：append key value
-- 获取部分字符：getrange key start end
-
-
+- strlen key：获取key存储的字符串值的字节长度
+	- 返回值：字符串长度（如中文UTF-8占3字节）
+	- key不存在时返回0
+- append key value：向key的字符串值末尾追加内容
+	- 返回值：追加后的字符串总长度
+	- key不存在时自动创建（等效`SET`）
+- getrange key start end：截取字符串的子串（闭区间，支持负数索引）
+	- 返回值：子字符串（包括`start`和`end`位置的字符）
+	- 负数索引表示从末尾倒数（如`-1`为最后一个字符）
+	- 超出范围自动截断
+	- key不存在则返回空
 
 ### 缓存对象
 使用 String 来缓存对象有两种方式：
@@ -67,13 +97,13 @@ Redis数据类型对应的底层数据结构
 OK
 #阅读量+1
 > INCR aritcle:readcount:1001
-(integer) 1  #返回的是最终incr后的值
+1 
 #阅读量+1
 > INCR aritcle:readcount:1001
-(integer) 2  #返回的是最终incr后的值
+2 
 ```
 
-[Redis实现高并发场景下的计数器设计](https://www.seven97.top/database/redis/07-practice-addone)
+[Redis实现高并发场景下的计数器设计](https://www.seven97.top/database/redis/07-practice-addone.html)
 
 ### [分布式锁](https://www.seven97.top/database/redis/05-implementdistributedlocks.html)
 
@@ -112,22 +142,38 @@ SET lock_key unique_value NX PX 10000
 ### 常用命令
 
 - 存储值：
-  - 左端存值：lpush key value [value ...]
-  - 右端存值：rpush key value [value ...]
-  - 索引存值：lset key index value
-
-- 弹出元素：
-  - 左端弹出：lpop key
-  - 右端弹出：rpop key
-
-- 获取元素个数：llen key
+	- lpush key value [value ...]：将一个或多个值插入到列表头部（左侧）
+		- 返回值：插入后列表的长度。若key不存在，自动创建空列表后执行操作
+		- 时间复杂度：O(N)，N为插入元素数量
+	- rpush key value [value ...]：将一个或多个值插入到列表尾部（右侧）
+		- 返回值：插入后列表的长度。若key不存在，自动创建空列表后执行操作
+		- 时间复杂度：O(N)，N为插入元素数量
+	- lset key index value：通过索引设置列表元素的值
+		- 返回值​：成功返回`OK`，索引超范围返回错误
+		- 索引从0开始，负数表示从末尾倒数（-1为最后一个元素）
+		- 时间复杂度：O(N)，首尾元素操作时为O(1)
 - 获取列表元素：
-  - 两边获取：lrange key start stop
-  - 索引获取：lindex key index
+	- lrange key start stop：获取列表中指定区间的元素（闭区间）
+		- 返回值​：元素列表。若key不存在返回空列表
+		- 支持负数索引（如`LRANGE mylist 0 -1`获取全部元素）。若stop超出范围自动截断到列表末尾
+	- lindex key index：通过索引获取单个元素
+		- 返回值：元素值。若索引无效，则返回`nil`
+		- 时间复杂度：O(N)，但对首尾元素操作时为O(1)
+- 弹出元素：
+	- lpop key：移除并返回列表头部（左侧）元素
+		- 返回值：被移除的元素值。若列表为空，则返回`nil`
+	- rpop key：移除并返回列表尾部（右侧）元素
+		- 返回值：被移除的元素值。若列表为空，则返回`nil`
+- llen key：获取元素个数
+	- 返回值​：列表长度。若key不存在时返回0
+	- 时间复杂度：O(1)
 - 删除元素：
-  - 根据值删除：lrem key count value
-  - 范围删除：ltrim key start stop
-
+	- lrem key count value：移除列表中与value匹配的元素，count表示删除的数量
+		- 返回值：实际移除的元素数量
+		- `count > 0`表示从头部开始移除count个匹配元素；`count < 0`表示从尾部开始移除|count|个匹配元素；`count = 0`表示移除所有匹配元素
+	- ltrim key start stop：修剪列表，只保留指定区间内的元素
+		- 返回值​：成功返回`OK`
+		- 若start > stop或key不存在，列表会被清空
 
 
 ### 消息队列
@@ -146,21 +192,38 @@ SET lock_key unique_value NX PX 10000
 ### 常用命令
 
 - 存放值：
-  - 单个：hset key field value
-  - 多个：hmset key field value [field value ...]
-  - 不存在时：hsetnx key field value
-
+  - hset key field value：设置哈希表中字段的值（若字段已存在则覆盖）。
+	  - 若字段是新建的，返回`1`；
+	  - 若字段已存在且值被覆盖，返回`0`；
+  - hmset key field value [field value ...]：批量设置哈希表中多个字段的值（覆盖已存在字段）。成功时返回`OK`
+  - hsetnx key field value：仅当字段不存在时设置值（原子性操作）。
+	  - 若字段新建成功，返回`1`；
+	  - 若字段已存在，返回`0`
 - 获取字段值：
-  - 单个：hget key field
-  - 多个：hmget key field [field ...]
-  - 获取所有键与值：hgetall key
-  - 获取所有字段：hkeys key
-  - 获取所有值：hvals key
-
-- 判断是否存在：hexists key field
-- 获取字段数量：hlen key
-- 递增/减：hincrby key field increment
-- 删除字段：hdel key field [field ...]
+  - hget key field：获取哈希表中单个字段的值。
+	  - 若字段存在，返回对应值（字符串类型）；
+	  - 若字段或键不存在，返回`nil`
+  - hmget key field [field ...]：批量获取哈希表中多个字段的值。
+	  - 返回顺序与请求字段顺序一致的列表；
+	  - 不存在的字段返回`nil`
+  - hgetall key：获取哈希表中所有字段和值（键值对交替排列）。
+	  - 返回包含所有字段和值的列表（如`["field1","val1","field2","val2"]`）；
+	  - 若键不存在或为空，返回空列表
+  - hkeys key：返回哈希表中所有字段名（field names）组成的列表。若哈希表不存在或为空，返回空列表；
+  - hvals key：返回哈希表中所有字段值（values）组成的列表。若哈希表不存在或为空，返回空列表；
+- hexists key field：判断是否存在。
+	- 若字段存在，则返回1
+	- 若字段不存在或键不存在，则返回0
+- hlen key：获取哈希表`key`中字段（field）的数量
+	- 返回字段数量，整数
+	- 若键不存在或哈希表为空，则返回0
+- hincrby key field increment：递增/减，将哈希表`key`中字段`field`的整数值增加`increment`（可为负数，负数就是递减）
+	- 操作后字段的新值（整数）
+	- 若字段不存在，则自动创建并初始化为`0`后再执行操作
+- hdel key field [field ...]：删除哈希表`key`中的一个或多个字段`field`
+	- 成功删除的字段field数量（不统计不存在的字段）
+	- 若删除后哈希表为空，键会自动删除，不存在的字段会被忽略
+	- 时间复杂度：O(N)，N为删除的字段数量
 
 
 
@@ -186,15 +249,27 @@ SET lock_key unique_value NX PX 10000
 
 ### 常用命令
 
-- 存储值：sadd key member [member ...]
-
-- 获取所有元素：smembers key
-- 随机获取：srandmember langs count
-- 判断是否存在某member：sismember key member
-- 获取集合中元素个数：scard key
-- 删除集合元素：srem key member [member ...]
-- 弹出元素：spop key [count]
-
+- sadd key member [member ...]：向集合中添加一个或多个成员元素
+	- 返回值​：成功添加的新成员数量（已存在的成员不计入）。若已存在，则返回0
+	- 若集合不存在，自动创建新集合
+	- 元素唯一性：重复添加同一元素会被忽略
+- smembers key：返回集合中所有成员（无序）
+	- 返回值​：成员列表。若集合为空或键不存在返回空列表
+	- 注意：大集合（如超过1万元素）慎用，可能阻塞Redis
+- srandmember key count：随机返回集合中一个或多个元素（不删除元素）
+	- 随机元素或列表（若count未指定则返回单个元素）
+	- `count>0`表示返回不重复的count个元素；`count<0`表示返回可能重复的abs(count)个元素
+- sismember key member：检查元素是否存在于集合中
+	- 返回值​：返回`1`表示元素存在；返回`0`表示元素不存在或集合不存在
+	- 时间复杂度：O(1)
+- scard key：获取集合的基数（元素数量）
+	- 返回值​：整数；若集合不存在时返回`0`
+- srem key member [member ...]：移除集合中一个或多个指定成员
+	- 返回值：实际移除的成员数量（忽略不存在的成员）
+- spop key [count]：随机移除并返回一个或多个成员
+	-  `count`可选，指定移除数量
+	- 返回值：被移除的元素或列表（集合为空时返回`nil`）
+	- 与SRANDMEMBER区别：SPOP会删除元素，SRANDMEMBER仅读取
 
 
 ### 点赞

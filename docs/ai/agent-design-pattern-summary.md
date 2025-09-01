@@ -1,3 +1,15 @@
+---
+title: Agent设计模式介绍
+category: AI
+tags:
+  - agent
+  - prompt
+head:
+  - - meta
+    - name: description
+      content: 全网最全的AI大模型知识点总结，让天下没有难学的八股文！
+---
+
 
 
 AI Agent有八种设计模式。对于这八种设计模式，整理了一张图，来阐明它们之间的关系。

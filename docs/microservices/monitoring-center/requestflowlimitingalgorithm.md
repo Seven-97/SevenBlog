@@ -2,7 +2,7 @@
 title: 深入理解请求限流算法的实现细节
 category: 微服务
 tags:
-  - 理论-算法
+  - 服务保护
 head:
   - - meta
     - name: keywords

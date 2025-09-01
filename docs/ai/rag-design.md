@@ -1,3 +1,19 @@
+---
+title: RAG设计模式介绍
+category: AI
+tags:
+  - agent
+  - prompt
+head:
+  - - meta
+    - name: description
+      content: 全网最全的AI大模型知识点总结，让天下没有难学的八股文！
+---
+
+
+
+
+
 前面，在讲述AI AGENT设计模式时，从最经典的ReAct模式开始，沿着规划路线介绍了REWOO、Plan&Execute和LLM Compiler，沿着反思路线介绍了Basic Reflection、Self Discover和Reflexion，并以最强大的设计模式LATS作为收尾。
 
 但是，所有的这些设计模式，都只是在告诉AI Agent应该如何规划和思考，且只能依赖于大模型既有的知识储备。而实际应用中，我们往往更希望AI Agent结合我们给定的知识和信息，在更专业的垂直领域内进行规划和思考。

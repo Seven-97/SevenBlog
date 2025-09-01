@@ -207,8 +207,6 @@ head:
 - [为什么Raft算法是分布式系统的首选？](https://www.seven97.top/microservices/protocol/raft-detail.html)
 - [解密ZAB协议：Zookeeper一致性的核心实现](https://www.seven97.top/microservices/protocol/zab-detail.html)
 - [一致性Hash算法：如何实现分布式系统中的高效数据分片？](https://www.seven97.top/microservices/protocol/consistencyhash.html)
-- [深入理解请求限流算法的实现细节](https://www.seven97.top/microservices/protocol/requestflowlimitingalgorithm.html)
-- [负载均衡算法：轮询、加权、Hash等算法的全面解析](https://www.seven97.top/microservices/protocol/loadbalance.html)
 - [幂等性：如何通过设计避免重复操作的影响？](https://www.seven97.top/microservices/protocol/idempotence.html)
 
 ### 分布式系统
@@ -258,6 +256,9 @@ head:
 ### 服务容灾
 
 - [服务保护概述](https://www.seven97.top/microservices/monitoring-center/serviceprotection-summary.html)
+- [深入理解请求限流算法的实现细节](https://www.seven97.top/microservices/monitoring-center/requestflowlimitingalgorithm.html)
+- [负载均衡算法：轮询、加权、Hash等算法的全面解析](https://www.seven97.top/microservices/monitoring-center/loadbalance.html)
+- [高并发场景下，一个好的熔断策略该怎么设计？](https://www.seven97.top/microservices/monitoring-center/fuse.html)
 - [Sentinel - 源码](https://www.seven97.top/microservices/monitoring-center/sentinel-sourcecode.html)
 
 ## 工具类库
@@ -329,7 +330,12 @@ head:
 - [领域驱动设计](https://www.seven97.top/architectural-ideas/DDD.html)
 
 ## 大数据框架
+
+### 理论&算法
 - [LSM树](https://www.seven97.top/bigdata/protocol/datastructure-LSMtree.html)
+
+### Hive
+- [group by 和 distinct的性能](https://www.seven97.top/bigdata/hive/distinct-groupby.html)
 
 ## 开发工具
 - [Maven入门，读完这篇就够了](https://www.seven97.top/tools/maven-detail.html)
