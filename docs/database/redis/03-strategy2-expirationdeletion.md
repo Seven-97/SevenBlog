@@ -32,10 +32,10 @@ Redis 可以对 key 设置过期时间的，为了防止过期的key长期占用
 
 ### 实现缓存续期
 
-- expire &lt;key> &lt;n>：设置 key 在 n 秒后过期，比如 expire key 100 表示设置 key 在 100 秒后过期；
-- pexpire &lt;key> &lt;n>：设置 key 在 n 毫秒后过期，比如 pexpire key2 100000 表示设置 key2 在 100000 毫秒（100 秒）后过期。
-- expireat &lt;key> &lt;n>：设置 key 在某个时间戳（精确到秒）之后过期，比如 expireat key3 1683187646 表示 key3 在时间戳 1683187646 后过期（精确到秒）；
-- pexpireat &lt;key> &lt;n>：设置 key 在某个时间戳（精确到毫秒）之后过期，比如 pexpireat key4 1683187660972 表示 key4 在时间戳 1683187660972 后过期（精确到毫秒）
+- `expire <key> <n>`：设置 key 在 n 秒后过期，比如 expire key 100 表示设置 key 在 100 秒后过期；
+- `pexpire <key> <n>`：设置 key 在 n 毫秒后过期，比如 pexpire key2 100000 表示设置 key2 在 100000 毫秒（100 秒）后过期。
+- `expireat <key> <n>`：设置 key 在某个时间戳（精确到秒）之后过期，比如 expireat key3 1683187646 表示 key3 在时间戳 1683187646 后过期（精确到秒）；
+- `pexpireat <key> <n>`：设置 key 在某个时间戳（精确到毫秒）之后过期，比如 pexpireat key4 1683187660972 表示 key4 在时间戳 1683187660972 后过期（精确到毫秒）
 
 对于上面说的用户token续期的诉求，可以这样来操作：
 
@@ -72,8 +72,8 @@ typedef struct redisDb {
 ```
 
 dict是hash表
-- *dict是键值对，指向的是数据库中保存的具体的key value对象，key是String类型，value是具体的数据类型
-- \*expires是过期字典，key与*dict中的key一致，value则是一个 long long 类型的整数，这个整数保存了 key 的过期时间；
+- \*dict是键值对，指向的是数据库中保存的具体的key value对象，key是String类型，value是具体的数据类型
+- \*expires是过期字典，key与\*dict中的key一致，value则是一个 long long 类型的整数，这个整数保存了 key 的过期时间；
 
 过期字典的数据结构如下图所示：
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270806221.png)
