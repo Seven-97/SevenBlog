@@ -201,6 +201,24 @@ public String getUserProfile(@SessionAttribute("loggedInUser") User user) {
 
 ## 前后端传值
 
+### 无注解传值
+
+| 传参方式           | 适用场景                                              | 请求示例 (假设服务端地址为 `/test`)                                                                             |
+| -------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| ​**URL 查询参数**​ | GET 请求，参数直接拼接在 URL 后                              | `http://seven97.top/test?message=你的消息内容`                                                            |
+| ​**表单 POST**​  | POST 请求，内容类型为 `application/x-www-form-urlencoded` | 使用 Postman 或 HTML form 发送 POST 请求，Body 选择 `x-www-form-urlencoded`并设置 key 为 `message`，value 为你的消息内容。 |
+
+
+```java
+@RequestMapping("/test")  
+@ResponseBody  
+public String testCheckTouchPoint(String message) {  
+    System.out.println(message);  
+    return "success";  
+}
+```
+
+
 ### @PathVariable 和 @RequestParam
 
 @PathVariable用于获取路径参数，@RequestParam用于获取查询参数。
