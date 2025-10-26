@@ -1,6 +1,6 @@
 ---
 title: Redis实现分页+多条件模糊查询组合方案
-category: Redis
+category: 数据库
 tag:
   - Redis
   - 缓存

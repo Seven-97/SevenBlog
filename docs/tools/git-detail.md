@@ -188,6 +188,8 @@ $ git remote set-url origin <your-git-url>
 $ git config --list
 ```
 
+#### 全局配置
+
 - 配置自己的名字
 
 ```bash
@@ -208,8 +210,20 @@ $ git config --global alias.logg "log --graph --decorate --abbrev-commit --all"
 # 之后就可以开心地使用 git log了
 ```
 
-​	
+git的全局配置一般会存在home目录的 `.gitconfig`文件。如 `/Users/spencer/.gitconfig`。
 
+#### 针对指定项目单独设置
+
+```
+# 进入自己项目的根目录
+cd [your_project_dir]
+
+# 设置用户名和邮箱
+git config user.name 'seven'
+git config user.email 'seven@example.com'
+```
+
+针对指定项目的配置会存在项目目录的 `.git/config`文件。如 `/Users/spencer/workspace/common_util/.git/config`。
 ### 切换分支
 
 > 新建仓库后，默认生成了master分支

@@ -1185,4 +1185,18 @@ UNCONN      0      0                                                      *:ntp 
 ```
 
 
+## shell命令快捷键
+
+删除：删除（具体可以说是剪切）的字符串可以 ctrl + y 进行粘贴
+
+- ctrl + u  ： 从光标处向前删除指令串
+- ctrl + k  ：  从光标处向后删除指令串
+
+
+移动
+
+- ctrl + a  ： 光标移动到整个指令串的最前面
+- ctrl + e  ： 光标移动到整个指令串的最后面
+
+
 <!-- @include: @article-footer.snippet.md -->     
