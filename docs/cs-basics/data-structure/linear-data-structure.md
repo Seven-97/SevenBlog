@@ -356,7 +356,201 @@ public class MyList<T> {
 
 如果我们不断往跳表中插⼊数据，可能出现某⼀段节点会特别多的情况，这个时候就需要动态更新索引，除了插⼊数据，还要插⼊到上⼀层的链表中，保证查询效率。redis 中使⽤了[跳表来实现zset](https://www.seven97.top/database/redis/02-basement1-datastructure.html#跳表) , redis 中使⽤⼀个随机算法来计算层级，计算出每个节点到底多少层索引，虽然不能绝对保证⽐较平衡，但是基本保证了效率，实现起来⽐那些平衡树，红⿊树的算法简单⼀点。
 
+在跳表中，每个节点包含以下几个组成部分：
 
+- 值（value）：节点存储的数据
+- 前进指针数组（forward array）：指向不同层级的后继节点
+- 层高（level）：该节点的最大层级
+
+跳表核心特性：
+1. 多层结构：由最底层的原始有序链表，以及若干层索引组成
+2. 概率平衡：通过随机函数决定节点的层数，无需复杂的平衡操作
+3. 快速查找：能够跳过大量节点，实现对数级别的查找效率
+4. 有序性：所有节点按关键字排序
+5. 空间换时间：使用额外的索引指针提高查询速度
+
+#### 基本操作
+
+- 查找（Search）：查找过程从最高层开始，沿着当前层前进，直到遇到大于或等于目标值的节点：
+	1. 如果找到目标值，返回该节点
+	2. 如果当前节点的下一个值大于目标值，则降至下一层继续查找
+	3. 如果到达最底层仍未找到，则目标值不存在
+
+- 插入（Insert）
+	1. 查找新值的插入位置，同时记录每一层的"插入点"
+	2. 随机生成新节点的层高
+	3. 从底层到该节点的最高层，逐层调整指针，将新节点插入到每层链表中
+
+- 删除（Delete）
+	1. 查找待删除节点的位置，同时记录每一层的前驱节点
+	2. 如果找到该节点，从该节点的最高层到底层，逐层调整前驱节点的指针，绕过待删除节点
+
+#### 基础实现
+
+```java
+import java.util.Random;
+
+public class SkipList<T extends Comparable<T>> {
+    private static final int MAX_LEVEL = 16; // 最大层数
+    private static final double P = 0.5;     // 提升层级的概率
+    private int level;                       // 当前跳表的最大层数
+    private final Node<T> header;            // 头节点
+    private final Random random;             // 用于随机层数的生成
+
+    // 节点定义
+    private static class Node<T extends Comparable<T>> {
+        T value;                  // 节点值
+        Node<T>[] forward;        // 前进指针数组
+
+        @SuppressWarnings("unchecked")
+        Node(T value, int level) {
+            this.value = value;
+            this.forward = new Node[level + 1];
+        }
+    }
+
+    // 构造函数
+    public SkipList() {
+        this.level = 0;
+        this.header = new Node<>(null, MAX_LEVEL);
+        this.random = new Random();
+    }
+
+    // 随机生成层数
+    private int randomLevel() {
+        int lvl = 0;
+        while (lvl < MAX_LEVEL && random.nextDouble() < P) {
+            lvl++;
+        }
+        return lvl;
+    }
+
+    // 查找操作
+    public Node<T> search(T value) {
+        Node<T> current = header;
+        
+        // 从最高层开始查找
+        for (int i = level; i >= 0; i--) {
+            // 在当前层向前移动，直到找到大于等于目标值的节点
+            while (current.forward[i] != null && 
+                   current.forward[i].value.compareTo(value) < 0) {
+                current = current.forward[i];
+            }
+        }
+        
+        // 现在我们在第0层，并且current是目标值的前一个节点
+        current = current.forward[0];
+        
+        // 检查是否找到目标值
+        if (current != null && current.value.compareTo(value) == 0) {
+            return current;
+        } else {
+            return null;
+        }
+    }
+
+    // 插入操作
+    public void insert(T value) {
+        @SuppressWarnings("unchecked")
+        Node<T>[] update = new Node[MAX_LEVEL + 1];
+        Node<T> current = header;
+
+        // 查找插入位置并记录每层的前驱节点
+        for (int i = level; i >= 0; i--) {
+            while (current.forward[i] != null && 
+                   current.forward[i].value.compareTo(value) < 0) {
+                current = current.forward[i];
+            }
+            update[i] = current;
+        }
+        
+        // 获取新节点的随机层数
+        int newLevel = randomLevel();
+        
+        // 如果新层数比当前跳表的最大层数大，更新跳表层数
+        if (newLevel > level) {
+            for (int i = level + 1; i <= newLevel; i++) {
+                update[i] = header;
+            }
+            level = newLevel;
+        }
+        
+        // 创建新节点
+        Node<T> newNode = new Node<>(value, newLevel);
+        
+        // 插入节点到各层链表中
+        for (int i = 0; i <= newLevel; i++) {
+            newNode.forward[i] = update[i].forward[i];
+            update[i].forward[i] = newNode;
+        }
+    }
+
+    // 删除操作
+    public void delete(T value) {
+        @SuppressWarnings("unchecked")
+        Node<T>[] update = new Node[MAX_LEVEL + 1];
+        Node<T> current = header;
+
+        // 查找删除位置并记录每层的前驱节点
+        for (int i = level; i >= 0; i--) {
+            while (current.forward[i] != null && 
+                   current.forward[i].value.compareTo(value) < 0) {
+                current = current.forward[i];
+            }
+            update[i] = current;
+        }
+        
+        current = current.forward[0];
+        
+        // 如果找到节点，进行删除
+        if (current != null && current.value.compareTo(value) == 0) {
+            for (int i = 0; i <= level; i++) {
+                // 如果当前层的前驱节点指向要删除的节点，则修改指针
+                if (update[i].forward[i] == current) {
+                    update[i].forward[i] = current.forward[i];
+                }
+            }
+            
+            // 更新跳表的最大层数
+            while (level > 0 && header.forward[level] == null) {
+                level--;
+            }
+        }
+    }
+
+    // 打印跳表内容（用于调试）
+    public void printSkipList() {
+        System.out.println("Skip List Structure:");
+        for (int i = level; i >= 0; i--) {
+            System.out.print("Level " + i + ": ");
+            Node<T> node = header.forward[i];
+            while (node != null) {
+                System.out.print(node.value + " ");
+                node = node.forward[i];
+            }
+            System.out.println();
+        }
+    }
+}
+
+// 跳表节点
+class SkipListNode {
+  constructor(value, level) {
+    this.value = value;
+    this.forward = new Array(level + 1).fill(null);
+  }
+}
+
+// 使用示例
+SkipList skipList = new SkipList();
+skipList.insert(3);
+skipList.insert(6);
+skipList.insert(7);
+console.log(skipList.search(6)); // true
+skipList.insert(9);
+skipList.delete(6);
+console.log(skipList.search(6)); // false
+```
 
 ## 栈
 
