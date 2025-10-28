@@ -103,6 +103,53 @@ p = $(1- (1 - 1/m)^{nk})^k ~ (1 - e^{- nk/m})^k$
 
 在删除商品 到 使用新的布隆过滤器B 之间的这段时间的不存在的查询有可能还会到数据库层面，但这种少量的不存在查询也是可以接受的。
 
+## 基础实现
+
+```java
+public class BloomFilter {
+    private BitSet bitSet;
+    private int bitSetSize;
+    private int numHashFunctions;
+    
+    public BloomFilter(int expectedInsertions, double falsePositiveProbability) {
+        // 计算最佳bit数组大小
+        this.bitSetSize = (int) Math.ceil(-(expectedInsertions * Math.log(falsePositiveProbability)) / (Math.log(2) * Math.log(2)));
+        
+        // 计算最佳哈希函数数量
+        this.numHashFunctions = (int) Math.ceil((bitSetSize / expectedInsertions) * Math.log(2));
+        
+        this.bitSet = new BitSet(bitSetSize);
+    }
+    
+    // 添加元素
+    public void add(String element) {
+        for (int i = 0; i < numHashFunctions; i++) {
+            int hash = getHash(element, i);
+            bitSet.set(hash);
+        }
+    }
+    
+    // 检查元素是否可能在集合中
+    public boolean mightContain(String element) {
+        for (int i = 0; i < numHashFunctions; i++) {
+            int hash = getHash(element, i);
+            if (!bitSet.get(hash)) {
+                return false; // 肯定不在集合中
+            }
+        }
+        return true; // 可能在集合中
+    }
+    
+    // 生成多个哈希值
+    private int getHash(String element, int index) {
+        int hash1 = element.hashCode();
+        int hash2 = hash1 >>> 16;
+        return Math.abs((hash1 + index * hash2) % bitSetSize);
+    }
+}
+```
+
+
 ## 应用布隆过滤器
 
 ### Redisson

@@ -90,6 +90,61 @@ hash算法最简单的做法就是进行取模运算，比如分布式系统中�
 
 并且，有了虚拟节点后，还可以为硬件配置更好的节点增加权重，比如对权重更高的节点增加更多的虚拟机节点即可。
 
+## 基础实现
+
+```java
+public class ConsistentHash {
+    private final int numberOfReplicas; // 虚拟节点数量
+    private final SortedMap<Integer, String> circle = new TreeMap<>();
+    
+    public ConsistentHash(int numberOfReplicas, Collection<String> nodes) {
+        this.numberOfReplicas = numberOfReplicas;
+        for (String node : nodes) {
+            addNode(node);
+        }
+    }
+    
+    // 添加节点
+    public void addNode(String node) {
+        for (int i = 0; i < numberOfReplicas; i++) {
+            String virtualNode = node + "#" + i;
+            int hash = getHash(virtualNode);
+            circle.put(hash, node);
+        }
+    }
+    
+    // 移除节点
+    public void removeNode(String node) {
+        for (int i = 0; i < numberOfReplicas; i++) {
+            String virtualNode = node + "#" + i;
+            int hash = getHash(virtualNode);
+            circle.remove(hash);
+        }
+    }
+    
+    // 获取数据应该存储的节点
+    public String getNode(String key) {
+        if (circle.isEmpty()) {
+            return null;
+        }
+        
+        int hash = getHash(key);
+        
+        // 如果没有大于等于该hash值的节点，则返回第一个节点
+        if (!circle.containsKey(hash)) {
+            SortedMap<Integer, String> tailMap = circle.tailMap(hash);
+            hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
+        }
+        
+        return circle.get(hash);
+    }
+    
+    // 哈希函数
+    private int getHash(String key) {
+        return Math.abs(key.hashCode()) % 359;
+    }
+}
+```
 ## 总结
 首先，hash算法可以用来解决分布式存储的问题，但如果节点数量发生变化，也将会发生大量的数据迁移。
 
