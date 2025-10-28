@@ -12,7 +12,7 @@ media/
 **/.vuepress/
 **/.obsidian/
 **/interview/
-**/algorithms/
+**/algorithms-navigation/
 **/about/
 # VuePress Output
 dist/
