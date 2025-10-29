@@ -2,6 +2,7 @@ node_modules/
 # *.drawio
 *.drawio.bkp
 .DS_Store
+
 # VS Code Config file
 .vscode/
 media/
@@ -11,11 +12,15 @@ media/
 # VuePress Cache
 **/.vuepress/
 **/.obsidian/
+
+# ignore
 **/interview/
-**/algorithms-navigation/
+**/algorithmsguide/
 **/about/
+
 # VuePress Output
 dist/
+
 # Build files
 packages/*/lib/
 traversal-folder-replace-string.py
