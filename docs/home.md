@@ -96,14 +96,14 @@ head:
 ### 版本新特性
 
 - [Java 8 新特性](https://www.seven97.top/java/new-features/java8.html)
-- [Java 9 新特性](https://www.seven97.top/java/new-features/java9.html)
-- [Java 10~13 新特性](https://www.seven97.top/java/new-features/java10-13.html)
-- [Java 14~15 新特性](https://www.seven97.top/java/new-features/java14-15.html)
-- [Java 16~18 新特性](https://www.seven97.top/java/new-features/java16-18.html)
-- [Java 19 新特性](https://www.seven97.top/java/new-features/java19.html)
+- [Java Java 9~10新特性](https://www.seven97.top/java/new-features/java9-10.html)
+- [Java 11 新特性](https://www.seven97.top/java/new-features/java11.html)
+- [Java 12~16新特性](https://www.seven97.top/java/new-features/java12-16.html)
+- [Java 17 新特性](https://www.seven97.top/java/new-features/java17.html)
+- [Java 18~20新特性](https://www.seven97.top/java/new-features/java18-20.html)
 - [Java 21 新特性](https://www.seven97.top/java/new-features/java21.html)
-- [Java 22~23 新特性](https://www.seven97.top/java/new-features/java22-23.html)
-- [Java 24 新特性](https://www.seven97.top/java/new-features/java24.html)
+- [Java 22~24新特性](https://www.seven97.top/java/new-features/java22-24.html)
+- [Java 25 新特性](https://www.seven97.top/java/new-features/java25.html)
 - [升级重要特性 - Java11升Java17](https://www.seven97.top/java/new-features/upgrade-java11tojava17.html)
 - [升级重要特性 - Java8升Java11](https://www.seven97.top/java/new-features/upgrade-java8tojava11.html)
 
@@ -291,12 +291,17 @@ head:
 - [图](https://www.seven97.top/cs-basics/data-structure/graph.html)
 - [位图](https://www.seven97.top/cs-basics/data-structure/bitmap.html)
 - [布隆过滤器](https://www.seven97.top/cs-basics/data-structure/bloomfilter.html)
-- [十大经典排序算法](https://www.seven97.top/cs-basics/data-structure/10-classical-sorting-algorithms.html)
+
 
 ### 算法
 
-- [回溯](https://www.seven97.top/cs-basics/algorithms/backtracking.html)
-- [贪心](https://www.seven97.top/cs-basics/algorithms/greedy.html)
+- [十大经典排序算法](https://www.seven97.top/cs-basics/algorithms/10-classical-sorting-algorithms.html)
+- [查找算法](https://www.seven97.top/cs-basics/algorithms/search.html)
+- [字符串匹配算法](https://www.seven97.top/cs-basics/algorithms/stringmatch.html)
+- [递归与分治](https://www.seven97.top/cs-basics/algorithms/recursion.html)
+- [图论](https://www.seven97.top/cs-basics/algorithms/graph.html)
+- [回溯算法](https://www.seven97.top/cs-basics/algorithms/backtracking.html)
+- [贪心算法](https://www.seven97.top/cs-basics/algorithms/greedy.html)
 - [动态规划](https://www.seven97.top/cs-basics/algorithms/dynamicprogramming.html)
 
 ### 计算机网络

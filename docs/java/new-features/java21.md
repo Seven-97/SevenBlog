@@ -14,15 +14,500 @@ head:
 
 
 
+21是继Java17之后，最新的LTS版本，于2023年9月发布
+
+
+## 正式特性
+
+### 虚拟线程
+
+该版本中虚拟线程称为了正式版，[Java 19](https://www.seven97.top/java/new-features/java18-20.html)中是预览版
+
+
+虚拟线程的实际应用
+
+```java
+public class VirtualThreadWebServer {  
+    public static void main(String[] args) throws IOException {  
+        // 创建虚拟线程执行器  
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {  
+            ServerSocket serverSocket = new ServerSocket(8080);  
+            System.out.println("服务器启动在端口 8080");  
+              
+            while (true) {  
+                Socket clientSocket = serverSocket.accept();  
+                  
+                // 为每个客户端连接创建虚拟线程  
+                executor.submit(() -> handleClient(clientSocket));  
+            }  
+        }  
+    }  
+      
+    private static void handleClient(Socket clientSocket) {  
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));  
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {  
+              
+            String inputLine;  
+            while ((inputLine = in.readLine()) != null) {  
+                // 模拟处理请求（可能涉及数据库查询等 I/O 操作）  
+                Thread.sleep(100); // 虚拟线程会自动让出  
+                out.println("Echo: " + inputLine);  
+            }  
+        } catch (Exception e) {  
+            e.printStackTrace();  
+        }  
+    }  
+}
+```
+
+
+虚拟线程与传统线程池的对比
+
+```java
+public class ThreadComparisonExample {  
+    public static void main(String[] args) throws InterruptedException {  
+        int taskCount = 100000;  
+          
+        // 传统线程池方式  
+        long start = System.currentTimeMillis();  
+        try (ExecutorService executor = Executors.newFixedThreadPool(200)) {  
+            CountDownLatch latch = new CountDownLatch(taskCount);  
+              
+            for (int i = 0; i < taskCount; i++) {  
+                executor.submit(() -> {  
+                    try {  
+                        // 模拟 I/O 操作  
+                        Thread.sleep(10);  
+                    } catch (InterruptedException e) {  
+                        Thread.currentThread().interrupt();  
+                    } finally {  
+                        latch.countDown();  
+                    }  
+                });  
+            }  
+            latch.await();  
+        }  
+        System.out.println("传统线程池耗时: " + (System.currentTimeMillis() - start) + "ms");  
+          
+        // 虚拟线程方式  
+        start = System.currentTimeMillis();  
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {  
+            CountDownLatch latch = new CountDownLatch(taskCount);  
+              
+            for (int i = 0; i < taskCount; i++) {  
+                executor.submit(() -> {  
+                    try {  
+                        Thread.sleep(10);  
+                    } catch (InterruptedException e) {  
+                        Thread.currentThread().interrupt();  
+                    } finally {  
+                        latch.countDown();  
+                    }  
+                });  
+            }  
+            latch.await();  
+        }  
+        System.out.println("虚拟线程耗时: " + (System.currentTimeMillis() - start) + "ms");  
+    }  
+}
+```
+
+
+### switch格式匹配
+
+Java 14 版本推出了 Switch 表达式，能够一行处理多个条件；Java 21 版本进一步优化了 Switch 的能力，新增了模式匹配特性，能够更轻松地根据对象的类型做不同的处理。
+
+之前的写法
+
+```java
+public class Test{
+    public static void main(String[] args) {
+        Integer i = 10;
+        String str = getObjInstance(i);
+        System.out.println(str);
+    }
+
+    public static String getObjInstance(Object obj) {
+        String objInstance = "";
+        if(obj == null){
+            objInstance = "空对象"
+        } else if (obj instanceof Integer i) {
+            objInstance = "Integer 对象：" + i;
+        } else if (obj instanceof Double d) {
+            objInstance = "Double 对象：" + d;
+        } else if (obj instanceof String s) {
+            objInstance = "String 对象：" + s;
+        }
+        return objInstance;
+    }
+
+}
+```
+
+
+新的写法，代码更加简洁
+
+```java
+public class Test{
+    public static void main(String[] args) {
+        Integer i = 10;
+        String str = getObjInstance(i);
+        System.out.println(str);
+    }
+
+    public static String getObjInstance(Object obj) {
+
+        return switch(obj){
+            case null -> "空对象";
+            case Integer i -> "Integer 对象：" + i;
+            case Double d -> "Double对象：" + d;
+            case String s -> "String对象：" + s;
+            default -> obj.toString();
+        };
+    }
+
+}
+```
+
+
+可以在switch中使用when
+
+```java
+public class Test{
+    public static void main(String[] args) {
+        yesOrNo("yes");
+    }
+
+    public static void yesOrNo(String obj) {
+
+        switch(obj){
+            case null -> {System.out.println("空对象");}
+            case String s
+                when s.equalsIgnoreCase("yes") -> {
+                System.out.println("确定");
+            }
+            case String s
+                when s.equalsIgnoreCase("no") -> {
+                System.out.println("取消");
+            }
+                //最后的case要写，否则编译回报错
+            case String s -> {
+                System.out.println("请输入yes或no");
+            }
+
+        };
+
+    }
+
+}
+```
+
+
+模式匹配的高级用法
+
+```java
+public class AdvancedPatternMatching {  
+    // 定义一些数据类型  
+    public sealed interface Expression permits Constant, BinaryOp {}  
+    public record Constant(int value) implements Expression {}  
+    public record BinaryOp(String operator, Expression left, Expression right) implements Expression {}  
+      
+    // 使用模式匹配计算表达式  
+    public int evaluate(Expression expr) {  
+        return switch (expr) {  
+            case Constant(var value) -> value;  
+            case BinaryOp("+", var left, var right) -> evaluate(left) + evaluate(right);  
+            case BinaryOp("-", var left, var right) -> evaluate(left) - evaluate(right);  
+            case BinaryOp("*", var left, var right) -> evaluate(left) * evaluate(right);  
+            case BinaryOp("/", var left, var right) -> evaluate(left) / evaluate(right);  
+            case BinaryOp(var op, var left, var right) ->   
+                throw new UnsupportedOperationException("不支持的操作符: " + op);  
+        };  
+    }  
+      
+    // 处理复杂的数据结构  
+    public String processData(Object data) {  
+        return switch (data) {  
+            case null -> "空数据";  
+            case String s when s.isEmpty() -> "空字符串";  
+            case String s when s.length() == 1 -> "单字符: " + s;  
+            case String s -> "字符串: " + s;  
+            case Integer i when i == 0 -> "零";  
+            case Integer i when i > 0 -> "正整数: " + i;  
+            case Integer i -> "负整数: " + i;  
+            case List<?> list when list.isEmpty() -> "空列表";  
+            case List<?> list when list.size() == 1 -> "单元素列表: " + list.get(0);  
+            case List<?> list -> "列表，大小: " + list.size();  
+            default -> "未知类型";  
+        };  
+    }  
+}
+```
+
+
+### record pattern
+
+Java14引入的新特性。通过该特性可以解构record类型中的值，例如
+
+```java
+public class Test{
+    public static void main(String[] args) {
+        Student s = new Student(10, "jordan");
+        printSum(s);
+    }
+
+    static void printSum(Object obj) {
+        //这里的Student(int a, String b)就是 record pattern
+        if (obj instanceof Student(int a, String b)) {
+            System.out.println("id:" + a);
+            System.out.println("name:" + b);
+        }
+    }
+
+}
+record Student(int id, String name) {}
+```
+
+或者
+
+```java
+public record Person(String name, int age) {}  
+public record Address(String city, String street) {}  
+public record Employee(Person person, Address address, double salary) {}
+
+//使用 Record 模式可以直接解构这些数据，不用一层一层取了
+public String analyzeEmployee(Employee emp) {  
+    return switch (emp) {  
+        // 一次性提取所有需要的信息  
+        case Employee(Person(var name, var age), Address(var city, var street), var salary)   
+            when salary > 50000 ->   
+            String.format("%s（%d岁）是高薪员工，住在%s%s，月薪%.0f",   
+                         name, age, city, street, salary);  
+        case Employee(Person(var name, var age), var address, var salary) ->   
+            String.format("%s（%d岁）月薪%.0f，住在%s",   
+                         name, age, salary, address.city());  
+    };  
+}
+```
+
+这种写法适合追求极致简洁代码的程序员，可以在一行代码中同时完成 类型检查、数据提取 和 条件判断。
+
+Record 模式的实际应用
+```java
+public class RecordPatternExample {  
+    // 定义 HTTP 响应的数据结构  
+    public sealed interface HttpResponse permits Success, Error, Redirect {}  
+    public record Success(int code, String body, Map<String, String> headers) implements HttpResponse {}  
+    public record Error(int code, String message) implements HttpResponse {}  
+    public record Redirect(int code, String location) implements HttpResponse {}  
+      
+    // 处理 HTTP 响应  
+    public void handleResponse(HttpResponse response) {  
+        switch (response) {  
+            case Success(var code, var body, var headers) when code == 200 -> {  
+                System.out.println("成功响应: " + body);  
+                if (headers.containsKey("Content-Type")) {  
+                    System.out.println("内容类型: " + headers.get("Content-Type"));  
+                }  
+            }  
+            case Success(var code, var body, var headers) -> {  
+                System.out.println("成功响应 " + code + ": " + body);  
+            }  
+            case Error(var code, var message) when code >= 500 -> {  
+                System.err.println("服务器错误 " + code + ": " + message);  
+            }  
+            case Error(var code, var message) -> {  
+                System.err.println("客户端错误 " + code + ": " + message);  
+            }  
+            case Redirect(var code, var location) -> {  
+                System.out.println("重定向 " + code + " -> " + location);  
+            }  
+        }  
+    }  
+      
+    // 解析嵌套的数据结构  
+    public void processOrder(Object order) {  
+        record Item(String name, double price, int quantity) {}  
+        record Customer(String name, String email) {}  
+        record Order(Customer customer, List<Item> items, double total) {}  
+          
+        switch (order) {  
+            case Order(Customer(var customerName, var email), var items, var total)   
+                when total > 1000 -> {  
+                System.out.println("大订单：客户 " + customerName + " (" + email + ")");  
+                System.out.println("订单总额：" + total);  
+                items.forEach(item -> System.out.println("- " + item.name() + " x" + item.quantity()));  
+            }  
+            case Order(Customer(var customerName, var email), var items, var total) -> {  
+                System.out.println("普通订单：客户 " + customerName);  
+                System.out.println("商品数量：" + items.size() + "，总额：" + total);  
+            }  
+            default -> System.out.println("无效订单");  
+        }  
+    }  
+}
+```
+
+### 有序集合
+
+在Java.util包下新增了3个接口
+
+1. SequencedCollection
+2. SequencedSet
+3. SequencedMap
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404252025824.png)
+
+
+为我们提供了更直观的方式来操作集合的头尾元素，说白了就是补了几个方法
+
+```java
+List<String> tasks = new ArrayList<>();  
+tasks.addFirst("Seve的任务");    // 添加到开头  
+tasks.addLast("小阿巴的任务");   // 添加到结尾  
+  
+String firstStr = tasks.getFirst();  // 获取第一个  
+String lastStr = tasks.getLast();   // 获取最后一个  
+  
+String removedFirst = tasks.removeFirst();  // 删除并返回第一个  
+String removedLast = tasks.removeLast();    // 删除并返回最后一个  
+  
+List<String> reversed = tasks.reversed();   // 反转列表
+```
+
+除了 List 之外，SequencedMap 接囗(比如 LinkedHashMap) 和 SequencedSet 接口(比如 LinkedHashset)也新增了类似的方法。本质上都是实现了有序集合接口
+
+示例：
+
+```java
+public class SequencedCollectionExample {  
+    public static void main(String[] args) {  
+        // List 的有序操作  
+        List<String> list = new ArrayList<>();  
+        list.addFirst("开始");  
+        list.addLast("结束");  
+        list.addFirst("真正的开始");  
+          
+        System.out.println("列表: " + list); // [真正的开始, 开始, 结束]  
+        System.out.println("第一个: " + list.getFirst());  
+        System.out.println("最后一个: " + list.getLast());  
+          
+        // Set 的有序操作  
+        SequencedSet<Integer> set = new LinkedHashSet<>();  
+        set.addFirst(1);  
+        set.addLast(3);  
+        set.addFirst(0);  
+        set.addLast(4);  
+          
+        System.out.println("有序集合: " + set); // [0, 1, 3, 4]  
+        System.out.println("反转后: " + set.reversed()); // [4, 3, 1, 0]  
+          
+        // Map 的有序操作  
+        SequencedMap<String, String> map = new LinkedHashMap<>();  
+        map.putFirst("first", "第一个");  
+        map.putLast("last", "最后一个");  
+        map.putFirst("zero", "第零个");  
+          
+        System.out.println("有序映射: " + map);  
+        System.out.println("第一个键值对: " + map.firstEntry());  
+        System.out.println("最后一个键值对: " + map.lastEntry());  
+    }  
+}
+```
+
+### 分代 ZGC
+
+Java 21 中的分代 ZGC 可以说是垃圾收集器领域的一个重大突破。ZGC 从 Java 11 开始就以其超低延迟而闻名，但是它并没有采用分代的设计思路
+
+在这之前，ZGC对所有对象一视同仁，无论是刚创建的新对象还是存活了很久的老对象，都使用同样的收集策略。这虽然保证了一致的低延迟，但在内存分配密集的应用中，效率并不是最优的。
+分代 ZGC 的核心思想是基于一个现象 —— 大部分对象都是"朝生夕死"的。它将堆内存划分为年轻代和老年代两个区域，年轻代的垃圾收集可以更加频繁和高效，因为大部分年轻对象很快就会死亡，收集器可以快速清理掉这些垃圾;而老年代的收集频率相对较低，减少了对长期存活对象的不必要扫描。
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202511012109874.png)
 
 
 
+使用
 
-Java20中没有太大的变化，这里主要聊下Java21的新特性，21是继Java17之后，最新的LTS版本，该版本中虚拟线程称为了正式版，[Java 19](https://www.seven97.top/java/new-features/java19.html)中是预览版
+```java
+# 启用分代 ZGC  
+java -XX:+UseZGC -XX:+UnlockExperimentalVMOptions -XX:+UseGenerationalZGC MyApp  
+  
+# 监控 GC 性能  
+java -XX:+UseZGC -XX:+UnlockExperimentalVMOptions -XX:+UseGenerationalZGC \  
+     -Xlog:gc:gc.log MyApp  
+  
+# 调整年轻代大小（可选）  
+java -XX:+UseZGC -XX:+UnlockExperimentalVMOptions -XX:+UseGenerationalZGC \  
+     -XX:NewRatio=2 MyApp
+```
 
- 
+分代 ZGC 的优势
+- 更低的分配开销：年轻代分配更高效
+- 更少的 GC 工作：大部分对象在年轻代就被回收
+- 更好的缓存局部性：年轻对象聚集在一起
+- 保持低延迟：继承了 ZGC的低延迟特性
 
-## 字符串模板
+### 弃用 Windows 32 位 x86 端囗
+
+Java 21 将 Windows 32 位支持标记为弃用
+
+```java
+# 32 位 Windows 系统将不再被官方支持  
+# 建议迁移到 64 位系统
+```
+
+### 准备禁止代理的动态加载
+
+Java 21 为禁止运行时动态加载 Java 代理做准备
+```java
+# 未来版本将不允许运行时加载代理  
+# java -javaagent:agent.jar MyApp  # 启动时加载仍然支持  
+  
+# 如果需要运行时加载（不推荐）  
+java -XX:+EnableDynamicAgentLoading MyApp
+```
+
+### 密钥封装机制 API
+
+Java 21 引入了密钥封装机制(KEM)API
+
+```java
+import javax.crypto.KEM;  
+import javax.crypto.KeyGenerator;  
+import java.security.KeyPair;  
+import java.security.KeyPairGenerator;  
+  
+public class KEMExample {  
+    public static void main(String[] args) throws Exception {  
+        // 生成密钥对  
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");  
+        kpg.initialize(2048);  
+        KeyPair keyPair = kpg.generateKeyPair();  
+          
+        // 创建 KEM 实例  
+        KEM kem = KEM.getInstance("RSA-KEM");  
+          
+        // 发送方：封装密钥  
+        KEM.Encapsulator encapsulator = kem.newEncapsulator(keyPair.getPublic());  
+        KEM.Encapsulated encapsulated = encapsulator.encapsulate();  
+          
+        byte[] encapsulatedKey = encapsulated.encapsulation();  
+        byte[] sharedSecret = encapsulated.key();  
+          
+        // 接收方：解封装密钥  
+        KEM.Decapsulator decapsulator = kem.newDecapsulator(keyPair.getPrivate());  
+        byte[] recoveredSecret = decapsulator.decapsulate(encapsulatedKey);  
+          
+        // 验证密钥一致性  
+        System.out.println("密钥封装成功: " +   
+                          java.util.Arrays.equals(sharedSecret, recoveredSecret));  
+    }  
+}
+```
+
+## 预览特性
+
+### 字符串模板
 
 字符串模板可以让开发者更简洁的进行字符串拼接（例如拼接sql，xml，json等）。该特性并不是为字符串拼接运算符+提供的语法糖，也并非为了替换SpringBuffer和StringBuilder。
 
@@ -164,11 +649,61 @@ String s = INTER."\{x} plus \{y} equals \{x + y}";
 System.out.println(s);
 ```
 
+### 未命名模式和变量(预览)
+
+Java 21 引入了未命名模式和变量
+
+```java
+// 未命名变量  
+for (int i = 0, _ = sideEffect(); i < 10; i++) {  
+    // _ 表示不关心的变量  
+}  
+  
+// 在 switch 中使用未命名模式  
+switch (obj) {  
+    case Point(var x, _) -> System.out.println("X坐标: " + x);  
+    case String _ -> System.out.println("某个字符串");  
+    default -> System.out.println("其他");  
+}  
+  
+// 在 catch 中使用  
+try {  
+    riskyOperation();  
+} catch (IOException _) {  
+    // 不关心异常对象  
+    System.out.println("IO 异常发生");  
+}
+```
+
+### 未命名类和实例主方法(预览)
+
+Java 21 简化了简单程序的编写
+
+```java
+// 传统写法  
+public class HelloWorld {  
+    public static void main(String[] args) {  
+        System.out.println("Hello World");  
+    }  
+}  
+  
+// Java 21 简化写法（预览）  
+void main() {  
+    System.out.println("Hello World");  
+}  
+  
+// 或者  
+public static void main() {  
+    System.out.println("Hello World");  
+}
+```
 
 
-## scoped values
 
-### ThreadLocal的问题
+
+### scoped values（第一次预览）
+
+#### ThreadLocal的问题
 
 在 Web 应用中，一个请求通常会被多个线程处理，每个线程需要访问自己的数据，使用 ThreadLocal 可以确保数据在每个线程中的独立性。但由于ThreadLocal在设计上的瑕疵，导致下面问题：
 
@@ -180,11 +715,11 @@ System.out.println(s);
 
  
 
-### ScopeValue初体验
+#### ScopeValue初体验
 
 
 
-#### 基本用法
+##### 基本用法
 
 ScopedValue对象用`jdk.incubator.concurrent`包中的`ScopedValue`类来表示。使用ScopedValue的第一步是创建`ScopedValue`对象，通过静态方法`newInstance`来完成，ScopedValue对象一般声明为`static final`，每个线程都能访问自己的scope value，与ThreadLocal不同的是，它只会被write 1次且仅在线程绑定的期间内有效。
 
@@ -233,7 +768,7 @@ public class Test{
 
 
 
-#### 多线程操作相同的ScopeValue
+##### 多线程操作相同的ScopeValue
 
 不同的线程在操作同一个ScopeValue时，相互间不会影响，其本质是利用了Thread类中scopedValueBindings属性进行的线程绑定。
 
@@ -269,7 +804,7 @@ public class Test{
 
 
 
-#### ScopeValue的修改
+##### ScopeValue的修改
 
 通过上面的示例可以看到，ScopeValue的值是在第一次使用where的时候就设置好了，该值在当前线程使用的期间是不会被修改的，这样就提高了性能。当然，我们也可以修改ScopeValue中的值，但需要注意，这里的修改会不影响本次方法中读取的值，而是会导致where后run中调用的方法里面的值发生变化。
 
@@ -308,167 +843,7 @@ public class Test{
 
 
 
-
-
-
-
-## 集合序列
-
-![image-20240425202520731](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404252025824.png)
-
-在Java.util包下新增了3个接口
-
-1. SequencedCollection
-2. SequencedSet
-3. SequencedMap
-
-通过这些接口可以为之前的部分List，Set，Map的实现类增加新的方法，以List为例：
-
-```java
-List<Integer> list = new LinkedList<>();
-list.add(1);
-list.add(2);
-list.add(3);
-
-List<Integer> reversedList = list.reversed();//反转List
-System.out.println(reversedList);
-
-list.addFirst(4);//从List前面添加元素
-list.addLast(5);//从List后面添加元素
-System.out.println(list);
-```
-
-
-
-## record pattern
-
-Java14引入的新特性。通过该特性可以解构record类型中的值，例如
-
-```java
-public class Test{
-    public static void main(String[] args) {
-        Student s = new Student(10, "jordan");
-        printSum(s);
-    }
-
-    static void printSum(Object obj) {
-        //这里的Student(int a, String b)就是 record pattern
-        if (obj instanceof Student(int a, String b)) {
-            System.out.println("id:" + a);
-            System.out.println("name:" + b);
-        }
-    }
-
-}
-record Student(int id, String name) {}
-```
-
-
-
-## switch格式匹配
-
-之前的写法
-
-```java
-public class Test{
-    public static void main(String[] args) {
-        Integer i = 10;
-        String str = getObjInstance(i);
-        System.out.println(str);
-    }
-
-    public static String getObjInstance(Object obj) {
-        String objInstance = "";
-        if(obj == null){
-            objInstance = "空对象"
-        } else if (obj instanceof Integer i) {
-            objInstance = "Integer 对象：" + i;
-        } else if (obj instanceof Double d) {
-            objInstance = "Double 对象：" + d;
-        } else if (obj instanceof String s) {
-            objInstance = "String 对象：" + s;
-        }
-        return objInstance;
-    }
-
-}
-```
-
-
-
-新的写法，代码更加简洁
-
-```java
-public class Test{
-    public static void main(String[] args) {
-        Integer i = 10;
-        String str = getObjInstance(i);
-        System.out.println(str);
-    }
-
-    public static String getObjInstance(Object obj) {
-
-        return switch(obj){
-            case null -> "空对象";
-            case Integer i -> "Integer 对象：" + i;
-            case Double d -> "Double对象：" + d;
-            case String s -> "String对象：" + s;
-            default -> obj.toString();
-        };
-    }
-
-}
-```
-
-
-
-可以在switch中使用when
-
-```java
-public class Test{
-    public static void main(String[] args) {
-        yesOrNo("yes");
-    }
-
-    public static void yesOrNo(String obj) {
-
-        switch(obj){
-            case null -> {System.out.println("空对象");}
-            case String s
-                when s.equalsIgnoreCase("yes") -> {
-                System.out.println("确定");
-            }
-            case String s
-                when s.equalsIgnoreCase("no") -> {
-                System.out.println("取消");
-            }
-                //最后的case要写，否则编译回报错
-            case String s -> {
-                System.out.println("请输入yes或no");
-            }
-
-        };
-
-    }
-
-}
-```
-
-
-
-## Unnamed Classes and Instance Main Methods（预览）
-
-对于初学者来说，写的第一个HelloWorld代码有太多的概念，为了方便初学者快速编写第一段Java代码，这里提出了无名类和实例main方法，下面代码可以直接运行编译，相当于是少了类的定义，main方法的修饰符和形参也省略掉了
-
-```java
-void main() {
-    System.out.println("Hello, World!");
-}
-```
-
-
-
-## Structured Concurrency 
+### Structured Concurrency 
 
 该特性主要作用是在使用虚拟线程时，可以使任务和子任务的代码编写起来可读性更强，维护性更高，更加可靠。
 
@@ -502,6 +877,58 @@ public class Test {
 record Food(String yaoZi, String drink) {
 }
 ```
+
+
+## 孵化器特性
+
+### 向量 API(第六次孵化器)
+Java 21 继续完善向量 API
+
+```java
+import jdk.incubator.vector.*;  
+  
+public class VectorExample {  
+    private static final VectorSpecies<Float> SPECIES = FloatVector.SPECIES_PREFERRED;  
+      
+    // 向量化的矩阵乘法  
+    public static void matrixMultiply(float[][] a, float[][] b, float[][] result) {  
+        int n = a.length;  
+        int m = b[0].length;  
+        int p = a[0].length;  
+          
+        for (int i = 0; i < n; i++) {  
+            for (int j = 0; j < m; j += SPECIES.length()) {  
+                FloatVector sum = FloatVector.zero(SPECIES);  
+                  
+                for (int k = 0; k < p; k++) {  
+                    FloatVector aVec = FloatVector.broadcast(SPECIES, a[i][k]);  
+                    FloatVector bVec = FloatVector.fromArray(SPECIES, b[k], j);  
+                    sum = aVec.fma(bVec, sum);  
+                }  
+                  
+                sum.intoArray(result[i], j);  
+            }  
+        }  
+    }  
+      
+    public static void main(String[] args) {  
+        float[][] a = {{1, 2}, {3, 4}};  
+        float[][] b = {{5, 6}, {7, 8}};  
+        float[][] result = new float[2][2];  
+          
+        matrixMultiply(a, b, result);  
+          
+        System.out.println("矩阵乘法结果:");  
+        for (float[] row : result) {  
+            System.out.println(Arrays.toString(row));  
+        }  
+    }  
+}
+```
+
+
+
+
 
 
 <!-- @include: @article-footer.snippet.md -->     

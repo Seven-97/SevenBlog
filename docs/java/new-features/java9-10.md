@@ -6,7 +6,7 @@ tags:
 head:
   - - meta
     - name: keywords
-      content: Java,版本新特性,Java9
+      content: Java,版本新特性,Java9,Java10
   - - meta
     - name: description
       content: 全网最全的Java 版本新特性知识点总结，让天下没有难学的八股文！
