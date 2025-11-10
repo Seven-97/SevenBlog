@@ -9,7 +9,7 @@ head:
       content: 正则表达式
   - - meta
     - name: description
-      content: 全网最全的JDK工具类知识点总结，让天下没有难学的八股文！
+      content: 全网最全的正则表达式知识点总结，让天下没有难学的八股文！
 ---
 
 

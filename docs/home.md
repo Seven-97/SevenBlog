@@ -277,9 +277,9 @@ head:
 - [并发编程 - ListenableFuture&Service](https://www.seven97.top/tool-library/guava/guava-cocurrent.html)
 - [本地缓存 - GuavaCache](https://www.seven97.top/tool-library/guava/guava-cache.html)
 
-### 正则表达式
-- [正则表达式的规则](https://www.seven97.top/tool-library/regular/regular-use.html)
-- [正则表达式的性能问题](https://www.seven97.top/tool-library/regular/regular-performance-issue.html)
+### 常用开发基础
+- [正则表达式的规则](https://www.seven97.top/tool-library/dev-base/regular-use.html)
+- [正则表达式的性能问题](https://www.seven97.top/tool-library/dev-base/regular-performance-issue.html)
 
 ## 计算机基础
 

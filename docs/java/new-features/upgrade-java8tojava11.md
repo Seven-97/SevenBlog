@@ -28,7 +28,7 @@ Java 11 已于 2018 年 9 月 25 日正式发布，为了加快的版本迭代�
 
 ### JDK 8 升级到JDK 11 性能提升多少？
 
-从规划调度引擎 OptaPlanner 项目对 [JDK 8和 JDK 11 的性能基准测试在新窗口打开](https://www.optaplanner.org/blog/2019/01/17/HowMuchFasterIsJava11.html)进行了对比来看：
+从规划调度引擎 OptaPlanner 项目对 [JDK 8和 JDK 11 的性能基准测试](https://www.optaplanner.org/blog/2019/01/17/HowMuchFasterIsJava11.html)进行了对比来看：
 
 ### 如何更好的理解从JDK 8 到 JDK 11 升级中带来的重要特性？
 
