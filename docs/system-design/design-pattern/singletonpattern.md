@@ -12,6 +12,8 @@ tags:
 就是采取一定的方法保证在整个的软件系统中，对某个类只能存在一个对象实例，并且该类只提供一个取得其对象实例的方法。如果我们要让**类在一个虚拟机中只能产生一个对象**，我们首先必须将类的构造器的访问权限设置为private，这样，就不能用new操作符在类的外部产生类的对象了，但在类内部仍可以产生该类的对象。因为在类的外部开始还无法得到类的对象，只能调用该类的某个静态方法以返回类内部创建的对象，静态方法只能访问类中的静态成员变量，所以，指向类内部产生的该类对象的变量也必须定义成静态的。
 
 ## 饿汉式
+
+### 简单的饿汉式
 ```java
 class Singleton {
     // 1.私有化构造器
@@ -52,6 +54,33 @@ com.seven.singleton.User@6d6f6e28
 
 static变量在类加载的时候初始化，此时不会涉及到多个线程对象访问该对象的问题，虚拟机保证只会装载一次该类，肯定不会发生并发问题，无需使用synchronized 关键字
 
+
+### 静态代码块
+
+```java
+public class HungrySingletonStatic {
+	
+	    private HungrySingletonStatic(){
+	
+	    }
+	
+	    private final static  HungrySingletonStatic h;
+	
+	    static {
+	        h = new HungrySingletonStatic();
+	    }
+	
+	    public static  HungrySingletonStatic getInstance(){
+	        return HungrySingletonStatic.h;
+	    }
+	}
+}
+```
+
+### 两种写法的总结
+
+饿汉式的这两种写法都是一样的，在类初始化的时候就创建了一个对象实例，当调用这个静态方法的时候返回的也是同一个对象实例，符合单例的设计思想。但是如果使用的单例比较多的情况下，使用这种方法在加载类的时候就会耗费很多资源，有些单例类可能暂时用不上，造成资源浪费。
+
 存在的问题：如果只是加载了本类，而并不需要调用getUser，则会造成资源的浪费。
 
 **总结：线程安全、非懒加载、效率高，资源浪费**
@@ -82,6 +111,7 @@ public class Singleton {
 如果是多线程环境，以上代码会出现线程安全问题。
 
 ### 方式2：方法加锁
+
 ```java
 class Singleton {
     // 1.私有化构造器
@@ -146,8 +176,10 @@ public class Singleton {
 
 **总结：线程安全、懒加载、效率高。**
 
-## 静态内部类-延迟初始化占位类（推荐）
-静态内部类单例模式中实例由内部类创建，由于 JVM 在加载外部类的过程中, 是不会加载静态内部类的, 只有内部类的属性/方法被调用时才会被加载, 并初始化其静态属性。静态属性由于被 `static` 修饰，保证只被实例化一次，并且严格保证实例化顺序。
+### 静态内部类-延迟初始化占位类（推荐）
+
+这里用了Java的类加载机制，静态内部类单例模式中实例由内部类创建，由于 JVM 在加载外部类的过程中, 是不会加载静态内部类的, 只有内部类的属性/方法被调用时才会被加载，并初始化其静态属性。也就是说，静态内部类只有使用的时候才会被加载。静态属性由于被 `static` 修饰，保证只被实例化一次，并且严格保证实例化顺序。
+
 ```java
 public class Singleton {
 
@@ -165,11 +197,13 @@ public class Singleton {
 ```
 第一次加载Singleton类时不会去初始化INSTANCE，只有第一次调用getInstance，虚拟机加载SingletonHolder并初始化INSTANCE，这样不仅能确保线程安全，也能保证 Singleton 类的唯一性。
 
-静态内部类单例模式是一种优秀的单例模式，是开源项目中比较常用的一种单例模式。在没有加任何锁的情况下，保证了多线程下的安全，并且没有任何性能影响和空间的浪费。
+静态内部类单例模式是一种优秀的单例模式，是开源项目中比较常用的一种单例模式。在没有加任何锁的情况下，保证了多线程下的安全，并且没有任何性能影响和空间的浪费。但是使用反射强制获取构造方法的时候就会破环单例，使用反射获得的构造方法可以创建无数个实例。
 
 **总结：线程安全、懒加载、效率高。**
 
-## 枚举
+## 注册式
+### 枚举
+
 枚举类实现单例模式是极力推荐的单例实现模式，因为枚举类型是线程安全的，并且只会装载一次，设计者充分的利用了枚举的这个特性来实现单例模式，枚举的写法非常简单，而且枚举类型是所用单例实现中唯一一种不会被破坏的单例实现模式。
 
 ```java
@@ -182,26 +216,54 @@ public enum Singleton {
 
 提供了序列化机制，保证线程安全，绝对防止多次实例化，即使是在面对复杂的序列化或者反射攻击的时候。
 
-枚举方式属于饿汉式方式，会浪费资源
+枚举方式属于饿汉式方式，程序启动时即占用内存，**可能造成资源浪费**。因此存在大规模生产单例的问题。
 
 **总结：线程安全、非懒加载、效率高。**
 
+### 容器式
+
+```java
+public class Container {
+
+    private Container(){}
+
+    //hashMap在初始化的时候，会有多个KEY相同，但是值不相同的数据，存储时一个KEY可能存入两个value的情况
+    private static Map<String,Object> singleton = new HashMap<>();
+
+    public static void putInstance(String key,Object object){
+        if( key.length() > 0 && object != null){
+            if(!Container.singleton.containsKey(key)){
+                singleton.put(key,object);
+            }
+        }
+    }
+
+    public static Object getInstance(String key){
+        return singleton.get(key);
+    }
+}
+```
+
+这其实是枚举单例的优化版本，解决了可能造成内存浪费的问题，但是引发了线程安全问题，Spring IOC 容器使用的这种方式，只不过[Spring IOC 容器](https://www.seven97.top/framework/spring/ioc1-summary.html)做了优化。
 
 ## 几种方式对比
-| 方式                   | 优点                     | 缺点               |
-| ---------------------- | ------------------------ | ------------------ |
-| 饿汉式                 | 线程安全、效率高         | 非懒加载，资源浪费 |
-| 懒汉式synchronized方法 | 线程安全、懒加载         | 效率低             |
-| 懒汉式双重检测         | 线程安全、懒加载、效率高 | 无                 |
-| 静态内部类             | 线程安全、懒加载、效率高 | 无                 |
-| 枚举                   | 线程安全、效率高         | 非懒加载，资源浪费 |
+| 方式                | 优点           | 缺点        |
+| ----------------- | ------------ | --------- |
+| 饿汉式               | 线程安全、效率高     | 非懒加载，资源浪费 |
+| 懒汉式synchronized方法 | 线程安全、懒加载     | 效率低       |
+| 懒汉式双重检测           | 线程安全、懒加载、效率高 | 无         |
+| 静态内部类             | 线程安全、懒加载、效率高 | 无         |
+| 枚举                | 线程安全、效率高     | 非懒加载，资源浪费 |
+| 容器式               | 懒加载、效率高      | 线程不安全     |
 
 可能有人看了以上表格，觉得枚举有缺点，为什么Joshua Bloch还推荐使用枚举？  
+
 这就要提到单例的破解了。普通的单例模式是可以通过反射和序列化/反序列化来破解的，而Enum由于自身的特性问题，是无法破解的。当然，由于这种情况基本不会出现，因此我们在使用单例模式的时候也比较少考虑这个问题。
 
 ## 枚举类是实现单例模式最好的方式
 
 在单例模式的实现中，除去**枚举**方法实现的单例模式，其它的实现都可以利用反射构造新的对象，从而破坏单例模式，但是枚举就不行，下面说说原因：  
+
 破坏单例的方式有 3 种，反射、克隆以及序列化，下面详细介绍：
 
 ### 反射
@@ -268,8 +330,8 @@ public enum EnumSingleton {
     at singleton.EnumSingleton.main(EnumSingleton.java:19)
 ```
 
-#### 枚举安全的原因解释:  
-对 EnumSingleton 文件进行反编译，可以发现 EnumSingleton 继承于 Enum，而 Enum 类确实没有无参的构造器，所以抛出 NoSuchMethodException。
+**枚举安全的原因解释**:  对 EnumSingleton 文件进行反编译，可以发现 EnumSingleton 继承于 Enum，而 Enum 类确实没有无参的构造器，所以抛出 NoSuchMethodException。
+
 ```java
 枚举类 EnumSingleton 反编译结果
 public final class singleton.EnumSingleton extends java.lang.Enum<singleton.EnumSingleton>
@@ -281,7 +343,7 @@ protected Enum(String name, int ordinal) {
 }
 ```
 
-进一步，通过调用父类有参构造器构造枚举实例对象，样例程序又抛出 IllegalArgumentException 异常。
+进一步，通过调用父类有参构造器构造枚举实例对象，程序又抛出 IllegalArgumentException 异常。
 ```java
 public enum EnumSingleton {
 
@@ -416,12 +478,22 @@ public abstract class Enum<E extends Enum<E>>
 ```
 
 ## 不用枚举如何防止单例模式破坏
+
+### 序列化
 若实现了序列化接口，重写 readResolve 方法即可，反序列化时将调用该方法返回对象实例
 ```java
 public Object readResolve() throws ObjectStreamException {
     return dobleCheckSingleton;
 }
 ```
+
+`readResolve()`方法是 Java 序列化机制提供的一个特殊钩子（hook）。它的核心作用在于：当对象通过 `ObjectInputStream`被反序列化时，如果该对象的类定义了这个方法，那么序列化机制会**自动调用它**，并用这个方法的返回值**替换**掉默认反序列化过程新创建的那个对象。
+
+正是利用了这个特性，我们可以在单例类中重写 `readResolve()`方法，让其返回已经存在的那个唯一实例，从而“欺骗”序列化系统，让它放弃新创建的对象，转而使用我们提供的单例
+
+> 重写 readResolve 方法
+
+### 反射
 
 通过反射破坏单例的场景，可以在构造方法中判断实例是否已经创建，若已创建则抛出异常
 ```java
@@ -432,9 +504,12 @@ private Singleton(){
 }
 ```
 
-通过clone破坏单例的场景，可以重写clone方法，返回已有单例对象
+### 克隆
+
+通过clone破坏单例的场景，可以重写clone方法，返回已有单例对象。但更重要的是，单例场景就不应该同时实现克隆能力，单例和克隆本身就是互斥的
 
 ## Runtime类
+
 Runtime类就是使用的单例设计模式。
 
 ```java

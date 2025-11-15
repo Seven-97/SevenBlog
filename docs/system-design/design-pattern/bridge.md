@@ -69,11 +69,11 @@ public class REVBBFile implements VideoFile {
 }
 
 //操作系统版本
-public abstract class OperatingSystemVersion {
+public abstract class OperatingSystem {
 
     protected VideoFile videoFile;
 
-    public OperatingSystemVersion(VideoFile videoFile) {
+    public OperatingSystem(VideoFile videoFile) {
         this.videoFile = videoFile;
     }
 
