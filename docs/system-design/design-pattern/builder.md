@@ -180,31 +180,7 @@ public abstract class Builder {
 
 这样做确实简化了系统结构，但同时也加重了抽象建造者类的职责，也不是太符合单一职责原则，如果construct() 过于复杂，建议还是封装到 Director 中。
 
-## 优缺点
-
-**优点：**
-
-- 建造者模式的封装性很好。使用建造者模式可以有效的封装变化，在使用建造者模式的场景中，一般产品类和建造者类是比较稳定的，因此，将主要的业务逻辑封装在指挥者类中对整体而言可以取得比较好的稳定性。
-
-- 在建造者模式中，客户端不必知道产品内部组成的细节，将产品本身与产品的创建过程解耦，使得相同的创建过程可以创建不同的产品对象。
-
-- 可以更加精细地控制产品的创建过程 。将复杂产品的创建步骤分解在不同的方法中，使得创建过程更加清晰，也更方便使用程序来控制创建过程。
-
-- 建造者模式很容易进行扩展。如果有新的需求，通过实现一个新的建造者类就可以完成，基本上不用修改之前已经测试通过的代码，因此也就不会对原有功能引入风险。符合开闭原则。
-
-**缺点：**
-
-- 建造者模式所创建的产品一般具有较多的共同点，其组成部分相似，如果产品之间的差异性很大，则不适合使用建造者模式，因此其使用范围受到一定的限制。
-
-## 使用场景
-
-建造者（Builder）模式创建的是复杂对象，其产品的各个部分经常面临着剧烈的变化，但将它们组合在一起的算法却相对稳定，所以它通常在以下场合使用。
-
-- 创建的对象较复杂，由多个部件构成，各部件面临着复杂的变化，但构件间的建造顺序是稳定的。
-
-- 创建复杂对象的算法独立于该对象的组成部分以及它们的装配方式，即产品的构建过程和最终的表示是独立的。
-
-## 模式扩展
+## 链式调用
 
 建造者模式除了上面的用途外，在开发中还有一个常用的使用方式，就是当一个类构造器需要传入很多参数时，如果创建这个类的实例，代码可读性会非常差，而且很容易引入错误，此时就可以利用建造者模式进行重构。
 
@@ -348,9 +324,128 @@ public class Client {
 }
 ```
 
-
-
 重构后的代码在使用起来更方便，某种程度上也可以提高开发效率。从软件设计上，对程序员的要求比较高。
+
+## 优缺点
+
+**优点：**
+
+- 建造者模式的封装性很好。使用建造者模式可以有效的封装变化，在使用建造者模式的场景中，一般产品类和建造者类是比较稳定的，因此，将主要的业务逻辑封装在指挥者类中对整体而言可以取得比较好的稳定性。
+
+- 在建造者模式中，客户端不必知道产品内部组成的细节，将产品本身与产品的创建过程解耦，使得相同的创建过程可以创建不同的产品对象。
+
+- 可以更加精细地控制产品的创建过程 。将复杂产品的创建步骤分解在不同的方法中，使得创建过程更加清晰，也更方便使用程序来控制创建过程。
+
+- 建造者模式很容易进行扩展。如果有新的需求，通过实现一个新的建造者类就可以完成，基本上不用修改之前已经测试通过的代码，因此也就不会对原有功能引入风险。符合开闭原则。
+
+**缺点：**
+
+- 建造者模式所创建的产品一般具有较多的共同点，其组成部分相似，如果产品之间的差异性很大，则不适合使用建造者模式，因此其使用范围受到一定的限制。
+- 会产生多余的Builder对象
+
+## 使用场景
+
+建造者（Builder）模式创建的是复杂对象，其产品的各个部分经常面临着剧烈的变化，但将它们组合在一起的算法却相对稳定，所以它通常在以下场合使用。
+
+- 创建的对象较复杂，由多个部件构成，各部件面临着复杂的变化（很多属性）
+- 创建对象需要很多步骤，但步骤顺序不一定固定
+- 创建复杂对象的算法独立于该对象的组成部分以及它们的装配方式，即产品的构建过程和最终的表示是独立的。
+
+说白了就是，有很多属性，但不同的需求场景下，需要使用的属性不一样，总不能排列组合属性来写构造方法吧，这种就适用建造者模式
+
+## 源码中的实现
+###  StringBuilder
+
+```java
+// 使用示例
+StringBuilder sb = new StringBuilder();
+sb.append("Hello").append(" ").append("World"); // 链式调用
+String result = sb.toString(); // 获取最终产品：字符串
+```
+
+它的核心在于 `append`方法总是返回 `this`，这使得下一次调用可以紧接而上。虽然它没有严格意义上的指挥者（Director）角色，但其简洁的链式API充分体现了建造者模式的核心思想：**将一个复杂对象（字符串）的构建步骤（append）与它的最终表示（String）分离**​
+
+### MyBatis CacheBuilder 构建缓存
+
+MyBatis 的 CacheBuilder 用于构建功能各异的缓存对象，其构建过程更具配置性。
+
+```java
+// 使用示例：构建一个大小为512，采用LRU淘汰算法，刷新间隔为1小时的缓存
+Cache cache = new CacheBuilder("userCache")
+    .size(512)
+    .eviction(LruCache.class) // 设置淘汰算法
+    .clearInterval(3600000L)   // 设置清除间隔
+    .build(); // 最终生成一个完整的Cache对象
+```
+
+在这里，`CacheBuilder`允许通过不同的方法组合来定义缓存的各种行为，最后的 `build()`方法负责将这些配置整合，实例化一个完整的、功能确定的缓存对象。这种模式非常适合构建包含多种可选配置的复杂对象
+
+### Spring BeanDefinitionBuilder动态定义Bean
+
+在Spring框架中，`BeanDefinitionBuilder`用于以编程方式动态定义Spring容器管理的Bean，这在需要根据条件灵活注册Bean时非常有用。
+
+```java
+// 使用示例：动态构建一个Bean定义
+BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(MyService.class);
+builder.addPropertyValue("name", "testName") // 设置属性
+       .setScope("prototype")                 // 设置作用域
+       .setInitMethodName("init");            // 设置初始化方法
+AbstractBeanDefinition beanDefinition = builder.getBeanDefinition(); // 获取最终的Bean定义
+```
+
+通过 `BeanDefinitionBuilder`，可以步骤化地定义Bean的各个方面（如类、属性、作用域等），最后通过 `getBeanDefinition()`获得完整的Bean定义元数据。
+
+### Lombok的@Builder注解
+
+Lombok的`@Builder`注解旨在**极大减少**为实现建造者模式而需要编写的模板代码。只需一个注解，它就能在编译时为你自动生成全套建造者模式代码
+
+基本使用：
+```java
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class User {
+    private final Integer id;
+    private String username;
+    private String password;
+    @Builder.Default private long createTime = System.currentTimeMillis(); // 设置默认值
+}
+
+// 使用生成的建造者
+User user = User.builder()
+    .id(1)
+    .username("john_doe")
+    .password("secret")
+    .build(); // createTime将使用默认值
+```
+
+**集合处理 (`@Singular`)**：为集合类型字段生成更安全、优雅的添加方法。
+
+```java
+@Builder
+public class Order {
+    private List<String> items;
+    @Singular private List<String> tags; // 使用@Singular注解
+}
+Order order = Order.builder()
+    .item("Book")
+    .tag("urgent")  // 添加单个元素
+    .tag("digital") // 再次添加单个元素
+    .build(); // tags 是一个不可变列表，包含 "urgent", "digital"
+```
+
+**实例复用 (`toBuilder = true`)**：基于已有对象创建新的建造者，修改部分属性。
+
+```java
+@Builder(toBuilder = true)
+public class User { ... }
+
+User originalUser = User.builder().id(1).username("alice").build();
+User modifiedUser = originalUser.toBuilder().username("bob").build(); // 只修改用户名
+```
+
 
 ## 创建者模式对比
 
