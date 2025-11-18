@@ -213,12 +213,9 @@ class TimSort<T> {
 上面的代码中最终会跑到 countRunAndMakeAscending() 这个方法中。我们可以看见，只用了compare方法，所以在调用Arrays.sort方法只传具体compare重写方法的类对象就行，这也是Comparator接口中必须要子类实现的一个方法。
 
 
+## 重构-替换 if-else
 
-## 策略枚举替换大量的if-else语句
-
-若遇到大量流程判断语句，几乎满屏都是if-else语句，**其实if-else是一种面向过程的实现。**那么，如何避免在面向对象编程里大量使用if-else呢？
-
-网络上有很多解决思路，有工厂模式、策略模式、甚至是规则引擎，但这些使用起来还是过于繁重了。虽说避免出现过多的if-else，但是，却会增加很多额外的类。
+若遇到大量流程判断语句，几乎满屏都是if-else语句，**其实if-else是一种面向过程的实现**。那么，如何避免在面向对象编程里大量使用if-else呢？
 
 假如有这样一个需求，需实现一周七天内分别知道要做事情的备忘功能，这里面就会涉及到一个流程判断，你可能会立马想到用if-else，那么，可能是会这样实现
 
@@ -248,7 +245,276 @@ public String getToDo(String day){
 
 这种代码，在业务逻辑里，少量还好，若是几百个判断呢，可能整块业务逻辑里都是满屏if-else,既不优雅也显得很少冗余。
 
-这时，就可以考虑使用策略枚举形式来替换这堆面向过程的if-else实现了。
+### 工厂类
+
+这种方法将对象的创建逻辑封装到一个专门的工厂类中，符合“开闭原则”，后续新增课程类型时，只需扩展工厂类即可。
+
+**重构步骤：**
+1. **定义公共接口**：创建一个接口（如 `CourseService`），声明公共方法（如 `getToDo()`）。
+2. **实现具体类**：为每一种课程（如英语、语文）创建一个类，实现该接口，完成各自的复杂逻辑。
+3. **创建工厂类**：构建一个工厂类（如 `CourseServiceFactory`），在静态代码块或初始化时，建立“星期几”到具体课程服务实例的映射关系（通常使用 `Map`）。
+4. **修改主方法**：在原方法中，通过工厂类根据输入参数 `day`获取对应的服务实例，并调用其方法。
+
+```java
+// 1. 定义公共接口
+public interface CourseService {
+    String getToDo();
+}
+
+// 2. 实现具体类
+public class EnglishCourseService implements CourseService {
+    @Override
+    public String getToDo() {
+        //......原Monday分支的复杂语句
+        return "今天上英语课";
+    }
+}
+public class ChineseCourseService implements CourseService {
+    @Override
+    public String getToDo() {
+        //......原Tuesday分支的复杂语句
+        return "今天上语文课";
+    }
+}
+// ... 为Wednesday, Thursday, Sunday等创建类似类
+
+// 3. 创建工厂类
+public class CourseServiceFactory {
+    private static final Map<String, CourseService> map = new HashMap<>();
+    static {
+        map.put("Monday", new EnglishCourseService());
+        map.put("Tuesday", new ChineseCourseService());
+        // ... 注册其他项
+    }
+    public static CourseService getService(String day) {
+        return map.get(day);
+    }
+}
+
+// 4. 修改原方法
+public String getToDo(String day) {
+    CourseService service = CourseServiceFactory.getService(day);
+    if (service != null) {
+        return service.getToDo();
+    }
+    // 处理默认或错误情况，例如return "未知日程"; 或抛出异常
+    return null;
+}
+```
+
+
+### 枚举
+
+枚举非常适合管理一组固定的常量，并且可以将每个常量对应的行为直接封装在枚举项内部，使代码非常清晰。
+
+**重构步骤：**
+
+1. **定义枚举类型**：创建一个枚举（如 `DayCourse`），枚举值就是星期几。
+2. **封装行为与属性**：为枚举定义一个抽象方法（如 `getToDo()`），然后在每个枚举值中实现这个方法的具体逻辑。
+3. **修改主方法**：原方法通过 `DayCourse.valueOf(day)`获取对应的枚举实例，并调用其方法。
+
+```java
+// 1. 定义枚举
+public enum DayCourse {
+    Monday {
+        @Override
+        public String getToDo() {
+            //......原Monday分支的复杂语句
+            return "今天上英语课";
+        }
+    },
+    Tuesday {
+        @Override
+        public String getToDo() {
+            //......原Tuesday分支的复杂语句
+            return "今天上语文课";
+        }
+    },
+    // ... 定义其他天数
+    Sunday {
+        @Override
+        public String getToDo() {
+            //......原Sunday分支的复杂语句
+            return "今天上编程课";
+        }
+    };
+    public abstract String getToDo();
+}
+
+// 2. 修改原方法
+public String getToDo(String day) {
+    try {
+        DayCourse dayCourse = DayCourse.valueOf(day); // 将字符串转换为枚举值
+        return dayCourse.getToDo();
+    } catch (IllegalArgumentException e) {
+        // 处理day不匹配任何枚举值的情况
+        return "未知日程";
+    }
+}
+```
+
+
+### 命令模式
+
+命令模式将请求封装为对象，使得你可以用不同的请求参数化其他对象，并支持请求的排队、记录、撤销等。
+
+**重构步骤：**
+
+1. **定义命令接口**：创建一个接口（如 `Command`），其中定义一个执行方法（如 `execute()`）。
+2. **实现具体命令**：为每一种课程创建一个类，实现 `Command`接口。
+3. **修改主方法**：原方法中，根据 `day`创建对应的具体命令对象，并调用其 `execute()`方法。
+
+```java
+// 1. 定义命令接口
+public interface Command {
+    String execute();
+}
+
+// 2. 实现具体命令
+public class EnglishCommand implements Command {
+    @Override
+    public String execute() {
+        //......原Monday分支的复杂语句
+        return "今天上英语课";
+    }
+}
+// ... 为其他天数创建类似的Command类
+
+// 3. 修改原方法 (可结合简单工厂优化Command的创建)
+public String getToDo(String day) {
+    Command command;
+    switch (day) {
+        case "Monday": command = new EnglishCommand(); break;
+        case "Tuesday": command = new ChineseCommand(); break;
+        // ... 其他情况
+        default: command = new UnknownCommand(); break;
+    }
+    return command.execute();
+}
+```
+
+
+### 规则引擎
+
+当业务规则非常复杂且需要动态变更时，规则引擎是理想选择，它实现了业务逻辑与执行逻辑的彻底分离。
+
+**重构步骤：**
+
+1. **定义规则接口**：创建一个接口（如 `Rule`），包含评估条件的方法（如 `evaluate`）和执行操作的方法（如 `execute`）。
+2. **实现具体规则**：为每一天创建一个规则类，实现 `Rule`接口。
+3. **创建规则引擎**：创建一个规则引擎类，用于注册和管理所有规则，并提供一个方法遍历所有规则，找到条件满足的规则并执行。
+4. **修改主方法**：原方法中，调用规则引擎来执行。
+
+```java
+// 1. 定义规则接口
+public interface Rule {
+    boolean evaluate(String day);
+    String execute();
+}
+
+// 2. 实现具体规则
+public class MondayRule implements Rule {
+    @Override
+    public boolean evaluate(String day) {
+        return "Monday".equals(day);
+    }
+    @Override
+    public String execute() {
+        //......原Monday分支的复杂语句
+        return "今天上英语课";
+    }
+}
+// ... 其他规则
+
+// 3. 创建简单的规则引擎
+public class SimpleRuleEngine {
+    private List<Rule> rules = new ArrayList<>();
+    public void addRule(Rule rule) {
+        rules.add(rule);
+    }
+    public String run(String day) {
+        for (Rule rule : rules) {
+            if (rule.evaluate(day)) {
+                return rule.execute();
+            }
+        }
+        return "未知日程"; // 默认规则
+    }
+}
+
+// 4. 修改原方法 (需初始化引擎和规则)
+public class Scheduler {
+    private SimpleRuleEngine ruleEngine = new SimpleRuleEngine();
+    public Scheduler() {
+        // 初始化，注册规则
+        ruleEngine.addRule(new MondayRule());
+        ruleEngine.addRule(new TuesdayRule());
+        // ...
+    }
+    public String getToDo(String day) {
+        return ruleEngine.run(day);
+    }
+}
+```
+
+
+### 策略模式
+
+策略模式定义一族算法，并封装每个算法，使它们可以相互替换，让算法的变化独立于使用算法的客户。
+
+**重构步骤：**
+
+1. **定义策略接口**：与命令模式类似，定义一个策略接口（如 `CourseStrategy`）。
+2. **实现具体策略**：为每一天创建一个策略类，实现该接口。
+3. **创建策略上下文**：创建一个上下文类（如 `CourseContext`），它包含一个策略引用，并提供一个方法来执行当前策略。
+4. **修改主方法**：原方法中，根据 `day`设置上下文对象的策略，然后执行。
+
+```java
+// 1. 定义策略接口
+public interface CourseStrategy {
+    String getToDo();
+}
+
+// 2. 实现具体策略
+public class EnglishStrategy implements CourseStrategy {
+    @Override
+    public String getToDo() {
+        //......原Monday分支的复杂语句
+        return "今天上英语课";
+    }
+}
+// ... 其他策略
+
+// 3. 创建策略上下文
+public class CourseContext {
+    private CourseStrategy strategy;
+    public void setStrategy(CourseStrategy strategy) {
+        this.strategy = strategy;
+    }
+    public String executeStrategy() {
+        if (strategy != null) {
+            return strategy.getToDo();
+        }
+        throw new IllegalStateException("Strategy not set");
+    }
+}
+
+// 4. 修改原方法 (可结合Map优化策略选择)
+public String getToDo(String day) {
+    CourseContext context = new CourseContext();
+    switch (day) {
+        case "Monday": context.setStrategy(new EnglishStrategy()); break;
+        case "Tuesday": context.setStrategy(new ChineseStrategy()); break;
+        // ...
+        default: throw new IllegalArgumentException("Invalid day: " + day);
+    }
+    return context.executeStrategy();
+}
+```
+
+### 策略枚举
+
+这其实是属于 **外层枚举（路由枚举）+ 内层策略枚举**​ 的混合结构
 
 首先，先定义一个getToDo()调用方法，假如传进的是“星期一”，即参数"Monday"。
 
@@ -368,5 +634,28 @@ public enum DayEnum {
 ```
 
 若要扩展其判断流程，只需要直接在枚举增加一个属性和内部toDo（实现），就可以增加新的判断流程了，而外部，仍旧用同一个入口dayEnum.toDo()即可。
+
+
+总结一下，这种方式核心在于**将“路由”和“行为”进行了解耦**。
+- **外层枚举 (`DayEnum`）作为“路由表”**：负责将具体的输入参数（如`"Monday"`）映射到一个抽象的策略类型（如`Type.ENGLISH`）。这使得**映射关系非常集中和清晰**。
+- **内层枚举 (`Type`）作为“策略实现集”**：它封装了具体的业务逻辑。所有被路由到`Type.ENGLISH`的日期，都共享同一套复杂的业务逻辑。
+
+这种做法极大地提升了代码的**可维护性和复用性**。如果需要修改“英语课”的逻辑，只需修改`Type.ENGLISH`的`toDo()`方法，所有关联的日期（如周一、周二、周三）都会自动生效
+
+尽管这种写法在特定场景下非常优雅，但也存在一些限制：
+1. **编译时绑定**：枚举最大的特点是所有值在编译时就必须确定。无法在程序运行时不修改代码、通过外部配置就动态地添加一个新的`DayEnum.Weekend`或一个新的课程类型`Type.MUSIC`。这对于需要高度动态配置的系统是一个硬约束。
+2. **单一职责的权衡**：这种结构将路由和策略都塞进了一个枚举文件中。当策略逻辑非常复杂时（例如，`Type.CHINESE.toDo()`方法内部需要调用多个Service，完成一系列复杂操作），可能会导致这个枚举类变得臃肿。虽然可以通过在策略方法内部调用外部Service类来缓解，但这仍是需要权衡的点。
+
+### 如何选择与小结
+
+这几种重构方法各有侧重，可以根据实际场景选择：
+
+- 如果业务逻辑相对稳定且类型固定，追求简洁直观，**枚举**是不错的选择。
+- 如果每个分支的逻辑非常复杂且独立，希望将对象的创建与使用解耦，**工厂类**非常合适。
+- 如果希望在运行时灵活切换算法，或者未来可能频繁增加新的课程类型，**策略模式**的扩展性更好。
+- 如果需要将请求的发送与执行解耦，或者未来可能支持命令队列、撤销等高级功能，可以考虑**命令模式**。
+- 如果业务规则极其复杂、多变，甚至需要从外部（如数据库、配置文件）动态加载规则，那么**规则引擎**能提供最大的灵活性。
+
+
 
 <!-- @include: @article-footer.snippet.md -->
