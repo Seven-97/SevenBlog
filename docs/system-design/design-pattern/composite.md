@@ -1,5 +1,5 @@
 ---
-title: 组合模式
+title: 组合（整体）模式
 category: 系统设计
 tags:
   - 设计模式

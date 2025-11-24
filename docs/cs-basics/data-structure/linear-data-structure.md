@@ -1054,8 +1054,5 @@ class MyStack {
 - 空间复杂度: O(n)
 
 
-## 参考链接
-
-来源：[线性数据结构 | JavaGuide](https://javaguide.cn/cs-basics/data-structure/linear-data-structure.html)，Seven对其做了补充完善
 
 <!-- @include: @article-footer.snippet.md -->     
