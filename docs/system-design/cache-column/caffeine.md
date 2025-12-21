@@ -114,7 +114,7 @@ public static void main(String[] args) throws Exception {
 
 `W-TinyLFU`算法有效的解决了LRU以及LFU存在的弊端，为Caffeine提供了大部分场景下**近乎完美**的**命中率**表现。
 
-关于`W-TinyLFU`的具体说明，有兴趣的话可以[点此了解](https://link.juejin.cn?target=https%3A%2F%2Fwww.jianshu.com%2Fp%2F3c6161e5337b)。
+关于`W-TinyLFU`的具体说明，有兴趣的话可以[点此了解](https://www.jianshu.com/p/3c6161e5337b)。
 
 
 
@@ -122,8 +122,8 @@ public static void main(String[] args) throws Exception {
 
 在Caffeine与Guava Cache之间如何选择？其实Spring已经给大家做了示范，从`Spring5`开始，其内置的本地缓存框架由Guava Cache切换到了Caffeine。应用到项目中的缓存选型，可以结合项目实际从多个方面进行抉择。
 
-- **全新项目**，闭眼选Caffeine Java8也已经被广泛的使用多年，现在的新项目基本上都是JAVA8或以上的版本了。如果有新的项目需要做本地缓存选型，闭眼选择Caffeine就可以，错不了。
-- 历史**低版本JAVA项目** 由于Caffeine对JAVA版本有依赖要求，对于一些历史项目的维护而言，如果项目的**JDK版本过低**则无法使用Caffeine，这种情况下`Guava Cache`依旧是一个不错的选择。当然，也可以下定决心将项目的JDK版本升级到`JDK1.8+`版本，然后使用Caffeine来获得更好的性能体验 —— 但是对于一个历史项目而言，升级基础JDK版本带来的影响可能会比较大，需要提前评估好。
+- **全新项目**，闭眼选Caffeine。Java8也已经被广泛的使用多年，现在的新项目基本上都是JAVA8或以上的版本了。如果有新的项目需要做本地缓存选型，闭眼选择Caffeine就可以，错不了。
+- 历史**低版本JAVA项目**：由于Caffeine对JAVA版本有依赖要求，对于一些历史项目的维护而言，如果项目的**JDK版本过低**则无法使用Caffeine，这种情况下`Guava Cache`依旧是一个不错的选择。当然，也可以下定决心将项目的JDK版本升级到`JDK1.8+`版本，然后使用Caffeine来获得更好的性能体验 —— 但是对于一个历史项目而言，升级基础JDK版本带来的影响可能会比较大，需要提前评估好。
 - 有同时使用**Guava其它能力** 如果你的项目里面已经有引入并使用了Guava提供的相关功能，这种情况下为了避免太多外部组件的引入，也可以直接使用Guava提供的Cache组件能力，毕竟Guava Cache的表现并不算差，应付常规场景的本都缓存诉求完全足够。当然，为了追求更加极致的性能表现，另外引入并使用Caffeine也完全没有问题。
 
 
@@ -238,7 +238,7 @@ public static void main(String[] args) {
 
 #### 业务使用
 
-在上一章节创建缓存对象的时候，Caffeine支持创建出**同步缓存**与**异步缓存**，也即`Cache`与`AsyncCache`两种不同类型。而如果指定了CacheLoader的时候，又可以细分出`LoadingCache`子类型与`AsyncLoadingCache`子类型。对于常规业务使用而言，知道这四种类型的缓存类型基本就可以满足大部分场景的正常使用了。但是Caffeine的整体缓存类型其实是细分成了很多不同的具体类型的，从下面的`UML图`上可以看出一二。
+Caffeine支持创建出**同步缓存**与**异步缓存**，也即`Cache`与`AsyncCache`两种不同类型。而如果指定了CacheLoader的时候，又可以细分出`LoadingCache`子类型与`AsyncLoadingCache`子类型。对于常规业务使用而言，知道这四种类型的缓存类型基本就可以满足大部分场景的正常使用了。但是Caffeine的整体缓存类型其实是细分成了很多不同的具体类型的，从下面的`UML图`上可以看出一二。
 
 - **同步缓存**
 
@@ -861,7 +861,7 @@ java.lang.IllegalStateException: weigher requires maximumWeight
 | weakValues | 采用`弱引用`方式存储value值内容，当value对象不再被引用的时候，由**GC**进行回收 |
 | softValues | 采用`软引用`方式存储value值内容，当内存容量满时基于**LRU**策略进行回收 |
 
-关于JVM不同引用的介绍看这篇文章[GC - 理论基础 | Seven的菜鸟成长之路 (seven97.top)](https://www.seven97.top/java/jvm/02-gc1-theory.html#引用类型)
+关于JVM不同引用的介绍看这篇文章[GC - 理论基础](https://www.seven97.top/java/jvm/02-gc1-theory.html#引用类型)
 
 ##### weakKeys
 
@@ -935,7 +935,7 @@ Exception in thread "main" java.lang.IllegalStateException: Weak or soft values 
 	at com.veezean.skills.cache.caffeine.CaffeineCacheService.main(CaffeineCacheService.java:297)
 ```
 
-当然咯，很多时候也可以将`weakKeys`与`weakValues`组合起来使用，这样可以获得到两种能力的综合加成。
+当然，很多时候也可以将`weakKeys`与`weakValues`组合起来使用，这样可以获得到两种能力的综合加成。
 
 ```java
 LoadingCache<String,  User> loadingCache = Caffeine.newBuilder()

@@ -171,9 +171,9 @@ private void ensureExplicitCapacity(int minCapacity) {
 
 addAll()方法能够一次添加多个元素，根据位置不同也有两个版本，
 
-- 在末尾添加的addAll(Collection<? extends E> c)方法，
+- 在末尾添加的`addAll(Collection<? extends E> c)`方法，
 
-- 从指定位置开始插入的addAll(int index, Collection<? extends E> c)方法
+- 从指定位置开始插入的`addAll(int index, Collection<? extends E> c)`方法
 
 跟add()方法类似，在插入之前也需要进行空间检查，如果需要则自动扩容；如果从指定位置插入，也会存在移动元素的情况。 addAll()的时间复杂度不仅跟插入元素的多少有关，也跟插入的位置相关。
 
@@ -208,9 +208,7 @@ public E get(int index) {
 ### remove方法
 
 remove()方法也有两个
-
 - remove(int index)删除指定位置的元素，
-
 - remove(Object o)删除第一个满足o.equals(elementData[index])的元素。
 
 删除操作是add()操作的逆过程，会需要将删除点之后的元素向前移动一个位置
@@ -313,9 +311,7 @@ for(int i=0;i<list.size();i++){
 
 
 
-解决办法：
-
-//从list最后一个元素开始遍历
+解决办法：从list最后一个元素开始遍历
 
 ```java
 //从list最后一个元素开始遍历

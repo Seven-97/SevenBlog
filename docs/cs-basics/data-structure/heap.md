@@ -211,11 +211,6 @@ head:
 
 
 
-## 参考链接
-
-来源：[堆 | JavaGuide](https://javaguide.cn/cs-basics/data-structure/heap.html)
-
-
 
 
 

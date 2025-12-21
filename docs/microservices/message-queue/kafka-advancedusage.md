@@ -1242,7 +1242,7 @@ properties.put(ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG, "org.apache.
 
  Kafka 0.9 版本之前consumer默认将offset保存在Zookeeper中，从0.9版本之后consumer默认保存在Kafka一个内置的topic中，该topic为_consumer_offsets。
 
- 消费者提交的offset值维护在**__consumer_offsets这个Topic中，具体维护在哪个分区中，是由消费者所在的消费者组groupid**决定，计算方式是：groupid的hashCode值对50取余。当kafka环境正常而消费者不能消费时，有可能是对应的__consumer_offsets分区leader为none或-1，或者分区中的日志文件损坏导致。
+ 消费者提交的offset值维护在`__consumer_offsets`这个Topic中，具体维护在哪个分区中，是由消费者所在的消费者组groupid决定，计算方式是：groupid的hashCode值对50取余。当kafka环境正常而消费者不能消费时，有可能是对应的__consumer_offsets分区leader为none或-1，或者分区中的日志文件损坏导致。
 
  __consumer_offsets 主题里面采用 key 和 value 的方式存储数据。key 是 group.id+topic+ 分区号，value 就是当前 offset 的值。每隔一段时间，kafka 内部会对这个 topic 进行 compact，也就是每个 group.id+topic+分区号就保留最新数据。
 

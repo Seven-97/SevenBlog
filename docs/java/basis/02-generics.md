@@ -108,7 +108,7 @@ class DateInter extends Pair<Date> {
 
 
 
-在这个子类中，设定父类的泛型类型为Pair&lt;Date&gt;，在子类中，覆盖了父类的两个方法，原意是这样的：将父类的泛型类型限定为Date，那么父类里面的两个方法的参数都为Date类型。
+在这个子类中，设定父类的泛型类型为`Pair<Date>`，在子类中，覆盖了父类的两个方法，原意是这样的：将父类的泛型类型限定为Date，那么父类里面的两个方法的参数都为Date类型。
 
 ```java
 public Date getValue() {  
@@ -140,7 +140,7 @@ class Pair {
 
 
 
-再看子类的两个重写的方法的类型：setValue方法，父类的类型是Object，而子类的类型是Date，参数类型不一样，这如果实在普通的继承关系中，根本就不会是重写，而是重载。 在一个main方法测试一下：
+再看子类的两个重写的方法的类型：setValue方法，父类的类型是Object，而子类的类型是Date，参数类型不一样，这如果是在普通的继承关系中，根本就不会是重写，而是重载。 在一个main方法测试一下：
 
 ```java
 public static void main(String[] args) throws ClassNotFoundException {  

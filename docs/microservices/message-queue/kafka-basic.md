@@ -21,7 +21,7 @@ head:
 
 在Kafka2.8版本前，Zookeeper的Consumer文件中存放消息被消费的记录（offset）
 
-在Kafka2.8版本走，消息被消费的记录（offset）存放在Kafka中。
+在Kafka2.8版本后，消息被消费的记录（offset）存放在Kafka中。
 
 （1）Producer：消息生产者，就是向 Kafka broker 发消息的客户端。
 

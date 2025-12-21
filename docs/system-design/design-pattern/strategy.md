@@ -129,89 +129,74 @@ public class SalesMan {
 
 ## 源码解析 - Comparator
 
-Comparator 中的策略模式。在Arrays类中有一个 sort() 方法，如下：
+有一个`Person`类，需要进行排序，有两种方式：
+
+-  Comparable：让对象自己会比较
+
+一个类实现了 `Comparable`接口，就意味着这个类的对象**天生就是可以相互比较排序的**。这被称为“自然排序”，比如 `String`按字典序、`Integer`按数值大小。
 
 ```java
-public class Arrays{
-    public static <T> void sort(T[] a, Comparator<? super T> c) {
-        if (c == null) {
-            sort(a);
-        } else {
-            if (LegacyMergeSort.userRequested)
-                legacyMergeSort(a, c);
-            else
-                TimSort.sort(a, 0, a.length, c, null, 0, 0);
-        }
+// Person类通过实现Comparable接口，获得了按年龄比较的能力
+public class Person implements Comparable<Person> {
+    private String name;
+    private int age;
+
+    // 构造方法、getter和setter省略...
+
+    @Override
+    public int compareTo(Person otherPerson) {
+        // 按照年龄进行自然排序
+        return this.age - otherPerson.age;
+        // 更严谨的写法是：return Integer.compare(this.age, otherPerson.age);
     }
 }
 ```
 
-
-
-Arrays就是一个环境角色类，这个sort方法可以传一个新策略让Arrays根据这个策略来进行排序。就比如下面的测试类。
+使用方式：
 
 ```java
-public class demo {
-    public static void main(String[] args) {
+List<Person> people = Arrays.asList(new Person("Alice", 30), new Person("Bob", 25));
+Collections.sort(people); // 排序后，顺序为 [Bob(25), Alice(30)]
+```
 
-        Integer[] data = {12, 2, 3, 2, 4, 5, 1};
-        // 实现降序排序
-        Arrays.sort(data, new Comparator<Integer>() {
-            public int compare(Integer o1, Integer o2) {
-                return o2 - o1;
-            }
-        });
-        System.out.println(Arrays.toString(data)); //[12, 5, 4, 3, 2, 2, 1]
+
+这里直接调用 `Collections.sort(list)`，排序规则由 `Person`类自己定义的 `compareTo`方法决定
+
+-  Comparator：外部定义多种比较规则
+
+如果想按姓名排序，但又不能或不想修改 `Person`类怎么办？或者，希望有不止一种排序方式（比如有时按年龄，有时按姓名）？这时 `Comparator`就派上用场了。它体现了**策略模式**，将比较算法与对象分离开
+
+```java
+// 创建一个按姓名比较的比较器
+import java.util.Comparator;
+
+public class NameComparator implements Comparator<Person> {
+    @Override
+    public int compare(Person p1, Person p2) {
+        return p1.getName().compareTo(p2.getName());
     }
 }
 ```
 
-
-
-这里我们在调用Arrays的sort方法时，第二个参数传递的是Comparator接口的子实现类对象。所以Comparator充当的是抽象策略角色，而具体的子实现类充当的是具体策略角色。环境角色类（Arrays）应该持有抽象策略的引用来调用。那么，Arrays类的sort方法到底有没有使用Comparator子实现类中的 compare() 方法吗？让我们继续查看TimSort类的 sort() 方法，代码如下：
+使用方式：
 
 ```java
-class TimSort<T> {
-    static <T> void sort(T[] a, int lo, int hi, Comparator<? super T> c,
-                         T[] work, int workBase, int workLen) {
-        assert c != null && a != null && lo >= 0 && lo <= hi && hi <= a.length;
-
-        int nRemaining  = hi - lo;
-        if (nRemaining < 2)
-            return;  // Arrays of size 0 and 1 are always sorted
-
-        // If array is small, do a "mini-TimSort" with no merges
-        if (nRemaining < MIN_MERGE) {
-            int initRunLen = countRunAndMakeAscending(a, lo, hi, c);
-            binarySort(a, lo, hi, lo + initRunLen, c);
-            return;
-        }
-        ...
-    }   
-        
-    private static <T> int countRunAndMakeAscending(T[] a, int lo, int hi,Comparator<? super T> c) {
-        assert lo < hi;
-        int runHi = lo + 1;
-        if (runHi == hi)
-            return 1;
-
-        // Find end of run, and reverse range if descending
-        if (c.compare(a[runHi++], a[lo]) < 0) { // Descending
-            while (runHi < hi && c.compare(a[runHi], a[runHi - 1]) < 0)
-                runHi++;
-            reverseRange(a, lo, runHi);
-        } else {                              // Ascending
-            while (runHi < hi && c.compare(a[runHi], a[runHi - 1]) >= 0)
-                runHi++;
-        }
-
-        return runHi - lo;
-    }
-}
+List<Person> people = Arrays.asList(new Person("Alice", 30), new Person("Bob", 25));
+Collections.sort(people, new NameComparator()); // 排序后，顺序为 [Alice(30), Bob(25)]
 ```
 
-上面的代码中最终会跑到 countRunAndMakeAscending() 这个方法中。我们可以看见，只用了compare方法，所以在调用Arrays.sort方法只传具体compare重写方法的类对象就行，这也是Comparator接口中必须要子类实现的一个方法。
+甚至可以**不创建新类**，直接使用匿名内部类或Lambda表达式，非常灵活
 
+```java
+// 使用Lambda表达式按年龄降序排列
+Collections.sort(people, (p1, p2) -> p2.getAge() - p1.getAge());
+// 或使用Java 8的Comparator工具方法，更清晰
+Collections.sort(people, Comparator.comparing(Person::getAge).reversed());
+```
+
+
+这里我们在调用Collections 的sort方法时，第二个参数传递的是Comparator接口的子实现类对象。所以Comparator充当的是抽象策略角色，而具体的子实现类充当的是具体策略角色。
+ 
 
 ## 重构-替换 if-else
 
