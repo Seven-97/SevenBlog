@@ -95,8 +95,15 @@ hash算法最简单的做法就是进行取模运算，比如分布式系统中�
 ```java
 public class ConsistentHash {
     private final int numberOfReplicas; // 虚拟节点数量
+	// 哈希环，key为虚拟节点的哈希值，value为实际节点
     private final SortedMap<Integer, String> circle = new TreeMap<>();
     
+    /**
+    * 构造函数
+    *
+    * @param numberOfReplicas 虚拟节点数量
+    * @param nodes          实际节点列表
+    */
     public ConsistentHash(int numberOfReplicas, Collection<String> nodes) {
         this.numberOfReplicas = numberOfReplicas;
         for (String node : nodes) {
@@ -127,7 +134,8 @@ public class ConsistentHash {
         if (circle.isEmpty()) {
             return null;
         }
-        
+
+		// 计算key的哈希值
         int hash = getHash(key);
         
         // 如果没有大于等于该hash值的节点，则返回第一个节点
@@ -139,9 +147,29 @@ public class ConsistentHash {
         return circle.get(hash);
     }
     
-    // 哈希函数
-    private int getHash(String key) {
-        return Math.abs(key.hashCode()) % 359;
+	/**
+    * FNV1_32_HASH算法
+    *
+    * @param str 字符串
+    * @return 哈希值
+    */
+	private long getHash(String str) {
+        final int p = 16777619;
+        int hash = (int) 2166136261L;
+        for (int i = 0; i < str.length(); i++) {
+            hash = (hash ^ str.charAt(i)) * p;
+        }
+        hash += hash << 13;
+        hash ^= hash >> 7;
+        hash += hash << 3;
+        hash ^= hash >> 17;
+        hash += hash << 5;
+
+        // 如果算出来的值为负数则取其绝对值
+        if (hash < 0) {
+            hash = Math.abs(hash);
+        }
+        return hash;
     }
 }
 ```

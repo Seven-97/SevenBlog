@@ -148,6 +148,194 @@ head:
 
 - 突发流量无法处理（无法应对短时间内的大量请求，因为一旦到达限流后，请求都会直接暴力被拒绝。这样就会损失一部分请求，这其实对于产品来说，并不太友好），需要合理调整时间窗口大小。
 
+### Redisson实现滑动窗口
+
+```java
+import org.redisson.api.RBatch;
+import org.redisson.api.RScoredSortedSet;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.protocol.ScoredEntry;
+import org.springframework.stereotype.Component;
+import java.util.Collection;
+import java.util.concurrent.TimeUnit;
+
+@Component
+public class SlidingWindowCounter {
+
+    private final RedissonClient redissonClient;
+    // 用于存储脚本SHA摘要的字段
+    private final String incrementScriptSha;
+    private final String addUniqueItemScriptSha;
+
+    public SlidingWindowCounter(RedissonClient redissonClient) {
+        this.redissonClient = redissonClient;
+        // 在构造函数中预加载脚本
+        this.incrementScriptSha = loadScript(buildIncrementLuaScript());
+        this.addUniqueItemScriptSha = loadScript(buildAddUniqueItemLuaScript());
+    }
+    
+    private String loadScript(String luaScript) {
+       // 使用 scriptLoad 方法将脚本预加载到Redis，并返回SHA摘要
+       return redissonClient.getScript().scriptLoad(luaScript);
+    }
+    
+    // 将脚本内容定义为常量或方法，便于管理和预加载
+    private String buildIncrementLuaScript() {
+    // 使用Lua脚本保证原子性：清除过期数据、添加新记录、统计总数、设置过期时间
+       return "local key = KEYS[1] " +
+                "local windowStart = tonumber(ARGV[1]) " +
+                "local currentTime = tonumber(ARGV[2]) " +
+                "local windowMillis = tonumber(ARGV[3]) " +
+                // 1. 移除窗口之前的过期数据，也就是windowStart之前的数据
+                "redis.call('zremrangebyscore', key, 0, windowStart) " +
+                // 2. 添加当前请求记录（使用UUID确保成员唯一，避免覆盖）
+                "redis.call('zadd', key, currentTime, currentTime .. '_' .. ARGV[4]) " +
+                // 3. 获取当前窗口内的总元素个数（即总请求次数）
+                "local totalCount = redis.call('zcard', key) " +
+                // 4. 设置Key的过期时间，避免内存泄漏（过期时间略大于窗口时间）
+                "redis.call('expire', key, windowMillis / 1000 + 60) " +
+                // 5. 返回总数
+                "return totalCount";
+    }
+    
+    private String buildAddUniqueItemLuaScript() {
+	    // Lua脚本：清除过期数据、添加/更新唯一项的时间戳、统计唯一项个数
+	    return  "local key = KEYS[1] " +
+                "local windowStart = tonumber(ARGV[1]) " +
+                "local currentTime = tonumber(ARGV[2]) " +
+                "local uniqueItem = ARGV[3] " +
+                "local windowMillis = tonumber(ARGV[4]) " +
+                // 1. 移除窗口之前的过期数据
+                "redis.call('zremrangebyscore', key, 0, windowStart) " +
+                // 2. 添加或更新唯一项（同一酒店ID会更新分数为最新时间）
+                "redis.call('zadd', key, currentTime, uniqueItem) " +
+                // 3. 获取当前窗口内的唯一元素个数（即不同酒店数）
+                "local uniqueCount = redis.call('zcard', key) " +
+                // 4. 设置过期时间
+                "redis.call('expire', key, windowMillis / 1000 + 60) " +
+                // 5. 返回唯一项数量
+                "return uniqueCount";
+    }
+
+    /**
+     * 增加计数
+     * 例如：统计用户请求次数，同一用户的多次请求会累加。
+     *
+     * @param counterKey 计数器的唯一标识，如 "req:user123"
+     * @param windowSize 窗口大小
+     * @param unit       窗口单位
+     * @return 当前窗口内的总请求次数
+     */
+    public long increment(String counterKey, long windowSize, TimeUnit unit) {
+
+        long windowMillis = unit.toMillis(windowSize);
+        long currentTime = System.currentTimeMillis();
+        long windowStart = currentTime - windowMillis;
+        String redisKey = buildKey(counterKey, windowSize, unit);
+
+        RScoredSortedSet<String> windowSet = redissonClient.getScoredSortedSet(redisKey);
+
+        Long result = redissonClient.getScript().eval(
+                org.redisson.api.RScript.Mode.READ_WRITE,
+                incrementScriptSha,
+                org.redisson.api.RScript.ReturnType.INTEGER,
+                java.util.Collections.singletonList(redisKey),
+                windowStart, currentTime, windowMillis, java.util.UUID.randomUUID().toString()
+        );
+
+        return result != null ? result : 0L;
+    }
+
+    /**
+     * 记录唯一值 - 用于“不同数据的计数”
+     * 例如：统计用户访问的不同酒店数，同一酒店ID多次出现只计一次。
+     *
+     * @param counterKey 计数器的唯一标识，如 "hotel:user123"
+     * @param uniqueItem  需要统计的唯一项，如酒店ID "hotel_456"
+     * @param windowSize 窗口大小
+     * @param unit       窗口单位
+     * @return 当前窗口内的唯一项数量
+     */
+
+    public long addUniqueItem(String counterKey, String uniqueItem, long windowSize, TimeUnit unit) {
+
+        long windowMillis = unit.toMillis(windowSize);
+        long currentTime = System.currentTimeMillis();
+        long windowStart = currentTime - windowMillis;
+        String redisKey = buildKey(counterKey, windowSize, unit);
+
+        RScoredSortedSet<String> windowSet = redissonClient.getScoredSortedSet(redisKey);
+
+        Long result = redissonClient.getScript().eval(
+                org.redisson.api.RScript.Mode.READ_WRITE,
+                addUniqueItemScriptSha,
+                org.redisson.api.RScript.ReturnType.INTEGER,
+                java.util.Collections.singletonList(redisKey),
+                windowStart, currentTime, uniqueItem, windowMillis
+        );
+
+        return result != null ? result : 0L;
+    }
+
+    /**
+     * 获取当前窗口的计数
+     *
+     * @param counterKey 计数器的唯一标识
+     * @param windowSize 窗口大小
+     * @param unit       窗口单位
+     * @return 当前窗口内的计数
+     */
+    public long getCount(String counterKey, long windowSize, TimeUnit unit) {
+
+        long windowMillis = unit.toMillis(windowSize);
+        long currentTime = System.currentTimeMillis();
+        long windowStart = currentTime - windowMillis;
+        String redisKey = buildKey(counterKey, windowSize, unit);
+
+        RScoredSortedSet<String> windowSet = redissonClient.getScoredSortedSet(redisKey);
+
+        // 移除过期数据并返回当前数量
+        windowSet.removeRangeByScore(0, true, windowStart, false);
+        return windowSet.size();
+    }
+
+    /**
+     * 获取当前窗口的所有唯一成员
+     *
+     * @param counterKey 计数器的唯一标识
+     * @param windowSize 窗口大小
+     * @param unit       窗口单位
+     * @return 当前窗口内的所有唯一成员集合
+     */
+
+    public Collection<String> getUniqueItems(String counterKey, long windowSize, TimeUnit unit) {
+
+        long windowMillis = unit.toMillis(windowSize);
+        long currentTime = System.currentTimeMillis();
+        long windowStart = currentTime - windowMillis;
+        String redisKey = buildKey(counterKey, windowSize, unit);
+
+        RScoredSortedSet<String> windowSet = redissonClient.getScoredSortedSet(redisKey);
+
+        // 移除过期数据
+        windowSet.removeRangeByScore(0, true, windowStart, false);
+        // 返回所有成员（即不同的酒店ID等）
+
+        return windowSet.readAll();
+    }
+
+    /**
+     * 构建Redis存储的Key，包含窗口信息
+     */
+    private String buildKey(String baseKey, long windowSize, TimeUnit unit) {
+
+        // 示例：sliding:counter:req:user123:3600000 (窗口3600秒)
+        return String.format("sliding:counter:%s:%d", baseKey, unit.toMillis(windowSize));
+    }
+
+}
+```
+
 ## 漏斗限流算法
 
 漏桶限流算法（Leaky Bucket Algorithm）是一种流量控制算法，用于控制流入网络的数据速率，以防止网络拥塞。它的思想是将数据包看作是水滴，漏桶看作是一个固定容量的水桶，数据包像水滴一样从桶的顶部流入桶中，并通过桶底的一个小孔以一定的速度流出，从而限制了数据包的流量。
