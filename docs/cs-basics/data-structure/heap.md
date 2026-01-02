@@ -56,7 +56,7 @@ head:
 
 如下图所示，图 1 是最大堆，图 2 是最小堆
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270855323.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202601011715762.png)
 
 ## 堆的存储
 
@@ -64,7 +64,7 @@ head:
 
 为了方便存储和索引，（二叉）堆可以用完全二叉树的形式进行存储。存储的方式如下图所示：
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270855166.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202601011715796.png)
 
 ## 堆的操作
 
@@ -84,9 +84,9 @@ head:
 
 **2.从底向上，如果父结点比该元素小，则该节点和父结点交换，直到无法交换**
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270855445.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202601011716539.png)
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404270855978.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202601011717343.png)
 
 ### 删除堆顶元素
 
