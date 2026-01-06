@@ -226,6 +226,8 @@ public class Test {
 - 数组使用的是连续内存空间对 CPU 的缓存机制友好，链表则相反。
 - 数组的大小固定，而链表则天然支持动态扩容。如果声明的数组过小，需要另外申请一个更大的内存空间存放数组元素，然后将原数组拷贝进去，这个操作是比较耗时的！
 
+链表的性能问题，详情可以看这篇文章：[LinkedList 存在的性能问题](https://www.seven97.top/java/collection/02-collection2-linkedlist.html#linkedlist-存在的性能问题)
+
 ### 单向链表的增删改查实现
 
 ```java
