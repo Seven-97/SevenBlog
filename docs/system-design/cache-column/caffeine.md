@@ -868,7 +868,7 @@ java.lang.IllegalStateException: weigher requires maximumWeight
 默认情况下，我们创建出一个Caffeine缓存对象并写入`key-value`映射数据时，key和value都是以**强引用**的方式存储的。而使用`weakKeys`可以指定将缓存中的key值以**弱引用**（WeakReference）的方式进行存储，这样一来，如果程序运行时没有其它地方使用或者依赖此缓存值的时候，该条记录就可能会被`GC回收`掉。
 
 ```java
-java复制代码 LoadingCache<String,  User> loadingCache = Caffeine.newBuilder()
+LoadingCache<String,  User> loadingCache = Caffeine.newBuilder()
                 .weakKeys()
                 .build(key -> userDao.getUser(key));
 ```
@@ -894,8 +894,7 @@ public static void main(String[] args) {
 
 执行之后，会发现使用存入时的key1进行查询的时候是可以查询到数据的，而使用key2去查询的时候并没有查询到记录，虽然key1与key2的值都是字符串123！
 
-```csharp
-csharp复制代码value1
+```java
 key1.equals(key2) ： true
 key1==key2 ： false
 null

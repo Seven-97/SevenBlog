@@ -107,7 +107,7 @@ jstack参数：
 
 通过 jstack 命令可以获取当前进程的所有线程信息。
 
-每个线程堆中信息中，都可以查看到 线程ID、线程的状态（wait、sleep、running 等状态）、是否持有锁信息等。
+每个线程堆的信息中，都可以查看到 线程ID、线程的状态（wait、sleep、running 等状态）、是否持有锁信息等。
 
 
 
@@ -280,7 +280,6 @@ no option 输出全部的参数和系统属性
 
 > 命令jmap是一个多功能的命令。它可以生成 java 程序的 dump 文件， 也可以查看堆内对象示例的统计信息、查看 ClassLoader 的信息以及 finalizer 队列。
 
-**注意**:此命令会导致虚拟机暂停工作1~3秒
 
 两个用途
 
@@ -422,6 +421,13 @@ Number of objects pending for finalization: 0 说明当前F-QUEUE队列中并没
 
 
 更多请参考： [jmap - Memory Map](https://docs.oracle.com/javase/1.5.0/docs/tooldocs/share/jmap.html)
+
+#### 注意
+
+此命令会导致虚拟机暂停工作1~3秒，因此在实际生产环境中基本不使用！！！一般情况下，在出现问题时，会用以下方案
+- 服务已OOM或即将OOM：依赖预设的JVM参数 `-XX:+HeapDumpOnOutOfMemoryError`。这样JVM会在崩溃时**自动生成Dump**，无需手动干预，避免二次伤害。
+- 服务可用但性能劣化：**Arthas**，用它进行**在线、低侵入式分析**。
+
 
 
 ### jstat
@@ -596,7 +602,7 @@ java.home              /Library/Java/JavaVir
 heap: 堆内存的使用情况：
 
 - used 32M: 当前堆内存使用 32MB
-- otal 155M: 堆内存总量为 155MB.
+- total 155M: 堆内存总量为 155MB.
 - max1820M:堆内存最大量为1820MB.
 - usage 1.77%: 堆内存使用百分比为 1.77%
 

@@ -798,6 +798,48 @@ top -s
 ```
 
 
+## lscpu
+
+查看详细的CPU架构信息
+
+```shell
+Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+
+# 计算验证：96 = 1个插槽 × 48核/插槽 × 2线程/核
+# 可以访问 48个物理核心，通过超线程技术呈现为 96个逻辑处理器，非常适合高并发工作负载
+CPU(s):                96         # 总逻辑处理器数 = 操作系统可见的CPU数量
+On-line CPU(s) list:   0-95
+Thread(s) per core:    2          # 每个物理核心有2个线程 → 启用了超线程
+Core(s) per socket:    48         # 每个CPU插槽有48个物理核心
+Socket(s):             1          # 只有1个物理CPU插槽
+
+NUMA node(s):          1
+Vendor ID:             AuthenticAMD
+CPU family:            23
+Model:                 49
+Model name:            AMD EPYC 7K62 48-Core Processor
+Stepping:              0
+
+# CPU当前运行在**3.24GHz**（高于基准频率），说明正在睿频加速以应对当前负载。
+CPU MHz:               3243.496           # 当前运行频率：3.24 GHz
+CPU max MHz:           2600.0000          # 基准频率：2.6 GHz  
+CPU min MHz:           1500.0000          # 最低频率：1.5 GHz
+
+BogoMIPS:              5190.44
+Virtualization:        AMD-V
+
+# L1总缓存：48核 × (32KB + 32KB) = 约3MB 
+# L2总缓存：48核 × 512KB = 24MB
+# L3总缓存：根据CCD数量而定（7K62通常有8个CCD，每个16MB → 约128MB）
+L1d cache:             32K        #​32KB/核心
+L1i cache:             32K        #​32KB/核心
+L2 cache:              512K       #​512KB/核心
+L3 cache:              16384K     #​16MB/CCD（核心复合体）共享
+NUMA node0 CPU(s):     0-95
+```
+
 
 ## netstat命令 - 显示网络状态
 
