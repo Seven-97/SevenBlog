@@ -380,6 +380,207 @@ DateUtils.df.get().format(new Date());
 ```
 
 
+## InheritableThreadLocal
+
+InheritableThreadLocal相比ThreadLocal多一个能力：在创建子线程Thread时，子线程Thread会自动继承父线程的InheritableThreadLocal信息到子线程中，进而实现在在子线程获取父线程的InheritableThreadLocal值的目的。
+
+### 和 ThreadLocal 的区别
+
+举个简单的栗子对比下InheritableThreadLocal和ThreadLocal：
+
+```java
+public class InheritableThreadLocalTest {    
+	private static final ThreadLocal<String> threadLocal = new ThreadLocal<>();    
+	private static final InheritableThreadLocal<String> inheritableThreadLocal = new InheritableThreadLocal<>();    
+
+	public static void main(String[] args) {        
+		testThreadLocal();        
+		testInheritableThreadLocal();    
+	}    
+
+	/**     * threadLocal测试     */    
+	public static void testThreadLocal() {       
+		 // 在主线程中设置值到threadLocal        
+		 threadLocal.set("我是父线程threadLocal的值");        
+		 // 创建一个新线程并启动        
+		 new Thread(() -> {            
+				 // 在子线程里面无法获取到父线程设置的threadLocal，结果为null            
+				 System.out.println("从子线程获取到threadLocal的值: " + threadLocal.get());           }
+		 ).start();    
+	 }    
+ 
+	 /**     * inheritableThreadLocal测试     */  
+	public static void testInheritableThreadLocal() {        
+		// 在主线程中设置一个值到inheritableThreadLocal        
+		inheritableThreadLocal.set("我是父线程inheritableThreadLocal的值");        
+		// 创建一个新线程并启动        
+		new Thread(() -> {            
+				// 在子线程里面可以自动获取到父线程设置的inheritableThreadLocal    
+				System.out.println("从子线程获取到inheritableThreadLocal的值: " + inheritableThreadLocal.get());        
+			}).start();    
+		}
+	}
+```
+
+执行结果：
+
+```text
+从子线程获取到threadLocal的值:null
+从子线程获取到inheritableThreadLocal的值:我是父线程inheritableThreadLocal的值
+```
+
+可以看到子线程中可以获取到父线程设置的inheritableThreadLocal值，但不能获取到父线程设置的threadLocal值
+### 实现原理
+
+InheritableThreadLocal 的实现原理相当精妙，它通过在创建子线程的瞬间，“复制”父线程的线程局部变量，从而实现了数据从父线程到子线程的**一次性、创建时**的传递 。
+
+其核心工作原理可以清晰地通过以下序列图展示，它描绘了当父线程创建一个子线程时，数据是如何被传递的：
+
+```mermaid
+sequenceDiagram
+    participant Parent as 父线程
+    participant Thread as Thread构造方法
+    participant ITL as InheritableThreadLocal
+    participant ThMap as ThreadLocalMap
+    participant Child as 子线程
+
+    Parent->>Thread: 创建 new Thread()
+    Note over Parent,Thread: 关键步骤：初始化
+    Thread->>Thread: 调用 init() 方法
+    Note over Thread,ITL: 检查父线程的 inheritableThreadLocals
+    Thread->>+ThMap: createInheritedMap(<br/>parent.inheritableThreadLocals)
+    ThMap->>ThMap: 新建一个ThreadLocalMap
+    loop 遍历父线程Map中的每个Entry
+        ThMap->>+ITL: 调用 key.childValue(parentValue)
+        ITL-->>-ThMap: 返回子线程初始值<br/>(默认返回父值，可重写)
+        ThMap->>ThMap: 将 (key, value) 放入新Map
+    end
+    ThMap-->>-Thread: 返回新的ThreadLocalMap对象
+    Thread->>Child: 将新Map赋给子线程的<br/>inheritableThreadLocals属性
+    Note over Child: 子线程拥有父线程变量的副本
+```
+
+下面我们来详细拆解图中的关键环节。
+
+ #### 核心实现机制
+
+1. **数据结构基础：`Thread`类内部维护了两个 `ThreadLocalMap`类型的变量 ：
+    - `threadLocals`：用于存储普通 `ThreadLocal`设置的变量副本。
+    - `inheritableThreadLocals`：专门用于存储 `InheritableThreadLocal`设置的变量副本 。`InheritableThreadLocal`通过重写 `getMap`和 `createMap`方法，使其所有操作都针对 `inheritableThreadLocals`字段，从而与普通 `ThreadLocal`分离开 。
+2. **继承触发时刻：子线程的创建**。继承行为发生在子线程被创建（即执行 `new Thread()`）时。在 `Thread`类的 `init`方法中，如果判断需要继承（`inheritThreadLocals`参数为 `true`）**且**父线程（当前线程）的 `inheritableThreadLocals`不为 `null`，则会执行复制逻辑 。
+3. **复制过程的核心：`createInheritedMap`**。这是实现复制的核心方法 。它会创建一个新的 `ThreadLocalMap`，并将父线程 `inheritableThreadLocals`中的所有条目遍历拷贝到新 Map 中。
+    - **Key的复制**：Key（即 `InheritableThreadLocal`对象本身）是直接复制的引用。
+    - **Value的生成**：Value 并非直接复制引用，而是通过调用 `InheritableThreadLocal`的 `childValue(T parentValue)`方法来生成子线程中的初始值。**默认实现是直接返回父值**（`return parentValue;`），这意味着对于对象类型，父子线程将共享同一个对象引用 。
+
+#### 关键特性与注意事项
+
+1. **创建时复制，后续独立**：继承只发生一次，即在子线程对象创建的瞬间。此后，父线程和子线程对各自 `InheritableThreadLocal`变量的修改互不影响 。
+2. **在线程池中的局限性**：这是 `InheritableThreadLocal`最需要警惕的问题。线程池中的线程是复用的，这些线程在首次创建时可能已经从某个父线程继承了值。但当它们被用于执行新的任务时，新的任务提交线程（逻辑上的“父线程”）与工作线程已无直接的创建关系，因此之前继承的值不会更新，这会导致**数据错乱**（如用户A的任务拿到了用户B的信息）或**内存泄漏**​ 。对于线程池场景，应考虑使用阿里开源的 **TransmittableThreadLocal (TTL)**​ 。
+3. **浅拷贝与对象共享**：由于 `childValue`方法默认是浅拷贝，如果存入的是可变对象（如 `Map`、`List`），父子线程实际持有的是同一个对象的引用。在一个线程中修改该对象的内部状态，会直接影响另一个线程 。若需隔离，可以重写 `childValue`方法实现深拷贝 。
+4. **内存泄漏风险**：与 `ThreadLocal`类似，如果线程长时间运行（如线程池中的核心线程），并且未及时调用 `remove`方法清理，那么该线程的 `inheritableThreadLocals`会一直持有值的强引用，导致无法被GC回收。良好的实践是在任务执行完毕后主动调用 `remove()`
+
+#### 线程池中局限性
+
+一般来说，在真实的业务场景下，没人会直接 new Thread，而都是使用线程池的，因此`InheritableThreadLocal`在线程池中的使用局限性要额外注意
+
+首先，我们先理解 `InheritableThreadLocal`的继承前提
+- `InheritableThreadLocal`的继承只发生在 **新线程被创建时**（即 `new Thread()`并启动时）。在创建过程中，子线程会复制父线程的 `InheritableThreadLocal`值。
+- 在线程池中，线程是预先创建或按需创建的，并且会被复用。因此，继承只会在线程池**创建新线程**时发生，而不会在复用现有线程时发生。
+
+再看线程池创建新线程的条件，对于标准的 `ThreadPoolExecutor`，新线程的创建遵循以下规则：
+1. **当前线程数 < 核心线程数**：当提交新任务时，如果当前运行的线程数小于核心线程数，即使有空闲线程，线程池也会创建新线程来处理任务。此时，新线程会继承父线程（提交任务的线程）的 `InheritableThreadLocal`。
+2. **当前线程数 >= 核心线程数 && 队列已满 && 线程数 < 最大线程数**：当任务队列已满，且当前线程数小于最大线程数时，线程池会创建新线程来处理任务。同样，新线程会继承父线程的 `InheritableThreadLocal`。
+
+
+不会继承的场景
+
+- **线程复用**：当线程池中有空闲线程时（例如，当前线程数 >= 核心线程数，但队列未满），任务会被分配给现有线程执行。此时，没有新线程创建，因此不会发生继承。现有线程的 `InheritableThreadLocal`值保持不变（可能是之前任务设置的值），这可能导致数据错乱（如用户A的任务看到用户B的数据）。
+- **线程数已达最大值**：如果线程数已达最大线程数，且队列已满，新任务会被拒绝（根据拒绝策略），也不会创建新线程，因此不会继承。
+
+
+不只是线程池污染，线程池使用 `InheritableThreadLocal` 还可能存在获取不到值的情况。例如，在执行异步任务的时候，复用了某个已有的线程A，并且当时创建该线程A的时候，没有继承InheritableThreadLocal，进而导致后面复用该线程的时候，从InheritableThreadLocal获取到的值为null：
+
+```java
+public class InheritableThreadLocalWithThreadPoolTest {    
+	private static final InheritableThreadLocal<String> inheritableThreadLocal = new InheritableThreadLocal<>();    
+	// 这里线程池core/max数量都只有2    
+	private static final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(            
+		2,            
+		2,            
+		0L,            
+		TimeUnit.MILLISECONDS,            
+		new LinkedBlockingQueue<Runnable>(3000),            
+		new ThreadPoolExecutor.CallerRunsPolicy()    
+	);    
+	
+	public static void main(String[] args) {        
+	// 先执行了不涉及InheritableThreadLocal的子任务初始化线程池线程 
+	       testAnotherFunction();        
+	       testAnotherFunction();        
+	       // 后执行了涉及InheritableThreadLocal
+	       testInheritableThreadLocalWithThreadPool("张三");        
+	       testInheritableThreadLocalWithThreadPool("李四");        
+	       threadPoolExecutor.shutdown();    
+	 }    
+	 
+	 /**     * inheritableThreadLocal+线程池测试     */    
+	    public static void testInheritableThreadLocalWithThreadPool(String param) {        
+		    // 1. 在主线程中设置一个值到inheritableThreadLocal        
+	         inheritableThreadLocal.set(param);        
+	        // 2. 提交异步任务到线程池        
+	        threadPoolExecutor.execute(() -> {            
+	        // 3. 在线程池-子线程里面可以获取到父线程设置的inheritableThreadLocal吗？            
+		        System.out.println("线程名: " + Thread.currentThread().getName() + ", 父线程设置的inheritableThreadLocal值: " + param + ", 子线程获取到inheritableThreadLocal的值: " + inheritableThreadLocal.get());        
+	        });        
+	        // 4. 清除inheritableThreadLocal        
+	        inheritableThreadLocal.remove();    
+	   }    
+	               
+	   /**     * 模拟另一个独立的功能     */   
+	   public static void testAnotherFunction() {        
+		   // 提交异步任务到线程池        
+	       threadPoolExecutor.execute(() -> {            
+	       // 在线程池-子线程里面可以获取到父线程设置的inheritableThreadLocal吗？            
+		       System.out.println("线程名: " + Thread.currentThread().getName() + ", 线程池-子线程摸个鱼");        
+	       });    
+	   }
+}
+```
+
+执行结果：
+
+```text
+线程名:pool-1-thread-2,线程池-子线程摸个鱼
+线程名:pool-1-thread-1,线程池-子线程摸个鱼
+线程名:pool-1-thread-1,父线程设置的inheritableThreadLocal值:李四，子线程获取到inheritableThreadLocal的值:null
+线程名:pool-1-thread-2,父线程设置的inheritableThreadLocal值:张三，子线程获取到inheritableThreadLocal的值:null
+```
+
+当然了，解决这个问题可以考虑使用阿里开源的 **TransmittableThreadLocal (TTL)**，​或者在提交异步任务前，先获取线程数据，再传入。例如：
+
+```java
+// 1. 在主线程中先获取inheritableThreadLocal的值
+String name = inheritableThreadLocal.get();    
+    
+// 2. 提交异步任务到线程池        
+threadPoolExecutor.execute(() -> {            
+// 3. 在线程池-子线程里面直接传入数据  
+System.out.println("线程名: " + Thread.currentThread().getName() + ", 父线程设置的inheritableThreadLocal值: " + param + ", 子线程获取到inheritableThreadLocal的值: " + name);        
+	        });        
+```
+
+### 与 ThreadLocal 的对比
+
+|特性|ThreadLocal|InheritableThreadLocal|
+|---|---|---|
+|**数据隔离**​|线程绝对隔离|线程绝对隔离|
+|**子线程继承**​|**不支持**​|**支持**（创建时）|
+|**底层存储字段**​|`Thread.threadLocals`|`Thread.inheritableThreadLocals`|
+|**适用场景**​|线程内全局变量，避免传参|**父子线程间**需要传递上下文数据|
+
+
+
+
 
 
 <!-- @include: @article-footer.snippet.md -->     
