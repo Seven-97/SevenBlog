@@ -508,24 +508,69 @@ Guava的RateLimiter限流组件，就是基于令牌桶算法实现的。
 
 本质上单机限流和分布式限流的区别其实就在于“阈值” 存放的位置,
 
-单机限流就上面所说的算法直接在单台服务器上实现就好了，而往往我们的服务是集群部署的。
-因此需要多台机器协同提供限流功能。
+### 单机限流
 
-像上述的计数器或者时间窗口的算法，可以将计数器存放至 Redis 等分布式 K-V 存储中。
+如果系统部署，是只有一台机器，那可以直接使用 单机限流的方案。可以使用Guava框架里的限流器
 
-例如滑动窗口的每个请求的时间记录可以利用 Redis的 zset存储，利用 ZREMRANGEBYSCORE删除时间窗口之外的数据，再用 ZCARD 计数。
+```java
+<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+<dependency>
+    <groupId>com.google.guava</groupId>
+    <artifactId>guava</artifactId>
+    <version>30.1.1-jre</version>
+</dependency>
+```
 
-像令牌桶也可以将令牌数量放到 Redis 中。不过这样的方式等于每一个请求我们都需要去 Redis 判断一下能不能通过，在性能上有一定的损耗。所以有个优化点就是**批量获取**，每次取令牌不是一个一取，而是取一批，不够了再去取一批，这样可以减少对 Redis 的请求。
+示例代码
 
-不过要注意一点，批量获取会导致一定范围内的限流误差。比如你取了10 个此时不用，等下一秒再用，那同一时刻集群机器总处理量可能会超过阈值其实「批量」这个优化点太常见了，不论是 MySQL的批量刷盘，还是Kafka 消息的批量发送还是分布式 ID 的高性能发号，都包含了「批量」的思想
+```java
+    public static void main(String[] args) throws InterruptedException {
+        // 每秒产生 1 个令牌
+        RateLimiter rt = RateLimiter.create(1, 1, TimeUnit.SECONDS);
+        System.out.println("try acquire token: " + rt.tryAcquire(1) + " time:" + System.currentTimeMillis());
+        System.out.println("try acquire token: " + rt.tryAcquire(1) + " time:" + System.currentTimeMillis());
+        Thread.sleep(2000);
+        System.out.println("try acquire token: " + rt.tryAcquire(1) + " time:" + System.currentTimeMillis());
+        System.out.println("try acquire token: " + rt.tryAcquire(1) + " time:" + System.currentTimeMillis());
 
-当然，分布式限流还有一种思想是平分，假设之前单机限流 500，现在集群部署了5台，那就让每台继续限流 500呗，即在总的入口做总的限流限制，然后每台机子再自己实现限流.
+        System.out.println("-------------分隔符-----------------");
+
+    }
+```
+
+`RateLimiter.tryAcquire()` 和 `RateLimiter.acquire()` 两个方法都通过限流器获取令牌
+
+### 分布式限流
+
+单机限流就上面所说的算法直接在单台服务器上实现就好了，而往往我们的服务是集群部署的，因此需要多台机器协同提供限流功能。
+
+**固定窗口限流算法**：可以将计数器存放至 Redis 等分布式 K-V 存储中。
+
+**滑动窗口限流算法**：滑动窗口的每个请求的时间记录可以利用 Redis的 zset存储，实现的过程是先使用 `ZSet` 的 `key` 存储限流的 `ID`，`score` 用来存储请求的时间，每次有请求访问来了之后，利用 ZREMRANGEBYSCORE 删除时间窗口之外的数据，再用 ZCARD 计数。
+
+此实现方式存在的缺点有两个：
+
+- 使用 ZSet 存储有每次的访问记录，如果数据量比较大时会占用大量的空间；
+- 此代码的执行非原子操作，先判断后增加，中间空隙可穿插其他业务逻辑的执行，最终导致结果不准确。当然这个可以使用 lua脚本 来实现
+
+滑动窗口限流算法可以查看[Redisson实现滑动窗口计数](https://www.seven97.top/database/redis/07-practice-addone.html#扩展：Redisson实现滑动窗口计数)
+
+
+**令牌桶算法**：也可以将令牌数量放到 Redis 中。不过这样的方式会导致每一个请求都需要去 Redis 判断一下能不能通过，在性能上有一定的损耗。所以有个优化点就是**批量获取**，每次取令牌不是一个一取，而是取一批，不够了再去取一批，这样可以减少对 Redis 的请求。
+
+不过要注意一点，批量获取会导致一定范围内的限流误差。比如取了10 个此时不用，等下一秒再用，那同一时刻集群机器总处理量可能会超过阈值。
+
+其实「批量」这个优化点太常见了，不论是 MySQL的批量刷盘，还是Kafka 消息的批量发送还是分布式 ID 的高性能发号，都包含了「批量」的思想
+
+
 
 ## 限流的难点
 
 可以看到，每个限流都有个阈值，这个阈值如何定是个难点。
 
-定大了服务器可能顶不住，定小了就“误杀”了，没有资源利用最大化，对用户体验不好。我能想到的就是限流上线之后先预估个大概的阈值，然后不执行真正的限流操作，而是采取日志记录方式，对日志进行分析查看限流的效果，然后调整阈值，推算出集群总的处理能力，和每台机子的处理能力(方便扩缩容)，然后将线上的流量进行重放，测试真正的限流效果，最终值确定，然后上线。
+定大了服务器可能顶不住，定小了就“误伤”了，没有资源利用最大化，对用户体验不好。
+
+可以对历史数据进行分析，找到误伤和限流的平衡点。或者在限流上线之后先预估个大概的阈值，然后不执行真正的限流操作，而是采取日志记录方式，对日志进行分析查看限流的效果，然后调整阈值，推算出集群总的处理能力，和每台机子的处理能力(方便扩缩容)，然后将线上的流量进行重放，测试真正的限流效果，最终值确定，然后上线。
 
 或者基于TCP拥塞控制的思想，根据请求响应在一个时间段的响应时间P90或者P99值来确定此时服务器的健康状况，来进行动态限流。在 Ease Gateway产品中实现了这套算法，有兴趣的同学可以自行搜索；
 

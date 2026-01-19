@@ -14,7 +14,7 @@ head:
 ---
 
 
-
+`Sentinel` 是阿里中间件团队研发的面向分布式服务架构的轻量级高可用流量控制组件，主要以流量为切入点，从`流量控制`、`熔断降级`、`系统负载保护`等多个维度来帮助用户保护服务的稳定性。
 
 
 ## 请求限流
@@ -245,7 +245,7 @@ public boolean isWindowDeprecated(long time, WindowWrap<T> windowWrap) {
 
 
 
-### Sentinel 限流思路
+#### Sentinel 限流思路
 
 在理解了 LeapArray#currentWindow 和 LeapArray#values 方法的细节之后，其实我们就可以琢磨出限流的实现思路了
 
@@ -255,7 +255,7 @@ public boolean isWindowDeprecated(long time, WindowWrap<T> windowWrap) {
 
 - 如果能通过，则对应的窗口加上本次通过的流量数
 
-### 漏斗
+### 漏斗算法的实现
 
 Sentinel 主要根据 FlowSlot 中的流控进行流量控制，其中 RateLimiterController 就是漏斗算法的实现
 
@@ -332,7 +332,7 @@ public class RateLimiterController implements TrafficShapingController {
 
 
 
-### 令牌桶
+### 令牌桶算法的实现
 
 Sentinel 的令牌桶实现基于 Guava，代码在 WarmUpController 中。
 
@@ -510,12 +510,6 @@ if (restToken >= warningToken) {
 5. 最后，如果 QPS 回复正常，那么又会逐渐回到警戒线之上，就回到了最开始的过程。
 
 ## 线程隔离
-
- 待更新……
-
- 
-
-## 快速失败
 
  待更新……
 

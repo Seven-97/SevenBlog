@@ -195,3 +195,229 @@ graph TD
 
 
 这个方案充分挖掘了Redis原子命令的潜力，通过补偿机制弥补分布式系统的不确定性，最终在简单与可靠之间找到平衡点。
+
+
+
+## 扩展：Redisson实现滑动窗口计数
+
+本方案是通过 **ZSet** 和 **Lua 脚本**来实现的分布式滑动窗口计数器。
+
+核心思想是**将每个请求的时间戳作为分数存入 ZSet，通过计算某个时间区间内的元素数量来统计请求次数，并利用 Lua 脚本保证整个‘清理过期数据-计数-添加新记录’流程的原子性**，非常适合在分布式环境下进行精准的限流和统计。
+
+Key 的组成是 `sliding:counter:{baseKey}:{windowSizeInMillis}`。固定前缀:业务相关key:时间窗口。这里**将窗口大小作为 Key 的一部分是关键**，这样同一个业务标识（如 `user123`）可以同时拥有多个不同时间粒度的计数器
+
+value 的构成（ZSet 中的元素）：取决于调用的方法，做了两种不同的计数场景：
+
+- **普通计数（`increment`方法）**：
+    - **Member（成员）**：`{currentTime}_{UUID}`。例如：`1766863205000_550e8400-e29b-41d4-a716-446655440000`。
+    - **Score（分数）**：当前的毫秒时间戳，即 `currentTime`。
+    - **设计意图**：使用 **时间戳+UUID** 是为了确保每个请求记录的**唯一性**，避免在高并发下同一毫秒内的多个请求因 Member 相同而被覆盖，从而导致计数不准。
+        
+- **唯一值计数（`addUniqueItem`方法）**：
+    - **Member（成员）**：直接使用业务上的唯一标识，如酒店ID `hotel_456`。
+    - **设计意图**：对于同一个 Member（如 `hotel_456`），后续的 `ZADD`操作会**更新其 Score 为最新时间**。这使得 ZSet 能自动维护每个唯一项的最新访问时间，并且 `ZCARD`命令可以直接返回唯一项的数量，完美实现了“统计不同数据的个数”的需求。
+
+
+```java
+import org.redisson.api.RScoredSortedSet;
+import org.redisson.api.RScript;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
+import org.springframework.stereotype.Component;
+
+import java.util.Collections;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 分布式滑动窗口计数器 - Redisson实现
+ * 支持普通计数和唯一值计数两种模式
+ */
+@Component
+public class SlidingWindowCounter {
+    
+    private final RedissonClient redissonClient;
+    
+    // Lua脚本SHA1缓存（脚本预加载）
+    private String incrementScriptSha1;
+    private String uniqueItemScriptSha1;
+    
+    // Key前缀
+    private static final String KEY_PREFIX = "sliding:counter:";
+    
+    public SlidingWindowCounter(RedissonClient redissonClient) {
+        this.redissonClient = redissonClient;
+        // 预加载Lua脚本
+        preloadScripts();
+    }
+    
+    /**
+     * 预加载Lua脚本到Redis服务器
+     */
+    private void preloadScripts() {
+        // 普通计数Lua脚本
+        String incrementScript = 
+            "local key = KEYS[1] " +
+            "local currentTime = tonumber(ARGV[1]) " +
+            "local windowSize = tonumber(ARGV[2]) " +
+            "local uuid = ARGV[3] " +
+            "local expireTime = tonumber(ARGV[4]) " +
+            " " +
+		    //计算窗口开始时间
+            "local windowStart = currentTime - windowSize " +
+            " " +
+            //删除过期数据
+            "redis.call('ZREMRANGEBYSCORE', key, 0, windowStart) " +
+            " " +
+            //添加当前请求记录
+            "local member = currentTime .. '_' .. uuid " +
+            "redis.call('ZADD', key, currentTime, member) " +
+            " " +
+            //设置过期时间
+            "redis.call('EXPIRE', key, expireTime) " +
+            " " +
+            //返回当前窗口内的请求数量
+            "return redis.call('ZCARD', key)";
+        
+        // 唯一值计数Lua脚本
+        String uniqueItemScript = 
+            "local key = KEYS[1] " +
+            "local currentTime = tonumber(ARGV[1]) " +
+            "local windowSize = tonumber(ARGV[2]) " +
+            "local uniqueValue = ARGV[3] " +
+            "local expireTime = tonumber(ARGV[4]) " +
+            " " +
+            //计算窗口开始时间
+            "local windowStart = currentTime - windowSize " +
+            " " +
+            //删除过期数据
+            "redis.call('ZREMRANGEBYSCORE', key, 0, windowStart) " +
+            " " +
+            //添加或更新唯一值
+            "redis.call('ZADD', key, currentTime, uniqueValue) " +
+            " " +
+            //设置过期时间
+            "redis.call('EXPIRE', key, expireTime) " +
+            " " +
+            //返回当前窗口内的唯一值数量
+            "return redis.call('ZCARD', key)";
+        
+        // 脚本预加载
+        RScript script = redissonClient.getScript(StringCodec.INSTANCE);
+        incrementScriptSha1 = script.scriptLoad(incrementScript);
+        uniqueItemScriptSha1 = script.scriptLoad(uniqueItemScript);
+    }
+    
+    /**
+     * 普通计数 - 每个请求都会增加计数
+     * @param baseKey 业务基础key，如"user:123"
+     * @param windowSize 窗口大小（毫秒）
+     * @param expireSeconds 过期时间（秒），建议 >= windowSize/1000
+     * @return 当前窗口内的请求数量
+     */
+    public long increment(String baseKey, long windowSize, long expireSeconds) {
+        String key = buildKey(baseKey, windowSize);
+        long currentTime = System.currentTimeMillis();
+        String uuid = UUID.randomUUID().toString();
+        
+        try {
+            // 使用EVALSHA执行预加载的脚本
+            RScript script = redissonClient.getScript(StringCodec.INSTANCE);
+            return script.evalSha(RScript.Mode.READ_WRITE, 
+                incrementScriptSha1, 
+                RScript.ReturnType.INTEGER, 
+                Collections.singletonList(key),
+                currentTime, windowSize, uuid, expireSeconds);
+        } catch (Exception e) {
+            // 如果脚本不存在，重新加载（容错处理）
+            if (e.getMessage().contains("NOSCRIPT")) {
+                preloadScripts();
+                return increment(baseKey, windowSize, expireSeconds);
+            }
+            throw new RuntimeException("滑动窗口计数失败", e);
+        }
+    }
+    
+    /**
+     * 唯一值计数 - 统计窗口内不同数据的个数
+     * @param baseKey 业务基础key
+     * @param uniqueValue 唯一值，如酒店ID "hotel_456"
+     * @param windowSize 窗口大小（毫秒）
+     * @param expireSeconds 过期时间（秒）
+     * @return 当前窗口内的唯一值数量
+     */
+    public long addUniqueItem(String baseKey, String uniqueValue, long windowSize, long expireSeconds) {
+        String key = buildKey(baseKey, windowSize);
+        long currentTime = System.currentTimeMillis();
+        
+        try {
+            RScript script = redissonClient.getScript(StringCodec.INSTANCE);
+            return script.evalSha(RScript.Mode.READ_WRITE, 
+                uniqueItemScriptSha1, 
+                RScript.ReturnType.INTEGER, 
+                Collections.singletonList(key),
+                currentTime, windowSize, uniqueValue, expireSeconds);
+        } catch (Exception e) {
+            if (e.getMessage().contains("NOSCRIPT")) {
+                preloadScripts();
+                return addUniqueItem(baseKey, uniqueValue, windowSize, expireSeconds);
+            }
+            throw new RuntimeException("唯一值计数失败", e);
+        }
+    }
+    
+    /**
+     * 获取当前窗口计数（不增加计数）
+     * @param baseKey 业务基础key
+     * @param windowSize 窗口大小
+     * @return 当前计数
+     */
+    public long getCurrentCount(String baseKey, long windowSize) {
+        String key = buildKey(baseKey, windowSize);
+        RScoredSortedSet<String> scoredSet = redissonClient.getScoredSortedSet(key, StringCodec.INSTANCE);
+        
+        long windowStart = System.currentTimeMillis() - windowSize;
+        // 删除过期数据并返回当前数量
+        scoredSet.removeRangeByScore(0, true, windowStart, false);
+        return scoredSet.size();
+    }
+    
+    /**
+     * 获取唯一值当前计数（不增加计数）
+     * @param baseKey 业务基础key
+     * @param windowSize 窗口大小
+     * @return 唯一值数量
+     */
+    public long getUniqueCount(String baseKey, long windowSize) {
+        // 实现同getCurrentCount，因为存储结构相同
+        return getCurrentCount(baseKey, windowSize);
+    }
+    
+    /**
+     * 清理指定key的计数数据
+     * @param baseKey 业务基础key
+     * @param windowSize 窗口大小
+     */
+    public void clear(String baseKey, long windowSize) {
+        String key = buildKey(baseKey, windowSize);
+        redissonClient.getKeys().delete(key);
+    }
+    
+    /**
+     * 构建Redis Key
+     */
+    private String buildKey(String baseKey, long windowSize) {
+        return KEY_PREFIX + baseKey + ":" + windowSize;
+    }
+}
+```
+
+
+其它设计亮点：
+
+- **原子性保证**：强调为什么使用 **Lua 脚本**而不是多个独立的 Redis 命令。因为在高并发场景下，如果“清理-判断-添加”不是原子操作，可能会出现竞态条件，导致计数超限。Lua 脚本在 Redis 中单线程执行，完美解决了这个问题。同时能减少网络io，减少redis的qps次数
+- **性能优化**：**脚本预加载**。在类初始化时（构造函数中）就通过 `SCRIPT LOAD`将 Lua 脚本加载到 Redis 并缓存其 SHA1 摘要。后续调用使用 `EVALSHA`而不是直接发送脚本内容，大大减少了网络传输开销，提升了性能。
+- **应对高并发**：在普通计数场景下使用 **“时间戳+UUID”** 来防止成员覆盖。
+- **两种模式**：实现两种方法（累计计数 vs. 唯一值计数），这比单一的计数器更具实用性。
+
+

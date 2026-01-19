@@ -259,6 +259,7 @@ head:
 - [深入理解请求限流算法的实现细节](https://www.seven97.top/microservices/monitoring-center/requestflowlimitingalgorithm.html)
 - [负载均衡算法：轮询、加权、Hash等算法的全面解析](https://www.seven97.top/microservices/monitoring-center/loadbalance.html)
 - [高并发场景下，一个好的熔断策略该怎么设计？](https://www.seven97.top/microservices/monitoring-center/fuse.html)
+- [Sentinel - 使用](https://www.seven97.top/microservices/monitoring-center/sentinel-sourcecode.html)
 - [Sentinel - 源码](https://www.seven97.top/microservices/monitoring-center/sentinel-sourcecode.html)
 
 ## 工具类库

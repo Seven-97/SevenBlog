@@ -75,7 +75,73 @@ redis=com.alibaba.dubbo.rpc.protocol.redis.RedisProtocol
 
  
 
-## Dubbo SPI 使用 & 源码学习
+## Dubbo SPI 使用
+
+如何自定义一个 Dubbo 的 SPI 扩展？
+
+
+要自定义一个 Dubbo 的 SPI（Service Provider Interface）扩展，一般需要遵循以下几个步骤：
+
+1. 定义接口：创建你想要扩展的接口，并使用 Dubbo 的 @SPI 注解标记它。 
+2. 实现接口：创建该接口的具体实现类。 
+3. 创建 SPI 配置文件：在 `META-INF/dubbo/` 目录下创建相应的配置文件，其名称为接口的全限定名，内容是实现类的键值对。 
+4. 在代码中使用：通过 ExtensionLoader 加载和使用你自定义的 SPI 扩展。
+
+下面是示例代码：
+
+1）定义一个接口，并用 @SPI 注解标记：
+
+```java
+package com.example.extension;
+
+import org.apache.dubbo.common.extension.SPI;
+
+@SPI
+public interface MyService {
+    void performService();
+}
+```
+
+2）实现这个接口：
+
+```java
+package com.example.extension.impl;
+
+import com.example.extension.MyService;
+
+public class MyServiceImpl implements MyService {
+    @Override
+    public void performService() {
+        System.out.println("Executing MyServiceImpl service...");
+    }
+}
+
+```
+
+3）创建 `SPI` 配置文件： 
+文件路径：`META-INF/dubbo/com.example.extension.MyService` 内容如下：
+
+```java
+default=com.example.extension.impl.MyServiceImpl
+```
+
+4）在代码中使用扩展：
+
+```java
+package com.example.extension;
+
+import org.apache.dubbo.common.extension.ExtensionLoader;
+
+public class Main {
+    public static void main(String[] args) {
+        MyService myService = ExtensionLoader.getExtensionLoader(MyService.class).getDefaultExtension();
+        myService.performService();
+    }
+}
+```
+
+
+## Dubbo源码学习
 
 通过获取协议的代码来分析下具体的操作过程
 
