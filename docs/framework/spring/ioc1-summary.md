@@ -63,12 +63,71 @@ ioc的思想最核心的地方在于，资源不由使用资源者管理，而�
        xsi:schemaLocation="http://www.springframework.org/schema/beans
  http://www.springframework.org/schema/beans/spring-beans.xsd">
     <!-- services -->
-    <bean id="userService" class="com.seven.springframework.service.UserServiceImpl">
+    <bean id="userService" name="us1,us2" class="com.seven.springframework.service.UserServiceImpl">
         <property name="userDao" ref="userDao"/>
         <!-- additional collaborators and configuration for this bean go here -->
     </bean>
     <!-- more bean definitions for services go here -->
 </beans>
+```
+
+##### 根据类型获取
+
+```java
+public class APP {
+
+    public static void main(String[] args) {
+        // create and configure beans
+        ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+
+        // retrieve configured instance
+        UserServiceImpl service = context.getBean(UserServiceImpl.class);
+
+        // use configured instance
+        List<User> userList = service.findUserList();
+    }
+}
+```
+
+注意，通过类型获取的方式，需要保证这个实例对象在容器中是单例的，不会产生多个；否则容器不知道拿哪个对象。因此，如果有多个对象的情况:
+- 可以通过id来获取
+- `primary = true`：可以设置这个属性，当同一个对象有多个实例时，优先选择该实例。
+##### 根据id获取
+
+```java
+public class APP {
+
+    public static void main(String[] args) {
+        // create and configure beans
+        ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+
+        // retrieve configured instance
+        UserServiceImpl service = context.getBean("userService", UserServiceImpl.class);
+
+        // use configured instance
+        List<User> userList = service.findUserList();
+    }
+}
+```
+
+##### 根据name获取
+
+id只能配置1个，name 可以配置多个，用逗号或分号分隔
+
+```java
+public class APP {
+
+    public static void main(String[] args) {
+        // create and configure beans
+        ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+
+        // retrieve configured instance
+        UserServiceImpl service = context.getBean("us1", UserServiceImpl.class);
+
+        // use configured instance
+        List<User> userList = service.findUserList();
+    }
+}
 ```
 
 
@@ -94,7 +153,7 @@ public class BeansConfig {
         return new UserDaoImpl();
     }
 
-    @Bean("userService")
+    @Bean("userService")//若未设置值，则默认name为方法名称
     public UserServiceImpl userService() {
         UserServiceImpl userService = new UserServiceImpl();
         userService.setUserDao(userDao());
@@ -115,10 +174,13 @@ public class BeansConfig {
 **举例**：
 
 1. 对类添加@Component相关的注解，比如@Controller，@Service，@Repository
-2. 设置ComponentScan的basePackage, 比如在xml文件里设置`<context:component-scan base-package='com.seven.springframework'>`, 或者在配置类中设置`@ComponentScan("com.seven.springframework")`注解，或者 直接在APP类中 `new AnnotationConfigApplicationContext("com.seven.springframework")`指定扫描的basePackage.
+2. 设置ComponentScan的basePackage（ComponentScan未设置制定扫描路径或类，会扫描当前类机器子目录下所有被以上注解声明的类）, 比如
+	- 在xml文件里设置`<context:component-scan base-package='com.seven.springframework'>`,
+	- 或者在配置类中设置`@ComponentScan("com.seven.springframework")`注解
+	- 或者 直接在APP类中 `new AnnotationConfigApplicationContext("com.seven.springframework")`指定扫描的basePackage.
 
 ```java
-@Service
+@Service //默认的名称 类名首字母小写，userServiceImpl
 public class UserServiceImpl {
 
     @Autowired
@@ -255,9 +317,8 @@ public @interface Autowired {
 
 1. @Autowired是Spring自带的注解，通过AutowiredAnnotationBeanPostProcessor 类实现的依赖注入
 2. @Autowired可以作用在CONSTRUCTOR、METHOD、PARAMETER、FIELD、ANNOTATION_TYPE
-3. @Autowired默认是根据类型（byType ）进行自动装配的
-4. 如果有多个类型一样的Bean候选者，需要指定按照名称（byName ）进行装配，则需要配合 @Qualifier。
-   指定名称后，如果Spring IOC容器中没有对应的组件bean抛出NoSuchBeanDefinitionException。也可以将@Autowired中required配置为false，如果配置为false之后，当没有找到相应bean的时候，系统不会抛异常
+3. @Autowired 默认是**根据类型**（byType ）进行自动装配的
+4. 如果有多个类型一样的Bean候选者，需要指定按照名称（byName ）进行装配，则需要配合 @Qualifier。指定名称后，如果Spring IOC容器中没有对应的组件bean抛出NoSuchBeanDefinitionException。也可以将@Autowired中required配置为false，如果配置为false之后，当没有找到相应bean的时候，系统不会抛异常
 
 
 
@@ -298,7 +359,7 @@ public @interface Resource {
 
 1. @Resource是JSR250规范的实现，在javax.annotation包下
 2. @Resource可以作用TYPE、FIELD、METHOD上
-3. @Resource是默认根据属性名称进行自动装配的，如果有多个类型一样的Bean候选者，则可以通过name进行指定进行注入
+3. @Resource是**默认根据属性名称**进行自动装配的，如果有多个类型一样的Bean候选者，则可以通过name进行指定进行注入
 
 
 
@@ -366,7 +427,7 @@ public class ConstructorBasedInjection {
 ```
 
 > 将@Autowired写在被注入的成员变量上，setter或者构造器上，就不用再xml文件中配置了。
-> **注意**：不能提供无参构造方法，否则Springboot默认会加载无参的构造方法，Bean实例对象会为null。并且构造器的权限需要为public
+> **注意**：不能提供无参构造方法，否则Springboot默认会加载无参的构造方法，Bean实例对象会为null。并且**构造器的权限需要为public**
 
 
 
@@ -420,9 +481,9 @@ public class ConstructorBasedInjection {
 
 1. 使用xml方式来声明Bean的定义，Spring容器在启动会加载并解析这个xml，把bean装载到IOC容器中
 
-2. 使用@CompontScan注解来扫描声明了@Controller、@Service、@Repository、@Component注解的类
+2. 使用@Configuration注解声明配置类，并使用@Bean注解实现Bean的定义，这种方式其实是xml配置方式的一种演变，是Spring迈入到无xml 时代的里程碑
 
-3. 使用@Configuration注解声明配置类，并使用@Bean注解实现Bean的定义，这种方式其实是xml配置方式的一种演变，是Spring迈入到无xml 时代的里程碑
+3. 使用@CompontScan注解来扫描声明了@Controller、@Service、@Repository、@Component注解的类
 
 4. 使用@Import注解，导入配置类或者普通的Bean
 
@@ -594,6 +655,8 @@ IoC容器的接口类是ApplicationContext，很显然它必然继承BeanFactory
 ApplicationContext整体结构：
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404281030642.png)
+
+从类图结构中也可以看到，ApplicationContext是BeanFactory的子接口
 
 - HierarchicalBeanFactory 和 ListableBeanFactory： ApplicationContext 继承了 HierarchicalBeanFactory 和 ListableBeanFactory 接口，在此基础上，还通过多个其他的接口扩展了BeanFactory的功能
 - ApplicationEventPublisher：让容器拥有发布应用上下文事件的功能，包括容器启动事件、关闭事件等。实现了 ApplicationListener 事件监听接口的 Bean 可以接收到容器事件 ， 并对事件进行响应处理 。 在 ApplicationContext 抽象实现类AbstractApplicationContext 中，我们可以发现存在一个 ApplicationEventMulticaster，它负责保存所有监听器，以便在容器产生上下文事件时通知这些事件监听者。

@@ -30,6 +30,18 @@ head:
 - dubbo 内部已经将序列化和反序列化的过程内部封装了，只需要在定义pojo类时实现Serializable接口即可
 - 一般会定义一个公共的pojo模块，让生产者和消费者都依赖该模块。
 
+Dubbo 支持的序列化方式对比：
+
+|序列化方式|特点|适用场景|配置示例|
+|---|---|---|---|
+|**hessian2 (默认)**​|二进制、跨语言、性能较好、兼容性佳|**推荐默认使用**，适合大多数Java应用|`serialization="hessian2"`|
+|**kryo**​|**极致性能**、序列化体积小、但不支持跨语言|对性能要求极高的**纯Java环境**​|`serialization="kryo"`|
+|**fst**​|性能接近kryo、兼容性更好|kryo的替代选择，稳定性要求高|`serialization="fst"`|
+|**protobuf**​|Google出品、跨语言、高效、强schema约束|**多语言微服务**、需要严格数据契约|`serialization="protobuf"`|
+|**avro**​|动态schema、适合大数据场景|Hadoop生态、数据演进频繁的场景|`serialization="avro"`|
+|**jdk**​|Java原生、兼容性好但**性能最差**​|兼容性测试、不推荐生产环境|`serialization="jdk"`|
+|**fastjson**​|文本格式、可读性好|需要人工调试、兼容老旧系统|`serialization="fastjson"`|
+|**gson**​|Google的JSON库|与现有Gson系统集成|`serialization="gson"`|
 
 
 ### 地址缓存
@@ -162,13 +174,24 @@ private DemoService demoService;
 
 ### 集群容错
 
-- Failover Cluster：失败重试。默认值。当出现失败，重试其它服务器 ，默认重试2次，使用 retries 配置。一般用于读操作
-- Failfast Cluster ：快速失败，只发起一次调用，失败立即报错。通常用于写操作。
-- Failsafe Cluster ：失败安全，出现异常时，直接忽略。返回一个空结果。
-- Failback Cluster ：失败自动恢复，后台记录失败请求，定时重发，直到成功。通常用于消息通知操作。
-- Forking Cluster ：并行调用多个服务器，只要一个成功即返回。
-- Broadcast  Cluster ：广播调用所有提供者，逐个调用，任意一台报错则报错。
+Dubbo 的集群容错机制是保障服务高可用的核心。下面这张表格汇总了各策略的核心特征：
 
+|容错策略|核心机制|推荐应用场景|关键配置|
+|---|---|---|---|
+|**`failfast`（快速失败）**​|只调用一次，失败立即抛出异常，**不进行任何重试**。|**非幂等性写操作**（如：创建订单、支付、资金扣减）。|`cluster="failfast"`|
+|**`failover`（故障转移）**​|失败后自动重试其他服务器。Dubbo **默认策略**，默认重试2次。|**读操作**或**幂等性写操作**（如：查询、状态更新）。|`cluster="failover" retries="2"`（可调整重试次数）|
+|**`failsafe`（失败安全）**​|调用失败时，**忽略异常**并返回一个空结果，记录错误日志。|**非核心业务**（如：日志记录、监控数据上报）。|`cluster="failsafe"`|
+|**`failback`（失败自动恢复）**​|失败后，将请求记录到后台，通过**定时任务进行重试**。|**可容忍延迟**的场景（如：消息通知、后续可补偿的操作）。|`cluster="failback"`|
+|**`forking`（并行调用）**​|并行调用多个服务提供者，**只要有一个成功就立即返回**。|**实时性要求极高**的读操作（能承受额外资源消耗）。|`cluster="forking" forks="2"`（设置最大并行数）|
+|**`broadcast`（广播调用）**​|逐个调用所有提供者，**任意一台报错则报错**。|通知所有提供者更新本地资源（如：刷新本地缓存）。|`cluster="broadcast"`|
+
+选择策略时，主要权衡业务的以下几个特性：
+
+|业务特性|优先考虑的策略|原因|
+|---|---|---|
+|**操作是否幂等**​|幂等操作可选 `failover`；非幂等操作**必须**选 `failfast`。|防止因重试导致数据重复或不一致。|
+|**对实时性的要求**​|要求高且资源充足用 `forking`；可接受延迟用 `failback`。|`forking`以资源换时间，`failback`保证最终成功。|
+|**业务的核心程度**​|核心链路失败需快速告警（`failfast`）；非核心链路可忽略（`failsafe`）。|保证核心业务的强一致性和可见性，非核心业务不影响主流程。|
 
 
 ### 服务降级
@@ -204,49 +227,31 @@ Dubbo除了注册中心需要进行整合，其它功能都自己实现了，而
 
 ### 协议
 
-- Dubbo：
+- Dubbo：支持多传输协议(Dubbo、Rmi、http、redis等等)，可以根据业务场景选择最佳的方式。非常灵活。
 
-支持多传输协议(Dubbo、Rmi、http、redis等等)，可以根据业务场景选择最佳的方式。非常灵活。
 默认的Dubbo协议：利用Netty，TCP传输，单一、异步、长连接，适合数据量小、高并发和服务提供者远远少于消费者的场景。
 
 
 
-- Feign：
-
-基于Http传输协议，短连接，不适合高并发的访问。
+- Feign：基于Http传输协议，短连接，不适合高并发的访问。
 
 
 
 ### 负载均衡
 
-- Dubbo：
-
-支持4种算法（随机、轮询、活跃度、Hash一致性），而且算法里面引入权重的概念。
-配置的形式不仅支持代码配置，还支持Dubbo控制台灵活动态配置。
-负载均衡的算法可以精准到某个服务接口的某个方法。
+- Dubbo：支持4种算法（随机、轮询、活跃度、Hash一致性），而且算法里面引入权重的概念。配置的形式不仅支持代码配置，还支持Dubbo控制台灵活动态配置。负载均衡的算法可以精准到某个服务接口的某个方法。
 
 
 
-- Feign：
-
-只支持N种策略：轮询、随机、ResponseTime加权。
-负载均衡算法是Client级别的。
-
-
-
-Nacos注册中心很好的兼容了Feign，Feign默认集成了Ribbon，所以在Nacos下使用Fegin默认就实现了负载均衡的效果。
+- Feign：只支持N种策略：轮询、随机、ResponseTime加权。负载均衡算法是Client级别的。Nacos注册中心很好的兼容了Feign，Feign默认集成了Ribbon，所以在Nacos下使用Fegin默认就实现了负载均衡的效果。
 
 
 
 ### 容错策略
 
-- Dubbo：
+- Dubbo：支持多种容错策略：failover、failfast、brodecast、forking等，也引入了retry次数、timeout等配置参数。
 
-支持多种容错策略：failover、failfast、brodecast、forking等，也引入了retry次数、timeout等配置参数。
-
-- Feign：
-
-利用熔断机制来实现容错的，处理的方式不一样。
+- Feign：利用熔断机制来实现容错的，处理的方式不一样。
 
 
 

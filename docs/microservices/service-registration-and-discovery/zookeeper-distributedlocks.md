@@ -56,14 +56,14 @@ head:
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404292129480.png)
 
-### 获取锁步骤：
+### 获取锁步骤
 
 1. 在 /lock 节点下创建一个有序临时节点 (EPHEMERAL_SEQUENTIAL)。
 2. 判断创建的节点序号是否最小，如果是最小则获取锁成功。不是则取锁失败，然后 watch 序号比本身小的前一个节点。
 3. 当取锁失败，设置 watch 后则等待 watch 事件到来后，再次判断是否序号最小。
 4. 取锁成功则执行代码，最后释放锁（删除该节点）
 
-### 释放锁步骤：
+### 释放锁步骤
 
 1. 成功获取锁的客户端在执行完业务流程之后，会将对应的子节点删除。
 2. 成功获取锁的客户端在出现故障之后，对应的子节点由于是临时顺序节点，也会被自动删除，避免了锁无法被释放。
@@ -299,7 +299,7 @@ private static class LockData
 
 整个可重入锁的实现逻辑非常简单，直接在客户端判断当前线程有没有获取锁，有的话直接将加锁次数加 1 就可以了。
 
-### 案例-模拟12306售票
+#### 案例-模拟12306售票
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404292130167.png)
 
@@ -390,8 +390,64 @@ public class LockTest {
 ```
 
 
+#### 与原生 ZooKeeper API 的对比
 
- 
+用 Apache Curator 实现分布式锁，拥有以下优势： 
+- **简化代码**：Curator 提供高级抽象，省去了大量底层代码。 
+- **可靠性**：Curator 处理了很多细节和边缘情况，比如会话超时、连接重试等。 
+- **丰富的功能**：除了分布式锁，Curator 还提供了常用的高级功能，如领导选举、分布式队列等。
+
+### 扩展-Curator 实现Watcher 功能
+
+可以通过 Apache Curator 来实现 ZooKeeper 的 Watcher 功能。Curator 是一个高级的 ZooKeeper 客户端，提供了许多便捷的 API。使用 Curator 实现 Watcher 功能的代码更简洁、易于维护。Curator 提供了一套 Watcher 的包装机制，使其不同于原生 ZooKeeper Watcher，Curator 能够自动处理重连和会话超时的问题，更加可靠。
+
+使用 Curator 实现 Watcher： 
+1. 首先需要创建 CuratorFramework 对象。 
+2. 然后使用 Curator 的监听机制，例如 PathChildrenCache、NodeCache 或 TreeCache 来添加 Watcher。
+
+与原生 Watcher 的不同： 
+1. Curator 提供了更高级别的抽象，简化了编程模型。 
+2. Curator 自动管理重新连接和会话超时问题。 
+3. Curator 提供了多种类型的 Cache（如 PathChildrenCache、NodeCache 和 TreeCache），方便不同场景下的使用。
+
+
+```java
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
+import org.apache.curator.retry.ExponentialBackoffRetry;
+
+public class CuratorWatcherExample {
+    public static void main(String[] args) throws Exception {
+        // 创建一个 CuratorFramework 实例
+        CuratorFramework client = CuratorFrameworkFactory.newClient(
+                "localhost:2181",
+                new ExponentialBackoffRetry(1000, 3)
+        );
+        client.start();
+
+        // 使用 PathChildrenCache 监视子节点的变化
+        PathChildrenCache cache = new PathChildrenCache(client, "/zk_path", true);
+        cache.getListenable().addListener((client1, event) -> {
+            switch (event.getType()) {
+                case CHILD_ADDED:
+                    System.out.println("Node added: " + event.getData().getPath());
+                    break;
+                case CHILD_UPDATED:
+                    System.out.println("Node updated: " + event.getData().getPath());
+                    break;
+                case CHILD_REMOVED:
+                    System.out.println("Node removed: " + event.getData().getPath());
+                    break;
+            }
+        });
+
+        // 启动监听
+        cache.start();
+    }
+}
+```
+
 
 ## 优缺点
 
