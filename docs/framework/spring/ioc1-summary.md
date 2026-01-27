@@ -132,6 +132,12 @@ public class APP {
 
 
 
+源码中也可以看到，用逗号或分号分隔
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202601251734461.png)
+
+
+
 #### Java 配置
 
 将类的创建交给我们配置的JavcConfig类来完成，Spring只负责维护和管理，采用纯Java创建方式。其本质上就是把在XML上的配置声明转移到Java配置类中

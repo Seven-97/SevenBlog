@@ -307,6 +307,122 @@ public static void main(String[] args) {
 | @After          | 用于定义最终final 通知，不管是否异常，该通知都会执行。使用时需要指定一个value属性，该属性用于指定该通知被植入的切入点。 |
 | @DeclareParents | 用于定义引介通知，相当于IntroductionInterceptor (不要求掌握)。 |
 
+#### 切入点表达式
+
+切入点表达式的核心语法基于`execution`关键字，基本格式如下：
+
+```java
+execution( 
+	[修饰符] 返回值类型 
+	[包名.类名.]方法名(参数列表) 
+	[throws 异常类型] 
+)
+```
+
+- **修饰符**：可选，如`public`、`private`等，省略时匹配任意修饰符。
+- **返回值类型**：必填，`*`表示任意返回值。
+- **包名.类名**：可选，`*`和`..`可用于通配（`..`表示当前包及子包）。
+- **方法名**：必填，`*`表示任意方法名。
+- **参数列表**：必填，`()`表示无参，`(..)`表示任意参数，`(*)`表示单个任意参数。
+- **异常类型**：可选，指定方法抛出的异常，省略时匹配任意异常。
+
+
+常用通配符：
+
+| 通配符  | 作用                                            | 示例                                       |
+| ---- | --------------------------------------------- | ---------------------------------------- |
+| `*`  | 匹配单个任意字符（类名、方法名、参数类型等）                        | `*Service`匹配所有以`Service`结尾的类             |
+| `..` | 匹配多个任意字符，在包路径中表示“当前包及所有子包”，在参数中表示“任意参数（包括无参）” | `com.example..*`匹配`com.example`包及子包下的所有类 |
+| `+`  | 匹配指定类及其所有子类                                   | `UserService+`匹配`UserService`类及其子类       |
+
+
+以下是实际开发中常用的切入点表达式配置：
+
+- 匹配指定包下的所有方法
+
+```java
+// 匹配com.example.service包下所有类的所有方法（不包含子包） 
+@Pointcut("execution(* com.example.service.*.*(..))") 
+public void servicePointcut() {} 
+
+// 匹配com.example.service包及所有子包下的所有方法 
+@Pointcut("execution(* com.example.service..*.*(..))") 
+public void serviceWithSubPackagePointcut() {}
+```
+
+- 匹配指定类的所有方法
+
+```java
+// 匹配UserService类的所有方法 
+@Pointcut("execution(* com.example.service.UserService.*(..))") 
+public void userServicePointcut() {} 
+
+// 匹配UserService及其子类的所有方法 
+@Pointcut("execution(* com.example.service.UserService+.*(..))") 
+public void userServiceAndSubClassPointcut() {}
+```
+
+
+- 匹配指定方法名的方法
+
+```java
+// 匹配所有以"get"开头的方法 
+@Pointcut("execution(* com.example.service.*.get*(..))") 
+public void getMethodPointcut() {} 
+
+// 匹配所有以"save"或"update"开头的方法 
+@Pointcut("execution(* com.example.service.*.save*(..)) || execution(* com.example.service.*.update*(..))") 
+public void saveOrUpdatePointcut() {}
+```
+
+- 匹配指定参数的方法
+
+```java
+// 匹配返回值为String类型的方法 
+@Pointcut("execution(String com.example.service.*.*(..))") 
+public void returnStringPointcut() {} 
+
+// 匹配返回值为void的方法 
+@Pointcut("execution(void com.example.service.*.*(..))") 
+public void returnVoidPointcut() {}
+```
+
+- 匹配指定返回值的方法
+
+```java
+// 匹配返回值为String类型的方法 
+@Pointcut("execution(String com.example.service.*.*(..))") 
+public void returnStringPointcut() {} 
+
+// 匹配返回值为void的方法 
+@Pointcut("execution(void com.example.service.*.*(..))") 
+public void returnVoidPointcut() {}
+```
+
+- 匹配指定注解的方法或类：可以通过`@annotation`（方法注解）或`@within`（类注解）匹配：
+
+```java
+// 匹配标注了@Loggable注解的方法 
+@Pointcut("@annotation(com.example.annotation.Loggable)") 
+public void loggableMethodPointcut() {} 
+
+// 匹配标注了@Service注解的类中的所有方法 
+@Pointcut("@within(org.springframework.stereotype.Service)") 
+public void serviceClassPointcut() {}
+```
+
+- 组合切入点表达式，使用逻辑运算符（`&&`、`||`、`!`）组合多个切入点：
+
+```java
+// 匹配service包中且以"get"开头的方法 
+@Pointcut("execution(* com.example.service..*.*(..)) && execution(* *..get*(..))") 
+public void serviceGetMethodPointcut() {} 
+
+// 匹配service包中除了UserService的其他类的方法 
+@Pointcut("execution(* com.example.service..*.*(..)) && !execution(* com.example.service.UserService.*(..))") 
+public void excludeUserServicePointcut() {}
+```
+
 
 
 
@@ -370,7 +486,7 @@ public class LogAspect {
 
 
     /**
-     * 环绕通知.
+     * 在切入点上应用环绕通知
      *
      * @param pjp pjp
      * @return obj
@@ -386,7 +502,7 @@ public class LogAspect {
     }
 
     /**
-     * 前置通知.
+     * 在切入点上应用前置通知
      */
     @Before("pointCutMethod()")
     public void doBefore() {
@@ -395,7 +511,7 @@ public class LogAspect {
 
 
     /**
-     * 后置通知.
+     * 在切入点上应用后置通知.
      *
      * @param result return val
      */
@@ -405,7 +521,7 @@ public class LogAspect {
     }
 
     /**
-     * 异常通知.
+     * 在切入点上应用异常通知.
      *
      * @param e exception
      */
@@ -415,7 +531,7 @@ public class LogAspect {
     }
 
     /**
-     * 最终通知.
+     * 在切入点上应用最终通知.
      */
     @After("pointCutMethod()")
     public void doAfter() {
@@ -510,6 +626,7 @@ public class App {
 上面使用AspectJ的注解，并配合一个复杂的`execution(* com.seven.springframeworkaopannojdk.service.*.*(..))` 语法来定义应该如何装配AOP。还有另一种方式，则是使用注解来装配AOP，这两者一般存在与不同的应用场景中：
 
 - 对于业务开发来说，一般使用  注解的方式来装配AOP，因为如果要使用AOP进行增强，业务开发就需要配置注解，业务能够很好的感知到这个方法(这个类)进行了增强。如果使用 表达式来装配AOP，当后续新增Bean，如果不清楚现有的AOP装配规则，容易被强迫装配，而在开发时未感知到，导致出现线上故障。例如，Spring提供的`@Transactional`就是一个非常好的例子。如果自己写的Bean希望在一个数据库事务中被调用，就标注上`@Transactional`。
+
 - 对于基础架构开发来说，无需业务感知到增强了什么方法，则可以使用表达式的方式来装配AOP。需要记录所有接口的耗时时长，直接写表达式，对业务无侵入
 
 
@@ -617,7 +734,7 @@ JdkProxyServiceImpl.doMethod2()
 
 ## 应用场景
 
-我们知道AO能够将那些与业务无关，却为业务模块所共同调用的逻辑或责任（例如事务处理、日志管理、权限控制等）封装起来，便于**减少系统的重复代码**，**降低模块间的耦合度**，**提高系统可拓展性和可维护性**。
+我们知道AOP能够将那些与业务无关，却为业务模块所共同调用的逻辑或责任（例如事务处理、日志管理、权限控制等）封装起来，便于**减少系统的重复代码**，**降低模块间的耦合度**，**提高系统可拓展性和可维护性**。
 
 1. 基于 AOP 实现统一的日志管理。
 2. 基于 Redisson + AOP 实现了接口防刷，一个注解即可限制接口指定时间内单个用户可以请求的次数。

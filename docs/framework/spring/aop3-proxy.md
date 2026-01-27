@@ -252,6 +252,7 @@ protected Object createProxy(Class<?> beanClass, @Nullable String beanName,
   if (classLoader instanceof SmartClassLoader && classLoader != beanClass.getClassLoader()) {
     classLoader = ((SmartClassLoader) classLoader).getOriginalClassLoader();
   }
+  //获取代理对象
   return proxyFactory.getProxy(classLoader);
 }
 ```
@@ -692,7 +693,7 @@ public Object invoke(Object proxy, Method method, Object[] args) throws Throwabl
             // We need to create a method invocation...
             MethodInvocation invocation =
                     new ReflectiveMethodInvocation(proxy, target, method, args, targetClass, chain);
-            // Proceed to the joinpoint through the interceptor chain.
+            // 真正的执行所有通知方法 以及 目标方法
             retVal = invocation.proceed();
         }
 
@@ -992,7 +993,7 @@ this is method B
 
 #### 方法嵌套调用，AOP不生效
 
-上面的代码，做下修改。在DemoServiceImpl实现类中，通过方法A去调用方法B，然后再单元测试类中，调用方法A。代码修改后如下：
+上面的代码，做下修改。在DemoServiceImpl实现类中，通过方法A去调用方法B，然后在单元测试类中，调用方法A。代码修改后如下：
 
 - 服务实现类：
 

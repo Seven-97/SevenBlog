@@ -131,6 +131,67 @@ tags:
 
 用来声明配置类，可以使用 @Component注解替代，不过使用@Configuration注解声明配置类更加语义化。
 
+### @Conditional
+
+允许根据特定条件动态地控制哪些 Bean 应该被创建并注册到 Spring 容器中，从而实现灵活的配置和自动装配
+
+@Conditional注解本身并不包含判断逻辑。它的作用是标记，而实际的判断工作交给了它引用的 Condition接口实现类
+
+```java
+public interface Condition {
+    boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
+}
+```
+
+Spring Boot 在 `@Conditional`的基础上，提供了一系列开箱即用的派生注解。下表列出了最常用的几个注解及其作用：
+
+|注解|作用|
+|---|---|
+|`@ConditionalOnClass`|当类路径下存在指定的类时生效。|
+|`@ConditionalOnMissingBean`|当容器中不存在指定类型的 Bean 时生效。|
+|`@ConditionalOnProperty`|当指定的配置属性满足要求时生效。|
+|`@ConditionalOnWebApplication`|仅当应用是 Web 应用时生效。|
+|`@ConditionalOnExpression`|基于复杂的 SpEL 表达式进行判断，功能更强大。|
+
+案例：程序在Windows系统上运行时，注入一个特定的服务实现；在Linux系统上运行时，注入另一个实现。
+
+```java
+// Windows系统条件判断
+public class WindowsCondition implements Condition {
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        String osName = context.getEnvironment().getProperty("os.name");
+        return osName != null && osName.toLowerCase().contains("windows");
+    }
+}
+
+// Linux系统条件判断
+public class LinuxCondition implements Condition {
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        String osName = context.getEnvironment().getProperty("os.name");
+        return osName != null && osName.toLowerCase().contains("linux");
+    }
+}
+
+@Configuration
+public class AppConfig {
+    
+    @Bean
+    @Conditional(WindowsCondition.class)  // 只有Windows条件下才创建
+    public SystemService windowsService() {
+        System.out.println("创建WindowsService实例");
+        return new WindowsService();
+    }
+    
+    @Bean
+    @Conditional(LinuxCondition.class)    // 只有Linux条件下才创建
+    public SystemService linuxService() {
+        System.out.println("创建LinuxService实例");
+        return new LinuxService();
+    }
+}
+```
 
 
 ## 常见的 HTTP 请求

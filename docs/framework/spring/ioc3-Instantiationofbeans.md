@@ -37,78 +37,42 @@ Spring 容器可以管理 singleton 作用域 Bean 的生命周期，在此作�
 - Bean生命周期整体流程如下：
 
 1. 加载Bean定义：通过 loadBeanDefinitions 扫描所有xml配置、注解将Bean记录在beanDefinitionMap中。即[IOC容器的初始化过程](https://www.seven97.top/framework/spring/ioc2-initializationprocess.html)
-
 2. Bean实例化：遍历 beanDefinitionMap 创建bean，最终会使用getBean中的doGetBean方法调用 createBean来创建Bean对象
-
-   1. 构建对象：容器通过 createBeanInstance 进行对象构造
-
-      1. 获取构造方法（大部分情况下只有一个构造方法）
-
-         1. 如果只有一个构造方法，无论这个构造方法有没有入参，都用这个构造方法
-
-         2. 有多个构造方法时
-
-            1.  先拿带有@Autowired的构造方法，但是如果多个构造方法都有@Autowired就会报错
-
-            2.  如果没有带有@Autowired的构造方法，那就找没有入参的；如果多个构造方法都是有入参的，那也会报错
-
-      2. 准备参数 
-
-         1. 先根据类进行查找
-
-         2. 如果这个类有多个实例，则再根据参数名匹配
-
-         3. 如果没有找到则报错
-
-      3. 构造对象：无参构造方法则直接实例化
-
-   2. 填充属性：通过populateBean方法为Bean内部所需的属性进行赋值，通常是 @Autowired 注解的变量；通过三级缓存机制进行填充，也就是依赖注入
-
-   3. 初始化Bean对象：通过initializeBean对填充后的实例进行初始化
-
-      1. 执行Aware：检查是否有实现者三个Aware：`BeanNameAware`，`BeanClassLoaderAware`, `BeanFactoryAware`；让实例化后的对象能够感知自己在Spring容器里的存在的位置信息，创建信息
-
-      2. 初始化前：BeanPostProcessor，也就是拿出所有的后置处理器对bean进行处理，当有一个处理器返回null，将不再调用后面的处理器处理。
-
-      3. 初始化：afterPropertiesSet，init- method；
-
-         1. 实现了InitializingBean接口的类执行其afterPropertiesSet()方法
-
-         2. 从BeanDefinition中获取initMethod方法
-
-      4. 初始化后：BeanPostProcessor,；获取所有的bean的后置处理器去执行。AOP也是在这里做的
-
-   4. 注册销毁：通过reigsterDisposableBean处理实现了DisposableBean接口的Bean的注册
-
-      1. Bean是否有注册为DisposableBean的资格：
-
-         1. 是否有destroyMethod。
-
-         2. 是否有执行销毁方法的后置处理器。
-
-      2. DisposableBeanAdapter： 推断destoryMethod
-
-      3. 完成注册
-
+	1. 构建对象：容器通过 createBeanInstance 进行对象构造
+	      1. 获取构造方法（大部分情况下只有一个构造方法）
+	         1. 如果只有一个构造方法，无论这个构造方法有没有入参，都用这个构造方法
+	         2. 有多个构造方法时
+	            1.  先拿带有@Autowired的构造方法，但是如果多个构造方法都有@Autowired就会报错
+	            2.  如果没有带有@Autowired的构造方法，那就找没有入参的；如果多个构造方法都是有入参的，那也会报错
+	    2. 准备参数 
+	        1. 先根据类进行查找
+	        2. 如果这个类有多个实例，则再根据参数名匹配
+	        3. 如果没有找到则报错
+	    3. 构造对象：无参构造方法则直接实例化
+	2. 填充属性：通过populateBean方法为Bean内部所需的属性进行赋值，通常是 @Autowired 注解的变量；通过三级缓存机制进行填充，也就是依赖注入
+	3. 初始化Bean对象：通过initializeBean对填充后的实例进行初始化
+	    1. 执行Aware：检查是否有实现者三个Aware：`BeanNameAware`，`BeanClassLoaderAware`, `BeanFactoryAware`；让实例化后的对象能够感知自己在Spring容器里的存在的位置信息，创建信息
+	    2. 初始化前：BeanPostProcessor，也就是拿出所有的后置处理器对bean进行处理，当有一个处理器返回null，将不再调用后面的处理器处理。
+	    3. 初始化：afterPropertiesSet，init- method；
+	        1. 实现了InitializingBean接口的类执行其afterPropertiesSet()方法
+	        2. 从BeanDefinition中获取initMethod方法
+	    4. 初始化后：BeanPostProcessor,；获取所有的bean的后置处理器去执行。AOP也是在这里做的
+	4. 注册销毁：通过reigsterDisposableBean处理实现了DisposableBean接口的Bean的注册
+	    1. Bean是否有注册为DisposableBean的资格：
+	        1. 是否有destroyMethod。
+	        2. 是否有执行销毁方法的后置处理器。
+	    2. DisposableBeanAdapter： 推断destoryMethod
+	    3. 完成注册
 3. 添加到单例池：通过 addSingleton 方法，将Bean 加入到单例池 singleObjects
-
 4. 销毁
-
-   1. 销毁前：如果有@PreDestory 注解的方法就执行
-
-   2. 如果有自定义的销毁后置处理器，通过 postProcessBeforeDestruction 方法调用destoryBean逐一销毁Bean
-
-   3. 销毁时：如果实现了destroyMethod就执行 destory方法
-
-   4. 执行客户自定义销毁：调用 invokeCustomDestoryMethod执行在Bean上自定义的destroyMethod方法
-
-      1. 有这个自定义销毁就会执行
-
-      2. 没有自定义destroyMethod方法就会去执行close方法
-
-      3. 没有close方法就会去执行shutdown方法
-
-      4. 都没有的话就都不执行，不影响
+	1. 销毁前：如果有@PreDestory 注解的方法就执行
+	2. 如果有自定义的销毁后置处理器，通过 postProcessBeforeDestruction 方法调用destoryBean逐一销毁Bean
+	3. 销毁时：如果实现了destroyMethod就执行 destory方法
+	4. 执行客户自定义销毁：调用 invokeCustomDestoryMethod执行在Bean上自定义的destroyMethod方法
+	    1. 有这个自定义销毁就会执行
+	    2. 没有自定义destroyMethod方法就会去执行close方法
+	    3. 没有close方法就会去执行shutdown方法
+	    4. 都没有的话就都不执行，不影响
 
 
 
@@ -309,16 +273,16 @@ protected <T> T doGetBean(
 
 逻辑流程如下：
 
-- 解析bean的真正name，如果bean是工厂类，name前缀会加&，需要去掉
-- 无参单例先从缓存中尝试获取
-- 如果bean实例还在创建中，则直接抛出异常
-- 如果bean definition 存在于父的bean工厂中，委派给父Bean工厂获取
-- 标记这个beanName的实例正在创建
-- 确保它的依赖也被初始化
-- 真正创建 
-  - 单例时
-  - 原型时
-  - 根据bean的scope创建
+1. 解析bean的真正name，如果bean是工厂类，name前缀会加&，需要去掉
+2. 无参单例先从缓存中尝试获取
+3. 如果bean实例还在创建中，则直接抛出异常
+4. 如果bean definition 存在于父的bean工厂中，委派给父Bean工厂获取
+5. 标记这个beanName的实例正在创建
+6. 确保它的依赖也被初始化
+7. 真正创建 
+	1. 单例时
+	2. 原型时
+	3. 根据bean的scope创建
 
 
 
@@ -355,7 +319,7 @@ protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable O
 
     Object beanInstance;
     try {
-        //实例化前，null
+        // ① 实例化前，null
         beanInstance = this.resolveBeforeInstantiation(beanName, mbdToUse);
         if (beanInstance != null) {//这里就是实例化前去执行了 “初始化之前和之后” 的流程，那么就有可能返回一个不是null的Bean
             return beanInstance;//就直接返回这个Bean对象了，不会再往正常走后续的Spring正常流程了
@@ -365,7 +329,7 @@ protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable O
     }
 
     try {
-        //这个就是走正常的Spring创建Bean的方法
+        //② 这个就是走正常的Spring创建Bean的方法
         beanInstance = this.doCreateBean(beanName, mbdToUse, args);
         if (this.logger.isTraceEnabled()) {
             this.logger.trace("Finished creating instance of bean '" + beanName + "'");
@@ -380,7 +344,7 @@ protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable O
 }
 ```
 
-### 实例化之前
+### ①实例化之前
 
 会对Bean的后置处理器BeanPostProcessors进行处理
 
@@ -432,7 +396,7 @@ protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, 
 
 
 
-### doCreateBean
+### ②doCreateBean
 
 org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#doCreateBean
 
@@ -445,7 +409,7 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
         instanceWrapper = (BeanWrapper)this.factoryBeanInstanceCache.remove(beanName);
     }
     
-    //1.实例化
+    //① 实例化
     if (instanceWrapper == null) {
         //这里就开始构造对象了
         instanceWrapper = this.createBeanInstance(beanName, mbd, args);
@@ -491,9 +455,9 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
     Object exposedObject = bean;
 
     try {
-        //2. 填充属性
+        //② 填充属性
         this.populateBean(beanName, mbd, instanceWrapper);
-        //3.初始化Bean对象
+        //③ 初始化Bean对象
         exposedObject = this.initializeBean(beanName, exposedObject, mbd);
     } catch (Throwable var18) {
         if (var18 instanceof BeanCreationException && beanName.equals(((BeanCreationException)var18).getBeanName())) {
@@ -537,7 +501,7 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
     }
 
     try {
-        //4.注册销毁流程
+        //④ 注册销毁流程
         this.registerDisposableBeanIfNecessary(beanName, bean, mbd);
         return exposedObject;
     } catch (BeanDefinitionValidationException var16) {
@@ -546,7 +510,7 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
 }
 ```
 
-#### 构建对象
+#### ①构建对象
 
 **createBeanInstance**创建一个Bean实例，就是返回一个原始对象
 
@@ -562,8 +526,7 @@ protected BeanWrapper createBeanInstance(String beanName, RootBeanDefinition mbd
         
         //2. Spring提供给开发者的扩展点
         //如果开发者要自己来实现创建对象的过程，那么，那么就可以提供一个Supplier的实现类
-        //当一个BeanDefinition中存在一个Supplier的实现类，Spring就利用这个类的get方法获取实例
-        //而不再走Spring的创建逻辑
+        //当一个BeanDefinition中存在一个Supplier的实现类，Spring就利用这个类的get方法获取实例，而不再走Spring的创建逻辑
         Supplier<?> instanceSupplier = mbd.getInstanceSupplier();
         if (instanceSupplier != null) {
             return this.obtainFromSupplier(instanceSupplier, beanName);
@@ -612,7 +575,7 @@ protected BeanWrapper createBeanInstance(String beanName, RootBeanDefinition mbd
 }
 ```
 
-#### 填充属性
+#### ②填充属性
 
 Spring使用实现了InstantiationAwareBeanPostProcessor的后置处理器对实例化后的Bean进行处理
 
@@ -726,7 +689,7 @@ protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable B
 
 
 
-#### 初始化Bean对象
+#### ③初始化Bean对象
 
 通过initializeBean对填充属性后的实例进行初始化
 
@@ -913,7 +876,7 @@ public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, S
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404281120393.png)
 
-#### 注册销毁
+#### ④注册销毁
 
 Spring在容器关闭时，会remove容器里所有的Bean。如果需要某些Bean在被Spring删除前执行一些逻辑，Spring也可以做到，那么就需要在Bean完成创建时将这个Bean注册为DisposableBean。
 
