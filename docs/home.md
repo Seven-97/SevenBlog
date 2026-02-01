@@ -353,13 +353,6 @@ head:
 ### Hive
 - [group by 和 distinct的性能](https://www.seven97.top/bigdata/hive/distinct-groupby.html)
 
-## 开发工具
-- [Maven入门，读完这篇就够了](https://www.seven97.top/tools/maven-detail.html)
-- [Git指南：从入门到精通](https://www.seven97.top/tools/git-detail.html)
-- [反编译工具 - jadx](https://www.seven97.top/tools/gradle/decompilation-jadx.html)
-- [Redis可视化管理工具集合](https://www.seven97.top/tools/redis-managertools.html)
-- [开发者在线工具集合](https://www.seven97.top/tools/onlinetools.html)
-
 ## 系统设计/实践
 
 ### 设计模式
@@ -418,6 +411,12 @@ head:
 - [支付技术流程](https://www.seven97.top/system-design/best-practices/paymenttechnology.html)
 - [Lombok注解引发的空指针问题分析](https://www.seven97.top/system-design/best-practices/lombok-nullpointerproblem.html)
 
+## 开发工具
+- [Maven入门，读完这篇就够了](https://www.seven97.top/tools/maven-detail.html)
+- [Git指南：从入门到精通](https://www.seven97.top/tools/git-detail.html)
+- [反编译工具 - jadx](https://www.seven97.top/tools/gradle/decompilation-jadx.html)
+- [Redis可视化管理工具集合](https://www.seven97.top/tools/redis-managertools.html)
+- [开发者在线工具集合](https://www.seven97.top/tools/onlinetools.html)
 
 
 

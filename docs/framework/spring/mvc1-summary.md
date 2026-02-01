@@ -310,6 +310,12 @@ web.xml中配置初始化参数contextConfigLocation，路径是classpath:spring
 
     <!-- 开启SpringMVC注解 -->
     <mvc:annotation-driven/>
+    <!-- 可以代替下边的配置，实际开发中一般使用上面的方式开启注解-->
+    <!--注解映射器 -->
+	<!--<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>-->
+	<!--注解适配器 -->
+	<!--<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"/>-->
+    
 
     <!-- 视图解析器 -->
     <bean id="jspViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
@@ -499,48 +505,6 @@ public void downloadFile(HttpServletResponse response) throws IOException {
     out.flush();
 }
 ```
-
-
-### 视图解析器添加前后缀
-
-配置视图解析器可以免去重复书写视图文件路径的前后缀。
-
-- Java Config
-
-```java
-@Configuration
-public class ViewConfig {
-    
-    @Bean
-    public ViewResolver viewResolver() {
-        InternalResourceViewResolver resolver = new InternalResourceViewResolver();
-        // 设置所有视图文件所在的公共前缀
-        resolver.setPrefix("/WEB-INF/views/");
-        // 设置视图文件的公共后缀
-        resolver.setSuffix(".jsp");
-        return resolver;
-    }
-}
-```
-
-- 控制器代码
-
-此配置后，控制器返回的 `"index"`会被自动补全为 `/WEB-INF/views/index.jsp`，极大简化了视图管理
-
-```java
-@Controller
-public class HomeController {
-    
-    @RequestMapping("/home")
-    public String home() {
-        // 控制器中只需返回逻辑视图名 "index"
-        // 视图解析器会自动拼接为 "/WEB-INF/views/index.jsp"
-        return "index"; 
-    }
-}
-```
-
-
 
 ### 直接返回数据（如JSON）
 
@@ -1014,7 +978,88 @@ class UserQuery {
 }
 ```
 
+## SpringMVC其它配置
+### 视图解析器添加前后缀
 
+配置视图解析器可以免去重复书写视图文件路径的前后缀。
+
+- xml 或者Java Config
+
+```xml
+ <!-- 视图解析器 -->
+    <bean id="jspViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+        <property name="prefix" value="/views/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+```
+
+```java
+@Configuration
+public class ViewConfig {
+    
+    @Bean
+    public ViewResolver viewResolver() {
+        InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+        // 设置所有视图文件所在的公共前缀
+        resolver.setPrefix("/views/");
+        // 设置视图文件的公共后缀
+        resolver.setSuffix(".jsp");
+        return resolver;
+    }
+}
+```
+
+- 控制器代码
+
+此配置后，控制器返回的 `"index"`会被自动补全为 `/views/index.jsp`，极大简化了视图管理
+
+```java
+@Controller
+public class HomeController {
+    
+    @RequestMapping("/home")
+    public String home() {
+        // 控制器中只需返回逻辑视图名 "index"
+        // 视图解析器会自动拼接为 "/WEB-INF/views/index.jsp"
+        return "index"; 
+    }
+}
+```
+
+### 中文乱码问题处理
+
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
+                             http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+
+    <!-- 1. 配置字符编码过滤器（必须放在第一个） -->
+    <filter>
+        <filter-name>characterEncodingFilter</filter-name>
+        <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+        <init-param>
+            <!-- 设置编码为UTF-8 -->
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+        <init-param>
+            <!-- 强制请求和响应都使用UTF-8编码 -->
+            <param-name>forceEncoding</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </filter>
+    
+    <filter-mapping>
+        <filter-name>characterEncodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+</web-app>
+```
 
 
 
