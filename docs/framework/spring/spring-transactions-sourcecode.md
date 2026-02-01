@@ -110,12 +110,394 @@ try (Connection connection = DriverManager.getConnection(url, user, password);
 
 ### 基于JDK代理的方式实现事务管理
 
+我们知道，代理模式可以对目标方法进行增强，因此对于JDK动态代理，可以在InvocationHandler的invoke方法中，在目标方法执行前开启事务，执行后提交，异常时回滚。从而自定义的实现事务管理
+
+#### 定义事务管理器
+
+- 定义事务注解：用于标记需要事务管理的方法。
+
+引入注解机制，可以灵活控制哪些方法需要事务。这样只需要在方法上添加注解就能自动获得事务支持。
+
+```java
+import java.lang.annotation.*;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface JDKProxyTransactional {
+}
+```
+
+- 数据库连接与线程绑定
+
+事务管理的核心是保证同一个线程内的多个数据库操作使用同一个Connection连接，可以通过ThreadLocal来实现线程绑定。
+
+```java
+import java.sql.Connection;
+import java.sql.SQLException;
+
+public class ConnectionUtils {
+    
+    private static ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
+    
+    // 假设已有数据源
+    private static DataSource dataSource = new DataSource();
+    
+    public static Connection getCurrentConnection() throws SQLException {
+        Connection connection = connectionHolder.get();
+        if (connection == null) {
+            // 从数据源获取新连接并绑定到当前线程
+            connection = dataSource.getConnection();
+            connectionHolder.set(connection);
+        }
+        return connection;
+    }
+    
+    public static void unbind() {
+        connectionHolder.remove();
+    }
+}
+```
+
+- 事务管理器：封装基本的事务操作
+
+事务管理器，应该提供beginTransaction、commit、rollback这些基本操作。
+
+```java
+import java.sql.SQLException;
+
+public class TransactionManager {
+    
+    public static void beginTransaction() throws SQLException {
+        // 关闭自动提交，即开启事务
+        ConnectionUtils.getCurrentConnection().setAutoCommit(false);
+    }
+    
+    public static void commit() throws SQLException {
+        Connection conn = ConnectionUtils.getCurrentConnection();
+        conn.commit();
+        conn.close(); // 提交后关闭连接
+        ConnectionUtils.unbind(); // 解绑
+    }
+    
+    public static void rollback() {
+        try {
+            Connection conn = ConnectionUtils.getCurrentConnection();
+            conn.rollback();
+            conn.close(); // 回滚后关闭连接
+            ConnectionUtils.unbind(); // 解绑
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+- 实现InvocationHandler：JDK动态代理的核心，在这里织入事务逻辑
+
+```java
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+public class TransactionalInvocationHandler implements InvocationHandler {
+    
+    private Object target; // 被代理的真实目标对象
+    
+    public TransactionalInvocationHandler(Object target) {
+        this.target = target;
+    }
+    
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        Object result = null;
+        
+        // 检查目标方法是否标注了@Transactional注解
+        boolean isTransactional = method.isAnnotationPresent(JDKProxyTransactional.class);
+        
+        try {
+            if (isTransactional) {
+                TransactionManager.beginTransaction();
+            }
+            
+            // 执行原始的业务方法
+            result = method.invoke(target, args);
+            
+            if (isTransactional) {
+                TransactionManager.commit();
+            }
+            
+        } catch (Exception e) {
+            if (isTransactional) {
+                TransactionManager.rollback();
+            }
+            // 将异常抛出，让调用者感知
+            throw e.getCause();
+        }
+        return result;
+    }
+}
+```
+
+-  创建代理工厂：提供一个简便的方法来生成代理对象。
+
+```java
+import java.lang.reflect.Proxy;
+
+public class ProxyFactory {
+    
+    @SuppressWarnings("unchecked")
+    public static <T> T createProxy(Object target) {
+        return (T) Proxy.newProxyInstance(
+            target.getClass().getClassLoader(),
+            target.getClass().getInterfaces(), // JDK动态代理要求目标类必须实现接口
+            new TransactionalInvocationHandler(target)
+        );
+    }
+}
+```
+
+#### 如何使用
+
+- 定义服务接口及其实现：在需要事务管理的方法上添加 `@JDKProxyTransactional`注解。
+
+```java
+// 1. 服务接口
+public interface UserService {
+	
+	// 注解，开启事务管理
+    @JDKProxyTransactional
+    void transferMoney(String from, String to) throws SQLException;
+}
+
+// 2. 服务实现
+public class UserServiceImpl implements UserService {
+
+	//模拟上面案例中的转账操作
+    @Override
+    public void transferMoney(String from, String to) throws SQLException {
+        String deductMoneySQL = "UPDATE accounts SET balance = balance - 200 WHERE name = ?"; // 扣款SQL
+        String addMoneySQL = "UPDATE accounts SET balance = balance + 200 WHERE name = ?"; // 加款SQL
+        
+        connection = ConnectionUtils.getCurrentConnection();
+        PreparedStatement deductStmt = connection.prepareStatement(deductMoneySQL);
+        PreparedStatement addStmt = connection.prepareStatement(addMoneySQL)) 
+        
+        // 执行第一条SQL：从Seven账户扣款200元
+        deductStmt.setString(1, from);
+        deductStmt.executeUpdate();
+            
+        // ！！！模拟在第二次更新前发生异常（如系统故障、业务逻辑异常等）
+        //int i = 1 / 0; // 这将抛出ArithmeticException异常
+            
+        // 执行第二条SQL：向Eight账户增加200元（因异常，此句不会执行）
+        addStmt.setString(1, to);
+        addStmt.executeUpdate();
+    }
+    
+}
+```
+
+- 获取代理对象并使用：通过代理工厂获取代理对象，然后调用方法
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        UserService realService = new UserServiceImpl();
+        // 获取代理对象，其方法调用将被事务管理
+        UserService proxyService = ProxyFactory.createProxy(realService);
+
+        // 当调用这个方法时，事务管理会自动生效
+        proxyService.transferMoney("A", "B");
+    }
+}
+```
+
+
 
 
 ### 基于AspectJ方式自定义事务实现
 
+同样的，我们也可以基于AspectJ方式来自定义事务实现，这种方式相比 JDK 动态代理更加强大，因为它支持**编译时织入**和**加载时织入**，可以直接拦截**类的任何方法**（包括非 public 方法、静态方法等），而不仅限于接口方法。
+
+#### 定义事务管理器
+
+- 定义事务注解
+
+```java
+import java.lang.annotation.*;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface AspectJTransactional {
+}
+```
 
 
+- 数据库连接和事务管理器
+
+```java
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+public class TransactionManager {
+    
+    private static ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
+    
+    // 假设已有数据源
+    private static DataSource dataSource = new DataSource();
+    
+    public static Connection getConnection() throws SQLException {
+        Connection conn = connectionHolder.get();
+        if (conn == null || conn.isClosed()) {
+            conn = dataSource.getConnection();
+            connectionHolder.set(conn);
+        }
+        return conn;
+    }
+    
+    public static void beginTransaction() throws SQLException {
+        Connection conn = getConnection();
+        conn.setAutoCommit(false);
+    }
+    
+    public static void commit() throws SQLException {
+        Connection conn = getConnection();
+        conn.commit();
+        conn.close();
+        connectionHolder.remove();
+    }
+    
+    public static void rollback() {
+        try {
+            Connection conn = getConnection();
+            conn.rollback();
+            conn.close();
+            connectionHolder.remove();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public static void unbind() {
+        connectionHolder.remove();
+    }
+}
+```
+
+
+- AspectJ 切面实现
+
+```java
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+
+import java.lang.reflect.Method;
+import java.sql.SQLException;
+
+@Aspect
+public class TransactionAspect {
+    
+    /**
+     * 切入点：拦截所有被@Transactional注解标记的方法
+     */
+    @Pointcut("@annotation(com.seven.AspectJTransactional)")
+    public void transactionalMethod() {}
+    
+    /**
+     * 环绕通知：在目标方法执行前后进行事务管理
+     */
+    @Around("transactionalMethod()")
+    public Object manageTransaction(ProceedingJoinPoint joinPoint) throws Throwable {
+        Method method = getMethod(joinPoint);
+        AspectJTransactional transactional = method.getAnnotation(AspectJTransactional.class);
+        
+        System.out.println("【AspectJ】拦截方法: " + method.getName());
+        
+        Object result = null;
+        boolean transactionStarted = false;
+        
+        try {
+            // 开启事务
+            TransactionManager.beginTransaction();
+            transactionStarted = true;
+            
+            // 执行目标方法
+            result = joinPoint.proceed();
+            
+            // 提交事务
+            TransactionManager.commit();
+            
+            return result;
+            
+        } catch (Throwable e) {
+            // 发生异常时回滚事务
+            if (transactionStarted) {
+                TransactionManager.rollback();
+            }
+            System.err.println("【AspectJ】方法执行异常，事务回滚: " + e.getMessage());
+            throw e;
+        }
+    }
+    
+    /**
+     * 获取被拦截的方法
+     */
+    private Method getMethod(ProceedingJoinPoint joinPoint) {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        return signature.getMethod();
+    }
+}
+```
+
+#### 如何使用
+
+业务服务类：不需要实现任何接口，AspectJ可以直接拦截类的方法
+
+```java
+public class UserService {
+    
+    private UserDao userDao = new UserDao();
+    
+    @AspectJTransactional
+    public void transferMoney(String fromUser, String toUser, int amount) {
+        System.out.println("执行转账业务: " + fromUser + " -> " + toUser + " 金额: " + amount);
+        
+        // 扣款
+        userDao.deductMoney(fromUser, amount);
+        
+        // 模拟业务异常
+        // int i = 1/0;
+        
+        // 存款
+        userDao.addMoney(toUser, amount);
+        
+        System.out.println("转账完成");
+    }
+    
+    @Transactional
+    public void batchOperation() {
+        System.out.println("执行批量操作...");
+        transferMoney("Alice", "Bob", 100);
+        transferMoney("Bob", "Charlie", 200);
+        // 这里如果出现异常，整个批量操作都会回滚
+    }
+    
+    // 私有方法也可以被拦截！
+    @Transactional
+    private void internalOperation() {
+        System.out.println("内部私有方法的事务操作");
+    }
+    
+    // 静态方法也可以被拦截！
+    @Transactional  
+    public static void staticOperation() {
+        System.out.println("静态方法的事务操作");
+    }
+}
+```
 
 
 

@@ -497,7 +497,7 @@ java.lang.InterruptedException: sleep interrupted
 
 
 
-如果只想中断 Executor 中的一个线程，可以通过使用 submit() 方法来提交一个线程，它会返回一个 Future<?> 对象，通过调用该对象的 cancel(true) 方法就可以中断线程。
+如果只想中断 Executor 中的一个线程，可以通过使用 submit() 方法来提交一个线程，它会返回一个 `Future<?>` 对象，通过调用该对象的 cancel(true) 方法就可以中断线程。
 
 ```java
 Future<?> future = executorService.submit(() -> {

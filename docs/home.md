@@ -150,6 +150,7 @@ head:
 ## 常用框架
 
 ### Spring
+
 - [全网最详细的Spring入门教程](https://www.seven97.top/framework/spring/spring-summary.html)
 - [Spring框架IoC核心详解](https://www.seven97.top/framework/spring/ioc1-summary.html)
 - [从底层源码深入分析Spring的IoC容器初始化过程](https://www.seven97.top/framework/spring/ioc2-initializationprocess.html)
@@ -158,6 +159,7 @@ head:
 - [Spring AOP基础、快速入门](https://www.seven97.top/framework/spring/aop1-summary.html)
 - [AOP背后的故事：Spring中切面实现的精彩历程](https://www.seven97.top/framework/spring/aop2-implementationofcrosssections.html)
 - [AOP中动态代理详解](https://www.seven97.top/framework/spring/aop3-proxy.html)
+- [AOP注解的妙用 - 实现接口限流、防重、防抖](https://www.seven97.top/framework/spring/aop-limit-repeatsubmit-antishake.html)
 - [万字长文带你窥探Spring中所有的扩展点](https://www.seven97.top/framework/spring/extentions-use.html)
 - [一文带你了解如何控制Bean的加载顺序？](https://www.seven97.top/framework/spring/loadingorderofbean.html)
 - [Spring事务管理使用篇](https://www.seven97.top/framework/spring/spring-transactions-use.html)
@@ -165,9 +167,9 @@ head:
 - [MVC快速入门](https://www.seven97.top/framework/spring/mvc1-summary.html)
 - [MVC中DispatcherServlet初始化的深度探索](https://www.seven97.top/framework/spring/mvc3-initializationprocessofdispatcherservlet.html)
 - [MVC中DispatcherServlet处理请求的完整流程](https://www.seven97.top/framework/spring/mvc4-processofdispatcherservletprocessingrequests.html)
+- [优雅的参数校验](https://www.seven97.top/framework/spring/parameterverification.html)
+- [优雅的处理返回值](https://www.seven97.top/framework/spring/encapsulationresult.html)
 - [Async注解底层异步线程池原理](https://www.seven97.top/framework/spring/spring-async.html)
-
-
 ### ORM框架
 
 - [JDBC连接数据库的核心原理](https://www.seven97.top/framework/orm/basement-jdbc.html)
@@ -181,11 +183,18 @@ head:
 - [MyBatis中一级缓存与二级缓存的幕后真相](https://www.seven97.top/framework/orm/mybatis-cacheimplementationmechanism.html)
 - [MyBatis-Plus批量插入的实现原理](https://www.seven97.top/framework/orm/mybatisplus-batchsave.html)
 
-### SpringBoot原理
+### SpringBoot
 
 - [SpringBoot使用内置Tomcat与外置Tomcat的深度剖析](https://www.seven97.top/framework/springboot/springbootstart-twoway.html)
 - [深度揭秘SpringBoot自动装配的实现原理](https://www.seven97.top/framework/springboot/principleofautomaticassembly.html)
 - [SpringBoot中过滤器与拦截器的深度对比与实战应用](https://www.seven97.top/framework/springboot/filter-interceptor.html)
+- [史上最全SpringBoot相关注解介绍](https://www.seven97.top/framework/springboot/springboot-annotation.html)
+- [整合Minio - 实现文件切片极速上传](https://www.seven97.top/framework/springboot/minio-springboot.html)
+- [整合EasyExcel - 实现百万数据导入导出](https://www.seven97.top/framework/springboot/easyexcle-springboot.html)
+
+### SpringAI
+
+- [Spring AI 框架中如何集成 MCP？](https://www.seven97.top/framework/springai/springai-mcp.html)
 
 ### 网络IO
 
@@ -354,6 +363,7 @@ head:
 ## 系统设计/实践
 
 ### 设计模式
+
 - [类与类之间六大关系揭秘以及软件设计七大原则](https://www.seven97.top/system-design/design-pattern/overviewofdesignpatterns.html)
 - [单例模式](https://www.seven97.top/system-design/design-pattern/singletonpattern.html)
 - [工厂模式](https://www.seven97.top/system-design/design-pattern/factorymethod.html)
@@ -401,18 +411,13 @@ head:
 - [Redis文章索引](https://www.seven97.top/system-design/cache-column/redis.html)
 - [如何更好的使用缓存](https://www.seven97.top/system-design/cache-column/usecache.html)
 
-### SpringBoot专栏
-- [史上最全SpringBoot相关注解介绍](https://www.seven97.top/system-design/springboot/springboot-annotation.html)
-- [优雅的参数校验](https://www.seven97.top/system-design/springboot/parameterverification.html)
-- [优雅的处理返回值](https://www.seven97.top/system-design/springboot/encapsulationresult.html)
-- [优雅地关闭程序](https://www.seven97.top/system-design/springboot/elegantlyclosetheprogram.html)
-- [AOP注解的妙用 - 实现接口限流、防重、防抖](https://www.seven97.top/system-design/springboot/aop-limit-repeatsubmit-antishake.html)
-- [整合Minio - 实现文件切片极速上传](https://www.seven97.top/system-design/springboot/minio-springboot.html)
-- [整合EasyExcel - 实现百万数据导入导出](https://www.seven97.top/system-design/springboot/easyexcle-springboot.html)
-
 ### 编程实践
+
+- [优雅地关闭程序](https://www.seven97.top/system-design/best-practices/elegantlyclosetheprogram.html)
+- [Java 日志管理的黄金组合: SLF4J+Logback](https://www.seven97.top/system-design/best-practices/logback.html)
 - [支付技术流程](https://www.seven97.top/system-design/best-practices/paymenttechnology.html)
 - [Lombok注解引发的空指针问题分析](https://www.seven97.top/system-design/best-practices/lombok-nullpointerproblem.html)
+
 
 
 

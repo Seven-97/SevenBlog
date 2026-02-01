@@ -18,6 +18,8 @@ head:
 
 ## 前言
 
+### 什么是MVC
+
 MVC英文是Model View Controller，是模型(model)－视图(view)－控制器(controller)的缩写，一种软件设计规范，本质上也是一种解耦。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202407212156709.png)
@@ -26,7 +28,14 @@ MVC英文是Model View Controller，是模型(model)－视图(view)－控制器(
 - **View**（视图）是应用程序中处理数据显示的部分。通常视图是依据模型数据创建的。
 - **Controller**（控制器）是应用程序中处理用户交互的部分。通常控制器负责从视图读取数据，控制用户输入，并向模型发送数据。
 
+
+### 什么是SpringMVC
+
 而Spring Web MVC 则是一种基于Java 的实现了Web MVC 设计模式的请求驱动类型的轻量级Web 框架，即使用了MVC 架构模式的思想，将 web 层进行职责解耦，基于请求驱动指的就是使用请求-响应模型，框架的目的就是为了简化开 发，Spring Web MVC 也是要简化我们日常Web 开发的。
+
+说白了，Spring MVC 就是 【接收请求】【响应数据】
+
+
 Spring MVC 下一般把后端项目分为 Service 层（处理业务）、Dao 层（数据库操作）、Entity 层（实体类）、Controller 层(控制层，返回数据给前台页面)。
 
 
@@ -94,6 +103,8 @@ Spring MVC 拦截器对应HandlerInterctor接口，该接口位于org.springfram
 ## MVC案例 
 
 ### 基于webxml
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202602011306237.png)
 
  [示例源码点击这里](https://github.com/Seven-97/Spring-Demo/tree/master/07-spring-mvc-helloworld)
 
@@ -297,7 +308,7 @@ web.xml中配置初始化参数contextConfigLocation，路径是classpath:spring
     <!-- 静态资源处理 -->
     <mvc:default-servlet-handler/>
 
-    <!-- 开启注解 -->
+    <!-- 开启SpringMVC注解 -->
     <mvc:annotation-driven/>
 
     <!-- 视图解析器 -->
@@ -362,6 +373,648 @@ web.xml中配置初始化参数contextConfigLocation，路径是classpath:spring
 具体源码[点击这里](https://github.com/Seven-97/Spring-Demo/tree/master/08-spring-mvc-helloworld-anno)
 
 这个不做过多讲解，真实项目的用得较少。因为若是老项目，就是基于webxml的，若是新项目，则直接上springboot了。
+
+## Spring MVC响应请求
+
+### 直接返回ModelAndView对象
+
+ModelAndView对象将数据模型和视图信息封装在一起。
+
+```java
+@RequestMapping("/order")
+public ModelAndView getOrderPage() {
+    // 1. 创建ModelAndView对象
+    ModelAndView mav = new ModelAndView();
+    
+    // 2. 添加模型数据（相当于model.addAttribute）
+    Order order = orderService.getLatestOrder();
+    mav.addObject("currentOrder", order);
+    mav.addObject("pageTitle", "订单详情");
+    
+    // 3. 设置视图名称
+    mav.setViewName("orderDetail"); // 视图解析器会处理为完整路径
+    
+    return mav;
+}
+```
+
+
+### 返回视图名称（页面跳转）
+
+该方法返回 `"userDetail.jsp"`，并可以在页面上通过 `${user}`获取数据
+
+```java
+@Controller
+@RequestMapping("/user")
+public class UserController {
+    
+    @RequestMapping("/detail")
+    public String getUserDetail(Model model) {
+        // 模拟查询用户信息
+        User user = userService.findUserById(1);
+        // 将数据添加到Model中，会自动存入请求域
+        model.addAttribute("user", user);
+        // 返回逻辑视图名，视图解析器会将其拼接为 "/WEB-INF/views/userDetail.jsp"
+        return "userDetail.jsp"; 
+    }
+}
+```
+
+### 使用Map传递数据
+
+该方法返回 `"userDetail.jsp"`，并可以在页面上通过 `${user}`获取数据
+
+```java
+@Controller
+@RequestMapping("/user")
+public class UserController {
+    
+    @RequestMapping("/detail")
+    public String getUserDetail(Map<String, User> map) {
+        // 模拟查询用户信息
+        User user = userService.findUserById(1);
+        // 将数据添加到Model中，会自动存入请求域
+        map.addAttribute("user", user);
+        // 返回逻辑视图名，视图解析器会将其拼接为 "/WEB-INF/views/userDetail.jsp"
+        return "userDetail.jsp"; 
+    }
+}
+```
+
+
+### 返回void
+
+这种方式绕过了SpringMVC的视图解析，提供了最大灵活性，但需要自行处理响应细节，与Servlet API耦合度高，一般不推荐作为主要方式
+
+```java
+@RequestMapping("/raw")
+public void handleRawResponse(HttpServletResponse response) throws IOException {
+    // 设置响应类型和编码
+    response.setContentType("text/plain; charset=UTF-8");
+    // 直接通过HttpServletResponse输出
+    PrintWriter out = response.getWriter();
+    out.write("这是一个直接输出的响应");
+    out.flush();
+}
+```
+
+
+### 重定向跳转
+
+redirect:会让浏览器地址栏变为新的URL。注意，重定向是两次请求，原始请求域（request scope）中的数据会丢失。若要传递参数，可使用 RedirectAttributes
+
+```java
+@PostMapping("/submit")
+public String submitForm(LoginForm form) {
+    // ... 处理表单提交逻辑，如保存数据
+    boolean isSuccess = loginService.processLogin(form);
+    
+    // 重定向到另一个地址，防止用户刷新浏览器导致表单重复提交
+    return "redirect:/login/success"; // 浏览器会向 "/login/success" 发起新请求
+}
+
+@GetMapping("/success")
+public String successPage() {
+    return "success"; // 展示成功页面
+}
+```
+
+### 使用HttpServletResponse
+
+此方式适用于文件下载、输出特定二进制内容等需要精细控制输出流的场景。它完全绕过了SpringMVC的视图解析机制
+
+```java
+@RequestMapping("/download")
+public void downloadFile(HttpServletResponse response) throws IOException {
+    // 设置响应头，告诉浏览器这是一个要下载的PDF文件
+    response.setContentType("application/pdf");
+    response.setHeader("Content-Disposition", "attachment; filename=\"document.pdf\"");
+    
+    // 获取文件流（此处为模拟）
+    byte[] fileContent = getFileContent();
+    
+    // 通过ServletResponse的输出流直接写入数据
+    ServletOutputStream out = response.getOutputStream();
+    out.write(fileContent);
+    out.flush();
+}
+```
+
+
+### 视图解析器添加前后缀
+
+配置视图解析器可以免去重复书写视图文件路径的前后缀。
+
+- Java Config
+
+```java
+@Configuration
+public class ViewConfig {
+    
+    @Bean
+    public ViewResolver viewResolver() {
+        InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+        // 设置所有视图文件所在的公共前缀
+        resolver.setPrefix("/WEB-INF/views/");
+        // 设置视图文件的公共后缀
+        resolver.setSuffix(".jsp");
+        return resolver;
+    }
+}
+```
+
+- 控制器代码
+
+此配置后，控制器返回的 `"index"`会被自动补全为 `/WEB-INF/views/index.jsp`，极大简化了视图管理
+
+```java
+@Controller
+public class HomeController {
+    
+    @RequestMapping("/home")
+    public String home() {
+        // 控制器中只需返回逻辑视图名 "index"
+        // 视图解析器会自动拼接为 "/WEB-INF/views/index.jsp"
+        return "index"; 
+    }
+}
+```
+
+
+
+### 直接返回数据（如JSON）
+
+@ResponseBody注解是核心，它告诉Spring将方法返回值直接写入响应流。若项目中配置了消息转换器（如Jackson），可直接返回对象，Spring会自动将其转为JSON
+
+```java
+@Controller
+@RequestMapping("/api")
+public class ApiController {
+
+    @RequestMapping(value = "/user", produces = "application/json;charset=UTF-8")
+    @ResponseBody // 关键注解：表明返回值直接作为HTTP响应体，不进行视图解析
+    public String getUserAsJson() {
+        User user = new User("张三", 25);
+        // 手动将对象转为JSON字符串（需Jackson等库）
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.writeValueAsString(user);
+        } catch (JsonProcessingException e) {
+            return "{\"error\": \"转换失败\"}";
+        }
+        // 更佳实践：直接返回对象，配置消息转换器自动转JSON（见后续说明）
+    }
+}
+```
+
+
+## SringMVC接收数据
+
+### 基本数据类型接收
+
+```java
+@RestController
+@RequestMapping("/api/user")
+public class UserController {
+    
+    /**
+     * 接收单个基本类型参数
+     * GET /api/user/detail?id=123
+     */
+    @GetMapping("/detail")
+    public String getUserDetail(@RequestParam("id") Long userId) {
+        // @RequestParam将请求参数"id"映射到方法参数userId
+        return "用户ID: " + userId;
+    }
+    
+    /**
+     * 参数可选，设置默认值
+     * GET /api/user/list 或 /api/user/list?page=2
+     */
+    @GetMapping("/list")
+    public String getUserList(
+            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
+        // required=false表示参数可选，defaultValue设置默认值
+        return String.format("第%d页，每页%d条", page, size);
+    }
+    
+    /**
+     * 简化写法：参数名与方法参数名一致时可省略@RequestParam
+     * GET /api/user/simple?name=张三&age=25
+     */
+    @GetMapping("/simple")
+    public String simpleParams(String name, Integer age) {
+        // 当请求参数名与方法参数名一致时，可以省略@RequestParam
+        return "姓名: " + name + ", 年龄: " + age;
+    }
+}
+```
+
+
+### 接收路径参数
+
+```java
+@RestController
+@RequestMapping("/api/product")
+public class ProductController {
+    
+    /**
+     * 接收路径参数
+     * GET /api/product/1001/category/2001
+     */
+    @GetMapping("/{productId}/category/{categoryId}")
+    public String getProductInfo(
+            @PathVariable("productId") Long productId,
+            @PathVariable("categoryId") Long categoryId) {
+        // @PathVariable从URL路径中提取参数
+        return String.format("产品ID: %d, 分类ID: %d", productId, categoryId);
+    }
+    
+    /**
+     * 正则表达式限制路径参数格式
+     * GET /api/product/2023-10-25
+     */
+    @GetMapping("/{date:\\d{4}-\\d{2}-\\d{2}}")
+    public String getProductsByDate(@PathVariable String date) {
+        // 使用正则表达式限制日期格式
+        return "查询日期: " + date;
+    }
+}
+```
+
+### 对象接收（自动绑定）
+
+#### 接收简单对象参数
+
+```java
+/**
+ * 用户查询参数对象
+ */
+public class UserQueryParams {
+    private String username;
+    private String email;
+    private Integer age;
+    private Date createTime;
+    
+    // 必须提供getter和setter方法
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+    
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    
+    public Integer getAge() { return age; }
+    public void setAge(Integer age) { this.age = age; }
+    
+    public Date getCreateTime() { return createTime; }
+    public void setCreateTime(Date createTime) { this.createTime = createTime; }
+    
+    @Override
+    public String toString() {
+        return String.format("UserQuery{username='%s', email='%s', age=%d}", 
+                           username, email, age);
+    }
+}
+
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+    
+    /**
+     * 对象接收 - GET请求
+     * GET /api/users/search?username=张三&email=zhang@example.com&age=25
+     */
+    @GetMapping("/search")
+    public String searchUsers(UserQueryParams params) {
+        // Spring自动将请求参数绑定到对象属性
+        return "查询参数: " + params.toString();
+    }
+    
+    /**
+     * 对象接收 - POST表单提交
+     * POST /api/users/create
+     * Content-Type: application/x-www-form-urlencoded
+     * Body: username=李四&email=li@example.com&age=30
+     */
+    @PostMapping("/create")
+    public String createUser(UserQueryParams user) {
+        return "创建用户: " + user.toString();
+    }
+}
+```
+
+#### 接收嵌套对象参数
+
+```java
+/**
+ * 地址信息
+ */
+public class Address {
+    private String province;
+    private String city;
+    private String street;
+    // getter/setter省略...
+}
+
+/**
+ * 用户信息（包含嵌套对象）
+ */
+public class UserInfo {
+    private String name;
+    private Integer age;
+    private Address address; // 嵌套对象
+    
+    // getter/setter...
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public Integer getAge() { return age; }
+    public void setAge(Integer age) { this.age = age; }
+    
+    public Address getAddress() { return address; }
+    public void setAddress(Address address) { this.address = address; }
+}
+
+@RestController
+@RequestMapping("/api/profile")
+public class ProfileController {
+    
+    /**
+     * 接收嵌套对象参数
+     * GET /api/profile/update?name=王五&age=28&address.province=北京&address.city=北京市
+     */
+    @PostMapping("/update")
+    public String updateProfile(UserInfo userInfo) {
+        // 使用点号语法接收嵌套对象属性
+        return String.format("用户: %s, 年龄: %d, 地址: %s-%s", 
+            userInfo.getName(), userInfo.getAge(),
+            userInfo.getAddress().getProvince(), 
+            userInfo.getAddress().getCity());
+    }
+}
+```
+
+### 数组接收
+
+数组在表单中的应用
+
+```java
+<!-- 前端HTML表单示例 -->
+<form action="/api/products/batch-delete" method="post">
+    <!-- 多个同名的checkbox -->
+    <input type="checkbox" name="productIds" value="1001"> 产品A
+    <input type="checkbox" name="productIds" value="1002"> 产品B
+    <input type="checkbox" name="productIds" value="1003"> 产品C
+    <button type="submit">批量删除</button>
+</form>
+```
+
+```java
+@RestController
+@RequestMapping("/api/products")
+public class ProductController {
+    
+    /**
+     * 批量删除产品
+     * POST /api/products/batch-delete
+     * Body: productIds=1001&productIds=1002&productIds=1003
+     */
+    @PostMapping("/batch-delete")
+    public String batchDeleteProducts(@RequestParam Long[] productIds) {
+        return "删除的产品ID: " + Arrays.toString(productIds);
+    }
+}
+```
+
+### 集合接收（通过包装对象）
+
+SpringMVC 不能直接在方法参数中接收集合，但可以通过对象包装的方式来接收。
+
+```java
+/**
+ * 包装类，包含集合属性
+ */
+public class BatchOperation {
+    private List<Long> ids;
+    private List<String> names;
+    
+    // getter/setter...
+    public List<Long> getIds() { return ids; }
+    public void setIds(List<Long> ids) { this.ids = ids; }
+    
+    public List<String> getNames() { return names; }
+    public void setNames(List<String> names) { this.names = names; }
+}
+
+@RestController
+@RequestMapping("/api/batch")
+public class BatchController {
+    
+    /**
+     * 接收集合参数 - 通过包装对象
+     * POST /api/batch/process
+     * 请求体格式1: ids=1&ids=2&ids=3
+     * 请求体格式2: names=Alice&names=Bob&names=Charlie
+     */
+    @PostMapping("/process")
+    public String processBatch(BatchOperation operation) {
+        StringBuilder result = new StringBuilder();
+        if (operation.getIds() != null) {
+            result.append("ID列表: ").append(operation.getIds());
+        }
+        if (operation.getNames() != null) {
+            result.append("名称列表: ").append(operation.getNames());
+        }
+        return result.toString();
+    }
+}
+```
+
+### 自定义转换器
+
+- 日期格式转换器
+
+```java
+/**
+ * 自定义日期转换器
+ * 将字符串转换为Date对象
+ */
+@Component
+public class StringToDateConverter implements Converter<String, Date> {
+    
+    private static final String[] DATE_PATTERNS = {
+        "yyyy-MM-dd",
+        "yyyy/MM/dd",
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy/MM/dd HH:mm:ss"
+    };
+    
+    @Override
+    public Date convert(String source) {
+        if (source == null || source.trim().isEmpty()) {
+            return null;
+        }
+        
+        // 尝试多种日期格式
+        for (String pattern : DATE_PATTERNS) {
+            try {
+                SimpleDateFormat format = new SimpleDateFormat(pattern);
+                format.setLenient(false); // 严格模式
+                return format.parse(source);
+            } catch (ParseException e) {
+                // 尝试下一种格式
+                continue;
+            }
+        }
+        
+        throw new IllegalArgumentException("无效的日期格式: " + source + 
+            "，支持的格式: " + Arrays.toString(DATE_PATTERNS));
+    }
+}
+```
+
+- 枚举类型转换器
+
+```java
+/**
+ * 用户状态枚举
+ */
+public enum UserStatus {
+    ACTIVE("活跃"),
+    INACTIVE("非活跃"),
+    DELETED("已删除");
+    
+    private final String description;
+    
+    UserStatus(String description) {
+        this.description = description;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+}
+
+/**
+ * 字符串到枚举转换器
+ */
+@Component
+public class StringToUserStatusConverter implements Converter<String, UserStatus> {
+    
+    @Override
+    public UserStatus convert(String source) {
+        if (source == null || source.trim().isEmpty()) {
+            return null;
+        }
+        
+        // 不区分大小写匹配
+        for (UserStatus status : UserStatus.values()) {
+            if (status.name().equalsIgnoreCase(source)) {
+                return status;
+            }
+        }
+        
+        // 也支持中文描述匹配
+        for (UserStatus status : UserStatus.values()) {
+            if (status.getDescription().equals(source)) {
+                return status;
+            }
+        }
+        
+        throw new IllegalArgumentException("无效的用户状态: " + source);
+    }
+}
+```
+
+
+- 注册自定义转换器
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    
+    @Autowired
+    private StringToDateConverter stringToDateConverter;
+    
+    @Autowired
+    private StringToUserStatusConverter stringToUserStatusConverter;
+    
+    /**
+     * 注册自定义转换器
+     */
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(stringToDateConverter);
+        registry.addConverter(stringToUserStatusConverter);
+    }
+}
+```
+
+
+- 在控制器中使用自定义转换
+
+```java
+@RestController
+@RequestMapping("/api/converter")
+public class ConverterController {
+    
+    /**
+     * 使用自定义日期转换器
+     * GET /api/converter/date?date=2023-10-25
+     */
+    @GetMapping("/date")
+    public String handleDateParam(@RequestParam Date date) {
+        // Spring会自动使用我们注册的StringToDateConverter
+        SimpleDateFormat format = new SimpleDateFormat("yyyy年MM月dd日");
+        return "转换后的日期: " + format.format(date);
+    }
+    
+    /**
+     * 使用自定义枚举转换器
+     * GET /api/converter/status?status=ACTIVE
+     * GET /api/converter/status?status=活跃
+     */
+    @GetMapping("/status")
+    public String handleStatusParam(@RequestParam UserStatus status) {
+        return "用户状态: " + status.getDescription();
+    }
+    
+    /**
+     * 在对象中使用自定义转换
+     * GET /api/converter/user?name=张三&createTime=2023-10-25 14:30:00&status=INACTIVE
+     */
+    @GetMapping("/user")
+    public String handleUserObject(UserQuery userQuery) {
+        // UserQuery对象中包含Date和UserStatus属性
+        return String.format("用户: %s, 创建时间: %s, 状态: %s",
+            userQuery.getName(),
+            userQuery.getCreateTime(),
+            userQuery.getStatus().getDescription());
+    }
+}
+
+/**
+ * 用户查询对象（包含需要自定义转换的属性）
+ */
+class UserQuery {
+    private String name;
+    private Date createTime;      // 需要自定义转换
+    private UserStatus status;    // 需要自定义转换
+    
+    // getter/setter...
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public Date getCreateTime() { return createTime; }
+    public void setCreateTime(Date createTime) { this.createTime = createTime; }
+    
+    public UserStatus getStatus() { return status; }
+    public void setStatus(UserStatus status) { this.status = status; }
+}
+```
+
+
 
 
 

@@ -12,7 +12,7 @@ head:
       content: 全网最全的Spring知识点总结，让天下没有难学的八股文！
 ---
 
-**概述**
+## 概述
 
 DispatcherServlet首先是Sevlet，Servlet有自己的生命周期的方法（init,destory等），那么在看DispatcherServlet初始化时首先需要看源码中DispatcherServlet的类结构设计。
 
@@ -272,7 +272,7 @@ protected void configureAndRefreshWebApplicationContext(ConfigurableWebApplicati
   postProcessWebApplicationContext(wac);
   applyInitializers(wac);
 
-  // Spring环境初始化完了，就可以初始化DispatcherServlet处理流程中需要的组件了。
+  // Spring环境初始化完了，就可以初始化DispatcherServlet处理流程中需要的组件了。做IOC容器的加载
   wac.refresh();
 }
 ```
@@ -305,8 +305,10 @@ protected void onRefresh(ApplicationContext context) {
 /**
   * Initialize the strategy objects that this servlet uses.
   * <p>May be overridden in subclasses in order to initialize further strategy objects.
+    初始化SpringMVC的九大组件
   */
 protected void initStrategies(ApplicationContext context) {
+  //文件上传
   initMultipartResolver(context);
   initLocaleResolver(context);
   initThemeResolver(context);
@@ -326,102 +328,42 @@ protected void initStrategies(ApplicationContext context) {
 
 主要看initHandlerXXX相关的方法，它们之间的关系可以看SpringMVC的请求流程：
 
-![img](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404281540287.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404281540287.png)
 
-1. HandlerMapping是映射处理器
+1. HandlerMapping 是映射处理器
 2. HandlerAdpter是**处理适配器**，它用来找到你的Controller中的处理方法
 3. HandlerExceptionResolver是当遇到处理异常时的异常解析器
+
+#### initMultipartResolver
+
+
+文件的上传请求，则需要使用MultipartResolver
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202602011305916.png)
+
+
 
 #### initHandlerMapping
 
 该方法负责进行HandlerMapping接口实现类的加载。HandlerMapping接口主要用来提供request 请求对象和Handler对象 映射关系的接口。所谓request对象比如web应用中的http 请求，Handler对象则指的是对应rquest请求的相关处理逻辑。
 
-首先判断是否查找所有HandlerMapping(默认为true)。如果为是，则从上下文(包括所有父上下文)中查询类型为HandlerMapping的Bean,并进行排序。如果为否，则从上下文中按指定名称去寻找。如果都没有找到，提供一个默认的实现。这个默认实现从DispatcherServlet同级目录的DispatcherServlet.properties中加载得。
+首先判断是否查找所有HandlerMapping(默认为true)。如果为是，则从上下文(包括所有父上下文)中查询类型为HandlerMapping的Bean,并进行排序。如果为否，则从上下文中按指定名称去寻找。如果都没有找到，提供一个默认的实现。这个默认实现从DispatcherServlet同级目录的DispatcherServlet.properties中加载的。
 
-```java
-/**
-  * Initialize the HandlerAdapters used by this class.
-  * <p>If no HandlerAdapter beans are defined in the BeanFactory for this namespace,
-  * we default to SimpleControllerHandlerAdapter.
-  */
-private void initHandlerAdapters(ApplicationContext context) {
-  this.handlerAdapters = null;
 
-  if (this.detectAllHandlerAdapters) {
-    // Find all HandlerAdapters in the ApplicationContext, including ancestor contexts.
-    Map<String, HandlerAdapter> matchingBeans =
-        BeanFactoryUtils.beansOfTypeIncludingAncestors(context, HandlerAdapter.class, true, false);
-    if (!matchingBeans.isEmpty()) {
-      this.handlerAdapters = new ArrayList<>(matchingBeans.values());
-      // We keep HandlerAdapters in sorted order.
-      AnnotationAwareOrderComparator.sort(this.handlerAdapters);
-    }
-  }
-  else {
-    try {
-      HandlerAdapter ha = context.getBean(HANDLER_ADAPTER_BEAN_NAME, HandlerAdapter.class);
-      this.handlerAdapters = Collections.singletonList(ha);
-    }
-    catch (NoSuchBeanDefinitionException ex) {
-      // Ignore, we'll add a default HandlerAdapter later.
-    }
-  }
+initHandlerMapping方法如下，无非就是获取按照优先级排序后的HanlderMappings, 将来匹配时按照优先级最高的HanderMapping进行处理
 
-  // Ensure we have at least some HandlerAdapters, by registering
-  // default HandlerAdapters if no other adapters are found.
-  if (this.handlerAdapters == null) {
-    this.handlerAdapters = getDefaultStrategies(context, HandlerAdapter.class);
-    if (logger.isTraceEnabled()) {
-      logger.trace("No HandlerAdapters declared for servlet '" + getServletName() +
-          "': using default strategies from DispatcherServlet.properties");
-    }
-  }
-}
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202602011033351.png)
 
-/**
-  * Initialize the HandlerExceptionResolver used by this class.
-  * <p>If no bean is defined with the given name in the BeanFactory for this namespace,
-  * we default to no exception resolver.
-  */
-private void initHandlerExceptionResolvers(ApplicationContext context) {
-  this.handlerExceptionResolvers = null;
+initHandlerMapping 没有找到自定义配置的，则构建默认的。默认值在
+DispatcherServlet.properties 文件中，九大组件均有默认值
 
-  if (this.detectAllHandlerExceptionResolvers) {
-    // Find all HandlerExceptionResolvers in the ApplicationContext, including ancestor contexts.
-    Map<String, HandlerExceptionResolver> matchingBeans = BeanFactoryUtils
-        .beansOfTypeIncludingAncestors(context, HandlerExceptionResolver.class, true, false);
-    if (!matchingBeans.isEmpty()) {
-      this.handlerExceptionResolvers = new ArrayList<>(matchingBeans.values());
-      // We keep HandlerExceptionResolvers in sorted order.
-      AnnotationAwareOrderComparator.sort(this.handlerExceptionResolvers);
-    }
-  }
-  else {
-    try {
-      HandlerExceptionResolver her =
-          context.getBean(HANDLER_EXCEPTION_RESOLVER_BEAN_NAME, HandlerExceptionResolver.class);
-      this.handlerExceptionResolvers = Collections.singletonList(her);
-    }
-    catch (NoSuchBeanDefinitionException ex) {
-      // Ignore, no HandlerExceptionResolver is fine too.
-    }
-  }
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202602011034305.png)
 
-  // Ensure we have at least some HandlerExceptionResolvers, by registering
-  // default HandlerExceptionResolvers if no other resolvers are found.
-  if (this.handlerExceptionResolvers == null) {
-    this.handlerExceptionResolvers = getDefaultStrategies(context, HandlerExceptionResolver.class);
-    if (logger.isTraceEnabled()) {
-      logger.trace("No HandlerExceptionResolvers declared in servlet '" + getServletName() +
-          "': using default strategies from DispatcherServlet.properties");
-    }
-  }
-}
-```
-
-### initHandlerAdapters
+#### initHandlerAdapters
 
 通过initHandlerMappings已经将request通过HandlerMapping(处理器映射器)将请求映射到了对应的Handler上，这一步就需要考虑如何解析并执行该handler对象。
+
+initHandlerAdapters方法和initHandlerExceptionResolvers方法也是类似的，如果没有找到，那就构建默认的。
 
  这里Spring使用了适配器模式，主要是因为handler对象有两种不同的类型。
 

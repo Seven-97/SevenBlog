@@ -23,7 +23,7 @@ head:
 3. DispatcherServlet——>HandlerAdapter：HandlerAdapter 将会把处理器包装为适配器，从而支持多种类型的处理器， 即适配器设计模式的应用，从而很容易支持很多类型的处理器；
 4. HandlerAdapter——>处理器功能处理方法的调用：HandlerAdapter 将会根据适配的结果调用真正的处理器的功能处理方法（也就是执行所有注册拦截器的preHandler方法），完成功能处理；并返回一个ModelAndView 对象（包含模型数据、逻辑视图名）；
 5. 倒序执行所有注册拦截器的postHandler方法
-6. ModelAndView 的逻辑视图名——> ViewResolver：ViewResolver 将把逻辑视图名解析为具体的View，通过这种策 略模式，很容易更换其他视图技术；
+6. ModelAndView 的逻辑视图名——> ViewResolver：ViewResolver 将把逻辑视图名解析为具体的View，通过这种策略模式，很容易更换其他视图技术；
 7. View——>渲染：View 会根据传进来的Model 模型数据进行渲染，此处的Model 实际是一个Map 数据结构，因此 很容易支持其他视图技术；
 8. 返回控制权给DispatcherServlet：由DispatcherServlet 返回响应给用户，到此一个流程结束
 
@@ -204,7 +204,7 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
         return;
       }
 
-      // 真正handle处理，并返回modelAndView
+      // ① 真正handle处理，并返回modelAndView
       mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
       if (asyncManager.isConcurrentHandlingStarted()) {
@@ -226,7 +226,7 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
       dispatchException = new NestedServletException("Handler dispatch failed", err);
     }
 
-    // 处理handler处理的结果，显然就是对ModelAndView 或者 出现的Excpetion处理
+    // ②处理handler处理的结果，显然就是对ModelAndView 或者 出现的Excpetion处理
     processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
   }
   catch (Exception ex) {
@@ -253,7 +253,7 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 }
 ```
 
-### 映射和适配器处理
+### ①映射和适配器处理
 
 对于真正的handle方法，我们看下其处理流程
 
@@ -386,7 +386,7 @@ protected ModelAndView invokeHandlerMethod(HttpServletRequest request,
 
 
 
-### 视图渲染
+### ②视图渲染
 
 接下来继续执行processDispatchResult方法，对视图和model（如果有异常则对异常处理）进行处理（显然就是渲染页面了）
 
