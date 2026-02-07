@@ -60,46 +60,6 @@ Spring MVC 下一般把后端项目分为 Service 层（处理业务）、Dao �
 
 
 
-## MVC 拦截器
-
-Spring MVC 拦截器对应HandlerInterctor接口，该接口位于org.springframework.web.servlet的包中，定义了三个方法，若要实现该接口，就要实现其三个方法：
-
-1. 前置处理（preHandle()方法）：该方法在执行控制器方法之前执行。返回值为Boolean类型，如果返回false，表示拦截请求，不再向下执行，如果返回true，表示放行，程序继续向下执行（如果后面没有其他Interceptor，就会执行controller方法）。所以此方法可对请求进行判断，决定程序是否继续执行，或者进行一些初始化操作及对请求进行预处理。
-2. 后置处理（postHandle()方法）：该方法在执行控制器方法调用之后，且在返回ModelAndView之前执行。由于该方法会在DispatcherServlet进行返回视图渲染之前被调用，所以此方法多被用于处理返回的视图，可通过此方法对请求域中的模型和视图做进一步的修改。
-3. 已完成处理（afterCompletion()方法）：该方法在执行完控制器之后执行，由于是在Controller方法执行完毕后执行该方法，所以该方法适合进行一些资源清理，记录日志信息等处理操作。
-
-可以通过拦截器进行权限检验，参数校验，记录日志等操作
-
-
-
-### MVC 的Interctor和 Filter 过滤器的区别
-
-- 功能相同：Interctor和 Filter 都能实现相应的功能
-
-- 容器不同：Interctor构建在 Spring MVC 体系中；Filter 构建在 Servlet 容器之上
-
-- 拦截内容不同：Filter对所有访问进行增强，Interctor仅对MVC访问进行增强
-
-- 使用便利性不同：Interctor提供了三个方法，分别在不同的时机执行；过滤器仅提供一个方法
-
-
-
-### 多拦截器执行顺序
-
-- 当配置多个拦截器时，会形成拦截器链
-
-- 拦截器的运行顺序参照拦截器添加顺序为准，即addInterctor的顺序
-
-- 当拦截器中出现对原始处理器的拦截，后面的拦截器均终止运行
-
-- 当拦截器运行中断，仅运行配置在前面的拦截器afterCompletion
-
-流程解析看下图：
-
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404281539349.png)
-
-
-
 ## MVC案例 
 
 ### 基于webxml
@@ -978,7 +938,7 @@ class UserQuery {
 }
 ```
 
-## SpringMVC其它配置
+## SpringMVC其它使用
 ### 视图解析器添加前后缀
 
 配置视图解析器可以免去重复书写视图文件路径的前后缀。
@@ -1060,6 +1020,121 @@ public class HomeController {
     </filter-mapping>
 </web-app>
 ```
+
+
+### 静态资源处理
+
+默认情况下，DispatcherServlet 会拦截所有请求，包括静态资源请求，这会导致静态资源无法正常访问。因此，我们需要配置 Spring MVC 以允许容器直接提供静态资源。
+
+有两种主要方式来处理静态资源：
+1. 使用 `<mvc:resources />`标签（XML 配置）
+2. 使用 `WebMvcConfigurer`的 `addResourceHandlers`方法（Java 配置）
+
+另外，还可以使用 `<mvc:default-servlet-handler />`来允许容器默认的 Servlet 处理静态资源。
+
+- XML 配置方式-使用默认Servlet处理（简单方式）
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!-- 启用默认Servlet处理静态资源 -->
+    <mvc:default-servlet-handler/>
+    
+    <!-- 启用注解驱动 -->
+    <mvc:annotation-driven/>
+    
+    <!-- 控制器扫描 -->
+    <context:component-scan base-package="com.example.controller"/>
+</beans>
+```
+
+- XML 配置方式-使用资源映射（推荐方式）
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 启用注解驱动 -->
+    <mvc:annotation-driven/>
+    
+    <!-- 控制器扫描 -->
+    <context:component-scan base-package="com.example.controller"/>
+    
+    <!-- 静态资源映射配置 -->
+    <mvc:resources mapping="/static/**" location="/static/"/>
+    <mvc:resources mapping="/css/**" location="/css/"/>
+    <mvc:resources mapping="/js/**" location="/js/"/>
+    <mvc:resources mapping="/images/**" location="/images/"/>
+    <mvc:resources mapping="/uploads/**" location="file:/var/uploads/"/>
+    
+    <!-- 带版本控制的资源映射 -->
+    <mvc:resources mapping="/resources/**" location="/resources/" cache-period="3600"/>
+    
+    <!-- WebJars支持 -->
+    <mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/"/>
+</beans>
+```
+
+-  JavaConfig 配置方式
+
+```java
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+    
+    /**
+     * 配置静态资源处理
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 1. 类路径下的静态资源
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("classpath:/static/")
+                .setCachePeriod(3600); // 缓存1小时
+        
+        // 2. Web根目录下的资源
+        registry.addResourceHandler("/css/**")
+                .addResourceLocations("/css/");
+        
+        registry.addResourceHandler("/js/**")
+                .addResourceLocations("/js/");
+        
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("/images/");
+        
+        // 3. 外部文件系统资源
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:/var/uploads/");
+        
+        // 4. WebJars支持
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
+    }
+}
+```
+
+
+
+
 
 
 

@@ -165,6 +165,7 @@ head:
 - [Spring事务管理使用篇](https://www.seven97.top/framework/spring/spring-transactions-use.html)
 - [Spring事务管理源码篇](https://www.seven97.top/framework/spring/spring-transactions-sourcecode.html)
 - [MVC快速入门](https://www.seven97.top/framework/spring/mvc1-summary.html)
+- [MVC拦截器](https://www.seven97.top/framework/spring/mvc2-Interceptor.html)
 - [MVC中DispatcherServlet初始化的深度探索](https://www.seven97.top/framework/spring/mvc3-initializationprocessofdispatcherservlet.html)
 - [MVC中DispatcherServlet处理请求的完整流程](https://www.seven97.top/framework/spring/mvc4-processofdispatcherservletprocessingrequests.html)
 - [优雅的参数校验](https://www.seven97.top/framework/spring/parameterverification.html)
