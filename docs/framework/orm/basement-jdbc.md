@@ -108,7 +108,7 @@ public static synchronized void registerDriver(java.sql.Driver driver,DriverActi
 
 
 
-## 获取链接
+## 获取连接
 
 看起来只有这一行代码
 
