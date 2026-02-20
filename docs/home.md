@@ -175,6 +175,7 @@ head:
 ### ORM框架
 
 - [JDBC连接数据库的核心原理](https://www.seven97.top/framework/orm/basement-jdbc.html)
+- [Mybatis基础操作](https://www.seven97.top/framework/orm/mybatis-baseuse.html)
 - [MyBatis源码视角下的初始化过程](https://www.seven97.top/framework/orm/mybatis-initializationprocessofmybatis.html)
 - [MyBatis如何高效加载配置文件？](https://www.seven97.top/framework/orm/mybatis-configurationparsingprocess.html)
 - [MyBatis中SqlSession背后的秘密](https://www.seven97.top/framework/orm/mybatis-sqlsessionexecutionprocess.html)
