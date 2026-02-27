@@ -39,6 +39,8 @@ head:
 </update>
 ```
 
+> 动态sql配置详解：https://mybatis.org/mybatis-3/dynamic-sql.html
+
 mybatis底层是如何构造这段sql的？
 
 ## 关于动态SQL的接口和类

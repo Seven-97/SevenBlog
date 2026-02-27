@@ -21,7 +21,7 @@ head:
 
 ### 虚拟线程
 
-该版本中虚拟线程称为了正式版，[Java 19](https://www.seven97.top/java/new-features/java18-20.html)中是预览版
+该版本中虚拟线程成为了正式版，[Java 19](https://www.seven97.top/java/new-features/java18-20.html)中是预览版
 
 
 虚拟线程的实际应用

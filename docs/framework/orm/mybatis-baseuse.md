@@ -1032,6 +1032,561 @@ public class UserService {
 }
 ```
 
+## Mybatis代码生成器
+
+https://github.com/mybatis/generator
+
+## Mybatis动态sql
+
+https://mybatis.org/mybatis-3/dynamic-sql.html
+
+
+## Mybatis批量操作
+
+进行批量操作时，有三种方式，操作方式对比：
+
+|操作类型|适用场景|实现方式|优点|缺点|
+|---|---|---|---|---|
+|**foreach SQL**​|小批量数据插入/更新/删除|在 XML 中写 `<foreach>`生成 SQL|简单直观，一次性执行|SQL 长度有限制，大数据量可能超限|
+|**Batch Executor**​|大批量数据操作|使用 `ExecutorType.BATCH`|性能最优，预编译 SQL|需要手动管理事务和提交|
+|**JDBC Batch**​|需要底层控制|使用原生 JDBC Batch|完全控制，灵活性高|代码复杂，需处理底层细节|
+
+### 使用 foreach 标签的批量操作案例
+
+#### 批量插入
+
+```xml
+<!-- 1. 基本批量插入 -->
+<insert id="batchInsert" parameterType="java.util.List">
+    INSERT INTO users (username, email, age, status, create_time)
+    VALUES
+    <foreach collection="list" item="user" separator=",">
+        (#{user.username}, #{user.email}, #{user.age}, #{user.status}, NOW())
+    </foreach>
+</insert>
+
+<!-- 2. 批量插入（返回自增主键） -->
+<insert id="batchInsertWithKeys" parameterType="java.util.List" 
+        useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO users (username, email, age, status, create_time)
+    VALUES
+    <foreach collection="list" item="user" separator=",">
+        (#{user.username}, #{user.email}, #{user.age}, #{user.status}, #{user.createTime})
+    </foreach>
+</insert>
+
+<!-- 3. 批量插入或更新（MySQL ON DUPLICATE KEY UPDATE） -->
+<insert id="batchInsertOrUpdate" parameterType="java.util.List">
+    INSERT INTO users (username, email, age, status, create_time)
+    VALUES
+    <foreach collection="list" item="user" separator=",">
+        (#{user.username}, #{user.email}, #{user.age}, #{user.status}, #{user.createTime})
+    </foreach>
+    ON DUPLICATE KEY UPDATE
+    email = VALUES(email),
+    age = VALUES(age),
+    status = VALUES(status),
+    update_time = NOW()
+</insert>
+```
+
+
+#### 批量更新
+
+```xml
+<!-- 1. 批量更新（根据ID） -->
+<update id="batchUpdate" parameterType="java.util.List">
+    UPDATE users
+    <trim prefix="SET" suffixOverrides=",">
+        <trim prefix="username = CASE" suffix="END,">
+            <foreach collection="list" item="user">
+                <if test="user.username != null">
+                    WHEN id = #{user.id} THEN #{user.username}
+                </if>
+            </foreach>
+        </trim>
+        <trim prefix="email = CASE" suffix="END,">
+            <foreach collection="list" item="user">
+                <if test="user.email != null">
+                    WHEN id = #{user.id} THEN #{user.email}
+                </if>
+            </foreach>
+        </trim>
+        <trim prefix="age = CASE" suffix="END,">
+            <foreach collection="list" item="user">
+                <if test="user.age != null">
+                    WHEN id = #{user.id} THEN #{user.age}
+                </if>
+            </foreach>
+        </trim>
+        <trim prefix="status = CASE" suffix="END,">
+            <foreach collection="list" item="user">
+                <if test="user.status != null">
+                    WHEN id = #{user.id} THEN #{user.status}
+                </if>
+            </foreach>
+        </trim>
+        update_time = NOW()
+    </trim>
+    WHERE id IN
+    <foreach collection="list" item="user" open="(" separator="," close=")">
+        #{user.id}
+    </foreach>
+</update>
+
+<!-- 2. 批量更新（简单版，逐条更新） -->
+<update id="batchUpdateSimple">
+    <foreach collection="list" item="user" separator=";">
+        UPDATE users
+        <set>
+            <if test="user.username != null">username = #{user.username},</if>
+            <if test="user.email != null">email = #{user.email},</if>
+            <if test="user.age != null">age = #{user.age},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{user.id}
+    </foreach>
+</update>
+
+<!-- 3. 批量更新状态 -->
+<update id="batchUpdateStatus">
+    UPDATE users
+    SET status = #{status},
+        update_time = NOW()
+    WHERE id IN
+    <foreach collection="ids" item="id" open="(" separator="," close=")">
+        #{id}
+    </foreach>
+</update>
+```
+
+#### 批量删除
+
+```xml
+<!-- 1. 批量删除（根据ID列表） -->
+<delete id="batchDeleteByIds">
+    DELETE FROM users
+    WHERE id IN
+    <foreach collection="ids" item="id" open="(" separator="," close=")">
+        #{id}
+    </foreach>
+</delete>
+
+<!-- 2. 批量删除（根据条件） -->
+<delete id="batchDeleteByCondition">
+    DELETE FROM users
+    WHERE (username, email) IN
+    <foreach collection="list" item="user" open="(" separator="," close=")">
+        (#{user.username}, #{user.email})
+    </foreach>
+</delete>
+```
+
+#### 批量查询
+
+```xml
+<!-- 1. 批量查询（根据ID列表） -->
+<select id="batchSelectByIds" resultMap="BaseResultMap">
+    SELECT * FROM users
+    WHERE id IN
+    <foreach collection="ids" item="id" open="(" separator="," close=")">
+        #{id}
+    </foreach>
+    ORDER BY
+    <foreach collection="ids" item="id" separator=",">
+        id = #{id} DESC
+    </foreach>
+</select>
+
+<!-- 2. 批量查询（分页批量查询） -->
+<select id="batchSelectByPage" parameterType="map" resultMap="BaseResultMap">
+    SELECT * FROM users
+    WHERE id IN
+    <foreach collection="ids" item="id" open="(" separator="," close=")">
+        #{id}
+    </foreach>
+    LIMIT #{offset}, #{pageSize}
+</select>
+```
+
+
+### 使用 foreach 标签的注意事项
+
+#### SQL 长度限制
+
+```java
+/**
+ * 处理超长 SQL 的批量操作
+ */
+public int safeBatchInsert(List<User> userList) {
+    int batchSize = 1000; // 根据数据库配置调整
+    int total = 0;
+    
+    for (int i = 0; i < userList.size(); i += batchSize) {
+        int end = Math.min(i + batchSize, userList.size());
+        List<User> subList = userList.subList(i, end);
+        
+        // 检查 SQL 长度
+        String sql = generateInsertSQL(subList);
+        if (sql.length() > 1000000) { // 1MB
+            // 进一步减小批次
+            batchSize = batchSize / 2;
+            i -= batchSize; // 回退
+            continue;
+        }
+        
+        total += userMapper.batchInsert(subList);
+    }
+    
+    return total;
+}
+```
+
+#### 事务管理
+
+```java
+@Service
+public class UserBatchService {
+    
+    @Transactional(rollbackFor = Exception.class)
+    public int batchInsertWithTransaction(List<User> userList) {
+        int result = 0;
+        
+        try {
+            result = userMapper.batchInsert(userList);
+            
+            // 如果后续操作失败，整个事务回滚
+            someOtherOperation();
+            
+        } catch (Exception e) {
+            // 抛出异常触发回滚
+            throw new RuntimeException("批量插入失败，已回滚", e);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 手动控制事务
+     */
+    public int batchInsertManualTransaction(List<User> userList) {
+        // 获取事务定义
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        
+        // 获取事务状态
+        TransactionStatus status = transactionManager.getTransaction(def);
+        
+        try {
+            int result = userMapper.batchInsert(userList);
+            
+            // 提交事务
+            transactionManager.commit(status);
+            return result;
+            
+        } catch (Exception e) {
+            // 回滚事务
+            transactionManager.rollback(status);
+            throw new RuntimeException("批量操作失败，已回滚", e);
+        }
+    }
+}
+```
+
+## Mybatis关联查询和延迟加载
+
+|特性|嵌套查询（Nested Query）|嵌套结果（Nested Result）|
+|---|---|---|
+|**原理**​|执行多条SQL查询，在结果映射中引用其他查询|执行一条联合查询，在结果映射中处理嵌套对象|
+|**SQL数量**​|N+1 条（主查询 + N 条关联查询）|1 条（联合查询）|
+|**性能**​|有 N+1 问题，性能较差|性能较好，避免 N+1 问题|
+|**复杂度**​|简单，易于理解和维护|复杂，SQL 语句较复杂|
+|**适用场景**​|关联数据较少，延迟加载场景|关联数据较多，需要一次性加载所有数据|
+|**内存占用**​|较低，按需加载|较高，一次性加载所有数据|
+
+### 嵌套查询
+
+在查询一个对象时，可以同时通过另一个查询语句来加载关联的另一个对象。例如，查询用户时，通过另一个查询语句来加载该用户的订单。
+
+```xml
+<!-- UserMapper.xml -->
+
+<!-- 1. 基本的嵌套查询 -->
+<select id="selectUserWithOrders" parameterType="Long" resultMap="userWithOrdersMap">
+    SELECT * FROM users WHERE id = #{userId}
+</select>
+
+<resultMap id="userWithOrdersMap" type="User">
+    <id property="id" column="id"/>
+    <result property="username" column="username"/>
+    <result property="email" column="email"/>
+    
+    <!-- 嵌套查询：通过 select 属性引用另一个查询 -->
+    <!-- 问题：会为每个用户执行一次 selectOrdersByUserId 查询 -->
+    <collection 
+        property="orders" 
+        column="id"  <!-- 将主查询的 id 列值作为参数传递给嵌套查询 -->
+        ofType="Order"
+        select="selectOrdersByUserId"/>  <!-- 引用另一个查询语句 -->
+</resultMap>
+
+<select id="selectOrdersByUserId" parameterType="Long" resultType="Order">
+    SELECT * FROM orders WHERE user_id = #{userId}
+</select>
+
+<!-- 2. 一对多 + 一对一 多重嵌套 -->
+<!-- 假设订单中还有订单项 -->
+<select id="selectUserWithOrdersAndItems" resultMap="userWithOrdersAndItemsMap">
+    SELECT * FROM users WHERE id = #{userId}
+</select>
+
+<resultMap id="userWithOrdersAndItemsMap" type="User">
+    <id property="id" column="id"/>
+    <result property="username" column="username"/>
+    <result property="email" column="email"/>
+    
+    <!-- 一级嵌套：用户的订单 -->
+    <collection 
+        property="orders" 
+        column="id" 
+        ofType="Order"
+        select="selectOrdersByUserId"/>
+</resultMap>
+
+<!-- 订单映射，包含订单项 -->
+<resultMap id="orderWithItemsMap" type="Order">
+    <id property="id" column="id"/>
+    <result property="orderNo" column="order_no"/>
+    <result property="amount" column="amount"/>
+    <result property="createTime" column="create_time"/>
+    
+    <!-- 二级嵌套：订单中的订单项 -->
+    <collection 
+        property="orderItems" 
+        column="id" 
+        ofType="OrderItem"
+        select="selectOrderItemsByOrderId"/>
+</resultMap>
+
+<select id="selectOrdersByUserId" parameterType="Long" resultMap="orderWithItemsMap">
+    SELECT * FROM orders WHERE user_id = #{userId}
+</select>
+
+<select id="selectOrderItemsByOrderId" parameterType="Long" resultType="OrderItem">
+    SELECT * FROM order_items WHERE order_id = #{orderId}
+</select>
+```
+
+
+嵌套查询可能引起N+1问题：因为当我们查询一个列表时，对于列表中的每一条记录，都会执行一次额外的查询来加载关联数据。这样，如果有N条记录，就会执行1次主查询和N次关联查询，即N+1次查询。
+
+### 嵌套结果
+
+通过一次复杂的联表查询，将结果映射到多个对象中。例如，通过一个SQL语句查询用户及其订单，然后通过结果映射将用户和订单的数据分别映射到用户对象和订单对象中。
+
+```xml
+<!-- UserMapper.xml -->
+
+<!-- 嵌套结果查询：一条SQL获取所有数据 -->
+<select id="selectUserWithOrdersNested" parameterType="Long" resultMap="userWithOrdersNestedMap">
+    SELECT 
+        u.id AS user_id,
+        u.username,
+        u.email,
+        o.id AS order_id,
+        o.order_no,
+        o.amount,
+        o.create_time
+    FROM users u
+    LEFT JOIN orders o ON u.id = o.user_id
+    WHERE u.id = #{userId}
+</select>
+
+<resultMap id="userWithOrdersNestedMap" type="User">
+    <id property="id" column="user_id"/>
+    <result property="username" column="username"/>
+    <result property="email" column="email"/>
+    
+    <!-- 嵌套结果映射：处理联合查询的结果集 -->
+    <collection 
+        property="orders" 
+        ofType="Order"
+        resultMap="orderResultMap"/>  <!-- 引用订单的结果映射 -->
+</resultMap>
+
+<resultMap id="orderResultMap" type="Order">
+    <id property="id" column="order_id"/>
+    <result property="orderNo" column="order_no"/>
+    <result property="amount" column="amount"/>
+    <result property="createTime" column="create_time"/>
+</resultMap>
+```
+
+### N+1 查询问题详解
+
+什么是 N+1 问题：当使用嵌套查询时，如果有 N 个主记录，每个主记录都有 M 个关联记录，那么会执行：
+- 1 条主查询
+- N 条关联查询
+
+总共执行 1 + N 条查询
+
+演示案例：
+
+```java
+@Test
+public void testNPlusOneProblem() {
+    // 查询10个用户
+    List<User> users = userMapper.selectAllUsers();
+    
+    // 嵌套查询会执行：
+    // 1. 查询所有用户: SELECT * FROM users; (1次)
+    // 2. 为每个用户查询订单: SELECT * FROM orders WHERE user_id = ? (N次，N=10)
+    // 总共执行 1 + 10 = 11 次查询！
+    
+    for (User user : users) {
+        // 访问订单时触发额外查询
+        List<Order> orders = user.getOrders();
+        System.out.println("用户 " + user.getUsername() + " 有 " + orders.size() + " 个订单");
+    }
+}
+```
+
+延迟加载可以解决N+1问题：延迟加载是指在需要使用关联数据时才去加载。在MyBatis中，可以配置延迟加载，这样在查询主对象时，不会立即加载关联对象，只有当访问关联对象时才会执行额外的查询。这样，如果访问了所有关联对象，那么还是会执行N+1次查询，但如果我们只访问部分主对象的关联对象，那么就可以减少查询次数。
+
+#### 延迟加载解决方案
+
+- 配置延迟加载：mybatis-config.xml 配置
+
+```xml
+<configuration>
+    <settings>
+        <!-- 开启延迟加载 -->
+        <setting name="lazyLoadingEnabled" value="true"/>
+        
+        <!-- 关闭积极加载（3.4.1版本后默认为false），当开启时，任何方法的调用都会加载该对象的所有属性，否则，每个属性会按需加载 -->
+        <setting name="aggressiveLazyLoading" value="false"/>
+        
+        <!-- 延迟加载触发方法，默认equals,clone,hashCode,toString -->
+        <setting name="lazyLoadTriggerMethods" value=""/>
+        
+        <!-- 启用多结果集（某些数据库需要） -->
+        <setting name="multipleResultSetsEnabled" value="true"/>
+    </settings>
+</configuration>
+```
+
+application.yml 配置（Spring Boot）
+
+```yaml
+mybatis:
+  configuration:
+    lazy-loading-enabled: true
+    aggressive-lazy-loading: false
+```
+
+- 在映射中使用延迟加载
+
+```xml
+<!-- 延迟加载配置示例 -->
+<resultMap id="userWithLazyOrdersMap" type="User">
+    <id property="id" column="id"/>
+    <result property="username" column="username"/>
+    <result property="email" column="email"/>
+    
+    <!-- 配置延迟加载 -->
+    <collection 
+        property="orders" 
+        column="id" 
+        ofType="Order"
+        select="selectOrdersByUserId"
+        fetchType="lazy"/>  <!-- 设置为延迟加载 -->
+</resultMap>
+
+<!-- 或者通过全局配置，不在每个collection单独设置 -->
+<collection 
+    property="orders" 
+    column="id" 
+    ofType="Order"
+    select="selectOrdersByUserId"/>
+```
+
+
+但是，延迟加载只是将N+1次查询的时机推迟了，并没有从根本上减少查询次数。要解决N+1问题，更好的方式是使用嵌套结果（即一次联表查询）或者批量加载（MyBatis 3.4.1以上支持关联的批量加载）来减少查询次数。
+
+#### 批量加载
+
+```xml
+<!-- 配置批量加载 -->
+<settings>
+    <!-- 开启批量加载 -->
+    <setting name="defaultExecutorType" value="BATCH"/>
+    
+    <!-- 或者通过Mapper方法单独设置 -->
+    <!-- 
+    <select id="selectUserWithOrders" resultMap="userWithOrdersMap" 
+            fetchSize="100" statementType="PREPARED">
+    -->
+</settings>
+```
+
+#### 使用嵌套结果（推荐）
+
+```xml
+<!-- 使用嵌套结果替代嵌套查询 -->
+<select id="selectUsersWithOrdersInBatch" resultMap="usersWithOrdersBatchMap">
+    SELECT 
+        u.id AS user_id,
+        u.username,
+        u.email,
+        o.id AS order_id,
+        o.order_no,
+        o.amount,
+        o.create_time
+    FROM users u
+    LEFT JOIN orders o ON u.id = o.user_id
+    WHERE u.id IN
+    <foreach collection="userIds" item="id" open="(" separator="," close=")">
+        #{id}
+    </foreach>
+    ORDER BY u.id, o.create_time DESC
+</select>
+
+<resultMap id="usersWithOrdersBatchMap" type="User">
+    <id property="id" column="user_id"/>
+    <result property="username" column="username"/>
+    <result property="email" column="email"/>
+    
+    <!-- 嵌套结果集合 -->
+    <collection property="orders" ofType="Order">
+        <id property="id" column="order_id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="amount" column="amount"/>
+        <result property="createTime" column="create_time"/>
+    </collection>
+</resultMap>
+```
+
+#### 使用子查询 + IN 语句
+
+```xml
+<!-- 通过子查询减少查询次数 -->
+<select id="selectUsersWithOrdersSmart" resultMap="userWithOrdersMap">
+    SELECT * FROM users WHERE id IN (
+        SELECT DISTINCT user_id FROM orders
+    )
+</select>
+
+<select id="selectOrdersForUsers" resultType="Order">
+    SELECT * FROM orders 
+    WHERE user_id IN
+    <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+        #{userId}
+    </foreach>
+</select>
+```
+
+
+
 
 
 <!-- @include: @article-footer.snippet.md -->     

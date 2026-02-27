@@ -943,7 +943,11 @@ public static void main(String[] args) {
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752066.webp)
 
-![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752050.webp)![图片](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752072.webp)![图片](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752076.webp)但是，
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752050.webp)
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752072.webp)
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202406171752076.webp)
 
 也就是说，通过java.util.concurrent.FutureTask#get()，就可以获取对应的异常信息。
 
@@ -1124,19 +1128,21 @@ if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
 
 阻塞队列：估算最大流量，设置阻塞队列长度
 
-注意：需要通过压力测试来进行微调，只有经过压测的检验，才能最终保证的配置大小是准确的。
+注意：一般需要通过压力测试来进行微调，只有经过压测的检验，才能最终保证的配置大小是准确的。具体关注：执行这个方法的QPS多少？有多少台机器？每台机器分担多少QPS？一个任务执行完需要多久？响应时间要求多久？  通过这些参数才是能计算出线程池数量大小
 
 ### 一般情况设置依据
 
 一般用来计算核心线程数
 
-#### CPU 密集型任务(N+1)：
+#### CPU 密集型任务(N+1)
 
 这种任务消耗的主要是 CPU 资源，可以将线程数设置为 **N（CPU 核心数）+1**，多出来的一个线程是为了防止某些原因导致的线程阻塞（如IO操作，线程sleep，等待锁）而带来的影响。一旦某个线程被阻塞，释放了CPU资源，而在这种情况下多出来的一个线程就可以充分利用 CPU 的空闲时间。
 
-#### I/O 密集型任务(2N)：
+#### I/O 密集型任务(2N)
 
 系统的大部分时间都在处理 IO 操作，此时线程可能会被阻塞，释放CPU资源，这时就可以将 CPU 交出给其它线程使用。因此在 IO 密集型任务的应用中，可以多配置一些线程，具体的计算方法：最佳线程数 = CPU核心数 * (1/CPU利用率) = CPU核心数 * (1 + (IO耗时/CPU耗时))，一般可设置为**2N**。
+
+
 
 ## ExecutorService 线程池实例
 

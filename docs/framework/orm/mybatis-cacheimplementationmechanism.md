@@ -24,15 +24,33 @@ head:
 
 每当我们使用MyBatis开启一次和数据库的会话，MyBatis会创建出一个SqlSession对象表示一次数据库会话。
 
-在对数据库的一次会话中，我们有可能会反复地执行完全相同的查询语句，如果不采取一些措施的话，每一次查询都会查询一次数据库,而我们在极短的时间内做了完全相同的查询，那么它们的结果极有可能完全相同，由于查询一次数据库的代价很大，这有可能造成很大的资源浪费。
+在对数据库的一次会话中，我们有可能会反复地执行完全相同的查询语句，如果不采取一些措施的话，每一次查询都会查询一次数据库，而我们在极短的时间内做了完全相同的查询，那么它们的结果极有可能完全相同，由于查询一次数据库的代价很大，这有可能造成很大的资源浪费。
 
 为了解决这一问题，减少资源的浪费，MyBatis会在表示会话的SqlSession对象中建立一个简单的缓存，将每次查询到的结果结果缓存起来，当下次查询的时候，如果判断先前有个完全一样的查询，会直接从缓存中直接将结果取出，返回给用户，不需要再进行一次数据库查询了。
 
-如下图所示，MyBatis一次会话: 一个SqlSession对象中创建一个本地缓存(local cache)，对于每一次查询，都会尝试根据查询的条件去本地缓存中查找是否在缓存中，如果在缓存中，就直接从缓存中取出，然后返回给用户；否则，从数据库读取数据，将查询结果存入缓存并返回给用户。
+如下图所示，MyBatis一次会话：一个SqlSession对象中创建一个本地缓存(local cache)，对于每一次查询，都会尝试根据查询的条件去本地缓存中查找是否在缓存中，如果在缓存中，就直接从缓存中取出，然后返回给用户；否则，从数据库读取数据，将查询结果存入缓存并返回给用户。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291824432.png)
 
 对于会话（Session）级别的数据缓存，我们称之为一级数据缓存，简称一级缓存。
+
+### 基本缓存与装饰类
+
+MyBatis缓存装饰器：
+
+| 缓存实现类                   | 功能描述                                                                                  | 装饰条件                                     |
+| ----------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 基本缓存                    | 缓存基本实现类                                                                               | 无                                        |
+| **LruCache**​           | 基于最近最少使用算法进行缓存淘汰                                                                      | eviction="LRU" (默认)                      |
+| **FifoCache**​          | 基于先进先出算法进行缓存淘汰<br>                                                                    | eviction="FIFO"                          |
+| **SoftCacheWeakCache**​ | 通过JVM的弱引用和软引用实现缓存淘汰，基于SoftReference和WeakReference                                     | eviction="SOFT" eviction="WEAK"          |
+| **SynchronizedCache**​  | 为缓存方法提供同步控制，保证线程安全                                                                    | 基本                                       |
+| **LoggingCache**​       | 记录缓存命中次数等日志信息，用于监控和性能调优。                                                              | 基本                                       |
+| **BlockingCache**​      | 对同一个Key的访问进行阻塞，防止缓存击穿                                                                 | blocking=true                            |
+| **SerializedCache**​    | 在存取值时执行序列化和反序列化，确保返回的是对象的深拷贝，避免篡改。                                                    | readOnly = false (默认)                    |
+| **ScheduleCache**​      | 定时调度的缓存，在执行get/put/remove/getSize等操作前，判断缓存时间是否超过最长缓存时间（默认一小时）。如果是则清空焕春（即每隔一段时间清空一次缓存） | `<mapper>`中`<cache>` 标签的flushInterval不为空 |
+| **TransactionalCache**​ | 管理事务中的缓存，在事务提交时才批量更新缓存；用于MyBatis二级缓存，保证事务一致性。                                         | 在TtranctionalManager中用Map维护对应关系          |
+
 
 ### MyBatis中的一级缓存是怎样组织的？
 
@@ -133,15 +151,18 @@ MyBatis在开启一个数据库会话时，会创建一个新的SqlSession对象
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291825124.png)
 
+
+> 由于一级缓存是基于Session的，如果有一个会话在读，一个会话在写(例如update了数据)，那么就有可能出现读取到脏数据，此时可以使用二级缓存赖解决跨会话共享的问题
+
 ### SqlSession 一级缓存的工作流程
 
 - 对于某个查询，根据statementId,params,rowBounds来构建一个key值，根据这个key值去缓存Cache中取出对应的key值存储的缓存结果；
 - 判断从Cache中根据特定的key值取的数据数据是否为空，即是否命中；
 - 如果命中，则直接将缓存结果返回；
 - 如果没命中： 
-  - 去数据库中查询数据，得到查询结果；
-  - 将key和查询到的结果分别作为key,value对存储到Cache中；
-  - 将查询结果返回；
+	- 去数据库中查询数据，得到查询结果；
+	- 将key和查询到的结果分别作为key,value对存储到Cache中；
+	- 将查询结果返回；
 - 结束。
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404291825566.png)
@@ -339,7 +360,7 @@ MyBatis对二级缓存的支持粒度很细，它会指定某一条查询语句�
 
 ### 二级缓存实现的选择
 
-MyBatis对二级缓存的设计非常灵活，它自己内部实现了一系列的Cache缓存实现类，并提供了各种缓存刷新策略如LRU，FIFO等等；另外，MyBatis还允许用户自定义Cache接口实现，用户是需要实现org.apache.ibatis.cache.Cache接口，然后将Cache实现类配置在`<cache type="">`节点的type属性上即可；除此之外，MyBatis还支持跟第三方内存缓存库如Memecached的集成，总之，使用MyBatis的二级缓存有三个选择:
+MyBatis对二级缓存的设计非常灵活，它自己内部实现了一系列的Cache缓存实现类，并提供了各种缓存刷新策略如LRU，FIFO等等；另外，MyBatis还允许用户自定义Cache接口实现，用户是需要实现`org.apache.ibatis.cache.Cache`接口，然后将Cache实现类配置在`<cache type="">`节点的type属性上即可；除此之外，MyBatis还支持跟第三方内存缓存库如Memecached的集成，总之，使用MyBatis的二级缓存有三个选择:
 
 - MyBatis自身提供的缓存实现；
 - 用户自定义的Cache接口实现；
@@ -392,6 +413,12 @@ MyBatis定义了大量的Cache的装饰器来增强Cache缓存的功能，如下
 从MyBatis的角度来看，这个问题可以这样表述：
 
 **对于某些表执行了更新(update、delete、insert)操作后，如何去清空跟这些表有关联的查询语句所造成的缓存**
+
+当然，这种情况可以让两个namespace共用一个二级缓存，可以在mapper文件中定义：
+
+```xml
+<cache-ref namespace="com.seven.dao.lingyigemapper" />
+```
 
 #### 当前MyBatis二级缓存的工作机制
 
