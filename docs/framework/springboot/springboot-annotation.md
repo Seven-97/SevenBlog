@@ -3,6 +3,13 @@ title: 史上最全SpringBoot相关注解介绍
 category: 系统设计
 tags:
   - SpringBoot
+head:
+  - - meta
+    - name: keywords
+      content: SpringBoot
+  - - meta
+    - name: description
+      content: 全网最全的SpringBoot知识点总结，让天下没有难学的八股文！
 ---
 
 

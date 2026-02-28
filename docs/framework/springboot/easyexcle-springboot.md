@@ -4,6 +4,13 @@ category: 系统设计
 tag:
   - SpringBoot
   - EasyExcel
+head:
+  - - meta
+    - name: keywords
+      content: SpringBoot,EasyExcel
+  - - meta
+    - name: description
+      content: 全网最全的SpringBoot知识点总结，让天下没有难学的八股文！
 ---
 
 24年11月6日，阿里巴巴旗下的Java Excel工具库EasyExcel宣布，将停止更新，未来将逐步进入维护模式，将继续修复Bug，但不再主动新增功能。

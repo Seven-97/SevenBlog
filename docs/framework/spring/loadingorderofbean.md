@@ -62,24 +62,107 @@ head:
 
 ### @Conditional 条件注解家族
 
-- @ConditionalOnClass：当类路径下存在指定的类时，配置类才会生效。
+@Conditional是 Spring 4.0 引入的核心注解，用于条件化地注册 Bean。可以用于根据特定条件来决定是否将 Bean 注册到 Spring 容器中。
+
+基本使用：
+1. 定义条件类实现 Condition 接口，实现matchs方法
+2. 在 @Conditional 注解中指定条件类
+3. Spring 启动时检查条件：return true表示符合条件，return false表示不符合条件
+4. 条件满足 → 注册 Bean
+5. 条件不满足 → 跳过注册
+
+
+- 实现 Condition 接口
 
 ```java
-@Configuration
-// 当类路径下存在指定的类时，配置类才会生效。
-@ConditionalOnClass(name = "com.example.SomeClass")
-public class MyConfiguration {
-	// ...
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.core.type.AnnotatedTypeMetadata;
+import org.springframework.core.env.Environment;
+
+/**
+ * 自定义条件：检查操作系统类型
+ */
+public class WindowsCondition implements Condition {
+    
+    @Override
+    public boolean matches(ConditionContext context, 
+                          AnnotatedTypeMetadata metadata) {
+        // 获取环境信息
+        Environment env = context.getEnvironment();
+        String os = env.getProperty("os.name");
+        
+        // 检查是否是 Windows 系统
+        return os != null && os.toLowerCase().contains("windows");
+    }
+}
+
+public class LinuxCondition implements Condition {
+    
+    @Override
+    public boolean matches(ConditionContext context, 
+                          AnnotatedTypeMetadata metadata) {
+        Environment env = context.getEnvironment();
+        String os = env.getProperty("os.name");
+        return os != null && os.toLowerCase().contains("linux");
+    }
 }
 ```
 
+- 在配置类中使用：
 
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Configuration;
 
-- @ConditionalOnMissingClass：当类路径下不存在指定的类时，配置类才会生效。
-- @ConditionalOnBean：当容器中存在指定的Bean时，配置类才会生效。
-- @ConditionalOnMissingBean：当容器中不存在指定的Bean时，配置类才会生效。
+@Configuration
+public class SystemConfig {
+    
+    /**
+     * 只在 Windows 系统下创建此 Bean
+     */
+    @Bean
+    @Conditional(WindowsCondition.class)
+    public SystemService windowsService() {
+        System.out.println("创建 Windows 系统服务");
+        return new WindowsSystemService();
+    }
+    
+    /**
+     * 只在 Linux 系统下创建此 Bean
+     */
+    @Bean
+    @Conditional(LinuxCondition.class)
+    public SystemService linuxService() {
+        System.out.println("创建 Linux 系统服务");
+        return new LinuxSystemService();
+    }
+    
+    /**
+     * 默认 Bean（当上面的条件都不满足时）
+     */
+    @Bean
+    public SystemService defaultSystemService() {
+        System.out.println("创建默认系统服务");
+        return new DefaultSystemService();
+    }
+}
+```
 
+同时，Spring Boot 也提供了很多基于 `@Conditional`的派生注解：
 
+|注解|作用|使用场景|
+|---|---|---|
+|`@ConditionalOnBean`|存在指定 Bean 时生效|Bean 依赖检查|
+|`@ConditionalOnMissingBean`|不存在指定 Bean 时生效|默认 Bean 配置|
+|`@ConditionalOnClass`|类路径存在指定类时生效|类库依赖检查|
+|`@ConditionalOnMissingClass`|类路径不存在指定类时生效|可选依赖|
+|`@ConditionalOnProperty`|配置属性满足条件时生效|配置开关|
+|`@ConditionalOnExpression`|SpEL 表达式为 true 时生效|复杂条件|
+|`@ConditionalOnJava`|指定 Java 版本时生效|版本兼容|
+|`@ConditionalOnWebApplication`|Web 应用时生效|Web 环境|
+|`@ConditionalOnNotWebApplication`|非 Web 应用时生效|非 Web 环境|
 
 
 

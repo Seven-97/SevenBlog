@@ -4,6 +4,13 @@ category: 系统设计
 tag:
   - SpringBoot
   - Minio
+head:
+  - - meta
+    - name: keywords
+      content: SpringBoot,Minio
+  - - meta
+    - name: description
+      content: 全网最全的SpringBoot知识点总结，让天下没有难学的八股文！
 ---
 
 
