@@ -344,7 +344,7 @@ public class SevenCondition implements Condition {
 ```
 
 
-具体逻辑为，拿到@xushuConditionalOnClass中的value属性，然后用类加载器进行加载，如果加载到了所指定的这个类，那就表示符合条件，如果加载不到，则表示不符合条件。
+具体逻辑为，拿到@SevenConditionalOnClass中的value属性，然后用类加载器进行加载，如果加载到了所指定的这个类，那就表示符合条件，如果加载不到，则表示不符合条件。
 
 ### 模拟实现自动配置类
 
@@ -417,7 +417,7 @@ MyApplication是Spring的一个配置类，但是MyApplication是我们传递给
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202602281935507.png)
 
-SPI的配置就完成了，相当于通过com.xushu.springboot.AutoConfiguration文件配置了springboot中所提供的配置类。
+SPI的配置就完成了，相当于通过com.seven.springboot.AutoConfiguration文件配置了springboot中所提供的配置类。
 
 并且提供一个接口：
 
@@ -481,27 +481,9 @@ public class SevenImportSeclet implements DeferredImportSelector {
 }
 ```
 
-这就完成了从com.xushu.springboot.AutoConfiguration文件中获取自动配置类的名字，并导入到Spring容器中，从而Spring容器就知道了这些配置类的存在，而对于user项目而言，是不需要修改代码的。
+这就完成了从com.seven.springboot.AutoConfiguration文件中获取自动配置类的名字，并导入到Spring容器中，从而Spring容器就知道了这些配置类的存在，而对于user项目而言，是不需要修改代码的。
 
 此时运行MyApplication，就能看到启动了Tomcat
-
-因为SpringBoot默认在依赖中添加了Tomcat依赖，而如果在User模块中再添加jetty的依赖：
-
-```java
-<dependencies>  
-    <dependency>        
-    <groupId>com.seven</groupId>  
-        <artifactId>springboot</artifactId>  
-        <version>1.0-SNAPSHOT</version>  
-    </dependency>  
-    <dependency>        
-	    <groupId>org.eclipse.jetty</groupId>  
-        <artifactId>jetty-server</artifactId>  
-        <version>9.4.43.v20210629</version>  
-    </dependency></dependencies>
-```
-
-那么启动MyApplication就会报错
 
 ## 总结
 

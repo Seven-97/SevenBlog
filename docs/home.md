@@ -188,12 +188,13 @@ head:
 
 ### SpringBoot
 
-- [SpringBoot使用内置Tomcat与外置Tomcat的深度剖析](https://www.seven97.top/framework/springboot/springbootstart-twoway.html)
-- [深度揭秘SpringBoot自动装配的实现原理](https://www.seven97.top/framework/springboot/principleofautomaticassembly.html)
-- [SpringBoot中过滤器与拦截器的深度对比与实战应用](https://www.seven97.top/framework/springboot/filter-interceptor.html)
 - [史上最全SpringBoot相关注解介绍](https://www.seven97.top/framework/springboot/springboot-annotation.html)
 - [整合Minio - 实现文件切片极速上传](https://www.seven97.top/framework/springboot/minio-springboot.html)
 - [整合EasyExcel - 实现百万数据导入导出](https://www.seven97.top/framework/springboot/easyexcle-springboot.html)
+- [SpringBoot使用内置Tomcat与外置Tomcat的深度剖析](https://www.seven97.top/framework/springboot/springbootstart-twoway.html)
+- [用300行代码手写SpringBoot核心原理](https://www.seven97.top/framework/springboot/springbootsource300.html)
+- [深度揭秘SpringBoot自动装配的实现原理](https://www.seven97.top/framework/springboot/principleofautomaticassembly.html)
+
 
 ### SpringAI
 
