@@ -490,5 +490,5 @@ public class SevenImportSeclet implements DeferredImportSelector {
 到此，我们实现了一个简单版本的SpringBoot，因为SpringBoot首先是基于Spring的，提供的功能也更加强大
 
 
-
+<!-- @include: @article-footer.snippet.md -->    
 

@@ -339,6 +339,8 @@ public class JalTest {
 - 在小端序中，存储顺序为 `78 56 34 12`。
 
 
+<!-- @include: @article-footer.snippet.md -->     
+
 
 
 

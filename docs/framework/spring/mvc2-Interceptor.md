@@ -1,5 +1,5 @@
 ---
-title: MVC-拦截器
+title: MVC中的拦截器实现案例
 category: 常用框架
 tags:
   - SpringMVC

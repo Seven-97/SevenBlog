@@ -528,7 +528,7 @@ npm run dev
 
 
 
-
+<!-- @include: @article-footer.snippet.md -->    
 
 
 

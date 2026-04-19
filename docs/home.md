@@ -210,6 +210,19 @@ head:
 - [一文带你了解什么是Servlet](https://www.seven97.top/framework/web/servlet.html)
 - [Tomcat的配置调优](https://www.seven97.top/framework/web/tomcat-config.html)
 - [Tomcat相关日志介绍](https://www.seven97.top/framework/web/tomcat-logs.html)
+- [用300行代码手写一个mini版的Tomcat](https://www.seven97.top/framework/web/tomcat-source300.html)
+- [Tomcat - 架构设计](https://www.seven97.top/framework/web/tomcat-arch.html)
+- [Tomcat - 启动过程详解](https://www.seven97.top/framework/web/tomcat-start.html)
+- [Tomcat - 组件管理源码详解](https://www.seven97.top/framework/web/tomcat-lifecycle.html)
+- [Tomcat - 事件的监听机制：观察者模式](https://www.seven97.top/framework/web/tomcat-listener.html)
+- [Tomcat - Server的设计和实现：StandardServer](https://www.seven97.top/framework/web/tomcat-server.html)
+- [Tomcat - Service的设计和实现：StandardService](https://www.seven97.top/framework/web/tomcat-service.html)
+- [Tomcat - 线程池的设计与实现：StandardThreadExecutor](https://www.seven97.top/framework/web/tomcat-executor.html)
+- [Tomcat - Request请求处理：Container设计](https://www.seven97.top/framework/web/tomcat-container.html)
+- [Tomcat - Container容器之Engine：StandardEngine](https://www.seven97.top/framework/web/tomcat-container-engine.html)
+- [Tomcat - Container的管道机制：责任链模式](https://www.seven97.top/framework/web/tomcat-container-pipline.html)
+- [Tomcat - Request请求处理过程：Connector](https://www.seven97.top/framework/web/tomcat-connector.html)
+
 
 ## 微服务/分布式
 
@@ -415,7 +428,36 @@ head:
 - [支付技术流程](https://www.seven97.top/system-design/best-practices/paymenttechnology.html)
 - [Lombok注解引发的空指针问题分析](https://www.seven97.top/system-design/best-practices/lombok-nullpointerproblem.html)
 
+## AI
+- [AI大模型入门知识](https://www.seven97.top/ai/large-model-summary.html)
+- [Rag入门知识](https://www.seven97.top/ai/rag-summary.html)
+- [RAG设计模式介绍](https://www.seven97.top/ai/rag-design.html)
+- [MCP入门知识](https://www.seven97.top/ai/mcp-summary.html)
+### agent专栏
+
+- [AI Agent入门知识](https://www.seven97.top/ai/agent/agent-summary.html)
+- [Agent强化知识](https://www.seven97.top/ai/agent/agent-enhance.html)
+- [Agent设计模式介绍](https://www.seven97.top/ai/agent/agent-design-pattern-summary.html)
+- [全网都在吹的OpenClaw是什么？](https://www.seven97.top/ai/agent/openclaw.html)
+
+#### 从0到1构建一个ClaudeAgent
+
+- [引言](https://www.seven97.top/ai/agent/leaernclaudecode/summary.html)
+- [工具与执行-Agent循环](https://www.seven97.top/ai/agent/leaernclaudecode/s01.html)
+- [工具与执行-工具](https://www.seven97.top/ai/agent/leaernclaudecode/s02.html)
+- [规划与协调-TodoWrite](https://www.seven97.top/ai/agent/leaernclaudecode/s03.html)
+- [规划与协调-子Agent](https://www.seven97.top/ai/agent/leaernclaudecode/s04.html)
+- [规划与协调-技能](https://www.seven97.top/ai/agent/leaernclaudecode/s05.html)
+- [内存管理-上下文压缩](https://www.seven97.top/ai/agent/leaernclaudecode/s06.html)
+- [规划与协调-任务系统](https://www.seven97.top/ai/agent/leaernclaudecode/s07.html)
+- [并发-后台任务](https://www.seven97.top/ai/agent/leaernclaudecode/s08.html)
+- [协作-Agent团队](https://www.seven97.top/ai/agent/leaernclaudecode/s09.html)
+- [协作-团队协议](https://www.seven97.top/ai/agent/leaernclaudecode/s10.html)
+- [协作-自主Agent](https://www.seven97.top/ai/agent/leaernclaudecode/s11.html)
+- [协作-Worktree+任务隔离](https://www.seven97.top/ai/agent/leaernclaudecode/s12.html)
+
 ## 开发工具
+
 - [Maven入门，读完这篇就够了](https://www.seven97.top/tools/maven-detail.html)
 - [Git指南：从入门到精通](https://www.seven97.top/tools/git-detail.html)
 - [反编译工具 - jadx](https://www.seven97.top/tools/gradle/decompilation-jadx.html)

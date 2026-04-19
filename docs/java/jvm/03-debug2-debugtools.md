@@ -240,9 +240,9 @@ no option 输出全部的参数和系统属性
 
 使用如下：
 
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202603110958867.png)
 
 
-![img](https:////upload-images.jianshu.io/upload_images/2843224-45c81fe69caa36f9.png?imageMogr2/auto-orient/strip|imageView2/2/w/348/format/webp)
 
 #### 示例四：-flag name=value
 
@@ -403,7 +403,7 @@ PS Old Generation
 命令：jmap -finalizerinfo pid
  描述：打印等待终结的对象信息
 
-![image-20250406134257131](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202504061342234.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202504061342234.png)
 
 Number of objects pending for finalization: 0 说明当前F-QUEUE队列中并没有等待Fializer线程执行final
 
@@ -682,7 +682,7 @@ sudo dmesg|grep -i kill|less 去找关键字oom_killer。找到的结果类似�
 
 dmesg日志时间转换公式: log实际时间=格林威治1970-01-01+(当前时间秒数-系统启动至今的秒数+dmesg打印的log时间)秒数：
 
-date -d "1970-01-01 UTC echo "$(date +%s)-$(cat /proc/uptime|cut -f 1 -d' ')+12288812.926194"|bc seconds" 剩下的，就是看看为什么内存这么大，触发了OOM-Killer了。
+`date -d "1970-01-01 UTC echo "$(date +%s)-$(cat /proc/uptime|cut -f 1 -d' ')+12288812.926194"|bc seconds"` 剩下的，就是看看为什么内存这么大，触发了OOM-Killer了。
 
 ## JVM可视化工具
 
@@ -708,9 +708,9 @@ javap        jimage        jrunscript    rmic
 
 选择
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730604.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730604.jpg)
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730584.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730584.jpg)
 
  
 
@@ -718,37 +718,37 @@ javap        jimage        jrunscript    rmic
 
 概述
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730625.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730625.jpg)
 
  
 
 内存
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730600.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730600.jpg)
 
  
 
 线程
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730594.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730594.jpg)
 
  
 
 类
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730611.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730611.jpg)
 
  
 
 VM概要
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730674.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730674.jpg)
 
  
 
 MBean
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730674.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730674.jpg)
 
 ### Visual VM
 
@@ -756,25 +756,25 @@ VisualVM 是一款免费的，集成了多个 JDK 命令行工具的可视化工
 
 Overview
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730697.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730697.jpg)
 
  
 
 Monitor
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730716.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730716.jpg)
 
  
 
 线程
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730735.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730735.jpg)
 
  
 
 Sampler
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730758.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730758.jpg)
 
 
 
@@ -784,7 +784,7 @@ visual gc 是 visualvm 中的图形化查看 gc 状况的插件。官方文档�
 
 比如我在IDEA中使用visual GC 插件来看GC状况。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730781.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730781.jpg)
 
 
 
@@ -798,7 +798,7 @@ JProfiler 是一个全功能的Java剖析工具（profiler），专用于分析J
 
 JProfiler 包含用于采集目标 JVM 分析数据的 JProfiler agent、用于可视化分析数据的 JProfiler UI、提供各种功能的命令行工具，它们之间的关系如下图所示。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730819.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730819.jpg)
 
  
 
@@ -827,11 +827,11 @@ JProfiler UI 的主要功能是展示通过 agent 采集上来的分析数据，
 
 **运行一个SpringBoot测试工程，选择attach到JVM**
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730841.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730841.jpg)
 
 选择指定的进程
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730861.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730861.jpg)
 
  
 
@@ -845,73 +845,73 @@ JProfier 提供两种数据采集模式 Sampling 和 Instrumentation。
 
 由于我们需要获取方法级别的统计信息，这里选择了 Instrumentation 模式。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730881.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730881.jpg)
 
  
 
 概览
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730903.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730903.jpg)
 
  
 
 内存
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730934.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730934.jpg)
 
  
 
 实时内存分布（类对象）
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730975.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730975.jpg)
 
  
 
 dump 堆内存
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730998.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730998.jpg)
 
  
 
 dump完会直接打开显示
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730019.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730019.jpg)
 
  
 
 线程存储
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730043.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730043.jpg)
 
  
 
 导出HTML报告
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730064.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730064.jpg)
 
  
 
 CPU 调用树
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730087.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730087.jpg)
 
  
 
 线程历史
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730120.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730120.jpg)
 
  
 
 JEE & 探针
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730141.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730141.jpg)
 
  
 
 MBeans
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730165.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730165.jpg)
 
 
 ### Eclipse Memory Analyzer (MAT)
@@ -924,13 +924,13 @@ MBeans
 
 - Overview：包含内存分布，以及潜在的问题推测
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730184.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730184.jpg)
 
  
 
 - Histogram：可以列出内存中的对象，对象的个数以及大小。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730206.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730206.jpg)
 
 具体需要重点理解如下两个概念，可参考[官网文档](http://help.eclipse.org/latest/index.jsp?topic=/org.eclipse.mat.ui.help/welcome.html)的解释
 
@@ -941,19 +941,19 @@ MBeans
 
 - Dominator Tree：可以列出那个线程，以及线程下面的那些对象占用的空间。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730229.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730229.jpg)
 
  
 
 - Top consumers：通过图形列出最大的object。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730549.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730549.jpg)
 
  
 
 - Leak Suspects：自动分析潜在可能的泄漏。
 
-![image.png](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730571.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404251730571.jpg)
 
  
 
