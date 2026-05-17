@@ -309,7 +309,7 @@ sun.misc.Launcher$AppClassLoader@18b4aac
 3. 通过ClassLoader.loadClass()方法动态加载
 
 ```java
-package com.pdai.jvm.classloader;
+package com.seven.jvm.classloader;
 public class loaderTest { 
         public static void main(String[] args) throws ClassNotFoundException { 
                 ClassLoader loader = HelloWorld.class.getClassLoader(); 

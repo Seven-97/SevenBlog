@@ -453,11 +453,11 @@ JDK9注解@Deprecated得到了增强，增加了 since 和 forRemoval 两个属�
 
 JDK9注解@Deprecated得到了增强，增加了 since 和 forRemoval 两个属性，可以分别指定一个程序元素被废弃的版本，以及是否会在今后的版本中被删除。
 
-在如下的代码中，表示PdaiDeprecatedTest这个类在JDK9版本中被弃用并且在将来的某个版本中一定会被删除。
+在如下的代码中，表示SevenDeprecatedTest这个类在JDK9版本中被弃用并且在将来的某个版本中一定会被删除。
 
 ```java
 @Deprecated(since="9", forRemoval = true)
-public class PdaiDeprecatedTest {
+public class SevenDeprecatedTest {
 
 }
 ```

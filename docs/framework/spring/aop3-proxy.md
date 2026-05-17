@@ -508,7 +508,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.List;
-import tech.pdai.springframework.service.IUserService;
+import tech.seven.springframework.service.IUserService;
 
 // 所有类和方法都是final类型的
 public final class $Proxy0 extends Proxy implements IUserService {
@@ -577,10 +577,10 @@ public final class $Proxy0 extends Proxy implements IUserService {
         try {
             // 初始化 methods, 2个IUserService接口中的方法，3个Object中的接口
             m1 = Class.forName("java.lang.Object").getMethod("equals", Class.forName("java.lang.Object"));
-            m3 = Class.forName("tech.pdai.springframework.service.IUserService").getMethod("findUserList");
+            m3 = Class.forName("tech.seven.springframework.service.IUserService").getMethod("findUserList");
             m2 = Class.forName("java.lang.Object").getMethod("toString");
             m0 = Class.forName("java.lang.Object").getMethod("hashCode");
-            m4 = Class.forName("tech.pdai.springframework.service.IUserService").getMethod("addUser");
+            m4 = Class.forName("tech.seven.springframework.service.IUserService").getMethod("addUser");
         } catch (NoSuchMethodException var2) {
             throw new NoSuchMethodError(var2.getMessage());
         } catch (ClassNotFoundException var3) {

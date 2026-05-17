@@ -12,16 +12,17 @@ head:
     - name: description
       content: 全网最全的微服务、分布式知识点总结，让天下没有难学的八股文！
 ---
->本文图片全挂了，待更新
+
+
 ## 调用过程
 
-dubbo的服务调用方是在xml配置了类似于 <dubbo:reference interface="com.jwfy.dubbo.product.ProductService" id="productService" />的配置，意味着后续在spring中通过 getBean('productService') 就可以获取到远程代理对象。dubbo:reference 本身映射成为的bean是ReferenceBean，其会存储整个dubbo需要的各种信息，例如控制中心的注册地址，服务端的具体IO和端口等。
+dubbo的服务调用方是在xml配置了类似于 `<dubbo:reference interface="com.jwfy.dubbo.product.ProductService" id="productService" />`的配置，意味着后续在spring中通过 `getBean('productService')` 就可以获取到远程代理对象。`dubbo:reference` 本身映射成为的bean是ReferenceBean，其会存储整个dubbo需要的各种信息，例如控制中心的注册地址，服务端的具体IO和端口等。
 
-![image.png](file:///C:/Users/HUAWEI%20MateBook%20Xpro/AppData/Local/Packages/oice_16_974fa576_32c1d314_38f6/AC/Temp/msohtmlclip1/01/clip_image002.jpg)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202605161138358.png)
 
 如上图就是ReferenceBean的类图，根据以往对spring的学习了解，有如下总结：
 
-- 很清楚的认识到其是一个工厂Bean,后续需要getObject方法得到真正的对象（其实在这里不看源码，我们就应该能猜到常规做法是通过动态代理生成interface="com.jwfy.dubbo.product.ProductService"中接口对应的proxy对象），如果想获取ReferenceBean对象本身，则需要使用getBean("&productService")
+- 很清楚的认识到其是一个工厂Bean，后续需要getObject方法得到真正的对象（其实在这里不看源码，我们就应该能猜到常规做法是通过动态代理生成`interface="com.jwfy.dubbo.product.ProductService`中接口对应的proxy对象），如果想获取ReferenceBean对象本身，则需要使用`getBean("&productService")`
 
 - 通过InitializingBean的afterPropertiesSet 方法去为当前的bean注入注册中心、均衡负责的方式、使用的协议等属性数据。
 
@@ -165,7 +166,7 @@ public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
 
 
 
- 
+ ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202605161147196.webp)
 
 ## 生成Invoker
 
@@ -321,7 +322,7 @@ registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.C
 
 - registry是ZookeeperRegistry对象
 
-- subscribeUrl是consumer://192.168.10.123/com.jwfy.dubbo.product.ProductService?application=dubbo-consume&default.check=false&dubbo=2.5.3&interface=com.jwfy.dubbo.product.ProductService&methods=print,getStr&owner=jwfy&pid=1196&side=consumer&timestamp=1526204222984
+- subscribeUrl是`consumer://192.168.10.123/com.jwfy.dubbo.product.ProductService?application=dubbo-consume&default.check=false&dubbo=2.5.3&interface=com.jwfy.dubbo.product.ProductService&methods=print,getStr&owner=jwfy&pid=1196&side=consumer&timestamp=1526204222984`
 
 > 表示是一个消费者
 
@@ -380,11 +381,11 @@ public void register(URL url) {
 
 在doRegister操作中，是利用zk的API存储如下的path
 
-/dubbo-jwfy/com.jwfy.dubbo.product.ProductService/consumers/consumer%3A%2F%2F192.168.10.123%2Fcom.jwfy.dubbo.product.ProductService%3Fapplication%3Ddubbo-consume%26category%3Dconsumers%26check%3Dfalse%26default.check%3Dfalse%26dubbo%3D2.5.3%26interface%3Dcom.jwfy.dubbo.product.ProductService%26methods%3Dprint%2CgetStr%26owner%3Djwfy%26pid%3D1196%26side%3Dconsumer%26timestamp%3D1526204222984
+`/dubbo-jwfy/com.jwfy.dubbo.product.ProductService/consumers/consumer%3A%2F%2F192.168.10.123%2Fcom.jwfy.dubbo.product.ProductService%3Fapplication%3Ddubbo-consume%26category%3Dconsumers%26check%3Dfalse%26default.check%3Dfalse%26dubbo%3D2.5.3%26interface%3Dcom.jwfy.dubbo.product.ProductService%26methods%3Dprint%2CgetStr%26owner%3Djwfy%26pid%3D1196%26side%3Dconsumer%26timestamp%3D1526204222984`
 
 如下图，在调用doRegister前后zk注册中心节点的情况，很明显已经注册成功
 
-
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202605161146807.webp)
 
 ### 订阅服务
 
@@ -560,7 +561,7 @@ public List<String> addTargetChildListener(String path, final IZkChildListener l
 
 现在完成了和注册中心的操作了，通过path顺利拿到生产者的信息，如果仔细观察上述的参数信息，会发现pid是1081，再看看jps显示的进程号,如下图，恰好说明获取到的生产者信息是对的
 
-![](C:\Users\HUAWEI MateBook Xpro\AppData\Roaming\Typora\typora-user-images\image-20240430192134320.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202605161141517.png)
 
  接着来到toUrlsWithEmpty函数，如果有仔细观察这个方法会发现，参数列表都改成了(URL consumer, String path, List&lt;String> providers)这已经很明确的告诉我们，第一个参数是消费者的url，第二个是当前zk的path信息，第三个是获取到的生产者列表信息（为啥是列表呢？因为生产者可以是多个，而且存在多个的情况下，后续均衡负责还需要选择一个可用的生产者进行网络信息交互操作）
 
@@ -570,7 +571,7 @@ public List<String> addTargetChildListener(String path, final IZkChildListener l
 
 紧接着来到了notify方法，如下图的具体各个参数具体值
 
-![](C:\Users\HUAWEI MateBook Xpro\AppData\Roaming\Typora\typora-user-images\image-20240430192153479.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202605161140760.png)
 
  
 
@@ -742,7 +743,7 @@ private void refreshInvoker(List<URL> invokerUrls){
 
 现在就剩下最关键的一句话cluster.join(directory)，会层层包装，最后形成的invoker如图所示
 
-![](C:\Users\HUAWEI MateBook Xpro\AppData\Roaming\Typora\typora-user-images\image-20240430192319271.png)
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202605161139802.png)
 
 在directory中包含了所有的注册信息，在后面的真正的函数调用其实也是通过invoker.invoker去调用执行
 
@@ -774,6 +775,10 @@ public Object invoke(Object proxy, Method method, Object[] args) throws Throwabl
     return invoker.invoke(new RpcInvocation(method, args)).recreate();
 }
 ```
+
+![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202605161148659.webp)
+
+
 
 来到了MockClusterInvoker类，此时需要注意到MockClusterInvoker类的invoke是FailoverClusterInvoker
 
@@ -1200,13 +1205,7 @@ private Object returnFromResponse() throws RemotingException {
 8. 加入重试机制，如果出现类似timeout等情况会进行重试操作（有一点需要注意，biz异常是不再进行重试，而直接上抛异常）
 9. 服务异步调用或者有无返回值
 
- 
 
- 
-
-![image.png](file:///C:/Users/HUAWEI%20MateBook%20Xpro/AppData/Local/Packages/oice_16_974fa576_32c1d314_38f6/AC/Temp/msohtmlclip1/01/clip_image014.gif)
-
- 
 
 服务提供者的集群集群⾥⾯有⼏个服务提供者，就有⼏个invoker，invoker理解成调⽤⼀个服务提供者需要的完整的细节，封装成的对象
 
