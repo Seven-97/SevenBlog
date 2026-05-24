@@ -38,3 +38,4 @@ package.json
 pnpm-lock.yaml
 sw.js
 .gitignore
+algorithm-process-infographic-prompt.md
