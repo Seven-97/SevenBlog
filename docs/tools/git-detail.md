@@ -1,7 +1,6 @@
 ---
 title: Git指南：从入门到精通
 category: 开发工具
-icon: git
 tags:
   - Git
 head:

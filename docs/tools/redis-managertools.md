@@ -1,7 +1,6 @@
 ---
 title: Redis可视化管理工具集合
 category: 开发工具
-icon: redis
 tags:
   - Redis
 ---
