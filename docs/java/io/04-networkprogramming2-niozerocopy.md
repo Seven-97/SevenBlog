@@ -39,7 +39,7 @@ MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_WRITE, 0, 1024);
 
 ### MappedByteBuffer
 
-MappedByteBuffer 是 NIO 基于**内存映射（[mmap](https://www.seven97.top/cs-basics/operating-system/zerocopytechnology.html#mmap-write)）**这种零拷贝方式的提供的一种实现，可以减少一次数据拷贝的过程。它继承自 ByteBuffer。FileChannel 定义了一个 map() 方法，它可以把一个文件从 position 位置开始的 size 大小的区域映射为内存映像文件。抽象方法 map() 方法在 FileChannel 中的定义如下：
+MappedByteBuffer 是 NIO 基于**内存映射**（[mmap](https://www.seven97.top/cs-basics/operating-system/zerocopytechnology.html#mmap-write)）这种零拷贝方式的提供的一种实现，可以减少一次数据拷贝的过程。它继承自 ByteBuffer。FileChannel 定义了一个 map() 方法，它可以把一个文件从 position 位置开始的 size 大小的区域映射为内存映像文件。抽象方法 map() 方法在 FileChannel 中的定义如下：
 
 ```java
 public abstract MappedByteBuffer map(MapMode mode, long position, long size)

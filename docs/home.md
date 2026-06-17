@@ -47,6 +47,7 @@ head:
 ### 并发编程
 - [并发编程理论基础：JMM内存模型、Happens-Before规则与线程安全实现的全面指南](https://www.seven97.top/java/concurrent/01-fundamentalsofconcurrency1-theory.html)
 - [线程基础的全景图：Java开发者必须掌握的核心知识点](https://www.seven97.top/java/concurrent/01-fundamentalsofconcurrency2-thread.html)
+-  [每个线程只管自己的变量，性能却不如单线程？问题出在缓存行](https://www.seven97.top/java/concurrent/01-falsesharing.html)
 - [Java中到底有哪些锁？](https://www.seven97.top/java/concurrent/01-fundamentalsofconcurrency3-lockofjava.html)
 - [synchronized底层机制剖析：从字节码到JVM的运作原理](https://www.seven97.top/java/concurrent/02-keyword1-synchronized.html)
 - [深入理解volatile：从内存可⻅性到指令重排序的全面解析](https://www.seven97.top/java/concurrent/02-keyword2-volatile.html)
@@ -424,6 +425,7 @@ head:
 ### 编程实践
 
 - [优雅地关闭程序](https://www.seven97.top/system-design/best-practices/elegantlyclosetheprogram.html)
+- [你们项目里的线程池是怎么用的？怎么管理的？](https://www.seven97.top/system-design/best-practices/how-use-threadpool.html)
 - [Java 日志管理的黄金组合: SLF4J+Logback](https://www.seven97.top/system-design/best-practices/logback.html)
 - [支付技术流程](https://www.seven97.top/system-design/best-practices/paymenttechnology.html)
 - [Lombok注解引发的空指针问题分析](https://www.seven97.top/system-design/best-practices/lombok-nullpointerproblem.html)

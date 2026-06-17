@@ -517,6 +517,15 @@ try {
 
 
 
+结合 JDBC 的 SPI（Service Provider Interface）机制，整个打破双亲委派的加载过程如下：
+
+1. 当程序首次使用 JDBC 时，会触发 `DriverManager` 类的静态代码块初始化。
+2. `DriverManager`（由启动类加载器加载）会调用 `ServiceLoader.load(Driver.class)` 来寻找驱动实现。
+3. `ServiceLoader` 内部并没有使用默认的类加载器，而是获取了当前线程的上下文类加载器（即应用类加载器）。
+4. 应用类加载器去读取 classpath 下 jar 包中 `META-INF/services/java.sql.Driver` 配置文件，从而成功加载具体的数据库驱动实现类（如 MySQL Driver）。
+
+
+
 ##### 源码实现
 
 ```java
@@ -618,7 +627,11 @@ while(driversIterator.hasNext()) {
 
 可以看到此时迭代器中有两个驱动，mysql和postgresql的都被加载了。
 
- 
+ #### JDBC vs Tomcat 打破双亲委派的思路
+
+- **JDBC 的思路（逆向委派）**：为了解决“上层接口找不到下层实现”的**跨层级调用问题**。它没有改变类加载器的层级结构，而是通过 `Thread Context ClassLoader` 开了一条“后门”，让父加载器能调用子加载器。
+- **Tomcat 的思路（类隔离与优先加载）**：为了解决“同级应用之间的版本冲突与安全隔离”问题。它直接重写了 `loadClass()` 方法的逻辑，改变了加载的先后顺序（先自己后父类），并配合自定义的网状类加载器架构，实现了物理级别的隔离。
+
 
 ## 自定义类加载器加载 java.lang.String
 

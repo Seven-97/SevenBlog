@@ -187,8 +187,18 @@ Tips：千万不要把线程池的状态和线程的状态弄混了。补一张�
   }
   ```
 
-  
+### ThreadFactory
 
+线程池中的 ThreadFactory  具体有什么作用？ 
+
+如果不使用自定义的 `ThreadFactory`，线程池默认会使用 `Executors.defaultThreadFactory()` 来创建线程。默认创建的线程名通常是 `pool-1-thread-1` 这种毫无业务含义的名字，且优先级、异常处理都是默认配置。
+
+自定义 `ThreadFactory` 的核心作用就是**给线程池里的每一个新线程“定制属性”**，具体包括以下四个方面：
+
+1. **赋予有意义的线程名称（最常用）**：例如命名为 `order-service-pool-1` 或 `pay-thread-xx`。当线上出现线程阻塞或死锁时，通过查看 Thread Dump（线程快照）或日志，能一眼看出该线程属于哪个业务模块，极大提高故障排查效率。
+2. **设置未捕获异常处理器（UncaughtExceptionHandler）**：如果线程内部抛出了未捕获的运行时异常，默认情况下异常会被静默吞掉，日志里找不到任何痕迹。通过工厂统一设置异常处理器，可以确保异常被记录或触发告警。
+3. **控制线程优先级（Priority）**：可以为核心业务线程设置较高的优先级，为非核心的辅助任务设置较低优先级，避免不重要的线程抢占系统资源。
+4. **决定是否为守护线程（Daemon）**：守护线程类似于“后台服务员”，当所有非守护线程结束时，JVM 会自动退出。将某些辅助线程设为守护线程，可以防止因线程池未正确关闭而导致应用程序无法退出的问题。
 
 
 ### 拒绝策略
@@ -1190,6 +1200,8 @@ public static ExecutionService newSingleThreadExecutor() {
 
 ### CachedThreadPool
 
+可缓存线程池，根据任务负载动态调整线程数量，并在任务完成后复用空闲线程，从而避免频繁创建和销毁线程带来的开销
+
 ```java
 public static ExecutorService newCachedThreadPool() {
     return new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
@@ -1206,14 +1218,14 @@ core是0，**最大线程数是Integer.MAX_VALUE**，因此当添加任务的速
 
 ### ScheduledThreadPoolExecutor
 
+在给定的延迟后运行任务，或者定期执行任务。
+
 ```java
 public ScheduledThreadPoolExecutor(int corePoolSize) {
         super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
               new DelayedWorkQueue());
 }
 ```
-
-在给定的延迟后运行任务，或者定期执行任务。
 
 为什么不建议使用？
 

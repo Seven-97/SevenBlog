@@ -17,6 +17,7 @@ media/
 **/interview/
 **/algorithmsguide/
 **/about/
+**/article/
 
 # VuePress Output
 dist/
