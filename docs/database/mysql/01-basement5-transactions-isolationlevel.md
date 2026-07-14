@@ -136,9 +136,12 @@ readView是MVCC多版本并发控制的一种实现手段。这个也叫快照�
 > 注意：max_trx_id 并不是m_ids中的最大值，事务id是递增分配的。比如，现在有id为1，2，3这三个事务，之后id为3的事务**提交**了。那么一个新的读事务在生成ReadView时，m_ids就包括**还活跃的事务**1和2，min_trx_id的值就**活跃事务** 中事务 id 最小的事务，即1，max_trx_id的值就是4。
 
 在创建 Read View 后，可以将记录中的 trx_id 划分这三种情况：
+
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404261856176.png)
 
+> 当然，如上所说，已提交事务 也会存在于m_ids 与 max_trx_id 之间
 ### undolog中每条记录的两个隐藏列
+
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404261856242.png)
 
 - trx_id，当一个事务对某条聚簇索引记录进行改动时，就会把该事务的事务 id 记录在 trx_id 隐藏列里；

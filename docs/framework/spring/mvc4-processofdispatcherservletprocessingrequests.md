@@ -18,15 +18,15 @@ head:
 
 ![](https://seven97-blog.oss-cn-hangzhou.aliyuncs.com/imgs/202404281540071.png)
 
-1. 用户发送请求——>DispatcherServlet：接收用户的请求：前端控制器收到请求后自己不进行处理，而是委托给其他的解析器进行 处理，作为统一访问点，进行全局的流程控制；
-2. DispatcherServlet——>HandlerMapping：HandlerMapping 将会把请求映射为 HandlerExecutionChain 对象（包含一 个Handler 处理器（页面控制器）对象、多个HandlerInterceptor 拦截器）对象，通过这种策略模式，很容易添加新的映射策略；
-3. DispatcherServlet——>HandlerAdapter：HandlerAdapter 将会把处理器包装为适配器，从而支持多种类型的处理器， 即适配器设计模式的应用，从而很容易支持很多类型的处理器；
-4. HandlerAdapter——>处理器功能处理方法的调用：HandlerAdapter 将会根据适配的结果调用真正的处理器的功能处理方法（也就是执行所有注册拦截器的preHandler方法），完成功能处理；并返回一个ModelAndView 对象（包含模型数据、逻辑视图名）；
-5. 倒序执行所有注册拦截器的postHandler方法
-6. ModelAndView 的逻辑视图名——> ViewResolver：ViewResolver 将把逻辑视图名解析为具体的View，通过这种策略模式，很容易更换其他视图技术；
-7. View——>渲染：View 会根据传进来的Model 模型数据进行渲染，此处的Model 实际是一个Map 数据结构，因此 很容易支持其他视图技术；
-8. 返回控制权给DispatcherServlet：由DispatcherServlet 返回响应给用户，到此一个流程结束
-
+1. **请求到达**：用户发起 HTTP 请求，请求首先到达 Web 服务器（如 Tomcat），然后被转发给 SpringMVC 的核心入口——`DispatcherServlet`（前端控制器）。
+2. **查找处理器**：`DispatcherServlet` 调用 `HandlerMapping**`（处理器映射器）。HandlerMapping 会根据请求的 URL 找到对应的处理器（Controller），并将该 Controller 和相关的拦截器封装成一个**处理器执行链**（HandlerExecutionChain）返回。
+3. **获取适配器**：`DispatcherServlet` 拿到执行链后，会调用 `HandlerAdapter`（处理器适配器）。适配器负责适配不同类型的 Controller，并准备执行环境。
+4. **拦截器前置处理**：在执行 Controller 方法之前，会先执行拦截器链中的 `preHandle()` 方法。如果返回 `false`，请求将被中断（常用于登录校验、权限控制等）。
+5. **执行业务逻辑**：`HandlerAdapter` 正式调用 Controller 中的具体方法，处理业务逻辑。处理完成后，通常会返回一个 `ModelAndView` 对象（包含模型数据和逻辑视图名）。
+6. **拦截器后置处理**：Controller 执行完毕后（且未发生异常），会执行拦截器的 `postHandle()` 方法，此时可以对返回的 `ModelAndView` 进行修改。
+7. **视图解析**：`DispatcherServlet` 将 `ModelAndView` 中的逻辑视图名交给 `ViewResolver`（视图解析器）。ViewResolver 会将其解析为具体的物理视图（如 JSP、Thymeleaf 页面）。
+8. **视图渲染与响应**：具体的 `View` 对象将模型数据渲染到页面上，生成最终的 HTML 或 JSON 等响应内容，最后由 `DispatcherServlet` 返回给客户端。
+9. **拦截器完成处理**：无论请求成功还是失败，最后都会执行拦截器的 `afterCompletion()` 方法，通常用于资源清理工作
 
 
 ## 源码解析
