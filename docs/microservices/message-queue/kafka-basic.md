@@ -1,7 +1,7 @@
 ---
 title: Kafka - 入门
 category: 微服务
-tag:
+tags:
   - Kafka
   - 消息队列
 head:

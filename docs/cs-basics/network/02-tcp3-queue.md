@@ -1,8 +1,8 @@
 ---
 title: TCP - 半连接队列和全连接队列
 category: 计算机基础
-tag:
- - 计算机网络
+tags:
+  - 计算机网络
 head:
   - - meta
     - name: keywords

@@ -1,8 +1,8 @@
 ---
 title: 调试排错 - CMS的GC问题分析与解决
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

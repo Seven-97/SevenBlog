@@ -1,9 +1,9 @@
 ---
 title: Sentinel - 使用
 category: 微服务
-tag:
- - Sentinel
- - 服务保护
+tags:
+  - Sentinel
+  - 服务保护
 head:
   - - meta
     - name: keywords

@@ -1,7 +1,7 @@
 ---
 title: 优雅地关闭程序
 category: 系统设计
-tag:
+tags:
   - SpringBoot
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: Kafka - 高级使用
 category: 微服务
-tag:
+tags:
   - Kafka
   - 消息队列
 head:

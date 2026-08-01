@@ -1,7 +1,7 @@
 ---
 title: 贪心算法
 category: 计算机基础
-tag:
+tags:
   - 算法
 head:
   - - meta

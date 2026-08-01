@@ -1,7 +1,7 @@
 ---
 title: Nacos - 交互模型
 category: 微服务
-tag:
+tags:
   - Nacos
 head:
   - - meta

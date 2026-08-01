@@ -1,7 +1,7 @@
 ---
 title: Spring AI 框架中如何集成 MCP？
 category: 系统设计
-tag:
+tags:
   - SpringAI
   - LLM
   - MCP

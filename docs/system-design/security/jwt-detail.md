@@ -1,7 +1,7 @@
 ---
 title: JWT 基础概念详解
 category: 系统设计
-tag:
+tags:
   - 认证授权
 ---
 

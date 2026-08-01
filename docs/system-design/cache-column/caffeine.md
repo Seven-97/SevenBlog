@@ -1,9 +1,9 @@
 ---
 title: Caffeine
 category: 系统设计
-tag:
- - 缓存
- - Caffeine
+tags:
+  - 缓存
+  - Caffeine
 ---
 
 

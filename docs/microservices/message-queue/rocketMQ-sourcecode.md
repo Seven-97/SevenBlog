@@ -1,7 +1,7 @@
 ---
 title: RocketMQ - 源码
 category: 微服务
-tag:
+tags:
   - RocketMQ
   - 消息队列
 head:

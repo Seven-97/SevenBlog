@@ -1,8 +1,8 @@
 ---
 title: CRON表达式介绍和使用
 category: 工具类库
-tag:
- - CRON表达式
+tags:
+  - CRON表达式
 head:
   - - meta
     - name: keywords

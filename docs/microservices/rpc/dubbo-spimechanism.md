@@ -1,9 +1,9 @@
 ---
 title: dubbo - SPI机制
 category: 微服务
-tag:
- - dubbo
- - RPC
+tags:
+  - dubbo
+  - RPC
 head:
   - - meta
     - name: keywords

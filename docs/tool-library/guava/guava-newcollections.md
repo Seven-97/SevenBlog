@@ -1,9 +1,9 @@
 ---
 title: 新集合 - BiMap&Multimap&Multiset
 category: 工具类库
-tag:
- - Guava
- - 集合
+tags:
+  - Guava
+  - 集合
 head:
   - - meta
     - name: keywords

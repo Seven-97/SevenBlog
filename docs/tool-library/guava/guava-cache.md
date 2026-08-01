@@ -1,9 +1,9 @@
 ---
 title: 本地缓存 - GuavaCache
 category: 工具类库
-tag:
- - 缓存
- - GuavaCache
+tags:
+  - 缓存
+  - GuavaCache
 head:
   - - meta
     - name: keywords

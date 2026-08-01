@@ -1,7 +1,7 @@
 ---
 title: 十大经典排序算法
 category: 计算机基础
-tag:
+tags:
   - 算法
 head:
   - - meta

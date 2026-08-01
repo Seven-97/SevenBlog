@@ -1,7 +1,7 @@
 ---
 title: SpringBoot 整合系列索引
 category: 系统设计
-tag:
+tags:
   - SpringBoot
 ---
 

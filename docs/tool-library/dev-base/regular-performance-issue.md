@@ -1,8 +1,8 @@
 ---
 title: 正则表达式的性能问题
 category: 工具类库
-tag:
- - 正则
+tags:
+  - 正则
 head:
   - - meta
     - name: keywords

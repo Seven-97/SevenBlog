@@ -1,8 +1,8 @@
 ---
 title: 初识缓存
 category: 系统设计
-tag:
- - 缓存
+tags:
+  - 缓存
 ---
 
 

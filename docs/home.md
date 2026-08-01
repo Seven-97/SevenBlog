@@ -265,6 +265,7 @@ head:
 - [dubbo - 入门](https://www.seven97.top/microservices/rpc/dubbo-basic.html)
 - [dubbo - 高级特性](https://www.seven97.top/microservices/rpc/dubbo-advancedusage.html)
 - [dubbo - SPI机制](https://www.seven97.top/microservices/rpc/dubbo-spimechanism.html)
+- [用300行代码带你手写简化版RPC框架](https://www.seven97.top/microservices/rpc/mini-rpc.html)
 - [dubbo - 服务暴露源码](https://www.seven97.top/microservices/rpc/dubbo-serviceexposure-sourcecode.html)
 - [dubbo - 服务调用源码](https://www.seven97.top/microservices/rpc/dubbo-servicenvocation-sourcecode.html)
 - [dubbo - 3.0新特性](https://www.seven97.top/microservices/rpc/dubbo-newfeature.html)

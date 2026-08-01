@@ -1,7 +1,7 @@
 ---
 title: 二维码登录详解
 category: 系统设计
-tag:
+tags:
   - 认证授权
 ---
 

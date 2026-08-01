@@ -1,7 +1,7 @@
 ---
 title: 集合工具类 - Collections
 category: 工具类库
-tag:
+tags:
   - Java工具类
   - 集合
 head:

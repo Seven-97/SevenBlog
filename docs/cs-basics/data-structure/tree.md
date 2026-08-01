@@ -1,7 +1,7 @@
 ---
 title: 树
 category: 计算机基础
-tag:
+tags:
   - 数据结构
 head:
   - - meta

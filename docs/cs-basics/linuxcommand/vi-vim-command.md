@@ -1,7 +1,7 @@
 ---
 title: vi/vim命令
 category: 计算机基础
-tag:
+tags:
   - Linux
 head:
   - - meta

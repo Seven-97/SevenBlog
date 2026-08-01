@@ -1,9 +1,9 @@
 ---
 title: dubbo - 入门
 category: 微服务
-tag:
- - dubbo
- - RPC
+tags:
+  - dubbo
+  - RPC
 head:
   - - meta
     - name: keywords

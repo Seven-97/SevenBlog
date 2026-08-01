@@ -1,8 +1,8 @@
 ---
 title: 进程管理 - 进程、线程状态，死锁
 category: 计算机基础
-tag:
- - 操作系统
+tags:
+  - 操作系统
 head:
   - - meta
     - name: keywords

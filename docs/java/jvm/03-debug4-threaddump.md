@@ -1,8 +1,8 @@
 ---
 title: 调试排错 - 线程Dump分析
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

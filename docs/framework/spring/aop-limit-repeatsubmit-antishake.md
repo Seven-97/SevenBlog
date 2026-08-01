@@ -1,7 +1,7 @@
 ---
 title: AOP注解的妙用 - 实现接口限流、防重、防抖
 category: 系统设计
-tag:
+tags:
   - SpringBoot
   - Redisson
   - Spring

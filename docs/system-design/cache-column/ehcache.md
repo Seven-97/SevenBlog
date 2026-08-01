@@ -1,9 +1,9 @@
 ---
 title: Ehcache
 category: 系统设计
-tag:
- - 缓存
- - Ehcache
+tags:
+  - 缓存
+  - Ehcache
 ---
 
 

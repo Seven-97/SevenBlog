@@ -1,7 +1,7 @@
 ---
 title: SSO 单点登录详解
 category: 系统设计
-tag:
+tags:
   - 认证授权
 ---
 

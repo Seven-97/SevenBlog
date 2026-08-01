@@ -1,9 +1,9 @@
 ---
 title: 如何更好的使用缓存
 category: 系统设计
-tag:
- - 缓存
- - Redis
+tags:
+  - 缓存
+  - Redis
 ---
 
 

@@ -1,8 +1,8 @@
 ---
 title: 调试排错 - 排查工具单
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

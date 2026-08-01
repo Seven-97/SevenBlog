@@ -1,7 +1,7 @@
 ---
 title: 领域驱动设计
 category: 架构思想
-tag:
+tags:
   - 领域驱动设计
 ---
 

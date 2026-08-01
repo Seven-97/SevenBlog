@@ -1,8 +1,8 @@
 ---
 title: 调试排错 - Java动态调试原理
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

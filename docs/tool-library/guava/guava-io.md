@@ -1,9 +1,9 @@
 ---
 title: IO工具 - GuavaIO
 category: 工具类库
-tag:
- - Guava
- - IO流
+tags:
+  - Guava
+  - IO流
 head:
   - - meta
     - name: keywords

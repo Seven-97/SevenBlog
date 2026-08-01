@@ -1,7 +1,7 @@
 ---
 title: 对象工具类 - Objects&Optional
 category: 工具类库
-tag:
+tags:
   - Java工具类
 head:
   - - meta

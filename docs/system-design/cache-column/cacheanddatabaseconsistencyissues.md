@@ -1,9 +1,9 @@
 ---
 title: 缓存和数据库一致性问题
 category: 系统设计
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 ---
 
 

@@ -1,8 +1,8 @@
 ---
 title: 字符串匹配算法
 category: 计算机基础
-tag:
- - 算法
+tags:
+  - 算法
 head:
   - - meta
     - name: keywords

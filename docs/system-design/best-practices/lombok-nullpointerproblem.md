@@ -1,9 +1,9 @@
 ---
 title: Lombok注解引发的空指针问题分析
 category: 系统设计
-tag:
- - Lombok
- - 最佳实践
+tags:
+  - Lombok
+  - 最佳实践
 head:
   - - meta
     - name: keywords

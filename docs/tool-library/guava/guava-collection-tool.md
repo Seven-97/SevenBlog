@@ -1,9 +1,9 @@
 ---
 title: 集合工具 - Collections2
 category: 工具类库
-tag:
- - Guava
- - 集合
+tags:
+  - Guava
+  - 集合
 head:
   - - meta
     - name: keywords

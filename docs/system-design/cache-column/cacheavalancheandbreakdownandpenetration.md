@@ -1,9 +1,9 @@
 ---
 title: 缓存雪崩、击穿、穿透
 category: 系统设计
-tag:
- - Redis
- - 缓存
+tags:
+  - Redis
+  - 缓存
 ---
 
 

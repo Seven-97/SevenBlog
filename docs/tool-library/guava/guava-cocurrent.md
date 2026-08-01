@@ -1,9 +1,9 @@
 ---
 title: 并发编程 - ListenableFuture&Service
 category: 工具类库
-tag:
- - Guava
- - 并发编程
+tags:
+  - Guava
+  - 并发编程
 head:
   - - meta
     - name: keywords

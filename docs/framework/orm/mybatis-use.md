@@ -1,9 +1,9 @@
 ---
 title: MyBatis - 使用篇
 category: 常用框架
-tag:
+tags:
   - ORM框架
-  - MyBatis 
+  - MyBatis
   - 缓存
 head:
   - - meta

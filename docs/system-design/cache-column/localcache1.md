@@ -1,8 +1,8 @@
 ---
 title: 本地缓存 - 按需应对
 category: 系统设计
-tag:
- - 缓存
+tags:
+  - 缓存
 ---
 
 

@@ -1,8 +1,8 @@
 ---
 title: ZooKeeper - 集群机制
 category: 微服务
-tag:
- - ZooKeeper
+tags:
+  - ZooKeeper
 head:
   - - meta
     - name: keywords

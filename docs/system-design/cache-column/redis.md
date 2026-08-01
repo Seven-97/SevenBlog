@@ -1,9 +1,9 @@
 ---
 title: Redis文章索引
 category: 系统设计
-tag:
- - 缓存
- - Redis
+tags:
+  - 缓存
+  - Redis
 ---
 
 

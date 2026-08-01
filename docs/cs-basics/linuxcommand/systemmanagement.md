@@ -1,7 +1,7 @@
 ---
 title: 系统管理
 category: 计算机基础
-tag:
+tags:
   - Linux
 head:
   - - meta

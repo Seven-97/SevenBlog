@@ -1,8 +1,8 @@
 ---
 title: 位图
 category: 计算机基础
-tag:
- - 数据结构
+tags:
+  - 数据结构
 head:
   - - meta
     - name: keywords

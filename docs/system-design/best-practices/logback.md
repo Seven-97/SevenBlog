@@ -1,7 +1,7 @@
 ---
 title: "Java 日志管理的黄金组合: SLF4J+Logback"
 category: 系统设计
-tag:
+tags:
   - Lombok
   - 最佳实践
 head:

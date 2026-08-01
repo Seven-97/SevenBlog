@@ -1,9 +1,9 @@
 ---
 title: GuavaCache
 category: 系统设计
-tag:
- - 缓存
- - GuavaCache
+tags:
+  - 缓存
+  - GuavaCache
 ---
 
 

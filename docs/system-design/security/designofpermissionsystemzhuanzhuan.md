@@ -1,7 +1,7 @@
 ---
 title: 权限系统设计实例
 category: 系统设计
-tag:
+tags:
   - 认证授权
 ---
 

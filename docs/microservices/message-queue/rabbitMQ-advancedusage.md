@@ -1,7 +1,7 @@
 ---
 title: RabbitMQ - 高级使用
 category: 微服务
-tag:
+tags:
   - RabbitMQ
   - 消息队列
 head:

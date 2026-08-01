@@ -1,8 +1,8 @@
 ---
 title: 调试排错 - JVM参数
 category: Java
-tag:
- - JVM
+tags:
+  - JVM
 head:
   - - meta
     - name: keywords

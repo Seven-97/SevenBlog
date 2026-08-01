@@ -1,7 +1,7 @@
 ---
 title: 优雅的参数校验
 category: 系统设计
-tag:
+tags:
   - SpringBoot
 ---
 

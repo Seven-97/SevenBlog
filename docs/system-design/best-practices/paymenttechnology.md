@@ -1,7 +1,7 @@
 ---
 title: 支付技术流程
 category: 系统设计
-tag:
+tags:
   - 支付技术
 head:
   - - meta

@@ -1,8 +1,8 @@
 ---
 title: 服务保护概述
 category: 微服务
-tag:
- - 服务保护
+tags:
+  - 服务保护
 head:
   - - meta
     - name: keywords

@@ -1,8 +1,8 @@
 ---
 title: 升级重要特性 - Java8升Java11
 category: Java
-tag:
- - 版本新特性
+tags:
+  - 版本新特性
 head:
   - - meta
     - name: keywords

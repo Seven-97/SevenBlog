@@ -1,9 +1,9 @@
 ---
 title: 内存管理 - 内存页面置换算法
 category: 计算机基础
-tag:
- - 操作系统
-head:
+tags:
+  - 操作系统
+heads:
   - - meta
     - name: keywords
       content: 操作系统,内存管理,内存页面置换算法,最佳页面置换算法,OPT,时钟页面置换算法
